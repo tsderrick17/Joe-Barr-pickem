@@ -29,3 +29,40 @@ test("the half-point hit rate is wins over games decided that way, and nothing w
   assert.equal(sortValue({ halfWins: 3, halfLosses: 1 }, "halfRate"), 0.75);
   assert.equal(sortValue({}, "halfRate"), 0, "no games sorts last");
 });
+
+test("sorted by half-point hit rate, players with no game decided that way go last either way, and level rates go to more wins", async () => {
+  const { compareRows, placesFor } = await import("../src/lib/trophy-rank.js");
+  const player = (name, halfWins, halfLosses) => ({ name, halfWins, halfLosses });
+  // The table on 2026-11-09: John and Shane O are 0-1, Rick, Steve and Tyler have none; Zac 2-0 and Shane D 1-0.
+  const rows = [player("Al", 1, 1), player("John", 0, 1), player("Rick", 0, 0), player("Shane D", 1, 0), player("Shane O", 0, 1), player("Steve", 0, 0), player("Tyler", 0, 0), player("Zac", 2, 0)];
+  const order = (descending) => [...rows].sort((a, b) => compareRows(a, b, "halfRate", descending)).map((row) => row.name);
+  assert.deepEqual(order(true), ["Zac", "Shane D", "Al", "John", "Shane O", "Rick", "Steve", "Tyler"]);
+  assert.deepEqual(order(false), ["John", "Shane O", "Al", "Shane D", "Zac", "Rick", "Steve", "Tyler"]);
+  const sorted = [...rows].sort((a, b) => compareRows(a, b, "halfRate", true));
+  assert.deepEqual(placesFor(sorted, "halfRate").map((p) => p.place), [1, 1, 3, 4, 4, 6, 6, 6], "0-1 is not level with no games");
+});
+
+test("the other columns keep their order: hit rate ranks qualified players first, names go A to Z, and wins break ties on hit rate", async () => {
+  const { compareRows } = await import("../src/lib/trophy-rank.js");
+  const a = { name: "Al", h: 5, avg: 0.5, qualified: true }, b = { name: "Bo", h: 2, avg: 1, qualified: false }, c = { name: "Cy", h: 5, avg: 0.6, qualified: true };
+  const order = (key, descending) => [a, b, c].sort((x, y) => compareRows(x, y, key, descending)).map((row) => row.name);
+  assert.deepEqual(order("rate", true), ["Cy", "Al", "Bo"]);
+  assert.deepEqual(order("name", false), ["Al", "Bo", "Cy"]);
+  assert.deepEqual(order("wins", true), ["Cy", "Al", "Bo"]);
+});
+
+test("in every column a \"—\" sorts last either way, below a real 0, and is never level with it", async () => {
+  const { compareRows, placesFor } = await import("../src/lib/trophy-rank.js");
+  const run = (longest) => ({ longest, current: 0, total: longest });
+  const zero = { name: "Zero", ab: 4, h: 0, avg: 0, qualified: false, halfWins: 0, halfLosses: 0, pushes: 0, streaks: { noDonut: run(0), sweeps: run(0) } };
+  const some = { name: "Some", ab: 4, h: 2, avg: 0.5, qualified: false, halfWins: 1, halfLosses: 1, pushes: 1, streaks: { noDonut: run(2), sweeps: run(1) } };
+  const blank = { name: "Blank", ab: 0, h: 0, avg: null, qualified: false, halfWins: 0, halfLosses: 0, pushes: 0, streaks: null };
+  for (const key of ["wins", "rate", "perfect", "donut", "sweeps", "halfW", "halfL", "halfRate", "pushes"]) {
+    for (const descending of [true, false]) {
+      const real = key === "halfRate" ? { ...zero, halfLosses: 1 } : zero;   // .000 needs a game decided by a half point
+      const sorted = [blank, real, some].sort((a, b) => compareRows(a, b, key, descending));
+      assert.equal(sorted.at(-1).name, "Blank", `${key} ${descending ? "high to low" : "low to high"}`);
+      assert.equal(placesFor(sorted, key).at(-1).tied, false, `${key}: "—" is not level with 0`);
+    }
+  }
+});

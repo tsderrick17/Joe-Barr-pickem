@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { formatAverage } from "@/lib/all-time-stats.js";
-import { halfRate, placesFor, sortValue, type SortKey } from "@/lib/trophy-rank.js";
+import { compareRows, halfRate, placesFor, type SortKey } from "@/lib/trophy-rank.js";
 
 type Champion = { playerId: string; name: string };
 type Season = { seasonYear: number; pickem: Champion[] | null; survivor: Champion[] | null; bowl: Champion[] | null };
@@ -39,18 +39,8 @@ export default function TrophyRoomPage() {
   }, []);
 
   const players = data?.players ?? [];
-  // Every column sorts on its own number (a streak column on the best run). Hit rate ranks players with enough picks first (so one lucky pick
-  // does not top the table); the rest rank everyone. Ties share a place (see placesFor).
-  const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
-  const sorted = [...players].sort((a, b) => {
-    const direction = sort.descending ? 1 : -1;
-    if (sort.key === "name") return (sort.descending ? -1 : 1) * byName(a, b);
-    if (sort.key === "rate") {
-      if (a.qualified !== b.qualified) return a.qualified ? -1 : 1;
-      return direction * ((b.avg ?? 0) - (a.avg ?? 0)) || direction * (b.h - a.h) || byName(a, b);
-    }
-    return direction * (sortValue(b, sort.key) - sortValue(a, sort.key)) || (sort.key === "wins" ? direction * ((b.avg ?? 0) - (a.avg ?? 0)) : 0) || byName(a, b);
-  });
+  // Every column sorts on its own number (see compareRows). Ties share a place (see placesFor).
+  const sorted = [...players].sort((a, b) => compareRows(a, b, sort.key, sort.descending));
   const choose = (key: SortKey) => setSort((current) => current.key === key ? { key, descending: !current.descending } : { key, descending: key !== "name" });
   const switchView = (next: View) => { setView(next); setSort(next === "record" ? { key: "rate", descending: true } : { key: "name", descending: false }); };   // Record opens on hit rate, Other Stats A to Z
   const flipView = () => switchView(view === "record" ? "more" : "record");   // a two-way switch: either half flips to the other view
