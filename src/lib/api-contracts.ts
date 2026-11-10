@@ -103,6 +103,8 @@ export type StandingsResponse = {
   week: string;
   weekStatus: "upcoming" | "active" | "complete";
   maxPicks: number;
+  /** The holiday skin the Pick'em Pad wears this week (see src/lib/pad-skin.js), or null for the usual pad. */
+  padSkin?: "halloween" | "thanksgiving" | "christmas" | null;
   nextRevealAt: string | null;
   rows: StandingsRow[];
   survivorAvailable: boolean;

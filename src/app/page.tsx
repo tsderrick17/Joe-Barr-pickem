@@ -360,6 +360,7 @@ export default function HomePage() {
           seasonSnapshotReleased={data.seasonSnapshotReleased ?? false}
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
+          skin={data.padSkin ?? null}
           onToggleEliminatedRows={offSeason ? undefined : () => void setEliminatedRowsHidden("pickem", !data.hidePickemEliminatedRows)}
           rows={data.rows}
           viewerPlayerId={data.viewerPlayerId}

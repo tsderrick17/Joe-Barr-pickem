@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - Holiday skins for the Pick'em Pad
+
+- The owner asked for fun, heavily themed "skins" that keep the pad's data and layout exactly as they are, starting with the
+  holidays, on the Pick'em Pad only: Halloween (a spider on its silk, a web, bats, jack-o'-lanterns), Thanksgiving (falling
+  leaves, a cornucopia), Christmas (garland and a wreath, snow, gifts). New Year's was dropped.
+- Each holiday has its own full colour scheme (paper, ink, ruling, margin, win totals, lines, W and L) and its own mark for a
+  hidden pick in place of the lock: a ghost, a covered dish, a wrapped gift. A skin is the same by day and by night.
+- It shows by itself in the pool week whose days (Tuesday through Monday, Eastern) include the holiday, read from the week's
+  `starts_at` and `ends_at`, which the Standings read already loads: no extra database request. Never in a playoff round.
+
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 
 - Season's name sat above its medallion, the only one that did; it is below now like the rest. Season sits a little further in so its name stays inside
