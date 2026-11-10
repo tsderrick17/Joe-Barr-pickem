@@ -25,8 +25,8 @@ async function serve(page: Page, state: string) {
   await page.clock.install({ time: new Date(NOW) });
 }
 
-async function settle(page: Page, ready: string) {
-  await page.goto("/admin");
+async function settle(page: Page, ready: string, path = "/admin") {
+  await page.goto(path);
   await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.reload();
@@ -39,42 +39,33 @@ async function settle(page: Page, ready: string) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 }
 
-// Panels are shown in every state that changes them; the rest use the healthy day.
-const PANELS: Array<{ id: string; tab: number; states: string[]; open?: string[] }> = [
-  { id: "today", tab: 0, states: ["healthy", "attention", "quiet"] },
-  { id: "performance", tab: 1, states: ["healthy"] },
-  { id: "season", tab: 2, states: ["healthy"] },
-  { id: "bowl-pool", tab: 3, states: ["healthy", "attention"] },
+// The wheel and every page it opens, in each state that changes them; the rest use the healthy day. The dial along the bottom is in every page shot.
+const PAGES: Array<{ id: string; path: string; ready: string; states: string[] }> = [
+  { id: "wheel", path: "/admin", ready: ".cw-hub", states: ["healthy", "attention", "quiet"] },
+  { id: "gameday", path: "/admin/gameday", ready: ".commissioner-flow", states: ["healthy", "attention", "quiet"] },
+  { id: "health", path: "/admin/health", ready: ".cw-page-head", states: ["healthy", "attention"] },
+  { id: "stats", path: "/admin/stats", ready: ".pool-stats-tiles", states: ["healthy"] },
+  { id: "odds", path: "/admin/odds", ready: ".cw-page-head", states: ["healthy"] },
+  { id: "limits", path: "/admin/limits", ready: ".cw-page-head", states: ["healthy"] },
+  { id: "season", path: "/admin/season", ready: ".cw-page-head", states: ["healthy"] },
+  { id: "bowl-pool", path: "/admin/bowl-pool", ready: ".cw-page-head", states: ["healthy", "attention"] },
 ];
 
-for (const panel of PANELS) {
-  for (const state of panel.states) {
+for (const view of PAGES) {
+  for (const state of view.states) {
     for (const theme of ["day", "night"]) {
       for (const [label, width] of Object.entries(WIDTHS)) {
-        test(`Commissioner ${panel.id} ${state} ${theme} at ${label}`, async ({ page }) => {
+        test(`Commissioner ${view.id} ${state} ${theme} at ${label}`, async ({ page }) => {
           await page.setViewportSize({ width, height: 900 });
           await signIn(page, theme);
           await serve(page, state);
-          await settle(page, ".commissioner-panel-tab");
-          await page.locator(".commissioner-panel-tab").nth(panel.tab).click();
-          for (const summary of panel.open ?? []) {
-            const target = page.locator("summary, details > summary").filter({ hasText: summary }).first();
-            if (await target.count()) await target.click();
-          }
-          if (panel.id === "today" && state === "attention") {
-            // Something needs the commissioner, so the repair and health drawers open by themselves. Their tools load at their own pace,
-            // so prove they are open, then fold them shut: the capture is the page as it first appears.
-            const drawers = page.locator(".commissioner-diagnostics > details");
-            await expect(drawers.filter({ hasText: "Fix something" })).toHaveAttribute("open", "");
-            await expect(drawers.filter({ hasText: "Health and safety" })).toHaveAttribute("open", "");
-            await page.evaluate(() => document.querySelectorAll(".commissioner-diagnostics > details").forEach((drawer) => { (drawer as HTMLDetailsElement).open = false; }));
-          }
-          await page.waitForTimeout(600);
+          await settle(page, view.ready, view.path);
+          await page.waitForTimeout(1600);   // the dial settles on its page (a 1.4 s swing)
           await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
           await settleNetwork(page);
-          await expect(page).toHaveScreenshot(`commissioner-${panel.id}-${state}-${theme}-${label}.png`, { fullPage: true });
+          await expect(page).toHaveScreenshot(`commissioner-${view.id}-${state}-${theme}-${label}.png`, { fullPage: true });
         });
       }
     }
@@ -134,14 +125,13 @@ for (const theme of ["day", "night"]) {
   }
 }
 
-// The score-polling chart (Performance tab): the first nine windows in percentages, with the emergency windows as one count.
+// The score-polling chart (Odds credits page): the first nine windows in percentages, with the emergency windows as one count.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner polling chart day at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signIn(page, "day");
     await serve(page, "healthy");
-    await settle(page, ".commissioner-panel-tab");
-    await page.locator(".commissioner-panel-tab").nth(1).click();
+    await settle(page, ".cw-page-head", "/admin/odds");
     const section = page.locator("section[aria-label='Fresh finals picked up by polling ladder']");
     await expect(section.locator("svg")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(600);
@@ -149,15 +139,14 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
-// The score-checking line on the Performance tab: Normal, and the three schedules the low-balance rule can switch to, each with its reason in plain words.
+// The score-checking line on the Odds credits page: Normal, and the three schedules the low-balance rule can switch to, each with its reason in plain words.
 for (const tier of ["normal", "lean", "minimal", "paused"] as const) {
   for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
     test(`Commissioner score checking ${tier} day at ${label}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, "day");
       await serve(page, tier === "normal" ? "healthy" : tier);
-      await settle(page, ".commissioner-panel-tab");
-      await page.locator(".commissioner-panel-tab").nth(1).click();
+      await settle(page, ".cw-page-head", "/admin/odds");
       const section = page.locator("section[aria-label='Monthly provider credit usage']");
       await expect(section.locator("svg").first()).toBeVisible({ timeout: 30_000 });
       await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
@@ -167,14 +156,13 @@ for (const tier of ["normal", "lean", "minimal", "paused"] as const) {
   }
 }
 
-// The provider cost chart (Performance tab): credits per game as 15- and 30-day moving averages.
+// The provider cost chart (Odds credits page): credits per game as 15- and 30-day moving averages.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner provider cost chart day at ${label}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signIn(page, "day");
     await serve(page, "healthy");
-    await settle(page, ".commissioner-panel-tab");
-    await page.locator(".commissioner-panel-tab").nth(1).click();
+    await settle(page, ".cw-page-head", "/admin/odds");
     const section = page.locator("section[aria-label^='Provider cost']");
     await expect(section.locator("svg")).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: ".mobile-primary-nav { visibility: hidden !important; }" });
@@ -183,17 +171,14 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
-// The watchdog panel on Today (inside the "Health and safety" drawer, which the Today shots fold shut): the warnings the automation worked around, or
-// the plain "No warnings this week". It opens by itself when something needs attention; on a quiet day the test opens it.
+// The watchdog panel on the Health page: the warnings the automation worked around, or the plain "No warnings this week".
 for (const [state, theme] of [["quiet", "day"], ["attention", "day"], ["attention", "night"]] as const) {
   for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
     test(`Commissioner watchdog warnings ${state} ${theme} at ${label}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, theme);
       await serve(page, state);
-      await settle(page, ".commissioner-panel-tab");
-      const drawer = page.locator(".commissioner-diagnostics > details").filter({ hasText: "Health and safety" });
-      if ((await drawer.getAttribute("open")) === null) await drawer.locator("summary").click();
+      await settle(page, ".cw-page-head", "/admin/health");
       const section = page.locator("section.commissioner-tool").filter({ hasText: "Action-only alerts" });
       await expect(section.getByText(state === "quiet" ? "No warnings this week" : "Recent warnings")).toBeVisible({ timeout: 30_000 });
       await page.waitForTimeout(600);
@@ -202,15 +187,13 @@ for (const [state, theme] of [["quiet", "day"], ["attention", "day"], ["attentio
   }
 }
 
-// The last-resort final entry (Today → Fix something → Game Exceptions): an NFL game still not final past the score provider's three-day window.
-// It is answered from this fixture only, so the other Today shots keep their baselines.
+// The last-resort final entry (Game day → Fix something → Game Exceptions): an NFL game still not final past the score provider's three-day window.
+// It is answered from this fixture only, so the other Game day shots keep their baselines.
 const OVERDUE_GAME = { id: "g-overdue", awayTeam: "Cleveland Browns", homeTeam: "Pittsburgh Steelers", week: "Week 4", kickoffAt: "2026-09-28T17:00:00Z" };
 
 async function openLastResortFinal(page: Page) {
   await page.route("**/api/admin/game-exceptions", (route) => route.fulfill({ json: { exceptions: [], recordableGames: [OVERDUE_GAME], manualFinalGames: [OVERDUE_GAME] } }));
-  await settle(page, ".commissioner-panel-tab");
-  const drawer = page.locator(".commissioner-diagnostics > details").filter({ hasText: "Fix something" });
-  if ((await drawer.getAttribute("open")) === null) await drawer.locator("summary").click();
+  await settle(page, ".cw-page-head", "/admin/gameday");
   const block = page.locator("#verified-final");
   await expect(block).toBeVisible({ timeout: 30_000 });
   await block.getByRole("button", { name: /Cleveland Browns at Pittsburgh Steelers/ }).click();
@@ -257,36 +240,99 @@ test("Commissioner last-resort final asks first, then sends the scores and the n
   expect(sent).toEqual({ gameId: "g-overdue", awayScore: 20, homeScore: 17, source: "NFL.com box score" });
 });
 
-// The desk has five tabs, each with one job (the fifth, Workshop, opens full screen at its own address); repair and health tools sit in drawers on Today, and the season's checks live on Season.
-test("Commissioner desk has five tabs, with repair and health in drawers on Today", async ({ page }) => {
+// The wheel has ten spokes, each opening its own page; the old tabs' tools are all still there, as plain sections (no fold-down drawers).
+test("Commissioner wheel: ten spokes, each opens its page, and the tools are in view", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await settle(page, ".commissioner-panel-tab");
-  const tabs = page.locator(".commissioner-panel-tab");
-  await expect(tabs).toHaveCount(5);
-  expect((await tabs.allInnerTexts()).map((text) => text.replace(/\d+\s*/, "").trim())).toEqual(["Today", "Performance", "Season", "Bowl Pool", "Workshop"]);
-  for (const drawer of ["Fix something", "Checks and manual runs", "Health and safety"]) await expect(page.locator("summary").filter({ hasText: drawer })).toBeVisible();
-  await tabs.nth(2).click();
-  await expect(page.locator("summary").filter({ hasText: "Season readiness checks" })).toBeVisible();
+  await settle(page, ".cw-hub");
+  const spokes = page.locator(".cw-spoke");
+  await expect(spokes).toHaveCount(10);
+  expect((await spokes.locator(".cw-name").allInnerTexts()).map((text) => text.trim())).toEqual(["Game day", "Health", "Messages", "Players", "Bowl Pool", "Season", "Pool stats", "Odds credits", "Free limits", "Workshop"]);
+  await expect(async () => {
+    await page.getByRole("button", { name: /^Game day:/ }).click();
+    await expect(page).toHaveURL(/\/admin\/gameday$/, { timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Game day" })).toBeFocused();
+  for (const title of ["Fix something", "Checks and manual runs"]) await expect(page.getByRole("heading", { level: 2, name: title })).toBeVisible();
+  await expect(page.locator(".commissioner-diagnostics")).toHaveCount(0);   // the old fold-down drawers
+  await page.goto("/admin/health");
+  await expect(page.getByRole("heading", { level: 2, name: "Alerts and sign-in" })).toBeVisible({ timeout: 30_000 });
+  await page.goto("/admin/season");
+  await expect(page.getByRole("heading", { level: 2, name: "Season readiness checks" })).toBeVisible({ timeout: 30_000 });
 });
 
+// The hub counts what needs the Commissioner and opens the list; each line goes to the page that fixes it.
+test("Commissioner wheel: Needs you lists what needs attention, with a way there", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "attention");
+  await settle(page, ".cw-hub");
+  const hub = page.locator(".cw-hub");
+  await expect(hub.locator("b")).toHaveText("2", { timeout: 30_000 });
+  await hub.click();
+  const sheet = page.getByRole("dialog", { name: "Needs you" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.locator(".cw-needs li")).toHaveCount(2);
+  await page.waitForTimeout(400);
+  await expect(page).toHaveScreenshot("commissioner-wheel-needs-you-day-phone-390.png");
+  await sheet.getByRole("link", { name: "Go" }).last().click();
+  await expect(page).toHaveURL(/\/admin\/health$/);
+});
 
-// On a phone the five tabs wrap into two even rows: none sits off screen or is clipped, at the narrowest and a usual width.
+// The dial: drag and let go opens the page in the middle; sliding up off the dial before letting go cancels; the arrow keys turn it one page;
+// the Wheel button goes home; the browser's Back button returns to the page before.
+test("Commissioner dial: drag to open, slide up to cancel, keys, Wheel and Back", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 860 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await settle(page, ".cw-page-head", "/admin/health");
+  const dial = page.locator(".cw-dial");
+  await expect(dial.locator(".cw-dk[aria-current=page]")).toHaveAttribute("aria-label", /^Health/);
+  await page.waitForTimeout(1600);
+  const box = (await dial.boundingBox())!;
+  const middle = { x: box.x + box.width / 2, y: box.y + 36 };
+  const drag = async (dx: number, dy = 0) => {
+    await page.mouse.move(middle.x, middle.y);
+    await page.mouse.down();
+    for (let step = 1; step <= 10; step += 1) await page.mouse.move(middle.x + (dx * step) / 10, middle.y + (dy * step) / 10);
+    await page.waitForTimeout(200);   // hold still, so letting go is not a flick
+    await page.mouse.up();
+  };
+  const gap = await page.evaluate(() => Math.min(64, Math.max(36, (window.innerWidth - 150) / 4)));
+  await drag(-gap, -box.height);   // slide up off the dial: nothing opens
+  await page.waitForTimeout(400);
+  await expect(page).toHaveURL(/\/admin\/health$/);
+  await drag(-gap);   // one notch to the left brings the next page, Messages, to the middle
+  await expect(page).toHaveURL(/\/admin\/reminders$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Messages" })).toBeVisible();
+  await page.locator("body").press("ArrowLeft");
+  await expect(page).toHaveURL(/\/admin\/health$/, { timeout: 30_000 });
+  await page.goBack();
+  await expect(page).toHaveURL(/\/admin\/reminders$/, { timeout: 30_000 });
+  await dial.getByRole("link", { name: "Back to the wheel" }).click();
+  await expect(page).toHaveURL(/\/admin$/, { timeout: 30_000 });
+  await expect(page.locator(".cw-dial")).toHaveCount(0);
+});
+
+// The wheel and the dial fit a small phone: nothing off screen, no sideways scrolling.
 for (const width of [360, 390]) {
-  test(`Commissioner tabs all fit on screen (${width})`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
+  test(`Commissioner wheel and dial fit on screen (${width})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
     await signIn(page, "day");
     await serve(page, "healthy");
-    await settle(page, ".commissioner-panel-tab");
-    const fit = await page.locator(".commissioner-panel-tabs").evaluate((rail) => {
-      const box = rail.getBoundingClientRect();
-      const tabs = [...rail.querySelectorAll(".commissioner-panel-tab")].map((tab) => tab.getBoundingClientRect());
-      return { sideways: rail.scrollWidth - rail.clientWidth, inside: tabs.every((tab) => tab.left >= box.left - 1 && tab.right <= box.right + 1 && tab.right <= window.innerWidth), rows: new Set(tabs.map((tab) => Math.round(tab.top))).size };
-    });
-    expect(fit.sideways).toBeLessThanOrEqual(1);
-    expect(fit.inside).toBe(true);
-    expect(fit.rows).toBe(2);
+    await settle(page, ".cw-hub");
+    const wheel = (await page.locator(".cw-wheel").boundingBox())!;
+    expect(wheel.x).toBeGreaterThanOrEqual(0);
+    expect(wheel.x + wheel.width).toBeLessThanOrEqual(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    await page.goto("/admin/gameday");
+    await expect(page.locator(".cw-dial")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(1600);
+    const label = (await page.locator(".cw-dial-label").boundingBox())!;
+    expect(label.x).toBeGreaterThanOrEqual(0);
+    expect(label.x + label.width).toBeLessThanOrEqual(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   });
 }
 
@@ -368,19 +414,14 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
-// Performance: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
-test("Performance: the dropdown shows the league or one player's own stats", async ({ page }) => {
+// Pool stats: one panel with a dropdown. The league first; choosing a player swaps every figure, including the most picked team.
+test("Pool stats: the dropdown shows the league or one player's own stats", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day");
   await serve(page, "healthy");
-  await page.goto("/admin");
-  await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
+  await page.goto("/admin/stats");
   const section = page.locator("[aria-labelledby=pool-stats-title]");
-  // A press that lands before the page is ready to answer does nothing (this test failed that way on 2026-10-30 and 2026-11-05), so press until the panel opens.
-  await expect(async () => {
-    await page.locator(".commissioner-panel-tab").nth(1).click();
-    await expect(section.getByLabel("Show")).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 30_000 });
+  await expect(section.getByLabel("Show")).toBeVisible({ timeout: 30_000 });
   await expect(section.getByLabel("Show")).toHaveValue("league", { timeout: 30_000 });
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("2,418–2,077");
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
@@ -425,21 +466,15 @@ test("Performance: the dropdown shows the league or one player's own stats", asy
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
 });
 
-// Performance: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.
+// Pool stats: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.
 for (const width of [390, 560, 768, 1280]) {
-  test(`Performance: the tables fit their cards without scrolling sideways at ${width}px`, async ({ page }) => {
+  test(`Pool stats: the tables fit their cards without scrolling sideways at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await signIn(page, "day");
     await serve(page, "healthy");
-    await page.goto("/admin");
-    await expect(page.locator(".commissioner-panel-tab").first()).toBeVisible({ timeout: 30_000 });
+    await page.goto("/admin/stats");
     const section = page.locator("[aria-labelledby=pool-stats-title]");
-    // A tab tapped before the page has finished loading its handlers does nothing, and on a busy machine that left this waiting out its whole time
-    // limit: tap again until the Performance tab answers (choosing a tab twice is harmless).
-    await expect(async () => {
-      await page.locator(".commissioner-panel-tab").nth(1).click();
-      await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 4_000 });
-    }).toPass({ timeout: 30_000 });
+    await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 30_000 });
     const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
     expect(overflowing, "no table wider than its card").toBe(0);
     // The teams and splits tables show every row: no scroll bar, at any width.

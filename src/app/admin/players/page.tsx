@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { lastSeenLabel, playerTotals, visitsLabel } from "@/lib/player-presence.js";
@@ -160,33 +159,8 @@ export default function PlayerManagementPage() {
   }
 
   return (
-    <main className="commissioner-subpage min-h-screen px-5 py-6 text-(color:--themed-text-31) md:px-10">
+    <div className="commissioner-subpage text-(color:--themed-text-31)">
       <div className="mx-auto max-w-5xl">
-        <header className="desk-rule-bottom pb-5">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <p className="text-sm font-bold tracking-[0.24em] text-slate-600">
-                COMMISSIONER
-              </p>
-
-              <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">
-                Players
-              </h1>
-
-              <p className="mt-3 text-lg text-(color:--themed-text-29)">
-                Who is in the pool, what they get, and when they were last here.
-              </p>
-            </div>
-
-            <Link
-              className="shrink-0 font-bold underline"
-              href="/admin"
-            >
-              System health
-            </Link>
-          </div>
-        </header>
-
         <div className="players-layout">
           <section className="players-add">
             <h2 className="font-serif text-3xl font-bold">
@@ -375,6 +349,6 @@ export default function PlayerManagementPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

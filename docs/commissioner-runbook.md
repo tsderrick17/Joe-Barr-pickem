@@ -47,16 +47,23 @@ This is a pilot contract for this read route, not yet a guarantee for every
 player route. Do not change player records or issue a new PIN to work around
 an outage.
 
-The desk has five tabs: **Today**, **Performance**, **Season**, **Bowl Pool**, and
-**Workshop** (which opens full screen; **Desk** at its top left comes back). Start at **Today**. The live operations map is the first place to
-check schedule, selections, line locks, scoring, recap readiness, and week/round
-handoff; select a stage for the exact hold and next safe action. Below it are the
-game pipeline, the key counts, and what is up next. The repair and health tools
-are drawers at the bottom of Today: **Game-day guide**, **Fix something**
-(postponements, no contests, last-resort finals), **Checks and manual runs**, and
-**Health and safety** (automation, alerts, sign-in, activity log, handbook). Fix
-something and Health and safety open by themselves when the map says something
-needs the commissioner. Use the specialist tools only after the map identifies a need.
+The Commissioner area opens on **the Wheel** (`/admin`): ten spokes in four groups, each a page with its own
+address. Every week: **Game day**, **Health**, **Messages** (the Email center), **Players**. The season: **Bowl Pool**,
+**Season**. The numbers: **Pool stats**, **Odds credits**, **Free limits**. And the **Workshop** (full screen; **Desk**
+at its top left comes back). Each ring's colour says how that page stands (green all good, amber look soon, red needs
+you now, grey nothing to report) and amber or red always carries a count or "!". The red hub in the middle counts what
+needs you; tap it for the list, each line with a **Go** to the page that fixes it. **Handbook** (top right, every page)
+holds the game-day guide and the Commissioner handbook.
+
+On a page, the dial along the bottom moves between pages: drag it and let go to open the page in the middle, slide up
+off it before letting go to cancel, or tap a neighbour. On a computer the arrow buttons and the keyboard's arrow keys
+turn it one page. **Wheel** (bottom left) goes home; the browser's Back button works too.
+
+Start at **Game day**. The live operations map is the first place to check schedule, selections, line locks, scoring,
+recap readiness, and week/round handoff; select a stage for the exact hold and next safe action. Below it are the game
+pipeline, the key counts, what is up next, then **Fix something** (postponements, no contests, last-resort finals) and
+**Checks and manual runs**, always in view. **Health** holds automation, the watchdog, alerts, player sign-in and the
+activity log. Use the specialist tools only after the map identifies a need.
 
 Use this page only after the [SOP index](SOP_INDEX.md) identifies an abnormal
 condition. Scheduled automation is the normal operator. Recovery controls must
@@ -129,12 +136,12 @@ watchdog's "final overdue" alert fires six hours after the expected end, long
 before this point; use this section only when the provider has stayed unavailable
 (an outage, an exhausted or lapsed plan) past the three days.
 
-1. Fix the cause first if you can (renew the plan, check **Health and safety**),
+1. Fix the cause first if you can (renew the plan, check **Health**),
    then run **Final Score Check** once. A game inside the window is still fetched
    automatically.
 2. For each game still not final more than three days after kickoff, look up the
    official final score yourself on NFL.com or ESPN.
-3. Open **Today → Fix something → Game Exceptions → Enter a verified final · last
+3. Open **Game day → Fix something → Game Exceptions → Enter a verified final · last
    resort**. Choose the game, type both scores, write where you checked them
    (for example "NFL.com box score"), and press **Save verified final**. The
    block appears only when such a game exists.
@@ -242,7 +249,7 @@ one day; investigate only missing, failed, or duplicate receipts.
 
 After the credential-hardening release, the production bulk operation completed
 successfully for all 11 player accounts. The control remains under
-**Commissioner → Today → Health and safety → Commissioner handbook** for an intentional pepper
+**Commissioner → Handbook → Commissioner handbook** for an intentional pepper
 rotation: create a stable, random `PLAYER_AUTH_PEPPER` of at least 32
 characters in every Vercel environment, then run the audited operation while a
 Commissioner session is still valid. It preserves every four-digit player PIN,
@@ -328,7 +335,7 @@ there for context when reviewing whether a retry actually recovered the system.
 
 The fixed retry ladder below is the only score-polling policy. There is no polling simulator or suggested plan, and nothing here changes the cadence.
 
-The live cadence: the first NFL score check is eligible 175 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 5 minutes, and unfinished games follow seven 5-minute windows, two 10-minute windows, three 20-minute windows, then emergency windows of 60, 120 and 240 minutes. After the last window the game is not checked automatically again: the overdue alert (6 hours after kickoff) tells you, and the sync-scores button still works. That is the Normal schedule, in force until 440 of the month's 500 credits are used. After that the worker switches to a Lean or Minimal schedule (fewer, later checks) so the rest of the month lasts, and pauses only if what is left would not cover the official lines; the Performance tab shows which schedule is in force and why, and the sync-scores button always works (2 credits a tap). Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder chart shows the percentage of newly finalized games captured by each of the 5- and 10-minute polling windows, with the later windows as one count below it; it counts only checks made on the Normal schedule (not the lighter low-credit ones), so it starts empty after a schedule change. Each game is counted once at the window that first records it as final.
+The live cadence: the first NFL score check is eligible 175 minutes after official kickoff for both regular-season and playoff games, the worker is invoked every 5 minutes, and unfinished games follow seven 5-minute windows, two 10-minute windows, three 20-minute windows, then emergency windows of 60, 120 and 240 minutes. After the last window the game is not checked automatically again: the overdue alert (6 hours after kickoff) tells you, and the sync-scores button still works. That is the Normal schedule, in force until 440 of the month's 500 credits are used. After that the worker switches to a Lean or Minimal schedule (fewer, later checks) so the rest of the month lasts, and pauses only if what is left would not cover the official lines; the Odds credits page shows which schedule is in force and why, and the sync-scores button always works (2 credits a tap). Recent score polls list eligible games, completed finals found, newly finalized games, and credits consumed. The ladder chart shows the percentage of newly finalized games captured by each of the 5- and 10-minute polling windows, with the later windows as one count below it; it counts only checks made on the Normal schedule (not the lighter low-credit ones), so it starts empty after a schedule change. Each game is counted once at the window that first records it as final.
 
 Provider cost plots credits per settled game as a 15-day and a 30-day moving
 average (one point per exact kickoff slate; each average covers the games in the

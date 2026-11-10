@@ -14,7 +14,7 @@ and use the [SOP index](SOP_INDEX.md); for guarded recovery steps, use the
    sync are healthy. The normal regular-season and playoff cadences stay fixed
    until 440 of the month's 500 provider credits are used; after that the score
    worker switches to a lighter Lean or Minimal schedule to make the rest last
-   (the Performance tab says which, and why), and it pauses automatic checks
+   (the Odds credits page says which, and why), and it pauses automatic checks
    only when what is left is needed for the official lines. Every game is still
    graded, and the "Run score check now" button always works.
    Connected Systems shows the rolling 30-day credits per

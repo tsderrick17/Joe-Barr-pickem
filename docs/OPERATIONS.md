@@ -144,7 +144,7 @@ mid-ladder when the schedule changes goes straight to the next time on the new l
 | Lean | 175, 190, 205, 220, 235, 250, 265, 325, 445, 685 | about 5.9 |
 | Minimal | 190, 210, 230, 250, 310, 430, 670 | about 4.5 |
 
-\*The forecast model's figure at a 90% first-hour share (`expectedScoreChecks`); the Performance tab prices the rest of the month with it.
+\*The forecast model's figure at a 90% first-hour share (`expectedScoreChecks`); the Odds credits page prices the rest of the month with it.
 
 Every score run, and every health check, decides the schedule afresh (`decideScoreTier`, `chooseScoreTier`): Normal under 440 used, or when
 no credit reading was taken this month (credits renew on the 1st, UTC); from 440 used, Lean if its forecast for the game days left fits in
@@ -153,7 +153,7 @@ when nothing is left after the line need. So it can step back up from Minimal to
 A game the schedule says to leave alone is not checked and spends nothing; its retry timer moves to its next time (an hour on, when paused), so
 the gate stops waking the worker for it. The Commissioner's "Run score check now" button ignores the schedule, checks every due game and
 spends 2 credits a tap. Each run records its `tier`; the "new game finals by polling rung" chart counts Normal-schedule runs only, because
-a rung is a place on a schedule's list. The Performance tab's credit panel shows the schedule in force and why. Its month-end forecast is a
+a rung is a place on a schedule's list. The Odds credits page's credit panel shows the schedule in force and why. Its month-end forecast is a
 full-operations forecast: it always prices every remaining slate on the Normal schedule and never reflects a lower one.
 
 Each successful score run records newly finalized games by ladder window. The
@@ -376,7 +376,7 @@ Commissioner Desk), and automatically resolves the
 incident after recovery. A resolved condition can alert again if it genuinely
 recurs. The two channels are independent: the alert counts as delivered when
 either gets through, and the one that failed is listed under Commissioner ->
-Health and safety -> Recent warnings (so a lapsed Brevo key or a dead phone
+Health -> Recent warnings (so a lapsed Brevo key or a dead phone
 subscription is noticed while the other channel still works). Only when both
 fail is the notification retried, no more than every 30 minutes. A Commissioner
 with no phone set up simply gets the email.
@@ -646,7 +646,7 @@ exceptions control so its picks are voided or retained according to the
 documented rules rather than graded as a loss. A postponed game is put back on
 the calendar with the same control (Reschedule, with the new kickoff): its picks
 stay, players can change them until the new kickoff, and its reminders are
-rebuilt for the new time. The Commissioner does this on the Bowl Pool tab: a postponed
+rebuilt for the new time. The Commissioner does this on the Bowl Pool page: a postponed
 game lists a date and a time (Eastern) with a Reschedule button. A game ESPN and the odds
 feed gave no line shows under "Bowl Pool lines" from the evening before its line locks (or
 once it is final); pick the favorite, type the spread with a half point (3.5, never 3), and
