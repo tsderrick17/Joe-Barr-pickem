@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { dateFormat } from "@/lib/date-format.js";
+import { ChoiceChips } from "@/components/commissioner/choice-chips";
 
 type LineGame = { id: string; bowlName: string; kickoffAt: string; lineLockAt: string; status: string; away: { id: string; name: string }; home: { id: string; name: string } };
 type Entry = { favorite: string; spread: string };
@@ -67,12 +68,7 @@ export default function BowlPoolLines() {
       <b>{game.bowlName}</b> · {game.away.name} at {game.home.name}
       <br /><span className="text-(color:--themed-text-29)">{game.status === "final" ? "Final, waiting on a line to be graded" : `Line locks ${when(game.lineLockAt)} · kickoff ${when(game.kickoffAt)}`}</span>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <select aria-label={`Favorite in ${game.bowlName}`} className="desk-button px-3 py-2" onChange={(event) => change(game, { favorite: event.target.value, ...(event.target.value === PICKEM ? { spread: "" } : {}) })} value={entryFor(game).favorite}>
-          <option value="">Favorite</option>
-          <option value={game.away.id}>{game.away.name}</option>
-          <option value={game.home.id}>{game.home.name}</option>
-          <option value={PICKEM}>No favorite (pick&apos;em)</option>
-        </select>
+        <ChoiceChips label={`Favorite in ${game.bowlName}`} onChange={(favorite) => change(game, { favorite, ...(favorite === PICKEM ? { spread: "" } : {}) })} options={[{ value: game.away.id, label: game.away.name }, { value: game.home.id, label: game.home.name }, { value: PICKEM, label: "No favorite (pick’em)" }]} value={entryFor(game).favorite} />
         <input aria-label={`Spread in ${game.bowlName}`} className="desk-input w-28 px-3 py-2" disabled={entryFor(game).favorite === PICKEM} inputMode="decimal" onChange={(event) => change(game, { spread: event.target.value })} placeholder="e.g. 3.5" value={entryFor(game).spread} />
         <button className="desk-button-solid px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={busy} onClick={() => void save(game)} type="button">Set line</button>
       </div>

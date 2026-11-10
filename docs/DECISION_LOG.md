@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - No drop-downs or folds anywhere in the Commissioner area
+
+- The owner's first complaint about the old desk was its drop-down menus and fold-down drawers. The Wheel removed the drawers and the Pool stats
+  drop-down; this finishes the job inside the tools.
+- Choosing a game (Game exceptions, Bowl Pool exceptions), a favorite (Bowl Pool lines) or an email type (email image studio) is now a row of
+  chips: tap the game itself (`ChoiceChips`). The grading period steps with arrows (`Stepper`), oldest to newest.
+- What was folded is now in view: the activity log, the emergency manual controls (with their warning), every passed preflight check, and the
+  latest five resolved incidents.
+- A behaviour test walks every Commissioner page and fails on any `select` or `details`. Nothing about what the tools do changed.
+
 ## 2026-11-10 - The numbers pages: dashboard charts
 
 - The owner, a finance professional who reads dashboards all day, spends the most time on the old Performance tab's figures and asked for the

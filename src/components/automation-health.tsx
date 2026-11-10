@@ -191,14 +191,14 @@ export default function AutomationHealth() {
           />
         </div>
 
-        <details className="mt-4 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
-          <summary className="cursor-pointer font-bold">Emergency manual controls</summary>
+        <section aria-label="Emergency manual controls" className="mt-4 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
+          <h3 className="font-bold">Emergency manual controls</h3>
           <p className="mt-2 text-sm text-(color:--themed-text-29)">These runs bypass provider cooldown timing and the low-credit schedule. Authentication, overlap leases, line locks, week pins, and atomic database checks remain enforced.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("scores")} type="button">{action === "scores" ? "Checking scores..." : "Run score check now"}</button>
             <button className="desk-button px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={action !== null || loading} onClick={() => void runEmergency("schedule")} type="button">{action === "schedule" ? "Refreshing schedule..." : "Override schedule cooldown"}</button>
           </div>
-        </details>
+        </section>
       </> : null}
     </section>
   );

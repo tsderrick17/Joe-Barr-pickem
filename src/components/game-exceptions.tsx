@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { ChoiceChips } from "@/components/commissioner/choice-chips";
 
 type GameException = {
   id: string;
@@ -196,10 +197,9 @@ export default function GameExceptions() {
         <div className="mt-5 border border-zinc-400 bg-(color:--themed-bg-26) p-4">
           <p className="text-sm font-bold uppercase tracking-wide text-(color:--themed-text-29)">Record verified disruption</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <select className="min-w-64 desk-button px-3 py-2" value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)}>
-              <option value="">Choose a scheduled or live game</option>
-              {recordableGames.map((game) => <option key={game.id} value={game.id}>{game.week} · {game.awayTeam} at {game.homeTeam}</option>)}
-            </select>
+          </div>
+          <ChoiceChips label="Game" onChange={setSelectedGameId} options={recordableGames.map((game) => ({ value: game.id, label: `${game.awayTeam} at ${game.homeTeam}`, note: game.week }))} value={selectedGameId} />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <button className="border border-(color:--themed-border-18) px-3 py-2 text-sm font-bold text-(color:--themed-text-23) disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("postponed")} type="button">Mark postponed</button>
             <button className="bg-(color:--fill-danger-solid) px-3 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("cancelled")} type="button">Mark cancelled</button>
             <button className="border border-(color:--themed-border-25) px-3 py-2 text-sm font-bold text-red-900 disabled:opacity-40" disabled={!selectedGameId || isRecording} onClick={() => void recordDisruption("no_contest")} type="button">Declare no contest</button>

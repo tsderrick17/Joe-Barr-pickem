@@ -123,7 +123,7 @@ for (const theme of ["day", "night"]) {
       await expect(page.getByRole("heading", { name: "Email image studio" })).toBeVisible({ timeout: 30_000 });
       await page.evaluate(() => document.fonts.ready);
       await page.getByRole("button", { name: "Open email image studio" }).click();
-      await page.getByLabel("Email type").selectOption("bowl_pool_open");
+      await page.getByRole("group", { name: "Email type" }).getByRole("button", { name: /Bowl Pool opening announcement/ }).click();
       await expect(page.getByText("Phone notification")).toBeVisible({ timeout: 30_000 });
       await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
       await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
@@ -269,6 +269,24 @@ test("Commissioner wheel: ten spokes, each opens its page, and the tools are in 
   await expect(page.getByRole("heading", { level: 2, name: "Alerts and sign-in" })).toBeVisible({ timeout: 30_000 });
   await page.goto("/admin/season");
   await expect(page.getByRole("heading", { level: 2, name: "Season readiness checks" })).toBeVisible({ timeout: 30_000 });
+});
+
+// No drop-down menus and no fold-down sections anywhere in the Commissioner area: every choice is made by tapping the thing itself.
+test("Commissioner pages have no drop-downs or folds", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "attention");
+  for (const path of ["/admin/gameday", "/admin/health", "/admin/reminders", "/admin/players", "/admin/bowl-pool", "/admin/season", "/admin/stats", "/admin/odds", "/admin/limits"]) {
+    await page.goto(path);
+    await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+    await settleNetwork(page);
+    await expect(page.locator("main select, main details"), path).toHaveCount(0);
+  }
+  await page.goto("/admin/reminders");
+  await page.getByRole("button", { name: "Open email image studio" }).click();
+  await expect(page.getByRole("group", { name: "Email type" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("main select, main details")).toHaveCount(0);
 });
 
 // The hub counts what needs the Commissioner and opens the list; each line goes to the page that fixes it.
