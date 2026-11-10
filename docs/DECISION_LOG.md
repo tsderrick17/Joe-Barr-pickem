@@ -25,6 +25,7 @@ and add a row above.
   the rim, clear of "The season" there.
 - The colour key under the wheel is gone: the owner found it confusing. The hub already says "All clear" or counts what needs you, and a ring
   that needs a look pulses with a count on it.
+
 ## 2026-11-10 - Pool stats: plain tables, figures inside the columns
 
 - Weekly records: each share sits inside the foot of its column. Above the column it read as the label of the coin-flip mark,
