@@ -496,7 +496,7 @@ export async function GET(request: NextRequest) {
     week: currentWeek.display_name,
     weekStatus: currentWeek.status as PeriodStatus,
     maxPicks: currentWeek.max_picks,
-    padSkin: padSkinForWeek(currentWeek, currentTime),
+    padSkin: padSkinForWeek(currentWeek),
     nextRevealAt: nextPickRevealAt(
       [...((games ?? [])).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],
       currentTime,
