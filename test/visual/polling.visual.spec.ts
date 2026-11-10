@@ -83,7 +83,7 @@ async function openGrading(page: Page, state: "healthy" | "quiet") {
   await page.clock.install({ time: new Date(ADMIN_NOW) });
   await page.goto("/admin/gameday");
   await expect.poll(() => calls.grading, { timeout: 30_000 }).toBeGreaterThan(0);
-  await expect(page.locator("option[value=p5]").first()).toBeAttached({ timeout: 30_000 });   // the dashboard has its data, so its polling timer is set
+  await expect(page.getByRole("group", { name: "Period" }).getByText(/Week 5/)).toBeVisible({ timeout: 30_000 });   // the dashboard has its data, so its polling timer is set
   return calls;
 }
 

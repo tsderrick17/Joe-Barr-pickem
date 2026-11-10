@@ -79,7 +79,7 @@ export default function AutomationPreflight() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="font-serif text-xl font-bold">{result.status === "healthy" ? "Every launch dependency is ready" : "Launch dependencies need attention"}</p><p className={`mt-1 text-sm font-semibold ${result.status === "healthy" ? "text-green-800" : "text-red-800"}`}>{result.status === "healthy" ? `${passedChecks} checks passed — no action needed.` : `${reviewChecks} item${reviewChecks === 1 ? "" : "s"} need${reviewChecks === 1 ? "s" : ""} your attention.`}</p></div>
       </div>
-      {result.status === "healthy" ? <details className="mt-4"><summary className="cursor-pointer text-sm font-bold underline underline-offset-2">See all {passedChecks} passed checks</summary>{detailGrid}</details> : detailGrid}
+      {result.status === "healthy" ? <><p className="mt-4 text-sm font-bold">All {passedChecks} checks passed</p>{detailGrid}</> : detailGrid}
       <p className="mt-4 text-xs text-(color:--themed-text-28)">Checked {new Date(result.checkedAt).toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" })}.</p>
     </div> : null}
   </section>;
