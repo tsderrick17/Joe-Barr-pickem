@@ -11,6 +11,7 @@ import SurvivorPokerChip, { TOSS_DEFAULTS } from "@/components/survivor-poker-ch
 import TrophyBanner from "@/components/trophy-banner";
 import { PUFF_AT } from "@/lib/pull-chain.js";
 import { STROKE_JITTER_DEFAULTS, strokeJitter } from "@/lib/stroke-jitter";
+import { ChoiceChips } from "@/components/commissioner/choice-chips";
 
 /**
  * The pieces on the Workshop board: the real components with sample data, and the settings each one can be tuned with. A setting changes only
@@ -306,12 +307,7 @@ export const PIECES: Piece[] = [
       </button>
     ),
     controls: ({ chip }, update) => <>
-      <label className="asset-choice">
-        <span>Team</span>
-        <select className="asset-select" onChange={(event) => { const team = event.target.value; update((current) => ({ ...current, chip: { ...current.chip, team } })); }} value={chip.team}>
-          {CHIP_TEAMS.map(([key, name]) => <option key={key} value={key}>{name}</option>)}
-        </select>
-      </label>
+      <div className="asset-choice"><span>Team</span><ChoiceChips label="Team" onChange={(team) => update((current) => ({ ...current, chip: { ...current.chip, team } }))} options={CHIP_TEAMS.map(([key, name]) => ({ value: key, label: name }))} value={chip.team} /></div>
       <Choice label="State" onChange={(state) => update((current) => ({ ...current, chip: { ...current.chip, state } }))} options={CHIP_STATES} value={chip.state} />
       <Choice label="Size" onChange={(size) => update((current) => ({ ...current, chip: { ...current.chip, size } }))} options={CHIP_SIZES} value={chip.size} />
       <Choice label="Idle spin" onChange={(spin) => update((current) => ({ ...current, chip: { ...current.chip, spinning: spin === "on" } }))} options={[["off", "Off"], ["on", "On"]] as const} value={chip.spinning ? "on" : "off"} />
@@ -364,12 +360,7 @@ export const PIECES: Piece[] = [
     // At rest it is already up, as a picked team's is; it raises when tapped (an animation running on load also drew its lettering unevenly).
     draw: ({ settings: { pennantTeam }, plays }) => <span className={`bowl-team-pick ${plays > 0 ? "is-new" : ""}`} key={`${plays}-${pennantTeam}`}><BowlMegaphone side="left" team={PENNANT_TEAMS[pennantTeam]} /></span>,
     controls: (settings, update) => <>
-      <label className="asset-choice">
-        <span>School</span>
-        <select className="asset-select" onChange={(event) => { const team = event.target.value as keyof typeof PENNANT_TEAMS; update((current) => ({ ...current, pennantTeam: team })); }} value={settings.pennantTeam}>
-          {Object.values(PENNANT_TEAMS).map((team) => <option key={team.abbreviation} value={team.abbreviation}>{team.short_name}</option>)}
-        </select>
-      </label>
+      <div className="asset-choice"><span>School</span><ChoiceChips label="School" onChange={(team) => update((current) => ({ ...current, pennantTeam: team as keyof typeof PENNANT_TEAMS }))} options={Object.values(PENNANT_TEAMS).map((team) => ({ value: team.abbreviation, label: team.short_name }))} value={settings.pennantTeam} /></div>
       {easingChoice("pennant", settings.ease, update)}
     </>,
   },

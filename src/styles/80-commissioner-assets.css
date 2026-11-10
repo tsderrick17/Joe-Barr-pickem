@@ -183,16 +183,18 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
   .football-loader-sheet, .football-loader-tilt { animation: none; }
 }
 
-/* ---- The Workshop board ----
-   Full screen, over the site's own header and banners: an endless board of tiles that moves under the finger, a few small controls pinned at the
-   edges, and a settings panel that comes in only when a piece's tune button is tapped (from the right on a computer, from the bottom on a phone). */
-html.has-workshop, html.has-workshop body { overflow: hidden; overscroll-behavior: none; }
-.workshop { background: var(--club-paper); color: var(--club-ink); inset: 0; overflow: hidden; position: fixed; z-index: 80; }
-.workshop-board { cursor: grab; height: 100%; outline: none; overflow: hidden; position: relative; touch-action: none; user-select: none; -webkit-user-select: none; width: 100%; }
-.workshop-board:active { cursor: grabbing; }
-.workshop-board:focus-visible { box-shadow: inset 0 0 0 2px var(--club-gold); }
-.workshop-world { left: 0; position: absolute; top: 0; transform-origin: 0 0; will-change: transform; }
-.workshop-tile { background: var(--club-paper-2); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--club-line); overflow: hidden; position: absolute; }
+/* ---- The Workshop showroom ----
+   Every piece once, on shelves in an ordinary scrolling page inside the Commissioner area: a row of controls at the top, then a titled shelf
+   for each part of the pool. Two columns on a phone, more on a computer; wide pieces always run the full width of their shelf. A piece's
+   settings open in the Commissioner sheet. */
+.workshop { display: grid; gap: 18px; }
+.workshop-bar { align-items: center; display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.workshop-shelf > h2 { border-bottom: 1px solid var(--club-line); font-family: var(--font-serif); font-size: 20px; font-weight: 600; margin: 0 0 10px; padding-bottom: 6px; }
+.workshop-shelf-grid { display: grid; gap: 8px; grid-auto-flow: row dense; grid-auto-rows: 160px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.workshop-tile { background: var(--club-paper-2); border-radius: 10px; box-shadow: inset 0 0 0 1px var(--club-line); overflow: hidden; position: relative; }
+.workshop-tile[data-span="2"] { grid-column: span 2; }
+.workshop-tile[data-span="full"] { grid-column: 1 / -1; }
+.workshop-tile[data-rows="2"] { grid-row: span 2; }
 .workshop-tile.is-dark { background: var(--club-forest); box-shadow: inset 0 0 0 1px var(--club-gold-dk); }
 .workshop-tile.is-selected { box-shadow: inset 0 0 0 2px var(--club-gold); }
 .workshop-stage { align-items: center; display: flex; gap: 1rem; height: 100%; justify-content: center; padding: .75rem; width: 100%; }
@@ -202,40 +204,20 @@ html.has-workshop, html.has-workshop body { overflow: hidden; overscroll-behavio
 .workshop-stage.is-playable:focus-visible { outline: 2px solid var(--club-gold); outline-offset: -4px; }
 .workshop-label { bottom: .45rem; color: var(--club-muted); font: 700 .62rem/1 Arial, Helvetica, sans-serif; left: .6rem; letter-spacing: .14em; pointer-events: none; position: absolute; text-transform: uppercase; }
 .workshop-tile.is-dark .workshop-label { color: var(--club-gold); }
-/* The tune button: small and quiet until it is wanted. */
-.workshop-tune { align-items: center; background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 50%; color: var(--club-muted); display: flex; height: 1.75rem; justify-content: center; opacity: .55; position: absolute; right: .4rem; top: .4rem; transition: opacity .15s; width: 1.75rem; }
+/* The tune button: quiet until it is wanted, but always big enough for a finger. */
+.workshop-tune { align-items: center; background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 50%; color: var(--club-muted); display: flex; height: 2rem; justify-content: center; opacity: .7; position: absolute; right: .4rem; top: .4rem; transition: opacity .15s; width: 2rem; }
+.workshop-tune::before { content: ""; inset: -6px; position: absolute; }
 .workshop-tile:hover .workshop-tune, .workshop-tune:focus-visible, .workshop-tile.is-selected .workshop-tune { color: var(--club-ink); opacity: 1; }
-/* Controls pinned at the edges of the screen. */
-.workshop-chrome { align-items: center; background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 999px; box-shadow: 0 .2rem .6rem rgba(31, 27, 22, .14); color: var(--club-ink); display: inline-flex; font: 700 .72rem/1 Arial, Helvetica, sans-serif; gap: .4rem; letter-spacing: .08em; min-height: 2.25rem; padding: 0 .9rem; text-transform: uppercase; }
-.workshop-back { left: .75rem; position: absolute; top: .75rem; }
-.workshop-title { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 999px; box-shadow: 0 .2rem .6rem rgba(31, 27, 22, .14); font: 400 1.05rem/1 var(--pool-display-font); left: 50%; margin: 0; padding: .55rem 1.1rem; pointer-events: none; position: absolute; top: .75rem; transform: translateX(-50%); }
-.workshop-menu-wrap { position: absolute; right: .75rem; top: .75rem; }
-.workshop-count { background: var(--club-forest); border-radius: 999px; color: var(--sand-93); font-size: .62rem; min-width: 1.1rem; padding: .18rem .3rem; text-align: center; }
-.workshop-menu { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 6px; box-shadow: 0 .6rem 1.6rem rgba(31, 27, 22, .22); display: grid; gap: .6rem; margin-top: .4rem; max-height: calc(100dvh - 5rem); overflow-y: auto; padding: .9rem; position: absolute; right: 0; width: min(20rem, calc(100vw - 1.5rem)); }
-.workshop-switch { align-items: center; display: flex; font-size: .85rem; gap: .55rem; }
+.workshop-count { background: var(--club-forest); border-radius: 999px; color: var(--sand-93); font-size: .62rem; margin-left: .4rem; min-width: 1.1rem; padding: .18rem .3rem; text-align: center; }
+.workshop-switch { align-items: center; display: flex; font-size: .85rem; gap: .55rem; min-height: 44px; }
 .workshop-switch input { accent-color: var(--club-forest-2); height: 1.05rem; width: 1.05rem; }
-.workshop-settings { border-top: 1px solid var(--club-line); display: grid; gap: .45rem; padding-top: .7rem; }
-.workshop-settings h2 { font: 400 1rem/1.2 var(--pool-display-font); margin: 0; }
-.workshop-settings p { color: var(--club-muted); font-size: .75rem; line-height: 1.4; margin: 0; }
-.workshop-settings pre { background: var(--club-paper-2); border-radius: 2px; box-shadow: inset 0 0 0 1px var(--club-line); font-size: .68rem; margin: 0; overflow-x: auto; padding: .6rem; white-space: pre-wrap; }
-.workshop-zoom { bottom: .9rem; display: flex; gap: .4rem; position: absolute; right: .75rem; }
-.workshop-zoom .workshop-chrome { justify-content: center; min-width: 2.25rem; padding: 0 .7rem; }
-.workshop-zoom .workshop-chrome[aria-label] { font-size: 1.05rem; }
-.workshop-hint { background: var(--club-forest); border-radius: 999px; bottom: .9rem; color: var(--sand-93); font-size: .75rem; left: .75rem; line-height: 1.3; margin: 0; max-width: calc(100vw - 13.5rem); padding: .55rem .9rem; pointer-events: none; position: absolute; }
-/* A piece's settings: a panel down the right side on a computer, a sheet from the bottom on a phone. */
-.workshop-panel { align-content: start; background: var(--club-paper); border-left: 1px solid var(--club-line); bottom: 0; box-shadow: -.4rem 0 1.4rem rgba(31, 27, 22, .16); display: grid; gap: .8rem; overflow-y: auto; padding: 1.1rem 1.1rem 1.4rem; position: absolute; right: 0; top: 0; width: 22rem; }
-.workshop-panel header { align-items: start; display: flex; gap: .75rem; justify-content: space-between; }
-.workshop-panel h2 { font: 400 1.25rem/1.2 var(--pool-display-font); margin: 0; }
+.workshop-settings { display: grid; gap: .6rem; }
+.workshop-settings p { color: var(--club-muted); font-size: .8rem; line-height: 1.4; margin: 0; }
+.workshop-settings pre { background: var(--club-paper-2); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--club-line); font-size: .7rem; margin: 0; overflow-x: auto; padding: .6rem; white-space: pre-wrap; }
+/* A piece's settings, inside the sheet. */
+.workshop-panel { display: grid; gap: .8rem; }
 .workshop-panel > p { color: var(--club-muted); font-size: .8rem; line-height: 1.45; margin: 0; }
 .workshop-panel-controls { display: grid; gap: .55rem; }
-.workshop-close { align-items: center; border: 1px solid var(--club-line); border-radius: 50%; color: var(--club-ink); display: flex; flex: none; height: 2rem; justify-content: center; width: 2rem; }
-.workshop.has-panel .workshop-zoom, .workshop.has-panel .workshop-menu-wrap { right: 23rem; }
-@media (max-width: 767px) {
-  .workshop-panel { border-left: 0; border-radius: 12px 12px 0 0; border-top: 1px solid var(--club-line); box-shadow: 0 -.4rem 1.4rem rgba(31, 27, 22, .18); left: 0; max-height: 58dvh; top: auto; width: auto; }
-  .workshop.has-panel .workshop-zoom { display: none; }
-  .workshop.has-panel .workshop-menu-wrap { right: .75rem; }
-  .workshop-title { display: none; }
-}
 /* The controls a panel holds (sliders, choices, words) and the pieces' own wrappers. */
 .asset-replay { background: transparent; border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--club-ink); font: 700 .7rem/1 Arial, sans-serif; justify-self: start; letter-spacing: .08em; padding: .45rem .8rem; text-transform: uppercase; }
 .asset-replay:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
