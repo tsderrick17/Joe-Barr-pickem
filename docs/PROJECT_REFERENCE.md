@@ -184,10 +184,12 @@ measure database requests or end-to-end route time.
   never become wins by inference.
 - A final tie for the Pick'em lead creates co-champions; the system invents no
   tiebreaker.
-- The Pick'em Pad wears a holiday skin in the pool week (Tuesday through Monday,
-  Eastern, from the week's `starts_at` and `ends_at`) that holds Halloween,
-  Thanksgiving Day, or Christmas Day: the holiday's own colours, artwork, and
-  mark for a hidden pick. Only the look changes; the rows, picks, lines, and
+- The Pick'em Pad wears a holiday skin for Halloween, Thanksgiving Day, and
+  Christmas Day: the holiday's own colours, artwork, and mark for a hidden pick.
+  A holiday from Thursday through Monday dresses the pool week it falls in
+  (Tuesday through Monday, Eastern, from the week's `starts_at` and `ends_at`).
+  A holiday on a Tuesday or Wednesday dresses the week before it, and the skin
+  then stays up through the holiday itself. Only the look changes; the rows, picks, lines, and
   results are the usual pad's. Playoff rounds never wear one. The rule is
   `src/lib/pad-skin.js`; the Standings read sends it as `padSkin`.
 - The Season Snapshot is the back of the Pick'em Pad; a round button at the pad's

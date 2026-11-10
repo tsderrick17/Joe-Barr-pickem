@@ -26,8 +26,12 @@ and add a row above.
   cornucopia, a lattice pie), Christmas (garland and a wreath, snow, gifts). New Year's was dropped.
 - Each holiday has its own full colour scheme (paper, ink, ruling, margin, win totals, lines, W and L) and its own mark for a
   hidden pick in place of the lock: a ghost, a covered dish, a wrapped gift. A skin is the same by day and by night.
-- It shows by itself in the pool week whose days (Tuesday through Monday, Eastern) include the holiday, read from the week's
-  `starts_at` and `ends_at`, which the Standings read already loads: no extra database request. Never in a playoff round.
+- It shows by itself in the pool week whose games are the holiday's weekend, read from the week's `starts_at` and `ends_at`,
+  which the Standings read already loads: no extra database request. Never in a playoff round. A holiday from Thursday through
+  Monday dresses the week it falls in (Tuesday through Monday, Eastern). The owner asked that a Tuesday holiday dress the week
+  before it, since a pool week opens on Tuesday and its games would all come after the holiday; a Wednesday holiday works the
+  same way. In both cases the skin stays up through the holiday itself (one or two days into the next week) and is gone the
+  next morning, so the pad is never plain on the day.
 - After the first look the owner asked for a richer finish: the art is shaded and detailed (a moonlit sky, a spider on its silk,
   glowing jack-o'-lanterns and a haunted house; maple and oak leaves, wheat, acorns, a woven cornucopia of produce; fir
   garland with baubles and gold beads, a wreath, a lit tree, wrapped gifts), each paper is lit from the top with a faint
