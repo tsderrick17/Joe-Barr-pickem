@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - Odds credits: one used figure everywhere
+
+- The owner saw 110 used on the tile and 113 at Today on the chart. The tile used the provider's own count; the chart added up our per-call
+  costs, some of them estimates. The provider's count is the truth when it reported this month, so the chart's running total is scaled to end
+  on it, and the forecast and month-end figure continue from it. A provider count from last month no longer stands in for this month's.
+- The total chart tops out at the free allowance (500) unless the month runs past it; a limit on the top line puts its name under the line.
+- The credits-per-game sparkline sits beside its figure, not over the tile's label.
+
 ## 2026-11-10 - The Workshop becomes a showroom
 
 - The owner found the endless board "way too much" but "on the right track". The showroom keeps every piece and every setting, and drops the

@@ -19,6 +19,21 @@ test("monthly credits include charged failures, zero days and only the current m
   assert.equal(result.reportedUsed, 12);
   assert.equal(result.remaining, 488);
   assert.equal(result.trackedCredits, 5);
+  // The provider's count wins: the running total the chart draws ends on it, and the forecast starts from it.
+  assert.equal(result.usedCredits, 12);
+  assert.equal(result.days.at(-1).usedCumulative, 12);
+  assert.ok(result.days.every((day, index) => index === 0 || day.usedCumulative >= result.days[index - 1].usedCumulative));
+  assert.equal(result.forecastTotal, 12 + result.forecastCredits);
+  assert.equal(result.calendarDays[2].forecastCumulative, 12 + result.calendarDays[2].forecast);
+});
+
+test("a provider count from last month is not this month's usage", () => {
+  const result = monthlyCreditSeries([
+    { started_at: "2026-08-31T23:00:00Z", job_type: "scores", details: { requestsLast: 2, requestsUsed: "480", requestsRemaining: "20" } },
+    { started_at: "2026-09-01T12:00:00Z", job_type: "scores", details: { requestsLast: 3 } },
+  ], new Date("2026-09-02T12:00:00Z"));
+  assert.equal(result.usedCredits, 3);
+  assert.equal(result.days.at(-1).usedCumulative, 3);
 });
 
 test("missing costs use estimates, explicit zero stays free and quota null is unknown", () => {

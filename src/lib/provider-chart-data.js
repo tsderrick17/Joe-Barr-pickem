@@ -237,7 +237,12 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     reportedThisMonth,
   };
   for (const day of allDays) day.forecast = Math.round(day.forecastScores + day.forecastLines + day.forecastOther);
-  let forecastCumulative = cumulative;
+  // The provider's own count is the truth when it reported this month; our per-day costs are partly estimates. The running total is scaled so
+  // it ends exactly on that count, and the forecast carries on from it, so every figure on the page agrees.
+  for (const day of allDays) {
+    day.usedCumulative = cumulative > 0 ? Math.round((day.cumulative * usedNow) / cumulative) : (day.date.slice(0, 10) >= todayKey ? usedNow : 0);
+  }
+  let forecastCumulative = usedNow;
   for (const day of allDays) {
     if (day.date.slice(0, 10) < todayKey) continue;
     forecastCumulative += day.forecast;
@@ -260,7 +265,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     : null;
   return {
     monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
-    forecastCredits, forecastTotal: Math.round(cumulative + forecastCredits),
+    forecastCredits, forecastTotal: Math.round(usedNow + forecastCredits), usedCredits: usedNow,
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
     forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks. This is a full-operations forecast on the Normal schedule; a low-credit schedule never changes it.`,
     forecastSettleShare: settle.share, forecastExpectedChecks: expectedChecks, tierPlan,

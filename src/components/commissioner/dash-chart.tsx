@@ -102,6 +102,8 @@ export function DashChart({
     </div>;
   })();
 
+  // A limit drawn along the top of the plot puts its name under the line (with every other limit's, so they stay in step) to keep clear of Today.
+  const refsBelow = refs.some((ref) => y(ref.y) - area.top < 16);
   const keyed = series.length > 1 || extraKey || refs.length > 0;
   return <figure className="dash-chart">
     {keyed ? <div className="dash-key" aria-hidden="true">
@@ -128,7 +130,7 @@ export function DashChart({
         </g> : null}
         {refs.map((ref) => <g key={ref.label}>
           <line className="dash-ref" x1={area.left} x2={area.left + area.width} y1={y(ref.y)} y2={y(ref.y)} />
-          <text className="dash-ref-label" x={area.left + 4} y={y(ref.y) - 5}>{ref.label}</text>
+          <text className="dash-ref-label" x={area.left + 4} y={y(ref.y) + (refsBelow ? 13 : -5)}>{ref.label}</text>
         </g>)}
         {kind === "line" ? series.map((line) => {
           const span = extent(line.values);
@@ -185,10 +187,9 @@ export function Sparkline({ values }: { values: Array<number | null> }) {
 export function Tile({ label, value, sub, children, trend }: { label: string; value: string; sub?: ReactNode; children?: ReactNode; trend?: ReactNode }) {
   return <div className="dash-tile">
     <span>{label}</span>
-    <b className={value.length > 8 ? "is-long" : ""}>{value}</b>
+    {trend ? <div className="dash-tile-row"><b className={value.length > 8 ? "is-long" : ""}>{value}</b>{trend}</div> : <b className={value.length > 8 ? "is-long" : ""}>{value}</b>}
     {sub ? <small>{sub}</small> : null}
     {children}
-    {trend}
   </div>;
 }
 

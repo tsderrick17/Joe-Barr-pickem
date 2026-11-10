@@ -7,10 +7,11 @@
 .dash-tile { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 14px; box-shadow: inset 0 1px 0 var(--dash-hi), 0 1px 2px var(--dash-shade); overflow: hidden; padding: 12px 14px; position: relative; }
 .dash-tile::after { background: var(--club-gold); bottom: 0; content: ""; left: 0; position: absolute; top: 0; width: 4px; }
 .dash-tile > span { color: var(--club-muted); display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
-.dash-tile > b { display: block; font-family: var(--font-serif); font-size: 28px; font-variant-numeric: tabular-nums lining-nums; font-weight: 600; line-height: 1.25; white-space: nowrap; }
-.dash-tile > b.is-long { font-size: 21px; line-height: 1.6; }
+.dash-tile > b, .dash-tile-row > b { display: block; font-family: var(--font-serif); font-size: 28px; font-variant-numeric: tabular-nums lining-nums; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+.dash-tile b.is-long { font-size: 21px; line-height: 1.6; }
 .dash-tile > small { color: var(--club-muted); display: block; font-size: 12px; }
-.dash-spark { position: absolute; right: 10px; top: 12px; }
+.dash-tile-row { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.dash-spark { flex: none; }
 .dash-spark path { fill: none; stroke: var(--club-muted); stroke-linejoin: round; stroke-width: 1.5; }
 .dash-spark circle { fill: var(--dash-s1); }
 .dash-arrow { border: 4px solid transparent; display: inline-block; height: 0; margin-right: 5px; vertical-align: 1px; width: 0; }
