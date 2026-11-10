@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Wheel: Season's name below, no colour key
+
+- Season's name sat above its medallion, the only one that did; it is below now like the rest. Season sits a little further in so its name stays inside
+  the rim, clear of "The season" there.
+- The colour key under the wheel is gone: the owner found it confusing. The hub already says "All clear" or counts what needs you, and a ring
+  that needs a look pulses with a count on it.
+
 ## 2026-11-10 - Odds credits: one used figure everywhere
 
 - The owner saw 110 used on the tile and 113 at Today on the chart. The tile used the provider's own count; the chart added up our per-call
