@@ -563,7 +563,7 @@ html[data-theme="night"] {
 
 
 /* The Pick'em Pad's holiday skins (15-pad-skins.css): each holiday's own paper, ink, ruling, and marks, and a faint
-   texture over the paper (stars on Halloween night, a warm, flecked parchment on Thanksgiving, falling snow at Christmas). A skin looks
+   texture over the paper (stars on Halloween night, a walnut harvest table on Thanksgiving, falling snow at Christmas). A skin looks
    the same by day and by night: it is its own coloured sheet either way. */
 .pad-skin--halloween {
   --skin-texture: radial-gradient(circle at 30% 40%, rgb(255 255 255 / .22) 0 .6px, transparent 1.2px) 0 0 / 37px 29px,
@@ -583,21 +583,21 @@ html[data-theme="night"] {
   --skin-ground: #2c2040;
 }
 .pad-skin--thanksgiving {
-  --skin-texture: radial-gradient(circle, rgb(140 90 30 / .09) 0 .7px, transparent 1.2px) 0 0 / 13px 17px,
-    radial-gradient(ellipse at 50% 30%, transparent 55%, rgb(150 95 35 / .12));
-  --skin-paper-top: #fdf3dc;
-  --skin-frame: #d8b97f;
-  --skin-paper: #f6e6c4;
-  --skin-ink: #4a2410;
-  --skin-rule: #d8b97f;
-  --skin-margin: #8f1d2c;
-  --skin-number: #b4571a;
-  --skin-spread: #8a5a00;
-  --skin-win: #3f6b12;
-  --skin-loss: #a11d2e;
-  --skin-out-paper: #ecd6a8;
-  --skin-out-ink: #8a6a4a;
-  --skin-ground: #e3c58e;
+  --skin-texture: repeating-linear-gradient(90deg, rgb(255 210 150 / .025) 0 1px, transparent 1px 9px, rgb(0 0 0 / .05) 9px 11px, transparent 11px 23px),
+    radial-gradient(ellipse at 50% 25%, transparent 50%, rgb(0 0 0 / .22));
+  --skin-paper-top: #5a3418;
+  --skin-frame: #c9973f;
+  --skin-paper: #2f1a0e;
+  --skin-ink: #fbeed3;
+  --skin-rule: #5c3d22;
+  --skin-margin: #e0702c;
+  --skin-number: #f5a540;
+  --skin-spread: #e8c26a;
+  --skin-win: #b2dc7a;
+  --skin-loss: #ff8f70;
+  --skin-out-paper: #3d2414;
+  --skin-out-ink: #a68e72;
+  --skin-ground: #4a2c16;
 }
 .pad-skin--christmas {
   --skin-texture: radial-gradient(circle, rgb(255 255 255 / .13) 0 1px, transparent 1.6px) 0 0 / 23px 23px,

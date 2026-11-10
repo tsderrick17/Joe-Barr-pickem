@@ -31,7 +31,10 @@ and add a row above.
 - After the first look the owner asked for a richer finish: the art is shaded and detailed (a moonlit sky, a spider on its silk,
   glowing jack-o'-lanterns and a haunted house; maple and oak leaves, wheat, acorns, a woven cornucopia of produce; fir
   garland with baubles and gold beads, a wreath, a lit tree, wrapped gifts), each paper is lit from the top with a faint
-  texture (stars, a flecked parchment, falling snow), and a thin frame runs inside the paper's edge.
+  texture (stars, a walnut grain, falling snow), and a thin frame runs inside the paper's edge.
+- Thanksgiving then got its own bigger pass (the owner found it plainer than the others): a dark walnut harvest table in place of
+  the light parchment, a garland of hanging maple and oak leaves on twine with acorns, falling leaves, and a table scene under the
+  rows: a pumpkin pie with whipped cream, a turkey with a fanned tail, and the cornucopia.
 
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 
