@@ -1,0 +1,195 @@
+/* The Commissioner Wheel: a brass-and-felt wheel for the home, a curved dial along the bottom of every page, and plain cream pages between.
+   The wheel and the dial are dark green in day and night alike; the pages use the --club-* tokens, which carry their own night values.
+   Status colours are fixed and always come with a mark or words, never colour alone. */
+.cw-shell {
+  --cw-ease: cubic-bezier(.45, 0, .2, 1);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .26 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), var(--club-page);
+  color: var(--club-ink);
+  min-height: 100vh;
+}
+.cw-shell button { touch-action: manipulation; }
+.cw-shell :focus-visible { outline: 3px solid var(--cw-gold); outline-offset: 2px; }
+
+/* The bar */
+.cw-top { background: var(--cw-green); border-bottom: 3px solid var(--cw-gold); box-shadow: 0 2px 0 rgba(0, 0, 0, .18); color: var(--cw-cream); }
+.cw-top-in { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin: 0 auto; max-width: 980px; padding: 12px 16px; }
+.cw-top small { color: var(--cw-gold); display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+.cw-top b { font-family: var(--font-serif); font-size: 20px; font-weight: 600; }
+.cw-handbook { align-items: center; border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; color: var(--cw-gold-lt); cursor: pointer; display: flex; font-size: 13px; font-weight: 600; gap: 6px; min-height: 44px; padding: 0 14px; position: relative; transition: scale .12s ease-out; }
+.cw-handbook svg { height: 16px; width: 16px; }
+.cw-handbook:active { scale: .95; }
+.cw-main { margin: 0 auto; max-width: 980px; padding: 16px 16px 40px; }
+.cw-shell.has-dial .cw-main { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+
+/* Medallions: brass coins with an engraved ring, a status ring outside, and a mark when something needs looking at */
+.cw-med {
+  background: radial-gradient(circle at 35% 30%, var(--cw-brass-1) 0%, var(--cw-brass-2) 55%, var(--cw-brass-3) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--cw-gold), 0 0 0 5px var(--cw-deep), 0 6px 14px rgba(0, 0, 0, .35);
+  color: var(--cw-green);
+  display: grid;
+  inset: 0;
+  place-items: center;
+  position: absolute;
+  transition: transform .2s;
+}
+.cw-med::after { border: 1px solid rgba(122, 91, 43, .32); border-radius: 50%; content: ""; inset: 9%; pointer-events: none; position: absolute; }
+.cw-icon { height: 48%; width: 48%; }
+.cw-halo { border: 3px solid var(--cw-c); border-radius: 50%; inset: -9%; opacity: .95; position: absolute; }
+.is-ok { --cw-c: var(--cw-ok); }
+.is-warn { --cw-c: var(--cw-warn); }
+.is-bad { --cw-c: var(--cw-bad); }
+.is-idle { --cw-c: var(--cw-idle); }
+.cw-halo.is-warn, .cw-halo.is-bad { animation: cw-pulse 3s ease-in-out infinite; box-shadow: 0 0 12px var(--cw-c); }
+@keyframes cw-pulse { 0%, 100% { opacity: .95; transform: scale(1); } 50% { opacity: .55; transform: scale(1.05); } }
+.cw-pip { align-items: center; background: var(--cw-c); border: 2px solid var(--cw-deep); border-radius: 999px; color: var(--cw-pip-ink); display: grid; font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 800; height: 26%; min-width: 26%; padding: 0 6%; place-items: center; position: absolute; right: -8%; top: -8%; }
+.cw-pip.is-bad { color: var(--cw-cream); }
+
+/* The wheel */
+.cw-home { align-items: center; display: flex; flex-direction: column; }
+.cw-greet { margin: 6px 0 2px; text-align: center; }
+.cw-greet h1 { font-family: var(--font-serif); font-size: 26px; font-weight: 600; margin: 0; text-wrap: balance; }
+.cw-greet p { color: var(--club-muted); font-size: 14px; margin: 2px 0 0; }
+.cw-wheel { aspect-ratio: 1; margin-top: 6px; min-width: 280px; position: relative; user-select: none; -webkit-touch-callout: none; width: min(94vw, 520px, calc(100dvh - 150px)); }
+@media (max-width: 520px) { .cw-wheel { width: min(100%, calc(100dvh - 150px)); } }
+.cw-face { height: 100%; inset: 0; overflow: visible; position: absolute; width: 100%; }
+.cw-spoke { animation: cw-pop .6s ease-out both; aspect-ratio: 1; cursor: pointer; display: block; position: absolute; transform: translate(-50%, -50%); transition: opacity .3s; width: 13.5%; }
+.cw-spoke .cw-med { font-size: 0; }
+@keyframes cw-pop { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
+@media (hover: hover) { .cw-spoke:hover .cw-med { transform: scale(1.08); } }
+.cw-spoke:focus-visible { outline: none; }
+.cw-spoke:focus-visible .cw-med { box-shadow: 0 0 0 3px var(--cw-gold), 0 0 0 5px var(--cw-deep), 0 0 0 9px var(--cw-gold-lt); }
+.cw-wheel.is-choosing .cw-spoke:not(.is-chosen) { opacity: .35; }
+.cw-wheel.is-choosing .cw-hub { opacity: .6; transition: opacity .3s; }
+.cw-spoke.is-chosen .cw-med { animation: cw-press .36s cubic-bezier(.3, 1.6, .5, 1) both; box-shadow: 0 0 0 3px var(--cw-gold-lt), 0 0 0 5px var(--cw-deep), 0 0 26px rgba(230, 207, 152, .75); }
+.cw-spoke.is-chosen .cw-halo { animation: none; box-shadow: 0 0 18px var(--cw-c); transform: scale(1.08); }
+@keyframes cw-press { 0% { transform: scale(1); } 28% { transform: scale(.86); } 100% { transform: scale(1.12); } }
+.cw-ripple { animation: cw-ripple .75s ease-out forwards; border: 3px solid var(--cw-gold-lt); border-radius: 50%; inset: 0; pointer-events: none; position: absolute; }
+.cw-ripple.is-late { animation-delay: .12s; }
+@keyframes cw-ripple { from { opacity: .95; transform: scale(1); } to { opacity: 0; transform: scale(2.3); } }
+.cw-name { background: rgba(11, 31, 24, .82); border: 1px solid rgba(201, 164, 95, .35); border-radius: 8px; color: var(--cw-cream); font-size: clamp(10px, 2.7vw, 12.5px); font-weight: 700; left: 50%; line-height: 1.25; padding: 2px 7px; position: absolute; top: 108%; transform: translateX(-50%); white-space: nowrap; }
+.cw-name.is-above { bottom: 108%; top: auto; }
+/* An invisible pad makes every spoke at least 44px to the finger without looking bigger. */
+.cw-spoke::before { border-radius: 50%; content: ""; inset: -14%; position: absolute; }
+.cw-hub {
+  aspect-ratio: 1;
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px), radial-gradient(circle at 40% 32%, var(--cw-felt-hi), var(--cw-felt) 55%, var(--cw-felt-lo));
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .25), inset 0 0 22px rgba(0, 0, 0, .45), 0 0 0 4px var(--cw-gold), 0 0 0 7px var(--cw-deep), 0 0 0 9px rgba(201, 164, 95, .5), 0 10px 24px rgba(0, 0, 0, .4);
+  color: var(--cw-cream);
+  cursor: pointer;
+  display: grid;
+  left: 50%;
+  place-items: center;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: scale .12s ease-out;
+  width: 30%;
+}
+.cw-hub:active { scale: .97; }
+.cw-hub b { color: var(--cw-gold-lt); display: block; font-family: var(--font-serif); font-size: clamp(34px, 10vw, 54px); font-variant-numeric: lining-nums; line-height: 1; text-shadow: 0 0 16px rgba(240, 200, 120, .5); }
+.cw-hub.is-clear b { color: var(--cw-ok); text-shadow: 0 0 18px rgba(63, 178, 122, .45); }
+.cw-hub-word { display: block; font-size: clamp(10px, 2.6vw, 12px); letter-spacing: .14em; text-transform: uppercase; }
+.cw-hub small { display: block; font-size: clamp(10px, 2.4vw, 11px); margin-top: 3px; opacity: .7; }
+.cw-legend { color: var(--club-muted); display: flex; flex-wrap: wrap; font-size: 12px; gap: 6px 14px; justify-content: center; list-style: none; margin: 10px 0 0; padding: 0; }
+.cw-legend li { align-items: center; display: flex; gap: 6px; }
+.cw-legend i { background: var(--cw-c); border-radius: 50%; display: inline-block; height: 10px; width: 10px; }
+
+/* Sheets: the browser's own dialog, rising from the bottom on a phone and centred on a computer, with a felt top edge */
+.cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); padding: 0; width: 100%; }
+.cw-sheet::backdrop { background: rgba(8, 16, 12, .55); }
+.cw-sheet[open] { animation: cw-up .3s ease-out; }
+@keyframes cw-up { from { opacity: 0; transform: translateY(40px); } }
+.cw-sheet-body { background: var(--club-paper); border-radius: 18px 18px 0 0; border-top: 5px solid var(--cw-felt); max-height: 88dvh; overflow: auto; overscroll-behavior: contain; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; }
+@media (min-width: 700px) { .cw-sheet { margin: auto; max-width: 640px; } .cw-sheet-body { border-radius: 16px; } }
+.cw-sheet h2 { font-family: var(--font-serif); font-size: 21px; font-weight: 600; margin: 0 0 12px; }
+.cw-grab { background: var(--club-line); border-radius: 3px; height: 5px; margin: 0 auto 10px; width: 42px; }
+.cw-close { border-radius: 50%; color: var(--club-muted); cursor: pointer; display: grid; height: 44px; place-items: center; position: absolute; right: 10px; top: 10px; width: 44px; }
+.cw-close svg { height: 20px; width: 20px; }
+.cw-needs { list-style: none; margin: 0; padding: 0; }
+.cw-needs li { align-items: center; background: var(--club-page); border: 1px solid var(--club-line); border-radius: 12px; display: flex; gap: 12px; margin-bottom: 8px; padding: 12px; }
+.cw-dot { background: var(--cw-c); border-radius: 50%; box-shadow: 0 0 8px var(--cw-c); flex: none; height: 12px; width: 12px; }
+.cw-needs-words { flex: 1; min-width: 0; }
+.cw-needs-words b { display: block; }
+.cw-needs-words small { color: var(--club-muted); display: block; font-size: 12px; }
+.cw-go { background: var(--cw-green); border-radius: 10px; color: var(--cw-cream); font-size: 14px; font-weight: 700; min-height: 44px; display: grid; padding: 0 16px; place-items: center; white-space: nowrap; }
+.cw-clear { color: var(--club-muted); margin: 0 0 6px; }
+.cw-handbook-body > * + * { margin-top: 16px; }
+
+/* Page title */
+.cw-page-head { align-items: center; display: flex; gap: 14px; margin: 6px 0 18px; }
+.cw-badge { flex: none; height: 60px; position: relative; width: 60px; }
+.cw-page-head h1 { font-family: var(--font-serif); font-size: 28px; font-weight: 600; margin: 0; }
+.cw-page-head h1::after { background: var(--cw-felt); border-radius: 2px; content: ""; display: block; height: 3px; margin-top: 5px; width: 46px; }
+.cw-page-head h1:focus { outline: none; }
+.cw-page-head p { color: var(--club-muted); margin: 2px 0 0; }
+@media (max-width: 520px) { .cw-page-head h1 { font-size: 24px; } }
+.cw-main > * + * { margin-top: 16px; }
+.cw-section { border-top: 1px solid var(--club-line); padding-top: 18px; }
+.cw-section > h2 { font-family: var(--font-serif); font-size: 22px; font-weight: 600; margin: 0; }
+.cw-section-line { color: var(--club-muted); font-size: 14px; margin: 2px 0 12px; }
+.cw-section > * + * { margin-top: 12px; }
+.cw-section > .cw-section-line { margin-top: 2px; }
+
+/* The dial */
+.cw-dial {
+  background: linear-gradient(to top, var(--cw-deep) 0%, var(--cw-green) 70%, rgba(22, 58, 46, 0) 100%);
+  bottom: 0;
+  height: calc(94px + env(safe-area-inset-bottom));
+  left: 0;
+  overflow: hidden;
+  position: fixed;
+  right: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  z-index: 40;
+}
+.cw-dial-track { inset: 0; position: absolute; transition: opacity .2s, filter .2s; }
+.cw-socket {
+  background: repeating-radial-gradient(circle, rgba(255, 255, 255, .03) 0 1px, transparent 1px 3px), radial-gradient(circle at 45% 35%, var(--cw-felt-hi), var(--cw-felt) 60%, var(--cw-felt-lo));
+  border-radius: 50%;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, .5), 0 0 0 2px var(--cw-gold), 0 0 0 4px var(--cw-deep);
+  height: 58px;
+  left: 50%;
+  margin-left: -29px;
+  pointer-events: none;
+  position: absolute;
+  top: 7px;
+  width: 58px;
+}
+.cw-dial.is-dragging .cw-socket { box-shadow: inset 0 0 14px rgba(0, 0, 0, .5), 0 0 0 2px var(--cw-gold-lt), 0 0 0 4px var(--cw-deep), 0 0 24px rgba(163, 38, 58, .8); }
+.cw-dial.is-cancel .cw-dial-track { filter: grayscale(.7); opacity: .35; }
+.cw-dial.is-cancel .cw-socket { opacity: .4; }
+.cw-rail { border: 2px solid rgba(201, 164, 95, .75); border-radius: 50%; height: 760px; left: 50%; margin-left: -380px; pointer-events: none; position: absolute; top: 36px; width: 760px; }
+.cw-rail.is-ticks { background: repeating-conic-gradient(rgba(230, 207, 152, .55) 0 .35deg, transparent .35deg 2.5deg); border: 0; mask: radial-gradient(circle, transparent calc(50% - 12px), #000 calc(50% - 11px), #000 calc(50% - 4px), transparent calc(50% - 3px)); }
+.cw-dk { cursor: grab; height: 42px; left: 50%; margin-left: -21px; position: absolute; top: 15px; width: 42px; will-change: transform; }
+.cw-dk::before { border-radius: 50%; content: ""; inset: -4px; position: absolute; }
+.cw-dial.is-dragging .cw-dk { cursor: grabbing; }
+.cw-dk .cw-med { box-shadow: 0 0 0 2px var(--cw-gold), 0 0 0 4px var(--cw-deep), 0 4px 10px rgba(0, 0, 0, .4); }
+.cw-dk .cw-halo { border-width: 2px; inset: -12%; }
+.cw-dk .cw-pip { font-size: 10px; height: 34%; min-width: 34%; right: -10%; top: -10%; }
+.cw-dk.is-centre .cw-med { box-shadow: 0 0 0 3px var(--cw-gold-lt), 0 0 0 5px var(--cw-deep), 0 0 22px rgba(230, 207, 152, .55); }
+.cw-dk:focus-visible { outline: none; }
+.cw-dk:focus-visible .cw-med { box-shadow: 0 0 0 3px var(--cw-gold-lt), 0 0 0 5px var(--cw-deep), 0 0 0 8px var(--cw-cream); }
+.cw-dial-label { bottom: calc(4px + env(safe-area-inset-bottom)); color: var(--cw-cream); font-size: 13px; font-weight: 700; left: 50%; letter-spacing: .04em; position: absolute; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.cw-dial-label small { color: var(--cw-gold-lt); font-size: 11.5px; font-weight: 500; margin-left: 7px; opacity: .85; }
+.cw-dial-home { background: var(--cw-deep); border-radius: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); box-shadow: 0 0 0 2px var(--cw-gold); color: var(--cw-gold-lt); display: grid; height: 36px; left: 12px; place-items: center; position: absolute; width: 36px; }
+.cw-dial-home svg { height: 22px; width: 22px; }
+.cw-dial-home small { font-size: 10px; margin-top: 2px; position: absolute; top: 100%; }
+.cw-dial-home::before, .cw-dial-arrow::before { content: ""; inset: -6px; position: absolute; }
+.cw-dial-arrow { border: 1px solid rgba(201, 164, 95, .5); border-radius: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); color: var(--cw-gold-lt); display: none; height: 32px; place-items: center; position: absolute; width: 32px; }
+.cw-dial-arrow svg { height: 20px; width: 20px; }
+.cw-dial-arrow.is-left { right: 62px; }
+.cw-dial-arrow.is-right { right: 16px; }
+@media (min-width: 700px) { .cw-dial-arrow { display: grid; } }
+.cw-dial-home:active, .cw-dial-arrow:active { scale: .95; }
+
+/* People who turn motion off get none */
+@media (prefers-reduced-motion: reduce) {
+  .cw-spoke, .cw-halo.is-warn, .cw-halo.is-bad, .cw-spoke.is-chosen .cw-med, .cw-sheet[open], .cw-med, .cw-handbook, .cw-hub, .cw-dial-track { animation: none; transition: none; }
+  .cw-ripple { display: none; }
+}

@@ -192,14 +192,17 @@ test("the menu shows names and switches night; Desk goes back to the Commissione
   await expect(page.locator(".workshop")).toHaveCount(0);
 });
 
-test("the Commissioner desk's Workshop tab opens the board full screen", async ({ page }) => {
+test("the wheel's Workshop spoke opens the board full screen", async ({ page }) => {
   await page.setViewportSize(SIZES["desktop-1280"]);
   await signIn(page, "day");
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.goto("/admin");
-  await page.locator(".commissioner-panel-tab", { hasText: "Workshop" }).click();
+  await expect(async () => {
+    await page.getByRole("button", { name: /^Workshop:/ }).click();
+    await expect(page).toHaveURL(/\/admin\/workshop$/, { timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
   await expect(page).toHaveURL(/\/admin\/workshop$/);
   await expect(page.locator(".workshop-tile").first()).toBeVisible({ timeout: 30_000 });
 });

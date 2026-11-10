@@ -19,6 +19,23 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-09 - The Commissioner Wheel replaces the desk's tabs and drawers
+
+- The owner disliked the desk's fold-down drawers and drop-down pickers and asked for a control panel of clickable icons in a layout of its own,
+  keeping every tool. After a prototype went through five rounds with the owner (`commissioner-wheel-prototype.html`, kept outside the repo),
+  the owner approved the Wheel.
+- `/admin` is now the Wheel: ten spokes in four groups, each its own page with its own address, so Back, bookmarks and the watchdog's links work.
+  The old Performance tab is three pages (Pool stats, Odds credits, Free limits): the owner reads them most and wanted each to stand alone.
+- The wheel never turns: the owner found turning "spastic". A tapped spoke presses in, springs back with a ripple, the others dim, and the page
+  opens 340 ms later. Reduced-motion settings turn the motion off.
+- Moving between pages is the bottom dial: drag and let go, slide up off it to cancel (the owner's ask), tap a neighbour, or the arrow keys.
+  It swings past and rocks back when it settles (the owner's "slight to and fro"). A thin red felt ring marks the middle; red felt is kept to a
+  few places (hub, dial ring, page-title underline, sheet edge), as the owner asked.
+- Status is never colour alone: amber and red carry a count or "!", and every spoke's accessible name says its state in words.
+- One read of the operations map serves the whole area. Nothing about pool rules, automation, or any write path changed; each tool is the
+  same component on its new page. The Handbook (game-day guide and Commissioner handbook) moved to a sheet on every page.
+- Still to come, in order: the numbers pages' new charts (W2), no drop-downs or folds inside the tools (W3), the Workshop showroom (W4).
+
 ## 2026-11-09 - All-Time Table: a "—" sorts last in every column
 
 - The Other Stats sort on the half-point hit rate treated "—" (no game decided by a half point) as .000, so a player 0-1 and a player with no

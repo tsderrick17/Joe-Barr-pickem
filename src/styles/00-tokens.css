@@ -152,6 +152,23 @@
   --club-ok: #2f6b57;
   --club-warn: #a8620f;
   --club-alert: #a33c29;
+  /* The Commissioner Wheel: brass, felt and fixed status lamps. The wheel and dial are dark in day and night alike, so these have no night values. */
+  --cw-ok: #3fb27a;
+  --cw-warn: #f0b429;
+  --cw-bad: #e0523f;
+  --cw-idle: #a49c88;
+  --cw-green: #163a2e;
+  --cw-deep: #0d241c;
+  --cw-gold: #c9a45f;
+  --cw-gold-lt: #e6cf98;
+  --cw-cream: #f4efe3;
+  --cw-felt: #7a1424;
+  --cw-felt-hi: #a3263a;
+  --cw-felt-lo: #3e0810;
+  --cw-brass-1: #fffdf7;
+  --cw-brass-2: #f3ead6;
+  --cw-brass-3: #dcc79a;
+  --cw-pip-ink: #2a1f00;
   --themed-shadow-1: inset 0 0 0 1px rgba(15, 118, 110, .08);
   --themed-shadow-2: 0 1px 2px rgba(95, 20, 61, 0.12);
   --themed-shadow-3: 0 4px 14px rgba(44, 36, 24, .14);
