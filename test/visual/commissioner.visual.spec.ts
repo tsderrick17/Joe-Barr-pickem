@@ -65,8 +65,8 @@ for (const view of PAGES) {
           await signIn(page, theme);
           await serve(page, state);
           await settle(page, view.ready, view.path);
-          // Game day's tool sections load at their own pace and have shots of their own (last-resort final, watchdog); the page shot is the map and games.
-          if (view.id === "gameday") await page.addStyleTag({ content: ".cw-section { display: none !important; }" });
+          // Game day's tool sections and Season's readiness checks load at their own pace, so the page shot leaves them out (Game day's tools have shots of their own).
+          if (view.id === "gameday" || view.id === "season") await page.addStyleTag({ content: ".cw-section { display: none !important; }" });
           await page.waitForTimeout(600);
           await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
