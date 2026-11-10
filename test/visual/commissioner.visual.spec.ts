@@ -23,6 +23,8 @@ async function serve(page: Page, state: string) {
   });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(NOW) });
+  // Motion off, as a person who turns it off would see it: the dial sits on its page at once instead of swinging, so every shot is the same.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   // The dial's "drag to turn" hint shows on the first three visits and fades after four seconds; screenshots are taken as on a later visit.
   await page.addInitScript(() => window.localStorage.setItem("commissioner-dial-hint", "3"));
 }
@@ -63,7 +65,9 @@ for (const view of PAGES) {
           await signIn(page, theme);
           await serve(page, state);
           await settle(page, view.ready, view.path);
-          await page.waitForTimeout(1600);   // the dial settles on its page (a 1.4 s swing)
+          // Game day's tool sections load at their own pace and have shots of their own (last-resort final, watchdog); the page shot is the map and games.
+          if (view.id === "gameday") await page.addStyleTag({ content: ".cw-section { display: none !important; }" });
+          await page.waitForTimeout(600);
           await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
           await page.waitForFunction(() => [...document.images].every((image) => image.complete));
           await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
