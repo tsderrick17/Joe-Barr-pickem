@@ -21,8 +21,8 @@ and add a row above.
 
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 
-- Season's name sat above its medallion, the only one that did; it is below now like the rest, and the rim's "The season" moved along to sit
-  under Bowl Pool, out of its way.
+- Season's name sat above its medallion, the only one that did; it is below now like the rest. Season sits a little further in so its name stays inside
+  the rim, clear of "The season" there.
 - The colour key under the wheel is gone: the owner found it confusing. The hub already says "All clear" or counts what needs you, and a ring
   that needs a look pulses with a count on it.
 
