@@ -46,10 +46,14 @@ function WheelFace() {
       const members = SPOKES.map((spoke, index) => spoke.group === groupIndex ? index : -1).filter((index) => index >= 0);
       const from = angle(members[0]) - STEP / 2 + 1.5, to = angle(members[members.length - 1]) + STEP / 2 - 1.5;
       const middle = (from + to) / 2, lower = Math.sin(middle * Math.PI / 180) > 0.2;
+      // A group across the bottom of the wheel puts its name on the larger side of the bottom spoke, clear of that spoke's label below it.
+      const across = from < 90 && to > 90, clear = 20;
+      const centre = across ? (90 - from >= to - 90 ? (from + 90 - clear) / 2 : (90 + clear + to) / 2) : middle;
+      const offset = round(((lower ? to - centre : centre - from) / (to - from)) * 100);
       return <g key={group.label}>
         <path d={band(from, to, 96, 170)} fill={group.color} opacity=".6" />
         <path d={arc(from, to, lower ? 193 : 187, lower)} fill="none" id={`cw-group-${groupIndex}`} />
-        <text fill="#163a2e" fontSize="10" fontWeight="800" letterSpacing="3"><textPath href={`#cw-group-${groupIndex}`} startOffset="50%" textAnchor="middle">{group.label}</textPath></text>
+        <text fill="#163a2e" fontSize="10" fontWeight="800" letterSpacing="3"><textPath href={`#cw-group-${groupIndex}`} startOffset={`${offset}%`} textAnchor="middle">{group.label}</textPath></text>
       </g>;
     })}
     <circle cx="200" cy="200" fill="url(#cw-sheen)" r="181" />
@@ -89,7 +93,6 @@ export default function CommissionerWheel() {
       {SPOKES.map((spoke, index) => {
         const [x, y] = point(angle(index), SPOKE_RADIUS);
         const status = spokes[spoke.key] as { state: SpokeState; count: number; line?: string };
-        const lowest = Math.sin(angle(index) * Math.PI / 180) > 0.9;
         return <button
           aria-label={`${spoke.name}: ${status.line ?? spoke.line}. ${STATE_WORDS[status.state]}.`}
           className={`cw-spoke is-${status.state} ${chosen === spoke.key ? "is-chosen" : ""}`}
@@ -100,7 +103,7 @@ export default function CommissionerWheel() {
         >
           <Medallion count={status.count} icon={spoke.icon} state={status.state} />
           {chosen === spoke.key ? <><span aria-hidden="true" className="cw-ripple" /><span aria-hidden="true" className="cw-ripple is-late" /></> : null}
-          <span aria-hidden="true" className={`cw-name ${lowest ? "is-above" : ""}`}>{spoke.name}</span>
+          <span aria-hidden="true" className="cw-name">{spoke.name}</span>
           <HapticTap />
         </button>;
       })}
@@ -118,12 +121,6 @@ export default function CommissionerWheel() {
         <HapticTap />
       </button>
     </div>
-    <ul className="cw-legend" aria-label="What the ring colours mean">
-      <li><i className="is-ok" />All good</li>
-      <li><i className="is-warn" />Look soon</li>
-      <li><i className="is-bad" />Needs you now</li>
-      <li><i className="is-idle" />Nothing to report</li>
-    </ul>
     <Sheet onClose={() => setNeedsOpen(false)} open={needsOpen} title="Needs you">
       {needs.length ? <ul className="cw-needs">
         {needs.map((item) => <li className={`is-${item.state}`} key={item.title}>
