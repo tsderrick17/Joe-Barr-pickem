@@ -122,7 +122,8 @@ for (const theme of ["day", "night"]) {
       await page.getByLabel("Email type").selectOption("bowl_pool_open");
       await expect(page.getByText("Phone notification")).toBeVisible({ timeout: 30_000 });
       await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
-      await page.waitForTimeout(600);
+      await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+      await page.waitForTimeout(1600);   // the dial settles (a 1.4 s swing)
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       await expect(page).toHaveScreenshot(`commissioner-reminders-bowl-message-${theme}-${label}.png`, { fullPage: true });
     });
