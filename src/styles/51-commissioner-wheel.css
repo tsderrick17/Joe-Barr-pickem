@@ -193,3 +193,15 @@
   .cw-spoke, .cw-halo.is-warn, .cw-halo.is-bad, .cw-spoke.is-chosen .cw-med, .cw-sheet[open], .cw-med, .cw-handbook, .cw-hub, .cw-dial-track { animation: none; transition: none; }
   .cw-ripple { display: none; }
 }
+
+/* Choices made by tapping the thing itself, in place of drop-down menus */
+.cw-choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cw-choices button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 12px; color: var(--club-ink); cursor: pointer; display: grid; font-size: 13px; font-weight: 700; min-height: 44px; padding: 6px 12px; text-align: left; }
+.cw-choices button small { color: var(--club-muted); font-size: 11px; font-weight: 500; }
+.cw-choices button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
+.cw-choices button[aria-pressed="true"] small { color: var(--cw-gold-lt); }
+.cw-choices button:disabled { cursor: default; opacity: .5; }
+.cw-stepper { align-items: center; display: inline-flex; gap: 6px; }
+.cw-stepper button { border: 1px solid currentColor; border-radius: 50%; cursor: pointer; font-size: 20px; height: 40px; line-height: 1; width: 40px; }
+.cw-stepper button:disabled { cursor: default; opacity: .35; }
+.cw-stepper b { font-size: 14px; min-width: 9rem; text-align: center; }

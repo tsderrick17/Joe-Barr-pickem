@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
 import { reminderTemplates } from "@/lib/reminder-templates";
 import { emailArtworkOptions, type EmailArtworkOptions } from "@/lib/email-artwork-options";
+import { ChoiceChips } from "@/components/commissioner/choice-chips";
 
 type Draft = { title: string; body: string; imageOptions: EmailArtworkOptions };
 type Preview = { html: string; images: Array<{ kind: string; src: string }>; source: string; warning: string; templateId: string; subject?: string; phone?: { title: string; body: string } };
@@ -37,6 +38,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
     finally { if (current === generation.current) setBusy(false); }
   }
 
+  const chosen = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
     async function load() {
@@ -46,7 +48,8 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
         if (!response.ok) throw new Error(result.error ?? "Email preferences could not be loaded.");
         const saved = Object.fromEntries((result.templates ?? []).map((item: Draft & { id: string }) => [item.id, { ...item, imageOptions: emailArtworkOptions(item.imageOptions) }]));
         const values = saved.weekly_recap ?? { title: initial.title, body: initial.body, imageOptions: { density: "compact" as const } };
-        if (active) { setOverrides(saved); setDraft(values); void render("weekly_recap", values, reminderId); }
+        // A type chosen while this was loading wins: the first preview never replaces it.
+        if (active) { setOverrides(saved); if (!chosen.current) { setDraft(values); void render("weekly_recap", values, reminderId); } }
       } catch (reason) { if (active) setError(reason instanceof Error ? reason.message : "Email preferences could not be loaded."); }
     }
     void load();
@@ -62,6 +65,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   }, [preview, phone]);
 
   function choose(id: string) {
+    chosen.current = id;
     const template = reminderTemplates.find((item) => item.id === id)!;
     const values = overrides[id] ?? { title: template.title, body: template.body, imageOptions: { density: "compact" as const } };
     setTemplateId(id); setDraft(values); setMessage(""); setDirty(false);
@@ -97,7 +101,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   return <section id="email-artwork-studio" className="desk-rule-bottom py-8">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black tracking-[.14em] text-[#007e72]">REVIEW BEFORE DELIVERY</p><h2 className="mt-1 font-serif text-2xl font-bold">Email image studio</h2><p className="mt-2 max-w-2xl text-sm text-(color:--themed-text-29)">See the actual generated images inside the email. Adjust the wording, refresh the preview, then save.</p></div>{reminderId ? <button type="button" className="min-h-11 font-bold underline" onClick={onCloseReceipt}>Back to template editor</button> : null}</div>
     {!reminderId ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
-      <label className="text-sm font-bold sm:col-span-2">Email type<select className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2" value={templateId} disabled={busy} onChange={(event) => choose(event.target.value)}>{reminderTemplates.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+      <div className="text-sm font-bold sm:col-span-2"><span id="email-type-label">Email type</span><ChoiceChips disabled={busy} label="Email type" onChange={choose} options={reminderTemplates.map((item) => ({ value: item.id, label: item.label }))} value={templateId} /></div>
       {fixedWording ? <div className="text-sm sm:col-span-2"><p className="font-bold">Email subject</p><p className="mt-1">{preview?.subject ?? "…"}</p><p className="mt-3 font-bold">Phone notification</p><p className="mt-1">{preview?.phone ? `${preview.phone.title}: ${preview.phone.body}` : "…"}</p><p className="mt-3 text-xs text-(color:--themed-text-28)">This message goes out once, on its own. Its words are written in the app and fill in from the real first game, so they are not edited here. Look it over, then send it to yourself.</p></div> : <><label className="text-sm font-bold sm:col-span-2">Subject<input className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={80} disabled={busy} value={draft.title} onChange={(event) => edit({ title: event.target.value })} /></label>
       <label className="text-sm font-bold sm:col-span-2">Message<textarea className="mt-2 min-h-24 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={220} disabled={busy} value={draft.body} onChange={(event) => edit({ body: event.target.value })} /></label>
       <p className="text-xs text-(color:--themed-text-28) sm:col-span-2">Keep week/date placeholders for automatic subjects. Standings and selections come from saved game data; correct results through Grading.</p></>}

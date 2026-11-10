@@ -487,8 +487,8 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 .grading-facts dt { color: var(--club-muted); flex: 0 0 auto; }
 .grading-facts dd { font-weight: 600; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .grading-log { background: var(--club-paper); box-shadow: 0 0 0 1px var(--club-line); border-radius: 3px; margin-top: 1rem; padding: .8rem 1rem; }
-.grading-log > summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 400; }
-.grading-log > summary > span { color: var(--club-muted); display: block; font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700; }
+.grading-log > .grading-log-title { margin: 0; font-family: Georgia, serif; font-size: 1.25rem; font-weight: 400; }
+.grading-log > .grading-log-title > span { color: var(--club-muted); display: block; font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700; }
 @media (max-width: 767px) {
   /* The phone nav is sticky too; park the grading rail just below it. */
   .grading-desk > .grading-rail { top: calc(var(--site-nav-height, 2.6rem) + .25rem); }
