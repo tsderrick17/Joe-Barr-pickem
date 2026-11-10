@@ -1,12 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import EfficiencyTrendPanel, { type CreditUsage, type EfficiencyPoint } from "@/components/efficiency-trend-panel";
-import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "@/lib/score-window.js";
+import type { CreditUsage, EfficiencyPoint } from "@/components/commissioner/odds-types";
 import { SCORE_RETRY_MINUTES } from "@/lib/score-retry-ladder.js";
-import { LadderHistogram } from "@/components/polling-strategy-panel";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
-import { formatAdminNumber } from "@/lib/format-admin-number.js";
 
 type Dashboard = {
   checkedAt: string;
@@ -82,7 +79,7 @@ function gradedLine(game: { kickoffAt: string; finalizedAt: string | null; grade
   return `${elapsed} after kickoff${game.gradedWindow ? ` · check ${game.gradedWindow.rung} of ${SCORE_RETRY_MINUTES.length + 1} (${game.gradedWindow.windowMinutes ? `${game.gradedWindow.windowMinutes}-min window` : "last check"})` : ""}`;
 }
 
-export default function GradingDashboard({ view = "today" }: { view?: "today" | "performance" | "log" }) {
+export default function GradingDashboard({ view = "today" }: { view?: "today" | "log" }) {
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -156,7 +153,7 @@ export default function GradingDashboard({ view = "today" }: { view?: "today" | 
   return <section className="grading-desk" aria-labelledby="grading-dashboard-title">
     {/* Compact sticky rail on a wider screen: the period picker stays in reach while scrolling. On a phone it scrolls with the page,
         since sticking under the site's own sticky tabs left a strip where the page showed through. */}
-    {view !== "log" ? <div className="grading-rail z-20 md:sticky md:top-2 px-5 py-6 sm:px-7"><div className="flex flex-wrap items-end justify-between gap-5"><div><h2 className="font-serif text-3xl sm:text-4xl" id="grading-dashboard-title">{view === "performance" ? "Performance" : "Game day"}</h2></div><div className="flex flex-wrap items-center gap-2">{view === "today" ? <><label className="grading-rail-note text-xs font-bold" htmlFor="grading-period">PERIOD</label><select aria-label="Period" className="grading-rail-control px-3 py-2 text-sm font-semibold" id="grading-period" onChange={(event) => { setPeriodId(event.target.value); void refresh(event.target.value); }} value={periodId}>{data?.periods.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.status}</option>)}</select><span className="grading-rail-note text-xs">Updated {local(data?.checkedAt ?? null)}</span><button className="grading-rail-control px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={!data} onClick={() => void copySnapshot()} type="button">{copied ? "Copied" : "Copy snapshot"}</button></> : null}<button className="grading-rail-primary px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">{loading ? "Checking." : "Refresh now"}</button></div></div></div> : null}
+    {view !== "log" ? <div className="grading-rail z-20 md:sticky md:top-2 px-5 py-6 sm:px-7"><div className="flex flex-wrap items-end justify-between gap-5"><div><h2 className="font-serif text-3xl sm:text-4xl" id="grading-dashboard-title">Game day</h2></div><div className="flex flex-wrap items-center gap-2">{view === "today" ? <><label className="grading-rail-note text-xs font-bold" htmlFor="grading-period">PERIOD</label><select aria-label="Period" className="grading-rail-control px-3 py-2 text-sm font-semibold" id="grading-period" onChange={(event) => { setPeriodId(event.target.value); void refresh(event.target.value); }} value={periodId}>{data?.periods.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.status}</option>)}</select><span className="grading-rail-note text-xs">Updated {local(data?.checkedAt ?? null)}</span><button className="grading-rail-control px-3 py-2 text-sm font-bold disabled:opacity-40" disabled={!data} onClick={() => void copySnapshot()} type="button">{copied ? "Copied" : "Copy snapshot"}</button></> : null}<button className="grading-rail-primary px-4 py-2 text-sm font-bold disabled:opacity-40" disabled={loading} onClick={() => void refresh()} type="button">{loading ? "Checking." : "Refresh now"}</button></div></div></div> : null}
     {error ? <p className="mt-5 border-l-4 border-(color:--themed-border-24) bg-(color:--themed-bg-24) p-4 font-semibold text-red-900">{error}</p> : null}
     {data?.period && metric ? <>
 {view === "today" ? <>
@@ -198,16 +195,6 @@ export default function GradingDashboard({ view = "today" }: { view?: "today" | 
         </div>
         </div>
       </div>
-      </> : null}
-      {view === "performance" ? <>
-            <EfficiencyTrendPanel history={metric.efficiency.history} creditUsage={data.creditUsage} checkedAt={data.checkedAt} summary={metric.efficiency} />
-      <section className="desk-card mt-4" aria-label="Fresh finals picked up by polling ladder">
-        <div className="flex flex-wrap items-baseline justify-between gap-3"><h3 className="font-serif text-xl font-bold">New game finals by polling rung</h3><span className="text-xs font-bold text-(color:--themed-text-27)">Bar width = retry gap · height = share of all finals</span></div>
-        <p className="mt-1 text-xs text-(color:--themed-text-27)">Polling starts {FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after kickoff; the bottom axis counts minutes from that first check.</p>
-        {data.ladderCoverage?.since ? <p className="mt-1 text-xs text-(color:--themed-text-27)">Every fresh final recorded on the Normal polling schedule · since {new Date(data.ladderCoverage.since).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })} · found across {formatAdminNumber(data.ladderCoverage.runs)} score checks. Finals found before that, or on a lighter low-credit schedule, are not counted here.</p> : null}
-        {data.ladderSummary.length ? <div className="mt-3"><LadderHistogram items={data.ladderSummary} /></div> : <p className="mt-3 text-sm text-(color:--themed-text-28)">Fills in as score polls record their retry rung.</p>}
-      </section>
-
       </> : null}
       {view === "log" ? <>
       {/* Logs stay one tap away; they open by themselves when something failed. */}

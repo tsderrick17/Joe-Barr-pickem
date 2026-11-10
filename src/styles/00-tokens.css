@@ -169,6 +169,15 @@
   --cw-brass-2: #f3ead6;
   --cw-brass-3: #dcc79a;
   --cw-pip-ink: #2a1f00;
+  /* The numbers pages' charts: green and cognac series (validated for colour-blind readers), a hairline grid, a red limit line. */
+  --dash-s1: #1c8a5a;
+  --dash-s2: #b5651d;
+  --dash-grid: #e7dfcf;
+  --dash-ref: #a3263a;
+  --dash-tip-bg: #14201b;
+  --dash-tip-ink: #f4efe3;
+  --dash-hi: rgba(255, 255, 255, .6);
+  --dash-shade: rgba(40, 30, 10, .07);
   --themed-shadow-1: inset 0 0 0 1px rgba(15, 118, 110, .08);
   --themed-shadow-2: 0 1px 2px rgba(95, 20, 61, 0.12);
   --themed-shadow-3: 0 4px 14px rgba(44, 36, 24, .14);
@@ -335,6 +344,12 @@ html[data-theme="night"] {
   --club-ok: #7fcaa6;
   --club-warn: #e2a94f;
   --club-alert: #f08c7a;
+  --dash-s1: #35a073;
+  --dash-s2: #c07a30;
+  --dash-grid: #29312c;
+  --dash-ref: #d0465c;
+  --dash-hi: rgba(255, 255, 255, .04);
+  --dash-shade: rgba(0, 0, 0, .3);
   --themed-bg-1: #37322e;
   --themed-text-1: #c2b7aa;
   --themed-text-2: #e7e2d6;
