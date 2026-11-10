@@ -32,10 +32,10 @@
   "dependencies": {
     "@fontsource/cormorant-garamond": "5.3.0",
     "@fontsource/graduate": "5.3.0",
-    "@sentry/nextjs": "^11.10.0",
-    "@supabase/supabase-js": "^2.118.0",
+    "@sentry/nextjs": "^11.11.0",
+    "@supabase/supabase-js": "^2.119.0",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.0.0",
+    "@vercel/speed-insights": "^2.1.0",
     "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
