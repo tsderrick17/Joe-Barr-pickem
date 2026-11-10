@@ -5,14 +5,14 @@
 export const WORKSHOP_SAVED_KEY = "pickem-workshop";
 
 /**
- * The shelves, top to bottom. Each piece has a width in columns (1, 2, or "full" for the wide ones) and a height in rows, so the shelf
- * reads as a tidy grid at every width: two columns on a phone, more on a computer, wide pieces always across the whole shelf.
+ * The shelves, top to bottom. On a computer the pieces of a shelf share its width evenly; a "full" piece runs the whole shelf. On a phone a
+ * shelf is two columns, and a piece marked phoneFull runs the whole width there, so no shelf ends with a gap. Banners are two rows tall.
  */
 export const WORKSHOP_SHELVES = [
-  { title: "Pick’em", pieces: [{ id: "submit", span: 2 }, { id: "highlight", span: 2 }, { id: "chip", span: 1, rows: 2 }, { id: "stamp", span: 1 }] },
-  { title: "Bowl Pool", pieces: [{ id: "crest", span: "full" }, { id: "pennant", span: 1, rows: 2 }, { id: "tile", span: 1 }, { id: "wins", span: 1 }] },
-  { title: "Around the site", pieces: [{ id: "football", span: 2, rows: 2 }, { id: "pull", span: "full" }, { id: "season-over", span: "full" }, { id: "eliminated", span: "full" }] },
-  { title: "Trophy banners", pieces: [{ id: "banner-pickem", span: 1, rows: 2 }, { id: "banner-bowl", span: 1, rows: 2 }, { id: "banner-survivor", span: 1, rows: 2 }] },
+  { title: "Pick’em", pieces: [{ id: "submit" }, { id: "highlight" }, { id: "chip" }, { id: "stamp" }] },
+  { title: "Bowl Pool", pieces: [{ id: "crest", span: "full" }, { id: "pennant", phoneFull: true }, { id: "tile" }, { id: "wins" }] },
+  { title: "Around the site", pieces: [{ id: "football", span: "full" }, { id: "pull", span: "full" }, { id: "season-over", span: "full" }, { id: "eliminated", span: "full" }] },
+  { title: "Trophy banners", pieces: [{ id: "banner-pickem", rows: 2 }, { id: "banner-bowl", rows: 2 }, { id: "banner-survivor", rows: 2, phoneFull: true }] },
 ];
 
 /** Problems with the shelves against the list of pieces: one missing, one shown twice, or one that does not exist. Empty means every piece is on a shelf once. */

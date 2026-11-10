@@ -28,7 +28,7 @@ const tuneIcon = (
 );
 
 /** One piece on its shelf. Tapping plays it; the tune button opens its settings. */
-function Tile({ piece, span, rows, settings, update, labels, selected, onTune, playAll }: { piece: Piece; span: number | "full"; rows: number; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
+function Tile({ piece, span, phoneFull, rows, settings, update, labels, selected, onTune, playAll }: { piece: Piece; span: "full" | undefined; phoneFull: boolean; rows: number; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
   const [own, setOwn] = useState(0);
   const plays = own + playAll;   // Play everything plays every piece at once
   const play = () => setOwn((count) => count + 1);
@@ -40,7 +40,7 @@ function Tile({ piece, span, rows, settings, update, labels, selected, onTune, p
     tabIndex: 0,
   } : {};
   return (
-    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} data-rows={rows} data-span={span}>
+    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} data-phone={phoneFull ? "full" : undefined} data-rows={rows} data-span={span}>
       <div className={`workshop-stage ${piece.tapToPlay ? "is-playable" : ""}`} style={{ ...piece.style?.(settings), "--asset-zoom": (piece.zoom ?? 1) * (settings.zoom[piece.id] ?? 1) } as CSSProperties} {...tap}>
         {piece.draw({ settings, update, plays, play, copy: "shelf" })}
       </div>
@@ -123,7 +123,8 @@ export default function WorkshopBoard() {
                 rows={(place as { rows?: number }).rows ?? 1}
                 selected={tuning === piece.id}
                 settings={settings}
-                span={place.span as number | "full"}
+                phoneFull={Boolean((place as { phoneFull?: boolean }).phoneFull)}
+                span={(place as { span?: "full" }).span}
                 update={update}
               />;
             })}

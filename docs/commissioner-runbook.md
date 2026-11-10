@@ -49,8 +49,8 @@ an outage.
 
 The Commissioner area opens on **the Wheel** (`/admin`): ten spokes in four groups, each a page with its own
 address. Every week: **Game day**, **Health**, **Messages** (the Email center), **Players**. The season: **Bowl Pool**,
-**Season**. The numbers: **Pool stats**, **Odds credits**, **Free limits**. And the **Workshop** (full screen; **Desk**
-at its top left comes back). Each ring's colour says how that page stands (green all good, amber look soon, red needs
+**Season**. The numbers: **Pool stats**, **Odds credits**, **Free limits**. And the **Workshop**, a showroom of every
+custom piece on shelves. Each ring's colour says how that page stands (green all good, amber look soon, red needs
 you now, grey nothing to report) and amber or red always carries a count or "!". The red hub in the middle counts what
 needs you; tap it for the list, each line with a **Go** to the page that fixes it. **Handbook** (top right, every page)
 holds the game-day guide and the Commissioner handbook.
