@@ -7,6 +7,9 @@
   --ledger-ink: var(--skin-ink);
   --scorepad-blue: var(--skin-rule);
   --scorepad-red: var(--skin-margin);
+  /* The paper is lit from the top, with the holiday's faint texture over it and a thin frame inside its edge. */
+  background: var(--skin-texture, none), linear-gradient(to bottom, var(--skin-paper-top), var(--skin-paper) 9rem);
+  box-shadow: inset 2px 0 0 var(--skin-frame), inset -2px 0 0 var(--skin-frame), inset 0 2px 0 var(--skin-frame);
   color: var(--skin-ink);
   position: relative;
 }
@@ -16,35 +19,38 @@
 .pad-skin .ats-result-stamp.text-green-700 { color: var(--skin-win); }
 .pad-skin .ats-result-stamp.text-red-700 { color: var(--skin-loss); }
 .pad-skin .pickem-ledger-row.is-eliminated { background: var(--skin-out-paper); color: var(--skin-out-ink); }
-.pad-skin-hidden { color: var(--skin-number); display: inline-block; vertical-align: -.2em; }
+.pad-skin-hidden { display: inline-block; vertical-align: -.3em; }
 
 /* The artwork sits over the paper's top edge; the week's name moves down to clear it. */
 .pad-skin-top { inset: 0 0 auto; pointer-events: none; position: absolute; z-index: 1; }
 .pad-skin-top svg { display: block; position: absolute; }
-.pad-skin-web { left: 0; top: 0; }
-.pad-skin-bat { left: 3.4rem; top: .55rem; }
-.pad-skin-spider { right: 1.4rem; top: 0; }
-.pad-skin-leaves { left: .2rem; top: .2rem; }
-.pad-skin-leaves.is-right { left: auto; right: .2rem; }
+.pad-skin .pad-skin-defs { position: absolute; }
+.pad-skin-web { left: 2px; top: 2px; }
+.pad-skin-moon { left: 3.6rem; top: .1rem; }
+.pad-skin-spider { right: 1.2rem; top: 0; }
+.pad-skin-bouquet { left: .15rem; top: .15rem; }
+.pad-skin-bouquet.is-right { left: auto; right: .15rem; }
 .pad-skin-garland { left: 0; top: 0; width: 100%; }
-.pad-skin-wreath { right: 1.1rem; top: .35rem; }
-.pad-skin--halloween .pickem-ledger-week-row th { padding-top: 1.55rem; }
-.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 1.3rem; }
-.pad-skin--christmas .pickem-ledger-week-row th { padding-top: 2.05rem; }
+.pad-skin-flakes { left: .4rem; top: 1.2rem; }
+.pad-skin-wreath { right: 1rem; top: .25rem; }
+.pad-skin--halloween .pickem-ledger-week-row th { padding-top: 1.75rem; }
+.pad-skin--thanksgiving .pickem-ledger-week-row th { padding-top: 1.5rem; }
+.pad-skin--christmas .pickem-ledger-week-row th { padding-top: 2.3rem; }
 
 /* Under the last row: the same paper, the pieces spread from edge to edge on the holiday's ground. */
 .pad-skin-foot {
   align-items: flex-end;
   background: linear-gradient(to top, var(--skin-ground) 0 4px, transparent 4px), var(--skin-paper);
   border-top: 1px solid var(--skin-rule);
+  box-shadow: inset 2px 0 0 var(--skin-frame), inset -2px 0 0 var(--skin-frame), inset 0 -2px 0 var(--skin-frame);
   display: flex;
   justify-content: space-between;
   margin-inline: auto;
   max-width: 30rem;
   overflow: hidden;
-  padding: .3rem .4rem 0;
+  padding: .3rem .5rem 2px;
   pointer-events: none;
   position: relative;
 }
 .pad-skin-foot svg { display: block; flex: none; position: relative; }
-.pad-skin-foot .pad-skin-snow { inset: auto 0 0; position: absolute; width: 100%; }
+.pad-skin-foot .pad-skin-backdrop { inset: auto 0 0; position: absolute; width: 100%; }
