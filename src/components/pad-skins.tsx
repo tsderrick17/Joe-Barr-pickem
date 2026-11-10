@@ -117,35 +117,118 @@ function Heirloom({ x, y, rx, ry, fill, rib }: { x: number; y: number; rx: numbe
       <path d={ribs} fill="none" stroke={rib} strokeOpacity=".55" strokeWidth=".8" />
       <ellipse cx={x - rx * 0.55} cy={y - ry * 0.3} fill="#fff" opacity=".16" rx={rx * 0.1} ry={ry * 0.38} />
       <path d={`M${fixed(x - 1.6)} ${fixed(y - ry + 1.5)}q-.6-5 2.6-7.4l1.8 1.2q-2.6 2-1.4 6.2z`} fill="#6b5a32" />
-      <path d={`M${fixed(x + 1.5)} ${fixed(y - ry - 3)}q5-3.4 7.4.6q.8 3-2 3q-2-.8 0-2.4`} fill="none" stroke="#c9973f" strokeLinecap="round" strokeWidth=".8" />
+      <path d={`M${fixed(x + 1.5)} ${fixed(y - ry - 3)}q5-3.4 7.4.6q.8 3-2 3q-2-.8 0-2.4`} fill="none" stroke="#7a8a3a" strokeLinecap="round" strokeWidth=".8" />
     </g>
   );
 }
 
-/** An oak sprig for a corner: a fine gold twig, oak leaves in muted autumn tones, two acorns. */
-function OakSprig({ ids }: { ids: Ids }) {
+/** Leaves blown into a top corner: maple and oak fanned out from the corner, an acorn and bittersweet berries. */
+function LeafCorner({ ids }: { ids: Ids }) {
   return (
     <g>
-      <path d="M2 4C18 6 36 10 62 26M30 10C36 4 42 3 48 4" fill="none" stroke="#c9973f" strokeLinecap="round" strokeWidth="1.3" />
-      <Leaf angle={150} edge="#e0b45e" fill={`url(#${ids("leaf-rust")})`} oak size={22} x={20} y={15} />
-      <Leaf angle={100} edge="#e0b45e" fill={`url(#${ids("leaf-ochre")})`} oak size={16} x={52} y={7} />
-      <Leaf angle={215} edge="#e0b45e" fill={`url(#${ids("leaf-wine")})`} oak size={20} x={47} y={25} />
-      <Acorn angle={-10} ids={ids} size={12} x={32} y={23} />
-      <Acorn angle={18} ids={ids} size={10} x={39} y={30} />
-      <Leaf angle={235} edge="#e0b45e" fill={`url(#${ids("leaf-olive")})`} oak size={15} x={64} y={36} />
+      <Leaf angle={172} fill={`url(#${ids("leaf-gold")})`} size={24} x={11} y={39} />
+      <Leaf angle={96} fill={`url(#${ids("leaf-brown")})`} oak size={20} x={59} y={8} />
+      <Leaf angle={104} fill={`url(#${ids("leaf-orange")})`} oak size={27} x={39} y={11} />
+      <Leaf angle={140} fill={`url(#${ids("leaf-orange")})`} size={18} x={35} y={33} />
+      <Leaf angle={135} fill={`url(#${ids("leaf-red")})`} size={31} x={16} y={15} />
+      <Acorn angle={150} ids={ids} size={11} x={27} y={31} />
+      {[[47, 24], [51, 27.5], [46.5, 29.5]].map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill="#d9471f" r="2.1" /><circle cx={x - 0.6} cy={y - 0.7} fill="#fff" opacity=".5" r=".55" /></g>)}
     </g>
   );
 }
 
-/** Wheat for a lower corner. */
-function WheatCorner({ ids }: { ids: Ids }) {
+/** The horn of plenty: a woven horn drawn along a spine that curls up to its tip and widens to the open mouth. */
+const HORN: Point[] = [[14, 22], [-8, 46], [36, 74], [88, 58]];
+const HORN_STEPS = Array.from({ length: 25 }, (_, index) => {
+  const t = index / 24;
+  const u = 1 - t;
+  const [a, b, c, d] = HORN;
+  const along = (axis: 0 | 1) => u ** 3 * a[axis] + 3 * u * u * t * b[axis] + 3 * u * t * t * c[axis] + t ** 3 * d[axis];
+  const slope = (axis: 0 | 1) => 3 * u * u * (b[axis] - a[axis]) + 6 * u * t * (c[axis] - b[axis]) + 3 * t * t * (d[axis] - c[axis]);
+  const length = Math.hypot(slope(0), slope(1));
+  return { at: [along(0), along(1)] as Point, tangent: [slope(0) / length, slope(1) / length] as Point, radius: 1.4 + 23 * t ** 1.5 };
+});
+type HornStep = (typeof HORN_STEPS)[number];
+/** A point across the horn at one step: share 1 is the lower edge, -1 the upper edge, 0 the spine. */
+const hornEdge = ({ at, tangent, radius }: HornStep, share: number) => `${fixed(at[0] - tangent[1] * radius * share)} ${fixed(at[1] + tangent[0] * radius * share)}`;
+const hornRun = (share: number, steps = HORN_STEPS) => steps.map((step) => hornEdge(step, share)).join("L");
+const HORN_OUTLINE = `M${hornRun(1)}L${hornRun(-1, [...HORN_STEPS].reverse())}Z`;
+const HORN_SHADE = `M${hornRun(1)}L${hornRun(0.15, [...HORN_STEPS].reverse())}Z`;
+const HORN_STRANDS = [-0.55, -0.1, 0.4].map((share) => `M${hornRun(share)}`).join("");
+const HORN_RIBS = HORN_STEPS.filter((_, index) => index >= 3 && index < 24 && index % 2 === 1).map((step) => {
+  const bend = `${fixed(step.at[0] - step.tangent[0] * step.radius * 0.35)} ${fixed(step.at[1] - step.tangent[1] * step.radius * 0.35)}`;
+  return `M${hornEdge(step, 1)}Q${bend} ${hornEdge(step, -1)}`;
+}).join("");
+const HORN_MOUTH = HORN_STEPS[24];
+const HORN_TILT = fixed((Math.atan2(HORN_MOUTH.tangent[1], HORN_MOUTH.tangent[0]) * 180) / Math.PI);
+const GRAPES: Point[] = [[94, 55], [99.5, 54], [105, 56], [96, 60.5], [101.5, 60], [107, 61.5], [98.5, 66], [104, 66.5], [101, 71.5]];
+
+/** A tom turkey in full strut, drawn around the middle of his fan: banded tail, bronze breast, barred wing. */
+const FEATHER = "M0 0C-2.5 -10 -6.5 -24 -5.2 -30.5Q0 -37.5 5.2 -30.5C6.5 -24 2.5 -10 0 0Z";
+const FAN = Array.from({ length: 13 }, (_, index) => -96 + index * 16);
+const COVERTS = Array.from({ length: 10 }, (_, index) => -81 + index * 18);
+const BREAST = Array.from({ length: 6 }, (_, row) => Array.from({ length: 7 }, (_, column) => [-21 + column * 4.6 + (row % 2) * 2.3, -1 + row * 4.2] as Point))
+  .flat()
+  .filter(([x, y]) => ((x + 5) / 14.5) ** 2 + ((y - 9) / 12.5) ** 2 < 1 && x < -2)
+  .map(([x, y]) => `M${fixed(x - 2)} ${fixed(y)}q2 2.4 4 0`)
+  .join("");
+const NECK = "M-14 3C-20 -2 -17.5 -8 -20.5 -14";
+
+function Turkey({ ids }: { ids: Ids }) {
   return (
     <g>
-      <Wheat angle={22} length={42} x={6} y={62} />
-      <Wheat angle={36} length={36} x={6} y={62} />
-      <Wheat angle={50} length={28} x={6} y={62} />
-      <Leaf angle={70} edge="#e0b45e" fill={`url(#${ids("leaf-wine")})`} oak size={16} x={28} y={56} />
-      <Acorn angle={20} ids={ids} size={10} x={38} y={58} />
+      {FAN.map((angle) => (
+        <g key={angle} transform={`rotate(${angle})`}>
+          <path d={FEATHER} fill="#f5e6c0" stroke="#5a3416" strokeWidth=".5" />
+          <path d={FEATHER} fill="#2a160b" transform="scale(.9)" />
+          <path d={FEATHER} fill={`url(#${ids("tail")})`} transform="scale(.8)" />
+          <path d="M0 -2V-26M-3.4 -19Q0 -21 3.4 -19M-2.7 -13.5Q0 -15.5 2.7 -13.5" fill="none" stroke="#2a160b" strokeOpacity=".5" strokeWidth=".7" />
+        </g>
+      ))}
+      {COVERTS.map((angle) => <path d={FEATHER} fill={`url(#${ids("bronze")})`} key={angle} stroke="#e0b876" strokeOpacity=".7" strokeWidth="1" transform={`rotate(${angle}) scale(.58)`} />)}
+      <path d="M-9 22v4.6m0 0l-3.6 1m3.6-1l-.3 1.6m.3-1.6l2.8.9M1 22v4.6m0 0l-3.6 1m3.6-1l-.3 1.6m.3-1.6l2.8.9" fill="none" stroke="#b9703a" strokeLinecap="round" strokeWidth="1.5" />
+      <ellipse cx="-5" cy="9" fill={`url(#${ids("bronze")})`} rx="16.5" ry="14.5" stroke="#24120a" strokeOpacity=".6" strokeWidth=".6" />
+      <path d={BREAST} fill="none" stroke="#e3a95c" strokeLinecap="round" strokeOpacity=".55" strokeWidth=".7" />
+      <path d="M-3 4C5 -.5 16 3.500 17.500 13C12.500 19 2 18.500 -3 13Z" fill="#4a2a12" stroke="#24120a" strokeWidth=".6" />
+      <path d="M1.500 5.500l-1.500 9.500M5.500 4.500l-1.500 11.500M9.500 5l-1 11M13 7l-.8 8" stroke="#f0dcae" strokeLinecap="round" strokeOpacity=".85" strokeWidth="1.1" />
+      <path d="M-18 7l-3 8.500" stroke="#1f1008" strokeLinecap="round" strokeWidth="1.700" />
+      <path d={NECK} fill="none" stroke="#3a1a10" strokeLinecap="round" strokeWidth="6.800" />
+      <path d={NECK} fill="none" stroke="#b5392c" strokeLinecap="round" strokeWidth="5.400" />
+      <circle cx="-21" cy="-15.500" fill="#c8483a" r="4" stroke="#3a1a10" strokeWidth=".6" />
+      <ellipse cx="-20.200" cy="-16.300" fill="#9cc0d4" opacity=".85" rx="2.200" ry="1.700" />
+      <path d="M-24.300 -16.800l-5.700 2.300 5.300 1.500z" fill="#e8b84e" stroke="#8a6a1c" strokeWidth=".4" />
+      <path d="M-24 -18.600q-3.800 .5 -3.400 6.800q1.900 -1.700 1.700 -5.600z" fill="#d62828" />
+      <path d="M-23 -12.800c-1.900 2.300-1.700 6.200 .6 7.900c1.700-2.100 1.500-5.600-.6-7.900z" fill="#d62828" />
+      <circle cx="-21.300" cy="-17" fill="#1a0f08" r=".85" /><circle cx="-21.550" cy="-17.250" fill="#fff" r=".28" />
+    </g>
+  );
+}
+
+/** A lattice-top cherry pie on a footed stand. */
+const PIE_CRIMP: Point[] = Array.from({ length: 28 }, (_, index) => {
+  const angle = (index / 28) * Math.PI * 2;
+  return [Number(fixed(276 + Math.cos(angle) * 27)), Number(fixed(53 + Math.sin(angle) * 10.1))];
+});
+const LATTICE = [-45, -30, -15, 0, 15, 30, 45];
+
+function LatticePie({ ids }: { ids: Ids }) {
+  return (
+    <g>
+      <path d="M268 38q-3-4 0-8t0-8M284 39q3-4 0-8t0-8" fill="none" opacity=".4" stroke="#a8875a" strokeLinecap="round" strokeWidth="1.200" />
+      <path d="M262 82.500q14 3 28 0q-1.500-3.400-9-4.600q-2.600-3-1-7.400h-8q1.600 4.400-1 7.400q-7.500 1.200-9 4.600z" fill={`url(#${ids("china")})`} stroke="#b39c70" strokeWidth=".6" />
+      <ellipse cx="276" cy="67" fill={`url(#${ids("china")})`} rx="35" ry="4.800" stroke="#b39c70" strokeWidth=".6" />
+      <path d="M249 53L255 64.500Q276 68.500 297 64.500L303 53Z" fill={`url(#${ids("tin")})`} />
+      <ellipse cx="276" cy="53" fill="#d39a4c" rx="28" ry="11" />
+      <ellipse cx="276" cy="53" fill={`url(#${ids("cherry")})`} rx="24" ry="9.200" />
+      <g clipPath={`url(#${ids("pie-top")})`}>
+        <g transform="translate(276 53) scale(1 .4)">
+          {LATTICE.map((offset) => <path d={`M${offset - 40} -40L${offset + 40} 40`} key={offset} stroke="#a86a2a" strokeWidth="7.400" />)}
+          {LATTICE.map((offset) => <path d={`M${offset - 40} -40L${offset + 40} 40`} key={offset} stroke="#edc47c" strokeWidth="5.400" />)}
+          {LATTICE.map((offset) => <path d={`M${offset + 40} -40L${offset - 40} 40`} key={offset} stroke="#a86a2a" strokeWidth="7.400" />)}
+          {LATTICE.map((offset) => <path d={`M${offset + 40} -40L${offset - 40} 40`} key={offset} stroke="#f2cd8a" strokeWidth="5.400" />)}
+        </g>
+      </g>
+      {PIE_CRIMP.map(([x, y]) => <circle cx={x} cy={y} fill="#e9b966" key={`${x}-${y}`} r="2.400" stroke="#a86a2a" strokeWidth=".5" />)}
     </g>
   );
 }
@@ -224,17 +307,33 @@ function HalloweenDefs({ ids }: { ids: Ids }) {
   );
 }
 
+function Shade({ id, stops }: { id: string; stops: [string, string, string] }) {
+  return <radialGradient cx="38%" cy="32%" id={id} r="75%"><stop offset="0" stopColor={stops[0]} /><stop offset=".6" stopColor={stops[1]} /><stop offset="1" stopColor={stops[2]} /></radialGradient>;
+}
+
 function ThanksgivingDefs({ ids }: { ids: Ids }) {
   return (
     <defs>
-      <Gradient id={ids("leaf-rust")} stops={["#d07a44", "#8f3f1c"]} />
-      <Gradient id={ids("leaf-wine")} stops={["#a8403a", "#5e1a1e"]} />
-      <Gradient id={ids("leaf-ochre")} stops={["#d9aa52", "#9a6b1f"]} />
-      <Gradient id={ids("leaf-olive")} stops={["#98a362", "#56602f"]} />
+      <Gradient id={ids("leaf-red")} stops={["#e2532f", "#9c1f1c"]} />
+      <Gradient id={ids("leaf-orange")} stops={["#f59a32", "#c4541a"]} />
+      <Gradient id={ids("leaf-gold")} stops={["#f7cf58", "#cf8f1e"]} />
+      <Gradient id={ids("leaf-brown")} stops={["#b97a3c", "#70401a"]} />
       <Gradient id={ids("nut")} stops={["#c98a45", "#7a4a1c"]} />
-      <radialGradient cx="38%" cy="32%" id={ids("orange")} r="75%"><stop offset="0" stopColor="#e6904a" /><stop offset=".6" stopColor="#b9581f" /><stop offset="1" stopColor="#7a3410" /></radialGradient>
-      <radialGradient cx="38%" cy="32%" id={ids("cream")} r="75%"><stop offset="0" stopColor="#f6eedc" /><stop offset=".6" stopColor="#d9c9a4" /><stop offset="1" stopColor="#a08c62" /></radialGradient>
-      <radialGradient cx="38%" cy="32%" id={ids("sage")} r="75%"><stop offset="0" stopColor="#a7b285" /><stop offset=".6" stopColor="#737e4d" /><stop offset="1" stopColor="#454d2a" /></radialGradient>
+      <Shade id={ids("orange")} stops={["#f5a04a", "#d9661f", "#8f3d10"]} />
+      <Shade id={ids("cream")} stops={["#fffaf0", "#e6d8b6", "#a8946a"]} />
+      <Shade id={ids("bronze")} stops={["#a86a34", "#5e3417", "#2e180a"]} />
+      <Shade id={ids("cherry")} stops={["#cf3a44", "#9a1826", "#6a0e1a"]} />
+      <Shade id={ids("gourd-green")} stops={["#86a444", "#4f7028", "#2c4014"]} />
+      <Shade id={ids("gourd-yellow")} stops={["#fbe07a", "#e8ae2c", "#b9741a"]} />
+      <Shade id={ids("apple")} stops={["#f4705a", "#c1272d", "#7d0f14"]} />
+      <Shade id={ids("grape")} stops={["#a47cc8", "#5b2d82", "#2f1248"]} />
+      <Gradient id={ids("wicker")} stops={["#e8bc78", "#a8742f"]} />
+      <Gradient id={ids("tail")} stops={["#cf7a30", "#8a4b1f", "#4a2710"]} />
+      <Gradient id={ids("hat")} stops={["#241c18", "#5a4d44", "#1d1612"]} x2="1" y2="0" />
+      <Gradient id={ids("tin")} stops={["#e3e7ea", "#8d969d"]} />
+      <Gradient id={ids("china")} stops={["#fffaf0", "#e2d2b0"]} />
+      <Gradient id={ids("corn")} stops={["#fbe08a", "#e2a93a"]} />
+      <clipPath id={ids("pie-top")}><ellipse cx="276" cy="53" rx="24" ry="9.200" /></clipPath>
     </defs>
   );
 }
@@ -303,21 +402,24 @@ export function PadSkinTop({ skin }: { skin: PadSkin }) {
     );
   }
   if (skin === "thanksgiving") {
-    const stalks = [[-28, 19], [-14, 22], [0, 24], [14, 22], [28, 19]];
     return (
       <div aria-hidden="true" className="pad-skin-top">
         <svg className="pad-skin-defs" height="0" width="0"><ThanksgivingDefs ids={ids} /></svg>
-        <svg className="pad-skin-sprig" height="52" viewBox="0 0 80 52" width="80"><OakSprig ids={ids} /></svg>
-        <svg className="pad-skin-sprig is-right" height="52" viewBox="0 0 80 52" width="80"><g transform="translate(80 0) scale(-1 1)"><OakSprig ids={ids} /></g></svg>
-        <svg className="pad-skin-crest" height="34" viewBox="0 0 150 34" width="150">
-          <path d="M8 21H56M12 23.5H54M94 21H142M96 23.5H138" stroke="#c9973f" strokeWidth=".8" />
-          <path d="M2 21l3.2-2.4 3.2 2.4-3.2 2.4zM141.6 21l3.2-2.4 3.2 2.4-3.2 2.4z" fill="#e0b45e" />
-          <circle cx="58.5" cy="21" fill="#e0b45e" r="1.1" /><circle cx="91.5" cy="21" fill="#e0b45e" r="1.1" />
-          {stalks.map(([angle, length]) => <Wheat angle={angle} key={angle} length={length} x={75} y={32} />)}
-          <path d="M68.5 24.2q6.5 2.2 13 0v2.8q-6.5 2.2-13 0z" fill="#8a2f2a" />
-          <path d="M75 25.4c-4-3-8.4-1.2-6.2 1.4 1.3 1.4 4.2.6 6.2-1.4zM75 25.4c4-3 8.4-1.2 6.2 1.4-1.3 1.4-4.2.6-6.2-1.4z" fill="#a33a2f" />
-          <path d="M74.2 26.6l-2.8 5.4M75.8 26.6l2.8 5.4" stroke="#8a2f2a" strokeLinecap="round" strokeWidth="1.3" />
-          <circle cx="75" cy="25.6" fill="#6e2220" r="1.3" />
+        <svg className="pad-skin-corner" height="56" viewBox="0 0 72 56" width="72"><LeafCorner ids={ids} /></svg>
+        <svg className="pad-skin-corner is-right" height="56" viewBox="0 0 72 56" width="72"><g transform="translate(72 0) scale(-1 1)"><LeafCorner ids={ids} /></g></svg>
+        <svg className="pad-skin-crest" height="36" viewBox="0 0 124 36" width="124">
+          <Leaf angle={-80} fill={`url(#${ids("leaf-red")})`} oak size={15} x={13} y={27} />
+          <Leaf angle={-55} fill={`url(#${ids("leaf-orange")})`} size={19} x={29} y={22} />
+          <Leaf angle={80} fill={`url(#${ids("leaf-brown")})`} oak size={15} x={111} y={27} />
+          <Leaf angle={55} fill={`url(#${ids("leaf-gold")})`} size={19} x={95} y={22} />
+          <ellipse cx="62" cy="33.800" fill="#4a2410" opacity=".2" rx="25" ry="1.800" />
+          <ellipse cx="62" cy="30" fill="#1d1612" rx="23" ry="4.400" />
+          <path d="M39.500 30.600Q62 36.800 84.500 30.600" fill="none" stroke="#6b5d52" strokeWidth=".7" />
+          <path d="M50.500 30L53.500 6.500Q62 4 70.500 6.500L73.500 30Q62 33.200 50.500 30Z" fill={`url(#${ids("hat")})`} />
+          <ellipse cx="62" cy="6.300" fill="#4a3f38" rx="8.500" ry="1.900" />
+          <path d="M51.300 23Q62 26 72.700 23L73.500 30Q62 33.200 50.500 30Z" fill="#8a3f1c" />
+          <rect fill="none" height="8.400" rx="1.200" stroke="#f0c14b" strokeWidth="2" width="9.600" x="57.200" y="23.400" />
+          <path d="M59.200 27.600h4.600" stroke="#f0c14b" strokeLinecap="round" strokeWidth="1.200" />
         </svg>
       </div>
     );
@@ -393,26 +495,62 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
     );
   }
   if (skin === "thanksgiving") {
-    const sheaf = [-36, -24, -12, 0, 12, 24, 36];
     return (
       <div aria-hidden="true" className="pad-skin-foot">
         <svg className="pad-skin-defs" height="0" width="0"><ThanksgivingDefs ids={ids} /></svg>
-        <svg height="64" viewBox="0 0 46 64" width="46"><WheatCorner ids={ids} /></svg>
-        <svg height="68" viewBox="0 0 200 68" width="200">
-          <ellipse cx="100" cy="64" fill="#000" opacity=".28" rx="88" ry="3.4" />
-          {sheaf.map((angle) => <Wheat angle={angle} key={angle} length={50 - Math.abs(angle) / 4} x={100} y={56} />)}
-          <Leaf angle={-72} edge="#e0b45e" fill={`url(#${ids("leaf-rust")})`} oak size={24} x={46} y={48} />
-          <Leaf angle={68} edge="#e0b45e" fill={`url(#${ids("leaf-wine")})`} size={24} x={154} y={46} />
-          <Leaf angle={-28} edge="#e0b45e" fill={`url(#${ids("leaf-ochre")})`} size={18} x={70} y={34} />
-          <Leaf angle={30} edge="#e0b45e" fill={`url(#${ids("leaf-olive")})`} oak size={17} x={131} y={33} />
-          <Heirloom fill={`url(#${ids("cream")})`} rib="#8a7650" rx={21} ry={10.5} x={64} y={53} />
-          <Heirloom fill={`url(#${ids("sage")})`} rib="#3a4222" rx={15} ry={9} x={139} y={55} />
-          <Heirloom fill={`url(#${ids("orange")})`} rib="#6e2c0c" rx={20} ry={17} x={100} y={46} />
-          <Heirloom fill={`url(#${ids("orange")})`} rib="#6e2c0c" rx={7.5} ry={5.5} x={166} y={58.5} />
-          <Acorn angle={-25} ids={ids} size={11} x={34} y={59} />
-          <Acorn angle={15} ids={ids} size={10} x={180} y={60} />
+        <svg className="pad-skin-scene" height="86" viewBox="0 0 360 86" width="360">
+          <ellipse cx="84" cy="83" fill="#4a2410" opacity=".2" rx="82" ry="2.400" />
+          <ellipse cx="198" cy="83.200" fill="#4a2410" opacity=".2" rx="24" ry="2.200" />
+          <ellipse cx="276" cy="83.200" fill="#4a2410" opacity=".2" rx="22" ry="2.200" />
+          <ellipse cx="333" cy="83.200" fill="#4a2410" opacity=".2" rx="26" ry="2.200" />
+
+          <path d={HORN_OUTLINE} fill={`url(#${ids("wicker")})`} stroke="#6e4318" strokeLinejoin="round" strokeWidth="1" />
+          <path d={HORN_SHADE} fill="#4a2410" opacity=".22" />
+          <path d={HORN_STRANDS} fill="none" stroke="#7a4c1c" strokeOpacity=".4" strokeWidth=".7" />
+          <path d={HORN_RIBS} fill="none" stroke="#6e4318" strokeLinecap="round" strokeWidth="1.300" />
+          <path d={HORN_RIBS} fill="none" stroke="#f6d9a0" strokeLinecap="round" strokeOpacity=".55" strokeWidth=".6" transform="translate(-1.200 -.4)" />
+          <g transform={`rotate(${HORN_TILT} 88 58)`}>
+            <ellipse cx="88" cy="58" fill="#c79248" rx="8.500" ry="24.600" stroke="#6e4318" strokeWidth="1.100" />
+            <ellipse cx="88.600" cy="58" fill="#2c1708" rx="5.800" ry="21" />
+          </g>
+          <Wheat angle={28} length={36} x={90} y={52} />
+          <Wheat angle={46} length={32} x={91} y={54} />
+          <Leaf angle={25} fill={`url(#${ids("leaf-red")})`} size={25} x={103} y={38} />
+          <Leaf angle={68} fill={`url(#${ids("leaf-gold")})`} oak size={21} x={121} y={47} />
+          <g transform="translate(113 52) rotate(-24)">
+            <path d="M-11 0C-17 -8 -26 -8 -31 -3.500C-24 -2 -17 0 -11 0ZM-11 0C-17 6 -25 7.500 -30 4.500C-24 3 -17 1.500 -11 0Z" fill="#d6c98a" stroke="#9a8a4a" strokeWidth=".5" />
+            <ellipse cx="2" cy="0" fill={`url(#${ids("corn")})`} rx="14" ry="5.400" stroke="#a8741c" strokeWidth=".5" />
+            <path d="M-8 -4v8M-4.500 -5v10M-1 -5.300v10.600M2.500 -5.400v10.800M6 -5.200v10.400M9.500 -4.500v9M13 -3v6M-11 0h26M-10 -2.700h24M-10 2.700h24" fill="none" stroke="#b07a18" strokeOpacity=".55" strokeWidth=".5" />
+          </g>
+          {GRAPES.map(([x, y]) => <g key={`${x}-${y}`}><circle cx={x} cy={y} fill={`url(#${ids("grape")})`} r="3.200" /><circle cx={x - 1} cy={y - 1.100} fill="#fff" opacity=".45" r=".7" /></g>)}
+          <path d="M127 53.500q.5-3.500 3-4.500" fill="none" stroke="#5a3a1c" strokeLinecap="round" strokeWidth="1.200" />
+          <circle cx="127" cy="61.500" fill={`url(#${ids("apple")})`} r="8.200" />
+          <ellipse cx="123.800" cy="58" fill="#fff" opacity=".35" rx="1.600" ry="2.600" transform="rotate(25 123.800 58)" />
+          <Heirloom fill={`url(#${ids("orange")})`} rib="#8f3d10" rx={14.500} ry={10.200} x={116} y={73.300} />
+          <path d="M143 61q-.6-3.500 2.200-5" fill="none" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.600" />
+          <ellipse cx="143" cy="66.500" fill={`url(#${ids("gourd-yellow")})`} rx="4.800" ry="5.800" />
+          <ellipse cx="143" cy="76" fill={`url(#${ids("gourd-green")})`} rx="7.800" ry="7.500" />
+          <path d="M138.300 70.400Q143 73.400 147.700 70.400Q147 67 143 66.500Q139 67 138.300 70.400Z" fill="#e8ae2c" />
+          <path d="M140 70.800q-2.400 5.800 0 12M143 71.600v11.800M146 70.800q2.400 5.800 0 12" fill="none" stroke="#c9dc8a" strokeOpacity=".7" strokeWidth=".8" />
+          <Acorn angle={75} ids={ids} size={10} x={157} y={80.300} />
+          <Leaf angle={100} fill={`url(#${ids("leaf-orange")})`} size={13} x={168} y={79} />
+
+          <g transform="translate(200 58)"><Turkey ids={ids} /></g>
+          <Acorn angle={-70} ids={ids} size={9} x={234} y={80.800} />
+
+          <LatticePie ids={ids} />
+
+          <path d="M337 61C336 45 328 35 319 39C315.500 41 316.500 46 320 46.500" fill="none" stroke="#2c4014" strokeLinecap="round" strokeWidth="9" />
+          <path d="M337 61C336 45 328 35 319 39C315.500 41 316.500 46 320 46.500" fill="none" stroke="#5f8230" strokeLinecap="round" strokeWidth="7" />
+          <path d="M320 46.500l-2.600 2.600" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.800" />
+          <circle cx="338" cy="70.500" fill={`url(#${ids("gourd-green")})`} r="12.600" stroke="#2c4014" strokeWidth=".6" />
+          {[[331, 66], [336, 62], [342, 65], [346, 71], [333, 73], [339, 70], [343, 77], [336, 79], [329, 71], [334, 50], [331, 43], [324, 39.500], [336, 56]].map(([x, y]) => <circle cx={x} cy={y} fill="#cfe08e" key={`${x}-${y}`} opacity=".75" r=".9" />)}
+          <path d="M316 68.500q-1.200-4.200 2.200-6" fill="none" stroke="#6b5a32" strokeLinecap="round" strokeWidth="1.800" />
+          <ellipse cx="316" cy="76" fill={`url(#${ids("gourd-yellow")})`} rx="9.500" ry="7.600" stroke="#a8741c" strokeWidth=".5" />
+          <path d="M307.500 78.500Q316 86 324.500 78.500Q321 83.500 316 83.600Q311 83.500 307.500 78.500Z" fill="#5f8230" />
+          {[[311, 73], [315, 71.500], [320, 73.500], [313, 77], [318, 77.500], [322, 76.500], [309.500, 76]].map(([x, y]) => <circle cx={x} cy={y} fill="#fdf0a8" key={`${x}-${y}`} r="1.150" stroke="#c98f1c" strokeWidth=".35" />)}
+          <Heirloom fill={`url(#${ids("cream")})`} rib="#a8946a" rx={7.500} ry={5.600} x={351} y={77.800} />
         </svg>
-        <svg height="64" viewBox="0 0 46 64" width="46"><g transform="translate(46 0) scale(-1 1)"><WheatCorner ids={ids} /></g></svg>
       </div>
     );
   }
@@ -450,7 +588,7 @@ export function PadSkinFoot({ skin }: { skin: PadSkin }) {
   );
 }
 
-/** What stands in for a pick still hidden until kickoff: a ghost, a gold acorn, a wrapped gift. */
+/** What stands in for a pick still hidden until kickoff: a ghost, a covered dish, a wrapped gift. */
 export function PadSkinHidden({ skin }: { skin: PadSkin }) {
   if (skin === "halloween") {
     return (
@@ -464,10 +602,11 @@ export function PadSkinHidden({ skin }: { skin: PadSkin }) {
   if (skin === "thanksgiving") {
     return (
       <svg aria-hidden="true" className="pad-skin-hidden" height="20" viewBox="0 0 16 16" width="20">
-        <ellipse cx="8" cy="9.8" fill="#c98a45" rx="4" ry="4.7" stroke="#e0b45e" strokeWidth=".6" />
-        <ellipse cx="6.6" cy="9.2" fill="#fff" opacity=".25" rx=".8" ry="1.7" />
-        <path d="M3 7.4Q8 2.4 13 7.4Q8 9.2 3 7.4Z" fill="#7a4a1c" stroke="#e0b45e" strokeWidth=".6" />
-        <path d="M8 4.4q.6-2 2.2-2.6" fill="none" stroke="#e0b45e" strokeLinecap="round" strokeWidth=".9" />
+        <path d="M.8 12.300h14.400l-1.500 1.700H2.300z" fill="#fffaf0" stroke="#8a6a3a" strokeLinejoin="round" strokeWidth=".55" />
+        <path d="M2.300 12.300a5.700 6 0 0 1 11.400 0z" fill="#d5dbe0" stroke="#6f7880" strokeLinejoin="round" strokeWidth=".6" />
+        <path d="M4.100 10.800a4 4.300 0 0 1 2.700-3.800" fill="none" opacity=".95" stroke="#fff" strokeLinecap="round" strokeWidth=".9" />
+        <path d="M8 6.300V5.300" stroke="#6f7880" strokeWidth=".8" />
+        <circle cx="8" cy="4.500" fill="#e8b93c" r="1.200" stroke="#8a6a1c" strokeWidth=".4" />
       </svg>
     );
   }

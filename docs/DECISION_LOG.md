@@ -22,20 +22,22 @@ and add a row above.
 ## 2026-11-10 - Holiday skins for the Pick'em Pad
 
 - The owner asked for fun, heavily themed "skins" that keep the pad's data and layout exactly as they are, starting with the
-  holidays, on the Pick'em Pad only: Halloween (a spider on its silk, a web, bats, jack-o'-lanterns), Thanksgiving (oak, wheat and
-  heirloom pumpkins), Christmas (garland and a wreath, snow, gifts). New Year's was dropped.
+  holidays, on the Pick'em Pad only: Halloween (a spider on its silk, a web, bats, jack-o'-lanterns), Thanksgiving (a turkey, a
+  cornucopia, a lattice pie), Christmas (garland and a wreath, snow, gifts). New Year's was dropped.
 - Each holiday has its own full colour scheme (paper, ink, ruling, margin, win totals, lines, W and L) and its own mark for a
-  hidden pick in place of the lock: a ghost, a gold acorn, a wrapped gift. A skin is the same by day and by night.
+  hidden pick in place of the lock: a ghost, a covered dish, a wrapped gift. A skin is the same by day and by night.
 - It shows by itself in the pool week whose days (Tuesday through Monday, Eastern) include the holiday, read from the week's
   `starts_at` and `ends_at`, which the Standings read already loads: no extra database request. Never in a playoff round.
 - After the first look the owner asked for a richer finish: the art is shaded and detailed (a moonlit sky, a spider on its silk,
   glowing jack-o'-lanterns and a haunted house; maple and oak leaves, wheat, acorns, a woven cornucopia of produce; fir
   garland with baubles and gold beads, a wreath, a lit tree, wrapped gifts), each paper is lit from the top with a faint
-  texture (stars, a walnut grain, falling snow), and a thin frame runs inside the paper's edge.
-- Thanksgiving then got its own identity (the owner found the first versions plain, then childish, and the leaf garland too close to
-  Christmas): a dark walnut harvest table, set like a printed dinner menu. A gold-ruled crest with a tied wheat sheaf sits over the
-  week's name, oak sprigs with acorns in the top corners, and a harvest centrepiece of heirloom pumpkins (orange, cream, sage), a
-  wheat sheaf and oak leaves under the rows, all in muted autumn tones with fine gold linework. A hidden pick is a gold acorn.
+  texture (stars, parchment flecks, falling snow), and a thin frame runs inside the paper's edge.
+- Thanksgiving took four tries (the owner found the first versions plain, then childish, the leaf garland too close to Christmas,
+  and a dark walnut "dinner menu" not it either). The owner then named what it must show, and that is the skin: a covered dish
+  for a hidden pick, a turkey, leaves, a cornucopia, fun gourds, a pilgrim hat and a lattice pie. Warm flecked parchment; maple
+  and oak leaves with an acorn and berries in the top corners; a pilgrim hat over the week's name; and under the rows one scene:
+  a woven cornucopia spilling wheat, corn, grapes, an apple, a pumpkin and a gourd, a fanned turkey, a cherry lattice pie on a
+  stand, and a swan gourd, a warty gourd and a white pumpkin. No garland across the top.
 
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 
