@@ -19,6 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The pool constitution is written to the player
+
+- The owner read the first version in the Handbook and asked for it to be shifted from a technical standpoint to a
+  player-centric one: the old Article I (the pool) and Article III (the pool week) go, and the season article should simply
+  say what a player needs to know: 2 picks every week, then the playoff games.
+- It is now ten articles in three parts, spoken to the player ("you"). The basics: how it works, making your picks, the
+  lines, winning. The contests: Survivor, the playoffs, the Bowl Pool. Good to know: when a game moves, emails and reminders,
+  the Commissioner.
+- Left out as behind-the-scenes detail: when a season starts and closes, the week handoff timing, the line-source fallback,
+  when scores are first checked, the three-day hand-entered final, the audit record's wording and when a Survivor loser
+  reads OUT. Those rules are unchanged and stay in this reference.
+
 ## 2026-11-10 - The pool constitution is rewritten in three parts
 
 - The owner asked for a general pass of the league constitution, then: keep it Commissioner-only for now and nail down the
