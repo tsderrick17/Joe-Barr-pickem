@@ -34,6 +34,7 @@ and add a row above.
   down on a phone.
 - It does not state when the Trophy Room opens to players; that date is the owner's to set.
 - Screenshot states `commissioner-handbook-constitution` (day phone and desktop, night phone) hold the layout.
+
 ## 2026-11-10 - "How it works" for every player; Slate notes in two groups; Bowl rules all folded; tiebreaker wording
 
 - The owner opened the folding "How it works" instructions (a Commissioner preview since 2026-11-04) to every player. The Slate
