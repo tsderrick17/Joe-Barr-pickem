@@ -19,6 +19,12 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - No Commissioner page is wider than the phone
+
+On the Odds credits page an iPhone could zoom out past full width, which made it hard to get back. The chart's screen-reader table
+was marked `sr-only`, but a table does not shrink to 1px, so a month of columns made the page 463px wide on a 390px phone. The table
+now sits inside a hidden box. A behaviour test checks every Commissioner page is no wider than a 390 phone.
+
 ## 2026-11-11 - The pool constitution, trimmed
 
 Owner review of the Handbook's constitution. Talk of points is gone: the Standings count winning picks and the most wins at the end of

@@ -167,11 +167,13 @@ export function DashChart({
       </svg> : null}
       {tip}
     </div>
-    <table className="sr-only">
+    {/* The screen-reader table sits in a hidden box: a table will not shrink to the 1px of "sr-only" itself, and a month of columns
+        pushed the page wider than a phone, so an iPhone let the page zoom out past full width. */}
+    <div className="sr-only"><table>
       <caption>{label}</caption>
       <thead><tr><th scope="col">Point</th>{series.map((line) => <th key={line.key} scope="col">{line.label}</th>)}</tr></thead>
       <tbody>{x.map((name, index) => <tr key={index}><th scope="row">{name}</th>{series.map((line) => <td key={line.key}>{line.values[index] === null || line.values[index] === undefined ? "–" : format(line.values[index] as number)}</td>)}</tr>)}</tbody>
-    </table>
+    </table></div>
   </figure>;
 }
 
