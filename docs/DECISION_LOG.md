@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Workshop becomes one living board (PR 1: the board)
+
+- The owner sent a screen recording of a "living bento board" (dozens of small interface pieces packed into one grid, each playing its own
+  moment on a loop) and asked to take inspiration from it, then approved a three-part plan: (1) one packed board, (2) every piece playing
+  on its own from one board clock, (3) pieces shown in their real setting. Our own fonts and colours stay; only layout and motion change.
+- This first part replaces the four shelves with one board: a slightly darker well holding a soft card for each piece (the Pool stats
+  card's corner and shadow), each tile shaped for its piece. The places come from three maps drawn as rows of cells (`WORKSHOP_LAYOUTS`),
+  so the board never has a gap; a unit test checks each map and a browser test checks the tiles fill the board at three widths.
+- No motion changes in this part; Play everything stays until the board clock replaces it.
+
 ## 2026-11-10 - Pool stats: bar figures under the axis, the two tables level
 
 - The owner asked for the Weekly records figures (22%, 33%, 44%) to sit below the axis, not inside the columns, and for the two

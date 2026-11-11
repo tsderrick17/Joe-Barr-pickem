@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergeSaved, shelfProblems, WORKSHOP_SHELVES } from "../src/lib/workshop-board.js";
+import { gridArea, layoutPlaces, layoutProblems, mergeSaved, WORKSHOP_LAYOUTS, WORKSHOP_ORDER } from "../src/lib/workshop-board.js";
 
 const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "wins", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner-pickem", "banner-bowl", "banner-survivor"];
 
@@ -15,7 +15,24 @@ test("saved settings are used only where they still fit, so an old or damaged sa
   assert.deepEqual(mergeSaved(defaults, { chip: "KC" }, rules).chip, defaults.chip);
 });
 
-test("every piece is on exactly one shelf", () => {
-  assert.deepEqual(shelfProblems(WORKSHOP_SHELVES, PIECES), []);
-  assert.deepEqual(shelfProblems([{ title: "x", pieces: [{ id: "chip" }, { id: "chip" }, { id: "nope" }] }], ["chip", "stamp"]), ["stamp is on no shelf", "chip is on more than one shelf", "nope is not a piece"]);
+test("every layout holds every piece once, each in one rectangle, with no gaps", () => {
+  for (const [name, rows] of Object.entries(WORKSHOP_LAYOUTS)) assert.deepEqual(layoutProblems(rows, PIECES), [], name);
+  assert.deepEqual(WORKSHOP_LAYOUTS.phone[0].length, 2);
+  assert.deepEqual(WORKSHOP_LAYOUTS.tablet[0].length, 4);
+  assert.deepEqual(WORKSHOP_LAYOUTS.desktop[0].length, 6);
+  assert.deepEqual([...WORKSHOP_ORDER].sort(), [...PIECES].sort());
+});
+
+test("a broken layout is caught: a ragged row, a missing piece, an unknown one, and a piece split in two", () => {
+  assert.deepEqual(layoutProblems([["chip", "chip"], ["stamp"]], ["chip", "stamp"]), ["row 2 is 1 wide, not 2"]);
+  assert.deepEqual(layoutProblems([["chip", "nope"]], ["chip", "stamp"]), ["stamp is not on the board", "nope is not a piece"]);
+  assert.deepEqual(layoutProblems([["chip", "stamp", "chip"]], ["chip", "stamp"]), ["chip is not one rectangle"]);
+  assert.deepEqual(layoutProblems([["chip", "stamp"], ["stamp", "chip"]], ["chip", "stamp"]), ["chip is not one rectangle", "stamp is not one rectangle"]);
+});
+
+test("a piece's place becomes its grid area", () => {
+  const places = layoutPlaces([["a", "a", "b"], ["a", "a", "c"]]);
+  assert.deepEqual(places.a, { row: 1, column: 1, rows: 2, columns: 2 });
+  assert.equal(gridArea(places.a), "1 / 1 / 3 / 3");
+  assert.equal(gridArea(places.c), "2 / 3 / 3 / 4");
 });

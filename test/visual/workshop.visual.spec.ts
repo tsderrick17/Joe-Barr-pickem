@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signIn } from "./session";
 
-// The Workshop showroom: every custom piece once, on shelves, inside the Commissioner area. Its settings stay hidden until a piece's tune button is tapped.
+// The Workshop: every custom piece once, packed into one board, inside the Commissioner area. Its settings stay hidden until a piece's tune button is tapped.
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
 
 async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280"], saved }: { theme?: string; size?: { width: number; height: number }; saved?: string } = {}) {
@@ -29,7 +29,7 @@ async function holdStill(page: Page) {
   await page.waitForTimeout(400);
 }
 
-/** A piece's button: each piece is on its shelf once. */
+/** A piece's button: each piece is on the board once. */
 async function nearestMiddle(page: Page, name: string): Promise<Locator> {
   const button = page.getByRole("button", { name, exact: true });
   await expect(button).toHaveCount(1);
@@ -64,16 +64,36 @@ for (const theme of ["day", "night"]) {
   }
 }
 
-test("every piece is on its shelf once, in four shelves", async ({ page }) => {
-  await openBoard(page);
-  expect(await page.locator(".workshop-shelf > h2").allInnerTexts()).toEqual(["Pick’em", "Bowl Pool", "Around the site", "Trophy banners"]);
-  const ids = await page.locator(".workshop-tile").evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("data-piece")));
-  expect(ids).toHaveLength(15);
-  expect(new Set(ids).size).toBe(15);
-  // A wide piece runs the whole shelf, and nothing spills sideways on a phone.
-  await page.setViewportSize(SIZES["phone-390"]);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
-});
+// One packed board: every piece once, no tile overlapping another, no gap, and nothing spilling sideways, on a phone, a tablet and a computer.
+for (const width of [390, 768, 1280]) {
+  test(`every piece is on the board once, packed with no gaps, at ${width}px`, async ({ page }) => {
+    await openBoard(page, { size: { width, height: 900 } });
+    await expect(page.locator(".workshop-shelf")).toHaveCount(0);
+    const ids = await page.locator(".workshop-tile").evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("data-piece")));
+    expect(ids).toHaveLength(15);
+    expect(new Set(ids).size).toBe(15);
+    const { covered, inside, overlaps } = await page.locator(".workshop-board").evaluate((board) => {
+      const style = getComputedStyle(board);
+      const box = board.getBoundingClientRect();
+      const left = box.left + parseFloat(style.paddingLeft), right = box.right - parseFloat(style.paddingRight);
+      const top = box.top + parseFloat(style.paddingTop), bottom = box.bottom - parseFloat(style.paddingBottom);
+      const gap = parseFloat(style.columnGap);
+      const tiles = [...board.querySelectorAll(".workshop-tile")].map((tile) => tile.getBoundingClientRect());
+      const area = tiles.reduce((sum, tile) => sum + (tile.width + gap) * (tile.height + gap), 0);
+      let overlaps = 0;
+      tiles.forEach((a, i) => tiles.slice(i + 1).forEach((b) => { if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) overlaps++; }));
+      return {
+        covered: area / ((right - left + gap) * (bottom - top + gap)),
+        inside: tiles.every((tile) => tile.left >= left - 1 && tile.right <= right + 1 && tile.top >= top - 1 && tile.bottom <= bottom + 1),
+        overlaps,
+      };
+    });
+    expect(overlaps, "no tile overlaps another").toBe(0);
+    expect(inside, "every tile inside the board").toBe(true);
+    expect(covered, "the tiles fill the board").toBeGreaterThan(0.995);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+  });
+}
 
 test("a tap plays the piece", async ({ page }) => {
   await openBoard(page);

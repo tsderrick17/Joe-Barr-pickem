@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { mergeSaved, WORKSHOP_SAVED_KEY, WORKSHOP_SHELVES } from "@/lib/workshop-board.js";
+import { gridArea, layoutPlaces, mergeSaved, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_SAVED_KEY } from "@/lib/workshop-board.js";
 import { changedSummary, defaultSettings, KNOBS, knobsFor, liveEase, liveKnobs, pieceById, SAVED_RULES, ZoomControl, type Piece, type Settings } from "@/components/workshop-pieces";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 
 /**
- * The Workshop showroom: every custom piece of the pool once, on shelves grouped by where it lives (Pick'em, Bowl Pool, around the site,
- * the trophy banners), in an ordinary page that scrolls. Tapping a piece plays it. Its settings stay out of sight until its tune button is
+ * The Workshop: every custom piece of the pool once, packed into one board with no gaps, each in a tile shaped for it (a map for a phone,
+ * a tablet and a computer, in src/lib/workshop-board.js). Tapping a piece plays it. Its settings stay out of sight until its tune button is
  * tapped, which opens them in a sheet. Settings are remembered on this device; Your settings gives the text to send so a value becomes what
  * players see.
  */
@@ -27,8 +27,12 @@ const tuneIcon = (
   </svg>
 );
 
-/** One piece on its shelf. Tapping plays it; the tune button opens its settings. */
-function Tile({ piece, span, phoneFull, rows, settings, update, labels, selected, onTune, playAll }: { piece: Piece; span: "full" | undefined; phoneFull: boolean; rows: number; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
+// Each piece's grid area on a phone, a tablet and a computer, worked out once from the maps.
+const PLACES = Object.fromEntries(Object.entries(WORKSHOP_LAYOUTS).map(([size, rows]) => [size, layoutPlaces(rows)])) as Record<keyof typeof WORKSHOP_LAYOUTS, Record<string, Parameters<typeof gridArea>[0]>>;
+const areas = (id: string) => ({ "--at-phone": gridArea(PLACES.phone[id]), "--at-tablet": gridArea(PLACES.tablet[id]), "--at-desktop": gridArea(PLACES.desktop[id]) }) as CSSProperties;
+
+/** One piece in its tile. Tapping plays it; the tune button opens its settings. */
+function Tile({ piece, settings, update, labels, selected, onTune, playAll }: { piece: Piece; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
   const [own, setOwn] = useState(0);
   const plays = own + playAll;   // Play everything plays every piece at once
   const play = () => setOwn((count) => count + 1);
@@ -40,7 +44,7 @@ function Tile({ piece, span, phoneFull, rows, settings, update, labels, selected
     tabIndex: 0,
   } : {};
   return (
-    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} data-phone={phoneFull ? "full" : undefined} data-rows={rows} data-span={span}>
+    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} style={areas(piece.id)}>
       <div className={`workshop-stage ${piece.tapToPlay ? "is-playable" : ""}`} style={{ ...piece.style?.(settings), "--asset-zoom": (piece.zoom ?? 1) * (settings.zoom[piece.id] ?? 1) } as CSSProperties} {...tap}>
         {piece.draw({ settings, update, plays, play, copy: "shelf" })}
       </div>
@@ -107,30 +111,22 @@ export default function WorkshopBoard() {
         </button>
       </div>
 
-      {WORKSHOP_SHELVES.map((shelf) => (
-        <section aria-label={shelf.title} className="workshop-shelf" key={shelf.title}>
-          <h2>{shelf.title}</h2>
-          <div className="workshop-shelf-grid">
-            {shelf.pieces.map((place) => {
-              const piece = pieceById(place.id);
-              if (!piece) return null;
-              return <Tile
-                key={place.id}
-                labels={settings.view.labels}
-                onTune={() => setTuning(piece.id)}
-                piece={piece}
-                playAll={playAll}
-                rows={(place as { rows?: number }).rows ?? 1}
-                selected={tuning === piece.id}
-                settings={settings}
-                phoneFull={Boolean((place as { phoneFull?: boolean }).phoneFull)}
-                span={(place as { span?: "full" }).span}
-                update={update}
-              />;
-            })}
-          </div>
-        </section>
-      ))}
+      <div aria-label="Every piece" className="workshop-board" role="group">
+        {WORKSHOP_ORDER.map((id) => {
+          const piece = pieceById(id);
+          if (!piece) return null;
+          return <Tile
+            key={id}
+            labels={settings.view.labels}
+            onTune={() => setTuning(piece.id)}
+            piece={piece}
+            playAll={playAll}
+            selected={tuning === piece.id}
+            settings={settings}
+            update={update}
+          />;
+        })}
+      </div>
 
       <Sheet onClose={() => setTuning(null)} open={Boolean(tuned)} title={tuned ? `${tuned.title} settings` : "Settings"}>
         {tuned ? <TuneControls piece={tuned} settings={settings} update={update} /> : null}
