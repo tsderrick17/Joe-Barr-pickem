@@ -93,3 +93,27 @@ test("Lab Survivor table: the felt shows this week's chips, sweeps a losing team
   await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
   await expect(page.locator(".lab-felt")).toHaveCount(0);
 });
+
+// Lamp-lit: the night look as a lounge after dark. A night mode, so by day it changes nothing but a note saying so.
+for (const [label, size] of Object.entries(SIZES)) {
+  for (const tryOut of ["survivor", "ticket"]) {
+    test(`Lab lamp-lit ${tryOut}, night at ${label}`, async ({ page }) => {
+      await page.addInitScript(() => window.localStorage.setItem("pickem-lab-lamp", "on"));
+      await openLab(page, tryOut, { theme: "night", size });
+      await expect(page.locator(".lab-stage.is-lamp")).toBeVisible();
+      await expect(page.locator(".lab-lamp-note")).toBeHidden();
+      await holdStill(page);
+      await expect(page.locator(".lab-stage")).toHaveScreenshot(`lab-lamp-${tryOut}-night-${label}.png`, { maxDiffPixels: 12 });
+    });
+  }
+}
+
+test("Lamp-lit is remembered, and by day it only shows a note", async ({ page }) => {
+  await openLab(page, "survivor");
+  const lamp = page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Lamp-lit" });
+  await expect(lamp).toHaveAttribute("aria-pressed", "false");
+  await lamp.click();
+  await expect(page.getByText("Lamp-lit shows in night mode")).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Lamp-lit" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+});
