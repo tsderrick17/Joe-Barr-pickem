@@ -1,27 +1,71 @@
-// The Workshop showroom: every custom piece of the pool once, on shelves grouped by where it lives, in an ordinary scrolling page.
-// Plain data and arithmetic, no React, so the shelves and saved settings can be checked on their own.
+// The Workshop: every custom piece of the pool once, packed into one living board.
+// Plain data and arithmetic, no React, so the board's maps and saved settings can be checked on their own.
 
 /** Settings the Commissioner tried, remembered on this device only. */
 export const WORKSHOP_SAVED_KEY = "pickem-workshop";
 
 /**
- * The shelves, top to bottom. On a computer the pieces of a shelf share its width evenly; a "full" piece runs the whole shelf. On a phone a
- * shelf is two columns, and a piece marked phoneFull runs the whole width there, so no shelf ends with a gap. Banners are two rows tall.
+ * The board: every piece once, packed into one grid with no gaps, each in a tile shaped for it. A layout is drawn as rows of cells, each cell
+ * naming the piece that covers it, so the map reads like the board itself. A piece covers one filled rectangle; every cell is covered. Three
+ * maps: a phone (2 columns), a tablet (4) and a computer (6). The tiles are in the computer's reading order on the page.
  */
-export const WORKSHOP_SHELVES = [
-  { title: "Pick’em", pieces: [{ id: "submit" }, { id: "highlight" }, { id: "chip" }, { id: "stamp" }] },
-  { title: "Bowl Pool", pieces: [{ id: "crest", span: "full" }, { id: "pennant", phoneFull: true }, { id: "tile" }, { id: "wins" }] },
-  { title: "Around the site", pieces: [{ id: "football", span: "full" }, { id: "pull", span: "full" }, { id: "season-over", span: "full" }, { id: "eliminated", span: "full" }] },
-  { title: "Trophy banners", pieces: [{ id: "banner-pickem", rows: 2 }, { id: "banner-bowl", rows: 2 }, { id: "banner-survivor", rows: 2, phoneFull: true }] },
-];
+const C = "crest", F = "football", S = "submit", H = "highlight", K = "chip", P = "pull", M = "pennant", T = "tile", W = "wins", X = "stamp";
+const A = "banner-pickem", B = "banner-bowl", V = "banner-survivor", E = "eliminated", O = "season-over";
+export const WORKSHOP_LAYOUTS = {
+  phone: [
+    [C, C], [S, S], [F, H], [F, K], [P, P], [T, W], [M, X],
+    [A, B], [A, B], [V, V], [V, V], [E, E], [O, O],
+  ],
+  tablet: [
+    [C, C, C, C], [F, F, S, S], [F, F, H, H], [P, P, P, P], [K, K, T, W],
+    [A, A, B, B], [A, A, B, B], [V, V, M, M], [V, V, X, X], [E, E, E, E], [O, O, O, O],
+  ],
+  desktop: [
+    [C, C, C, C, F, F], [S, S, H, K, F, F], [P, P, P, P, M, M],
+    [A, A, B, B, V, V], [A, A, B, B, V, V], [E, E, E, E, E, E], [O, O, O, X, T, W],
+  ],
+};
 
-/** Problems with the shelves against the list of pieces: one missing, one shown twice, or one that does not exist. Empty means every piece is on a shelf once. */
-export function shelfProblems(shelves, pieceIds) {
-  const placed = shelves.flatMap((shelf) => shelf.pieces.map((piece) => piece.id));
+/** Where each piece sits in one layout: its first row and column (from 1) and how many it spans. */
+export function layoutPlaces(rows) {
+  const places = {};
+  rows.forEach((row, r) => row.forEach((id, c) => {
+    const place = places[id];
+    if (!place) places[id] = { row: r + 1, column: c + 1, rows: 1, columns: 1 };
+    else {
+      place.rows = Math.max(place.rows, r + 2 - place.row);
+      place.columns = Math.max(place.columns, c + 2 - place.column);
+    }
+  }));
+  return places;
+}
+
+/** The CSS grid-area of a place: row start / column start / row end / column end. */
+export const gridArea = ({ row, column, rows, columns }) => `${row} / ${column} / ${row + rows} / ${column + columns}`;
+
+/** The order of the pieces on the page: the computer's map read row by row. */
+export const WORKSHOP_ORDER = [...new Set(WORKSHOP_LAYOUTS.desktop.flat())];
+
+/**
+ * Problems with a layout against the list of pieces: a row of the wrong width, a piece missing, one that does not exist, or one whose
+ * cells are not a single filled rectangle. Empty means every piece is on the board once and the board has no gaps.
+ */
+export function layoutProblems(rows, pieceIds) {
   const problems = [];
-  for (const id of pieceIds) if (!placed.includes(id)) problems.push(`${id} is on no shelf`);
-  for (const id of new Set(placed)) if (placed.filter((other) => other === id).length > 1) problems.push(`${id} is on more than one shelf`);
+  const width = rows[0]?.length ?? 0;
+  rows.forEach((row, r) => { if (row.length !== width) problems.push(`row ${r + 1} is ${row.length} wide, not ${width}`); });
+  const placed = new Set(rows.flat());
+  for (const id of pieceIds) if (!placed.has(id)) problems.push(`${id} is not on the board`);
   for (const id of placed) if (!pieceIds.includes(id)) problems.push(`${id} is not a piece`);
+  for (const [id, place] of Object.entries(layoutPlaces(rows))) {
+    for (let r = place.row; r < place.row + place.rows; r++) {
+      for (let c = place.column; c < place.column + place.columns; c++) {
+        if (rows[r - 1]?.[c - 1] !== id) { problems.push(`${id} is not one rectangle`); r = Infinity; break; }
+      }
+    }
+    const cells = rows.flat().filter((cell) => cell === id).length;
+    if (cells !== place.rows * place.columns && !problems.includes(`${id} is not one rectangle`)) problems.push(`${id} is not one rectangle`);
+  }
   return problems;
 }
 
