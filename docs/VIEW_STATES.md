@@ -33,9 +33,9 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
 | Forfeited the playoffs: "You forfeited, thanks for playing." banner, no receipt | `playoff-forfeited` |
 | Night mode Slate: official (teal) lines and chips are readable on the dark rows; every one is checked to 4.5:1 contrast (behavior test) | `night-upcoming-picked`, `night-live-survivor`, phone 390 and desktop 1280 |
-| "How it works" (Commissioner preview): a familiar player sees the short rules (PICK'EM 2 picks each week, SURVIVOR one team a week, each once) with the rest folded; the early-game note stays in view | `how-folded-phone-390`, `how-folded-desktop-1280`, night `night-how-folded-*` (`upcoming-unpicked`, `howItWorks: "folded"`) |
-| "How it works" opened by a tap: today's notes, then the rules (a push is a loss; Survivor ends on a loss, tie or missed week) | `how-opened-phone-390`, `how-opened-desktop-1280`; playoffs (every playoff game, stay in while you can tie the leader) `how-opened-playoff-phone-390` |
-| "How it works" for a player new to this kind of week (week 1, first playoff round): everything open | `how-new-player-phone-390`, `how-new-player-desktop-1280`; behavior tests: the button folds and opens, the early-game note is always shown, a player outside the preview keeps the classic instructions with no button |
+| "How it works" (every player): a familiar player sees the short rules (PICK'EM 2 picks each week; SURVIVOR one team a week, each once, a loss, tie or missed week ends the run) with the notes folded; the early-game note stays in view | `how-folded-phone-390`, `how-folded-desktop-1280`, night `night-how-folded-*` (`upcoming-unpicked`, `howItWorks: "folded"`) |
+| "How it works" opened by a tap: two groups of three, THE LINES and YOUR PICKS (a push is a loss) | `how-opened-phone-390`, `how-opened-desktop-1280`; playoffs (every playoff game, stay in while you can tie the leader) `how-opened-playoff-phone-390` |
+| "How it works" for a player new to this kind of week (week 1, first playoff round): everything open | `how-new-player-phone-390`, `how-new-player-desktop-1280`; behavior tests: the button folds and opens, the early-game note is always shown, the instructions start open before the Slate says how |
 | The Forfeit link at the foot of every playoff Slate (`playoff-upcoming`, `playoff-six-picks`, `playoff-live`), and its three questions, one at a time | `forfeit-step-1/2/3-phone-390` (behavior test in `slate-flow.visual.spec.ts`; the link is absent from regular weeks, forfeited, eliminated and off-season Slates) |
 
 ## Standings (`/`) — `standings.visual.spec.ts`, fixtures `standings-fixtures.mjs`
@@ -98,8 +98,8 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | A postponed and a cancelled game with the picks kept (the word replaces the venue and the buttons are locked), a game with no announced time ("Time TBD") and a preliminary line (black, not teal) | `disrupted` |
 | A game that kicked off the day before and has no final yet ("Final score pending" replaces the venue, the picks stay locked), beside a final game | `final-pending` |
 | Not a participant, first kickoff passed | `entry-closed` |
-| "How it works" (Commissioner preview): with Bowl picks saved, two short rules and the rest folded; Opt out stays in view | `bowl-how-folded-day-390`, `bowl-how-folded-day-1280`, `bowl-how-folded-night-390` |
-| "How it works" opened by a tap | `bowl-how-opened-day-390`, `bowl-how-opened-day-1280` |
+| "How it works" (every player): with Bowl picks saved, every rule is folded away; How it works and Opt out stay in view | `bowl-how-folded-day-390`, `bowl-how-folded-day-1280`, `bowl-how-folded-night-390` |
+| "How it works" opened by a tap: all six rules, the tiebreaker last | `bowl-how-opened-day-390`, `bowl-how-opened-day-1280` |
 | "How it works" with no Bowl picks saved yet: everything open | `bowl-how-new-player-day-390` |
 
 ## Commissioner area (the Wheel at `/admin` and its pages, `/admin/players`, `/admin/reminders`; the Trophy Room at `/trophy-room` is shot here too) — `commissioner.visual.spec.ts`, fixtures `commissioner-fixtures.mjs`

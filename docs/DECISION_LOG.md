@@ -19,6 +19,20 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - "How it works" for every player; Slate notes in two groups; Bowl rules all folded; tiebreaker wording
+
+- The owner opened the folding "How it works" instructions (a Commissioner preview since 2026-11-04) to every player. The Slate
+  reads whether the player is familiar (one small `picks` read, now for every player) and the Bowl Pool uses the player's own saved
+  Bowl picks, as before.
+- On the Slate the owner asked for the notes in two groups of three. They are THE LINES (lines lock at 8 AM on game day; teal
+  lines are official; favorites left, home team ALL CAPS) and YOUR PICKS (changes until kickoff; click SUBMIT; a push is a loss).
+  The two rules that belong to one game moved into that game's always-visible card: Survivor's "a loss, a tie or a missed week
+  ends your run", and in the playoffs Pick'em's "you stay in while you can still tie the leader".
+- On the Bowl Pool the owner asked for all of it hidden: folded, only How it works and Opt out show; all six rules are in the fold.
+- Tiebreaker wording by the guess box, chosen by the owner from four options (the rule is unchanged): "Guess the total points both
+  teams score in the National Championship. If players tie on wins, the closest guess wins, over or under." The short rule line
+  and the Bowl opening email keep their wording.
+
 ## 2026-11-10 - Holiday skins for the Pick'em Pad
 
 - The owner asked for fun, heavily themed "skins" that keep the pad's data and layout exactly as they are, starting with the

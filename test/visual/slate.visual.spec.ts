@@ -136,7 +136,7 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
     await serve(page, scenario);
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
-    await expect(page.getByText("Click a poker chip to choose a team.")).toHaveCount(shown ? 1 : 0);
+    await expect(page.getByText("Click a poker chip to choose one team to win each week.")).toHaveCount(shown ? 1 : 0);
   });
 }
 
@@ -302,7 +302,7 @@ for (const scenario of ["upcoming-picked", "live-survivor"]) {
   });
 }
 
-// "How it works" (a Commissioner preview for now): a familiar player sees the short rules folded, a new one sees everything open, and a
+// "How it works": a familiar player sees the short rules with the notes folded, a new one sees everything open, and a
 // tap opens the fold. The early-game note always stays in view. Each tap waits out the fold's motion before the screenshot.
 const openHowItWorks = async (page: Page) => {
   await page.getByRole("button", { name: "How it works" }).click();
@@ -347,12 +347,12 @@ test("Slate how it works folds and opens, and keeps the early-game note in view"
   await expect(lockNote).toBeHidden();
 });
 
-test("Slate players outside the preview keep the classic instructions", async ({ page }) => {
+test("Slate how it works starts open before the Slate says how", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "day", "visual-player");
   await serve(page, "upcoming-unpicked");
   await page.goto("/board");
   await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
-  await expect(page.getByRole("button", { name: "How it works" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "How it works" })).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByText("Lines lock at 8 AM on gameday, unless otherwise noted.")).toBeVisible();
 });
