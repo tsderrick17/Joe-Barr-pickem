@@ -382,6 +382,20 @@ for (const width of [360, 390]) {
   });
 }
 
+// No Commissioner page is wider than a phone: anything wider lets an iPhone zoom out past full width (the Odds credits chart's
+// screen-reader table once did).
+test("no Commissioner page is wider than a 390 phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  for (const path of ["/admin", "/admin/gameday", "/admin/health", "/admin/reminders", "/admin/players", "/admin/bowl-pool", "/admin/season", "/admin/stats", "/admin/odds", "/admin/limits", "/admin/workshop", "/admin/workshop/lab"]) {
+    await page.goto(path);
+    await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+    await page.waitForTimeout(1500);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), path).toBeLessThanOrEqual(0);
+  }
+});
+
 // The all-time table has just wins and hit rate, and each sorts on its own: Connor has the best hit rate, Tyler the most wins. Hit rate
 // ranks players with enough picks first, so a young player with a high rate sits under them.
 test("Trophy room: wins and hit rate sort independently", async ({ page }) => {

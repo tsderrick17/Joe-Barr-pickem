@@ -26,6 +26,11 @@ A first try (a new combined betting slip) was not a material improvement and was
 Refined look: the receipt printed on the ticket's paper and ink with the ticket's double rules; the ticket given the receipt's serrated
 ends and a perforation with round notches above its status stub. No font or size changes. It is scoped to a `ticket-family` class, so
 nothing changes for players until the owner approves; going live is adding that class on the Slate and Standings.
+## 2026-11-11 - No Commissioner page is wider than the phone
+
+On the Odds credits page an iPhone could zoom out past full width, which made it hard to get back. The chart's screen-reader table
+was marked `sr-only`, but a table does not shrink to 1px, so a month of columns made the page 463px wide on a 390px phone. The table
+now sits inside a hidden box. A behaviour test checks every Commissioner page is no wider than a 390 phone.
 
 ## 2026-11-11 - The pool constitution, trimmed
 
