@@ -392,7 +392,10 @@ measure database requests or end-to-end route time.
   incidents mark Health red, and Odds credits shows credits used (amber from 88% of the limit). Every page shares the bar with the
   Handbook and the bottom dial (`src/app/admin/layout.tsx`); the dial's rules (where a drag lands, the cancel, the flick, the settle) are
   `releaseTarget`, `dialPlace` and `swingAt`. There are no fold-down drawers on the pages: every tool of the old Today, Performance, Season and
-  Bowl Pool tabs is on its page in plain view.
+  Bowl Pool tabs is on its page in plain view. The Handbook sheet holds the gameday runbook and the pool constitution
+  (`src/components/commissioner-handbook.tsx`): three parts (Format, Mechanics, Rules) and fifteen articles of short numbered
+  clauses, each stating something the site enforces. It is Commissioner-only for now. When a pool rule changes, its clause
+  changes in the same pull request.
 - The numbers pages (Pool stats, Odds credits, Free limits) share one chart engine (`src/components/commissioner/dash-chart.tsx`, its arithmetic in
   `src/lib/dash-chart.js`): one y-axis, a hairline grid, 2px lines, columns at most 24px wide with a rounded top, a legend for two or more series,
   labels only at line ends and column tops, a crosshair and read-out under the pointer or finger, and a hidden table with the same numbers. Two series

@@ -19,6 +19,22 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The pool constitution is rewritten in three parts
+
+- The owner asked for a general pass of the league constitution, then: keep it Commissioner-only for now and nail down the
+  format, mechanics and rules of the pool in it. It stays in the Handbook sheet.
+- It is now three parts and fifteen articles of short numbered clauses. Format: the pool, the season, the pool week.
+  Mechanics: the lines, making picks, who sees what, scores and grading, emails and notifications. Rules: Pick'em, Survivor,
+  the playoffs, the Bowl Pool, postponed and cancelled games, champions and the record, the Commissioner.
+- Every clause states something the site enforces today, checked against the project reference and the code. Nothing is in
+  it that the site does not do: no dues, payouts or other house rules, and no claim that could not be verified. A rule that
+  changes in the code changes its clause in the same pull request.
+- The old version left out the Bowl Pool, the 8:00 AM line lock, how many picks a week, forfeiting, shared Survivor titles
+  and the Trophy Room. The two-column layout (runbook beside constitution) became one column so the long text reads straight
+  down on a phone.
+- It does not state when the Trophy Room opens to players; that date is the owner's to set.
+- Screenshot states `commissioner-handbook-constitution` (day phone and desktop, night phone) hold the layout.
+
 ## 2026-11-10 - Holiday skins for the Pick'em Pad
 
 - The owner asked for fun, heavily themed "skins" that keep the pad's data and layout exactly as they are, starting with the
