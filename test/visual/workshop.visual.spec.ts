@@ -4,7 +4,7 @@ import { signIn } from "./session";
 // The Workshop: every custom piece once, packed into one board, inside the Commissioner area. Its settings stay hidden until a piece's tune button is tapped.
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
 
-async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280"], saved, motion = false }: { theme?: string; size?: { width: number; height: number }; saved?: string; motion?: boolean } = {}) {
+async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280"], saved, motion = false, path = "/admin/workshop" }: { theme?: string; path?: string; size?: { width: number; height: number }; saved?: string; motion?: boolean } = {}) {
   await page.setViewportSize(size);
   await signIn(page, theme);
   await page.emulateMedia({ reducedMotion: motion ? "no-preference" : "reduce" });
@@ -13,9 +13,9 @@ async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
-  await page.goto("/admin/workshop");
+  await page.goto(path);
   const board = page.locator(".workshop");
-  await expect(board.locator(".workshop-tile").first()).toBeVisible({ timeout: 30_000 });
+  await expect(board.locator(path === "/admin/workshop" ? ".workshop-tile" : "[data-haptic-test]").first()).toBeVisible({ timeout: 30_000 });
   return board;
 }
 
@@ -52,6 +52,12 @@ for (const theme of ["day", "night"]) {
       await openBoard(page, { theme, size });
       await holdStill(page);
       await expect(page).toHaveScreenshot(`workshop-showroom-${theme}-${label}.png`, { fullPage: true });
+    });
+
+    test(`Workshop Lab, ${theme} at ${label}`, async ({ page }) => {
+      await openBoard(page, { theme, size, path: "/admin/workshop/lab" });
+      await holdStill(page);
+      await expect(page).toHaveScreenshot(`workshop-lab-${theme}-${label}.png`, { fullPage: true });
     });
 
     test(`Workshop with the football's settings open, ${theme} at ${label}`, async ({ page }) => {

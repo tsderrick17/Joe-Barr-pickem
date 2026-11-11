@@ -58,7 +58,7 @@ export function HapticFeelTest() {
   }
 
   return <section aria-labelledby="haptic-feel-test-title" className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" data-haptic-test={kind}>
-    <h2 className="text-sm font-black tracking-[.14em]" id="haptic-feel-test-title">FEEL TEST (COMMISSIONER ONLY)</h2>
+    <h2 className="text-sm font-black tracking-[.14em]" id="haptic-feel-test-title">FEEL TEST</h2>
     <p className="mt-3 text-sm leading-5 text-slate-600">{DEVICE_LINE[kind]}</p>
     <div className="mt-4 grid gap-2 sm:grid-cols-2">
       {FEELS.map((feel) => <button className={`${secondary} relative text-left`} key={feel} onClick={() => give(feel)} type="button">
