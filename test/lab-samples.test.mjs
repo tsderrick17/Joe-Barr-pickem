@@ -52,3 +52,10 @@ test("the Lab opens the try-out in the address, else the last one, else the newe
   assert.equal(labChoice(null, null), LAB_SHELF[0].id);
   assert.equal(labChoice(undefined, "nope"), LAB_SHELF[0].id);
 });
+
+test("the sample standings hold every sample player once, best first, within two picks a week", async () => {
+  const { LAB_STANDINGS } = await import("../src/lib/lab-samples.js");
+  assert.deepEqual(LAB_STANDINGS.map((row) => row.name).sort(), [...LAB_PLAYERS].sort());
+  for (let index = 1; index < LAB_STANDINGS.length; index += 1) assert.ok(LAB_STANDINGS[index - 1].wins >= LAB_STANDINGS[index].wins);
+  for (const row of LAB_STANDINGS) assert.ok(row.wins >= 0 && row.wins <= 18);
+});

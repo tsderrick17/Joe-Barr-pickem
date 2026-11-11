@@ -117,3 +117,33 @@ test("Lamp-lit is remembered, and by day it only shows a note", async ({ page })
   await page.reload();
   await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Lamp-lit" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
 });
+
+// The clubhouse: each page as a room. Every room gets a picture, day and night, phone and desktop.
+const ROOMS = ["Standings", "The Slate", "Trophy Room", "Bowl Pool"];
+for (const theme of ["day", "night"]) {
+  for (const [label, size] of Object.entries(SIZES)) {
+    for (const room of ROOMS) {
+      test(`Lab clubhouse, ${room}, ${theme} at ${label}`, async ({ page }) => {
+        await openLab(page, "clubhouse", { theme, size });
+        await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: room }).click();
+        await holdStill(page);
+        await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-${room.toLowerCase().replace(/[^a-z]+/g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+      });
+    }
+  }
+}
+
+test("the clubhouse doors lead to each room, one at a time", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  const doors = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(page.locator(".lab-leaderboard")).toBeVisible();
+  await expect(page.locator(".lab-leaderboard li")).toHaveCount(6);
+  await doors.getByRole("button", { name: "The Slate" }).click();
+  await expect(page.locator(".lab-bigboard li")).toHaveCount(4);
+  await expect(page.locator(".lab-leaderboard")).toHaveCount(0);
+  await doors.getByRole("button", { name: "Trophy Room" }).click();
+  await expect(page.locator(".lab-plaque")).toHaveCount(3);
+  await doors.getByRole("button", { name: "Bowl Pool" }).click();
+  await expect(page.locator(".lab-program")).toBeVisible();
+  await expect(doors.getByRole("button", { name: "Bowl Pool" })).toHaveAttribute("aria-pressed", "true");
+});

@@ -86,3 +86,9 @@ export function labAtsResult(game, team) {
   const spread = team === game.favourite ? game.line : -game.line;
   return margin + spread > 0 ? "W" : "L";
 }
+
+/** Sample Pick'em standings after week 9 (two picks a week, so 18 at most), best first. */
+export const LAB_STANDINGS = [
+  { name: "Earl", wins: 13 }, { name: "Walt", wins: 12 }, { name: "Dottie", wins: 12 }, { name: "Rosie", wins: 11 }, { name: "June", wins: 10 },
+  { name: "Lou", wins: 9 }, { name: "Marge", wins: 9 }, { name: "Hank", wins: 8 }, { name: "Bev", wins: 7 }, { name: "Gus", wins: 6 },
+];
