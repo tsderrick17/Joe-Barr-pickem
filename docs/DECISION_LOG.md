@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - The pool constitution, trimmed
+
+Owner review of the Handbook's constitution. Talk of points is gone: the Standings count winning picks and the most wins at the end of
+the season is champion. Dropped as repeats or unneeded: the push clause in The lines (Winning already says a push does not count), the
+early-week clause in Making your picks, Survivor's whole-season share, the playoffs' "not losses either", the Bowl Pool's "one point"
+and its "never counts in Pick'em or Survivor". Forfeit reads "It asks you to confirm 3 times and cannot be undone", and the Commissioner
+clause no longer mentions undoing a forfeit. The Bowl Pool opens "the day after Selection Sunday".
 ## 2026-11-11 - The Commissioner dial is sticky, not fixed
 
 On the Commissioner's iPhone home-screen app the bottom dial drifted up to mid-screen while a long page (the Workshop) scrolled, and
