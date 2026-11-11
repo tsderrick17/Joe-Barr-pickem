@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - Survivor as a card table, tried in the Lab
+
+From the offseason shortlist the owner loved both the poker and the craps idea for Survivor, kept the list view, and wanted a player's
+stack to open their weeks. The Lab try-out joins them: the felt carries the craps-style layout of all 32 teams with this week's chips on
+the teams taken (a losing team's box is swept), and the seats carry the poker idea (a stack of chips, one per week survived; an out seat
+goes dark). Tap a seat for that player's weeks; List shows today's Survivor Table with the same sample league. Felt and rail come from
+the Wheel's greens and brass. Sample players only; nothing reaches players until the owner approves.
+
 ## 2026-11-11 - Ticket and receipt as one family, tried in the Lab
 
 The owner likes today's ticket and receipt but wants them refined into one aesthetic "without losing their defining characteristics".

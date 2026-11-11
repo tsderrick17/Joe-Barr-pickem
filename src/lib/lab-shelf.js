@@ -1,10 +1,11 @@
 /**
  * The Workshop Lab's shelf: the try-outs, newest first. The first one opens when nothing else is asked for.
- * @typedef {"ticket" | "feel"} LabTryOut
+ * @typedef {"survivor" | "ticket" | "feel"} LabTryOut
  */
 
 /** @type {Array<{ id: LabTryOut, name: string }>} */
 export const LAB_SHELF = [
+  { id: "survivor", name: "Survivor table" },
   { id: "ticket", name: "Ticket & receipt" },
   { id: "feel", name: "Feel test" },
 ];

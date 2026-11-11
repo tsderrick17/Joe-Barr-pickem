@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
+import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { LabTicketFamily } from "@/components/lab/lab-ticket-family";
 import { WorkshopTabs } from "@/components/workshop-tabs";
 import { LAB_SHELF, labChoice, type LabTryOut } from "@/lib/lab-shelf.js";
@@ -39,6 +40,7 @@ export default function WorkshopLabPage() {
         <div aria-label="Try-outs" className="lab-chips lab-shelf" role="group">
           {LAB_SHELF.map((item) => <button aria-pressed={choice === item.id} key={item.id} onClick={() => choose(item.id)} type="button">{item.name}</button>)}
         </div>
+        {choice === "survivor" ? <LabSurvivorTable /> : null}
         {choice === "ticket" ? <LabTicketFamily /> : null}
         {choice === "feel" ? <HapticFeelTest /> : null}
       </> : <p className="workshop-lab-intro">{access === "checking" ? "Checking sign-in…" : "Commissioner only."}</p>}
