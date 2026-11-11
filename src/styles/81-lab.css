@@ -141,3 +141,69 @@
 .lab-stage.is-lamp .lab-felt { background-image: var(--lamp-felt-light), radial-gradient(ellipse at 50% 35%, rgba(255, 255, 255, .1), transparent 65%), repeating-radial-gradient(circle, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px); }
 .lab-stage.is-lamp .my-ticket { filter: var(--lamp-glow) drop-shadow(0 6px 12px rgba(37, 30, 18, .14)); }
 .lab-stage.is-lamp .slate-receipt-strip { filter: var(--lamp-glow) drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow); }
+
+/* ---- The clubhouse: each page a room, each keeping its own character ---- */
+.lab-clubhouse { display: grid; gap: 16px; }
+/* The doors: one per room, a brass knob on each. */
+.lab-doors { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); }
+.lab-doors button { align-items: center; background: linear-gradient(var(--club-paper), var(--club-page)); border: 1px solid var(--club-line); border-radius: 10px 10px 2px 2px; color: var(--club-ink); cursor: pointer; display: flex; font-size: 12px; font-weight: 700; gap: 6px; justify-content: center; min-height: 52px; padding: 0 6px; text-align: center; }
+.lab-doors button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
+.lab-door-knob { background: radial-gradient(circle at 35% 35%, var(--cw-brass-1), var(--cw-gold) 60%); border-radius: 50%; flex: none; height: 8px; width: 8px; }
+
+/* Standings: the leaderboard, white number plates hand-set on a green board. */
+.lab-leaderboard { background: var(--cw-green); border: 6px solid var(--cw-deep); border-radius: 6px; box-shadow: 0 8px 18px rgba(37, 30, 18, .25); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 14px 14px 10px; width: 100%; }
+.lab-leaderboard header { align-items: baseline; border-bottom: 2px solid var(--cw-gold); display: grid; grid-template-columns: 1fr auto; padding-bottom: 8px; }
+.lab-leaderboard header p { color: var(--cw-gold-lt); font-size: .62rem; font-weight: 800; grid-column: 1 / -1; letter-spacing: .24em; margin: 0; }
+.lab-leaderboard h3 { font-family: var(--font-serif); font-size: 1.6rem; letter-spacing: .12em; margin: 0; }
+.lab-leaderboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 800; letter-spacing: .16em; }
+.lab-leaderboard ol { display: grid; gap: 5px; list-style: none; margin: 10px 0 0; padding: 0; }
+.lab-leaderboard li { display: grid; gap: 5px; grid-template-columns: 2.2rem 1fr 2.6rem 2.6rem; }
+.lab-plate { align-items: center; background: linear-gradient(var(--cw-brass-1), var(--cw-cream)); border-radius: 2px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 1px 1px rgba(0, 0, 0, .4); color: var(--cw-deep); display: flex; font-family: Arial, Helvetica, sans-serif; font-size: 1.05rem; font-weight: 900; height: 2.1rem; justify-content: center; }
+.lab-plate.is-name { justify-content: flex-start; letter-spacing: .1em; padding: 0 10px; }
+.lab-plate.is-back { color: var(--cw-bad); }
+.lab-leaderboard footer { display: grid; font-size: .58rem; font-weight: 800; gap: 5px; grid-template-columns: 1fr 2.6rem 2.6rem; letter-spacing: .12em; padding-top: 6px; text-align: center; }
+.lab-leaderboard footer span:first-child { grid-column: 2; }
+
+/* The Slate: the big board at a sportsbook, lit amber lines on black. */
+.lab-bigboard { background: rgb(14 14 12); border: 4px solid rgb(52 50 46); border-radius: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--cw-warn); font-family: "Courier New", monospace; margin: 0 auto; max-width: 640px; padding: 12px; width: 100%; }
+.lab-bigboard header { border-bottom: 1px dashed rgba(240, 180, 41, .4); display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; padding-bottom: 8px; }
+.lab-bigboard h3 { font-size: 1.2rem; letter-spacing: .2em; margin: 0; text-shadow: 0 0 6px rgba(240, 180, 41, .55); }
+.lab-bigboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 700; }
+.lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
+.lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px; grid-template-columns: 1fr 3.2rem; padding: 8px 0; }
+.lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+.lab-board-team { align-items: center; color: var(--cw-cream); display: flex; font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .12em; }
+.lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
+.lab-board-at { display: none; }
+.lab-room-logo { height: 22px; object-fit: contain; width: 22px; }
+
+/* Trophy Room: a lit case of brass plaques. */
+.lab-case { background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255, 230, 170, .25), transparent 70%), linear-gradient(rgb(46 30 22), rgb(26 17 12)); border: 6px solid rgb(74 50 34); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); padding: 16px; }
+.lab-case header { text-align: center; }
+.lab-case h3 { font-family: var(--font-serif); font-size: 1.5rem; margin: 0; }
+.lab-case header p { color: var(--cw-gold-lt); font-size: .8rem; margin: 2px 0 12px; }
+.lab-case-shelf { border-bottom: 6px solid rgb(74 50 34); display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding-bottom: 10px; }
+.lab-plaque { background: linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 45%, var(--cw-brass-3) 70%, var(--cw-gold)); border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(255, 253, 247, .5), inset 0 0 0 4px rgba(42, 31, 0, .25), 0 3px 6px rgba(0, 0, 0, .5); color: var(--cw-pip-ink); padding: 10px 12px; text-align: center; }
+.lab-plaque-season { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; }
+.lab-plaque dl { display: grid; gap: 3px; margin: 0; }
+.lab-plaque dl div { display: flex; font-size: .8rem; justify-content: space-between; }
+.lab-plaque dt { font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.lab-plaque dd { font-family: var(--font-serif); font-weight: 700; margin: 0; }
+
+/* Bowl Pool: the game-day program, navy and gold. */
+.lab-program { background: rgb(22 34 58); border: 1px solid var(--cw-gold); border-radius: 4px; box-shadow: inset 0 0 0 5px rgb(22 34 58), inset 0 0 0 6px var(--cw-gold), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 22px 20px; width: 100%; }
+.lab-program header { border-bottom: 1px solid rgba(201, 164, 95, .6); padding-bottom: 12px; text-align: center; }
+.lab-program header p { color: var(--cw-gold); font-size: .62rem; font-weight: 800; letter-spacing: .3em; margin: 0; }
+.lab-program h3 { font-family: var(--font-serif); font-size: 1.8rem; font-style: italic; margin: 4px 0; }
+.lab-program header span { color: var(--cw-gold-lt); font-size: .78rem; }
+.lab-program ol { display: grid; list-style: none; margin: 10px 0 0; padding: 0; }
+.lab-program li { align-items: baseline; border-bottom: 1px dotted rgba(201, 164, 95, .45); display: grid; gap: 10px; grid-template-columns: 3.4rem 1fr auto; padding: 9px 0; }
+.lab-program li span { color: var(--cw-gold); font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
+.lab-program li strong { font-family: var(--font-serif); font-size: 1rem; }
+.lab-program li em { color: var(--cw-gold-lt); font-size: .75rem; }
+
+@media (min-width: 768px) {
+  .lab-bigboard li { grid-template-columns: 9rem 1fr 4rem 1.6rem 1fr 4rem; }
+  .lab-board-time { grid-column: auto; }
+  .lab-board-at { color: rgba(240, 180, 41, .6); display: block; text-align: center; }
+}

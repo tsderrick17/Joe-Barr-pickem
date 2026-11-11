@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - The clubhouse, tried in the Lab
+
+From the offseason shortlist: the pages as rooms of one clubhouse, each keeping its own character (the owner rejected one uniform house
+style). The Lab try-out shows only each room's sign and first rows with the sample league: Standings as a leaderboard of hand-set number
+plates, the Slate as a sportsbook's big board, the Trophy Room as a lit case of brass plaques, the Bowl Pool as a game-day program. Existing
+fonts only. Nothing changes on the real pages until the owner picks what to carry over.
+
 ## 2026-11-11 - Lamp-lit night, tried in the Lab
 
 From the offseason shortlist: night as "the lounge after dark", best judged on the Survivor table. A Lamp-lit switch on the Lab shelf puts
