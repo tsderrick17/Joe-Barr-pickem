@@ -29,10 +29,9 @@ and add a row above.
   The two rules that belong to one game moved into that game's always-visible card: Survivor's "a loss, a tie or a missed week
   ends your run", and in the playoffs Pick'em's "you stay in while you can still tie the leader".
 - On the Bowl Pool the owner asked for all of it hidden: folded, only How it works and Opt out show; all six rules are in the fold.
-- Tiebreaker wording, chosen by the owner from four options (the rule is unchanged): the rule line reads "Ties go to the closest
-  guess at the National Championship's total points."; above the guess box, "Guess the total points both teams score in the
-  National Championship. If players tie on wins, the closest guess wins, over or under." The Bowl opening email's step says the
-  same.
+- Tiebreaker wording by the guess box, chosen by the owner from four options (the rule is unchanged): "Guess the total points both
+  teams score in the National Championship. If players tie on wins, the closest guess wins, over or under." The short rule line
+  and the Bowl opening email keep their wording.
 
 ## 2026-11-10 - Holiday skins for the Pick'em Pad
 

@@ -65,7 +65,7 @@ export function bowlOpeningMessage({ seasonYear, firstGame, finalGameKickoffAt =
         "Every correct pick against the spread is one point.",
         "Lines lock at 8 AM Eastern on game day, and each pick locks at that game's kickoff.",
         "Pick now or come back later. You can change any pick until its kickoff.",
-        "If players tie on wins, the closest guess at the total points in the National Championship wins, over or under.",
+        "The tiebreaker is the total points scored in the National Championship.",
         `The first game is the ${bowlSpokenName(firstGame.bowl_name)} on ${longDay(firstGame.kickoff_at)}. You can opt out any time before then.`,
       ],
     },

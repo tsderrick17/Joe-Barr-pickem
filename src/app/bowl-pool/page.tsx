@@ -220,7 +220,7 @@ export default function BowlPoolPage() {
             {/* Every instruction folds away under How it works once a player has saved Bowl picks. */}
             <div className="bowl-how"><HowItWorksToggle className="bowl-how-toggle" controls={rulesFoldId} onToggle={() => setRulesToggled(!rulesOpen)} open={rulesOpen} /></div>
             <div className={`how-fold ${rulesOpen ? "is-open" : ""}`} id={rulesFoldId} inert={!rulesOpen}>
-              <div className="how-fold-inner"><ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>Click a team to pick it, then click SUBMIT to save.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Ties go to the closest guess at the National Championship&apos;s total points.</li></ul></div>
+              <div className="how-fold-inner"><ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>Click a team to pick it, then click SUBMIT to save.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul></div>
             </div>
             {!poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
           </div>

@@ -55,7 +55,7 @@ test("the words are the ones the owner approved, filled in from the schedule", (
     "Every correct pick against the spread is one point.",
     "Lines lock at 8 AM Eastern on game day, and each pick locks at that game's kickoff.",
     "Pick now or come back later. You can change any pick until its kickoff.",
-    "If players tie on wins, the closest guess at the total points in the National Championship wins, over or under.",
+    "The tiebreaker is the total points scored in the National Championship.",
     "The first game is the Salute to Veterans Bowl on Tuesday, Dec 15. You can opt out any time before then.",
   ]);
   assert.equal(bowlOpeningMessage({ seasonYear: 2026, firstGame: GAMES[0] }).snapshot.intro.endsWith("all the way through the National Championship."), true, "no date until the title game has one");

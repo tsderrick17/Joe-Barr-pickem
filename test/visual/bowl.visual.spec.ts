@@ -130,7 +130,7 @@ for (const [state, picks, theme, width, open] of HOW_STATES) {
     await settleNetwork(page);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     const toggle = page.getByRole("button", { name: "How it works" });
-    const tiebreakerRule = page.getByText("Ties go to the closest guess at the National Championship's total points.");
+    const tiebreakerRule = page.getByText("Tiebreaker is total points in Championship game.");
     await expect(toggle).toHaveAttribute("aria-expanded", picks === "picked" ? "false" : "true");
     if (picks === "picked") await expect(tiebreakerRule).toBeHidden();
     if (open) {
