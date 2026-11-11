@@ -1,4 +1,5 @@
 import { seasonSnapshotReleased, snapshotReleaseWeek } from "@/lib/season-snapshot.js";
+import { padSkinForWeek } from "@/lib/pad-skin.js";
 import { activeWeekState } from "@/lib/season-snapshot-freshness.js";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateActivePlayer } from "@/lib/authenticate-active-player";
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
   const [{ data: periods, error: periodsError }, { data: championSeason }] = await Promise.all([
     supabaseAdmin
       .from("scoring_periods")
-      .select("id, display_name, display_order, status, period_type, max_picks")
+      .select("id, display_name, display_order, status, period_type, max_picks, starts_at, ends_at")
       .eq("season_id", season.id)
       .order("display_order"),
     // A trophy is decorative, never a reason to make the whole pool
@@ -495,6 +496,7 @@ export async function GET(request: NextRequest) {
     week: currentWeek.display_name,
     weekStatus: currentWeek.status as PeriodStatus,
     maxPicks: currentWeek.max_picks,
+    padSkin: padSkinForWeek(currentWeek),
     nextRevealAt: nextPickRevealAt(
       [...((games ?? [])).map((game) => game.kickoff_at), ...survivorGames.map((game) => game.kickoff_at)],
       currentTime,

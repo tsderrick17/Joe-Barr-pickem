@@ -13,7 +13,7 @@ async function settled(page: Page) {
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Night mode is checked on the states that exercise the most styles.
-const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season"]);
+const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season", "skin-halloween", "skin-thanksgiving", "skin-christmas"]);
 
 async function serve(page: Page, scenario: string) {
   const home = homeResponse(scenario);

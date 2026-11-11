@@ -126,6 +126,10 @@ export const SCENARIOS = {
   "bowl-minimized": { ...base, showBowlCard: false, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
   // In the playoffs the Season Snapshot gets a Regular | Playoffs switch (it opens on the playoffs).
   "commissioner-playoff": { ...base, isCommissioner: true, seasonSnapshotReleased: true, isPlayoff: true, week: "Wild Card", maxPicks: 6, serverTime: "2027-01-10T19:00:00Z", showSurvivorStandings: false, survivorAvailable: false, rows: rows({ maxPicks: 6, playoff: true }), survivorRows: [] },
+  // The holiday weeks: the Pick'em Pad wears that holiday's skin (src/lib/pad-skin.js), with one player's picks still hidden.
+  "skin-halloween": { ...base, week: "Week 8", padSkin: "halloween", serverTime: "2027-10-31T18:30:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: null }) },
+  "skin-thanksgiving": { ...base, week: "Week 12", padSkin: "thanksgiving", serverTime: "2026-11-26T18:30:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: null }) },
+  "skin-christmas": { ...base, week: "Week 16", padSkin: "christmas", serverTime: "2026-12-25T18:30:00Z", rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: null }) },
   // A commissioner can turn the pad over to the Season Snapshot.
   "commissioner": { ...base, isCommissioner: true, seasonSnapshotReleased: true, rows: rows({ maxPicks: 2 }), survivorRows: survivorRows({ viewerOutWeek: 2 }) },
 };

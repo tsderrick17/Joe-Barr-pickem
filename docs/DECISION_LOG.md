@@ -19,6 +19,36 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - Holiday skins for the Pick'em Pad
+
+- The owner asked for fun, heavily themed "skins" that keep the pad's data and layout exactly as they are, starting with the
+  holidays, on the Pick'em Pad only: Halloween (a spider on its silk, a web, bats, jack-o'-lanterns), Thanksgiving (a turkey, a
+  cornucopia, a lattice pie), Christmas (garland and a wreath, snow, gifts). New Year's was dropped.
+- Each holiday has its own full colour scheme (paper, ink, ruling, margin, win totals, lines, W and L) and its own mark for a
+  hidden pick in place of the lock: a ghost, a covered dish, a wrapped gift. A skin is the same by day and by night.
+- It shows by itself on the pool week that is on screen on the holiday, read from the week's `starts_at` and `ends_at`,
+  which the Standings read already loads: no extra database request. Never in a playoff round. The owner set the rule: the
+  pool runs Wednesday through Tuesday (the default week advances early Wednesday), so a Tuesday holiday dresses the week before
+  it, and a Wednesday holiday dresses the week that opens that morning. A holiday from Thursday through Monday dresses the week
+  whose games surround it.
+- After the first look the owner asked for a richer finish: the art is shaded and detailed (a moonlit sky, a spider on its silk,
+  glowing jack-o'-lanterns and a haunted house; maple and oak leaves, wheat, acorns, a woven cornucopia of produce; fir
+  garland with baubles and gold beads, a wreath, a lit tree, wrapped gifts), each paper is lit from the top with a faint
+  texture (stars, parchment flecks, falling snow), and a thin frame runs inside the paper's edge.
+- Thanksgiving took four tries (the owner found the first versions plain, then childish, the leaf garland too close to Christmas,
+  and a dark walnut "dinner menu" not it either). The owner then named what it must show, and that is the skin: a covered dish
+  for a hidden pick, a turkey, leaves, a cornucopia, fun gourds, a pilgrim hat and a lattice pie. Warm flecked parchment; maple
+  and oak leaves with an acorn and berries in the top corners; a pilgrim hat over the week's name; and under the rows one scene:
+  a woven cornucopia spilling wheat, corn, grapes, an apple, a pumpkin and a gourd, a fanned turkey, a cherry lattice pie on a
+  stand, and a swan gourd, a warty gourd and a white pumpkin. No garland across the top.
+- The owner then found that version "a little clipartish" and "cheap and underdone, but on the right track". The approved
+  Halloween and Christmas skins are full scenes, so Thanksgiving became one too, with every named piece kept: the still life now
+  sits in a golden-hour farm (sunset sky, low sun, geese, an autumn treeline, a red barn, a furrowed field); the corners are
+  full boughs of folded leaves with hanging acorns and berries, printed into the parchment; the hat is larger and dressed with
+  leaves and acorns; the colours are deeper and the frame darker. The food from the horn is laid out in order rather than
+  heaped: a fan of three wheat stalks, the corn resting on the pumpkin, a tidy bunch of grapes at the lip, then a pear, an apple
+  and a striped gourd in a row.
+
 ## 2026-11-10 - The Wheel: Season's name below, no colour key
 
 - Season's name sat above its medallion, the only one that did; it is below now like the rest. Season sits a little further in so its name stays inside

@@ -4,6 +4,7 @@ import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
 import SeasonSnapshot from "@/components/season-snapshot";
+import { PadSkinFoot, PadSkinHidden, PadSkinTop, type PadSkin } from "@/components/pad-skins";
 
 export type PickemScoreboardPick = {
   label: string | null;
@@ -42,6 +43,8 @@ type Props = {
   onToggleEliminatedRows?: () => void;
   isCommissioner?: boolean;
   seasonSnapshotReleased?: boolean;
+  /** A holiday week's skin (see src/lib/pad-skin.js); the pad shows the same rows and picks either way. */
+  skin?: PadSkin | null;
 };
 
 /** Two half-circle arrows chasing each other with a gap between them. */
@@ -67,7 +70,9 @@ export default function PickemScoreboard({
   onToggleEliminatedRows,
   isCommissioner = false,
   seasonSnapshotReleased = false,
+  skin = null,
 }: Props) {
+  const holiday = isPlayoff ? null : skin;
   const hasEliminatedRows = rows.some((row) => row.playoffEliminated);
   const tableBox = useRef<HTMLDivElement>(null);
   const eliminatedHidden = useBlindTable(hideEliminatedRows, tableBox);
@@ -82,7 +87,7 @@ export default function PickemScoreboard({
   const flipButton = showSeasonSnapshot ? <button aria-label={flipped ? "Show the Pick'em Pad" : "Show the Season Snapshot"} aria-pressed={flipped} className="pad-flip-button" onClick={() => { setFlipped((current) => !current); setSpin((current) => current + 1); }} title={flipped ? "Back to the pad" : "Season Snapshot"} type="button"><FlipIcon spin={spin} /></button> : null;
 
   return (
-    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""}`}>
+    <section className={`pickem-ledger pickem-scoreboard-ledger py-4 sm:py-5 ${isPlayoff ? "playoff-scoreboard" : ""} ${isDensePlayoffRound ? "playoff-scoreboard--dense" : ""} ${showSeasonSnapshot ? "has-pad-flip" : ""} ${flipped ? "is-flipped" : ""} ${holiday ? `pad-skin pad-skin--${holiday}` : ""}`}>
       {flipButton}
       <div className="pad-flip-inner">
       <div className="pad-face pad-front" aria-hidden={flipped} inert={flipped}>
@@ -99,6 +104,7 @@ export default function PickemScoreboard({
         </div>
       </div>
       <div ref={tableBox} className={`pickem-standings-table pickem-ledger-table ${isPlayoff ? "playoff-scoreboard-scroll" : ""}`}>
+        {holiday ? <PadSkinTop skin={holiday} /> : null}
         <table className={`pickem-ledger-grid ${isPlayoff ? (isDensePlayoffRound ? "is-playoff-dense" : "is-playoff") : "is-regular"}`} data-picks={maxPicks}>
           {!isPlayoff ? <colgroup>
             <col className="pickem-ledger-wins-column" />
@@ -133,7 +139,7 @@ export default function PickemScoreboard({
                             <AtsResultStamp className="ml-1.5" result={pick.resultMark} />
                           </span>
                         ) : pick?.isHidden ? (
-                          <span aria-label="Selection submitted and hidden until kickoff" title="Selection submitted — revealed at kickoff">🔒</span>
+                          <span aria-label="Selection submitted and hidden until kickoff" title="Selection submitted — revealed at kickoff">{holiday ? <PadSkinHidden skin={holiday} /> : "🔒"}</span>
                         ) : null}
                       </td>
                     );
@@ -144,6 +150,7 @@ export default function PickemScoreboard({
           </tbody>
         </table>
       </div>
+      {holiday ? <PadSkinFoot skin={holiday} /> : null}
       </div>
       {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
       </div>
