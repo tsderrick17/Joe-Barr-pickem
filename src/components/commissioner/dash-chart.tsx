@@ -59,7 +59,9 @@ export function DashChart({
   const [box, width] = useWidth();
   const [hover, setHover] = useState<number | null>(null);
   const columns = kind === "columns";
-  const area = plotArea(width, height, { endLabels: endLabels && kind === "line", left: Math.max(30, 8 + Math.max(...yTicks.map((tick) => format(tick).length)) * 6.5) });
+  // Columns with marks carry their figures under the axis, above the column names, so no mark or column top ever crosses one.
+  const under = columns && capLabels && Boolean(marks);
+  const area = plotArea(width, height, { bottom: under ? 38 : 22, endLabels: endLabels && kind === "line", left: Math.max(30, 8 + Math.max(...yTicks.map((tick) => format(tick).length)) * 6.5) });
   const y = yScale(area, yMin, yMax);
   const count = x.length;
   const at = xScale(area, count, columns);
@@ -152,11 +154,7 @@ export function DashChart({
             {parts.map((part) => part.last
               ? <path className={`dash-col is-${series[part.series].tone}`} d={roundedTop(left, part.top, width, part.height)} key={part.series} />
               : <rect className={`dash-col is-${series[part.series].tone}`} height={part.height} key={part.series} width={width} x={left} y={part.top} />)}
-            {capLabels && total > 0 ? (() => {
-              // With marks, a column tall enough carries its figure inside, at its foot: it belongs to the column, and no mark ever crosses it.
-              const inside = Boolean(marks) && y(yMin) - y(total) >= 26;
-              return <text className={`dash-value${inside ? " is-inside" : ""}`} textAnchor="middle" x={at(index)} y={inside ? y(yMin) - 8 : y(total) - 7}>{format(total)}</text>;
-            })() : null}
+            {capLabels && (total > 0 || under) ? <text className="dash-value" textAnchor="middle" x={at(index)} y={under ? y(yMin) + 15 : y(total) - 7}>{format(total)}</text> : null}
             {marks && marks[index] !== null && marks[index] !== undefined ? <line className="dash-mark" x1={left - 5} x2={left + width + 5} y1={y(marks[index] as number)} y2={y(marks[index] as number)} /> : null}
           </g>;
         }) : null}

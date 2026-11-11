@@ -68,7 +68,6 @@
 .dash-mark { stroke: var(--club-ink); stroke-linecap: round; stroke-width: 2; }
 .dash-value { fill: var(--club-ink); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 700; }
 /* A column's figure inside its own foot, so it can never be read as the label of a mark drawn just above. */
-.dash-value.is-inside { fill: var(--club-paper); }
 .dash-tip { background: var(--dash-tip-bg); border-radius: 9px; box-shadow: 0 6px 18px rgba(0, 0, 0, .28); color: var(--dash-tip-ink); font-size: 12px; line-height: 1.4; padding: 8px 10px; pointer-events: none; position: absolute; white-space: nowrap; z-index: 3; }
 .dash-tip b { display: block; font-size: 11px; font-weight: 600; margin-bottom: 2px; opacity: .75; }
 .dash-tip span { align-items: center; display: flex; gap: 6px; }
@@ -110,8 +109,9 @@
 .dash-chips button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
 .dash-pair { display: grid; gap: 12px; }
 @media (min-width: 900px) { .dash-pair { grid-template-columns: 1fr 1fr; } }
-.dash-table tr.dash-break > * { border-top: 2px solid var(--club-line); }
-.dash-table .pool-sort { color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; min-height: 32px; text-transform: inherit; }
+/* The heavier line keeps the row the same height (one pixel less padding), so side-by-side tables stay level row for row. */
+.dash-table tr.dash-break > * { border-top: 2px solid var(--club-line); padding-top: 8px; }
+.dash-table .pool-sort { color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; margin-block: -9px; min-height: 32px; text-transform: inherit; }
 .dash-limit-note { grid-column: 1 / -1; }
 .dash-refresh { border: 1px solid var(--club-line); border-radius: 999px; cursor: pointer; flex: none; font-size: 13px; font-weight: 700; min-height: 40px; padding: 0 14px; }
 .dash-refresh:disabled { opacity: .5; }
