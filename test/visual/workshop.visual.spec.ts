@@ -55,7 +55,7 @@ for (const theme of ["day", "night"]) {
     });
 
     test(`Workshop Lab, ${theme} at ${label}`, async ({ page }) => {
-      await openBoard(page, { theme, size, path: "/admin/workshop/lab" });
+      await openBoard(page, { theme, size, path: "/admin/workshop/lab?try=feel" });
       await holdStill(page);
       await expect(page).toHaveScreenshot(`workshop-lab-${theme}-${label}.png`, { fullPage: true });
     });
@@ -332,7 +332,7 @@ test("a damaged save is ignored value by value: bad easing, zoom and pull fall b
 });
 
 // The bottom dial sits on the foot of the screen at every scroll position, top to bottom, on a long page (the Workshop) and a short one (the Lab).
-for (const path of ["/admin/workshop", "/admin/workshop/lab"]) {
+for (const path of ["/admin/workshop", "/admin/workshop/lab?try=feel"]) {
   test(`the dial stays on the foot of the screen while ${path} scrolls`, async ({ page }) => {
     await openBoard(page, { size: SIZES["phone-390"], path });
     const dial = page.locator(".cw-dial");

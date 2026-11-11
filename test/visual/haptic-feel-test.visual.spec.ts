@@ -19,7 +19,7 @@ async function scriptDevice(page: Page, kind: Kind) {
   }, [kind, IPHONE]);
 }
 
-async function open(page: Page, kind: Kind, { commissioner = true, theme = "day", width = 390, path = "/admin/workshop/lab" } = {}) {
+async function open(page: Page, kind: Kind, { commissioner = true, theme = "day", width = 390, path = "/admin/workshop/lab?try=feel" } = {}) {
   await page.setViewportSize({ width, height: 900 });
   await signIn(page, theme);
   await scriptDevice(page, kind);
@@ -167,5 +167,5 @@ test("the Workshop's Showroom and Lab tabs lead to each other", async ({ page })
   await expect(page.locator(".workshop-board")).toBeVisible({ timeout: 30_000 });
   await expect(tabs.getByRole("link", { name: "Showroom" })).toHaveAttribute("aria-current", "page");
   await tabs.getByRole("link", { name: "Lab" }).click();
-  await expect(page.locator("[data-haptic-test]")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("group", { name: "Try-outs" })).toBeVisible({ timeout: 30_000 });
 });
