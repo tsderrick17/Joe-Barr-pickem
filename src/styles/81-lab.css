@@ -1,0 +1,75 @@
+/* The Workshop Lab: the shelf of try-outs and each try-out. Commissioner-only; nothing here is seen by players. */
+
+/* The shelf and each try-out's switches: pill chips, green when chosen (the Pool stats name-chip style). */
+.lab-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lab-chips button { align-items: center; background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 999px; color: var(--club-ink); cursor: pointer; display: inline-flex; font-size: 13px; font-weight: 700; min-height: 44px; padding: 0 16px; }
+.lab-chips button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
+.lab-shelf { border-bottom: 1px solid var(--club-line); padding-bottom: 14px; }
+
+/* ---- Ticket & receipt ---- */
+.lab-family-room { display: grid; gap: 16px; }
+.lab-family-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: space-between; }
+.lab-family { --ticket-cutout: var(--club-page); display: grid; gap: 10px; }
+.lab-family-label { color: var(--club-muted); font-size: .72rem; font-weight: 700; letter-spacing: .14em; margin: 8px 0 0; text-transform: uppercase; }
+/* The receipt rides at the top of the Slate; in the Lab it stays in place. */
+.lab-family .slate-mini-nav { position: relative; top: auto; }
+
+/* ---- The refined family: one printer, two forms ----
+   Both pieces are printed on the ticket's stock with the ticket's ink. The receipt keeps its strip, chips, SUBMIT, notches and serrated
+   end, and takes the ticket's double rules along its long edges. The ticket keeps its masthead, columns, status and barcode, and takes
+   the receipt's serrated ends and a perforation with round notches above its status stub, so the two read as parts of one slip.
+   No font or text-size changes: only paper, ink, rules and edges. */
+.ticket-family .slate-receipt-strip {
+  --receipt-paper: var(--ticket-paper);
+  --receipt-rule: var(--ticket-edge);
+  --receipt-ink: var(--themed-text-6);
+  --receipt-label-ink: var(--ticket-small-ink);
+  --receipt-link-ink: var(--themed-text-6);
+  --receipt-shadow: drop-shadow(0 6px 12px rgba(37, 30, 18, .14));
+}
+.ticket-family .slate-receipt-ticket::before,
+.ticket-family .slate-receipt-pool::before {
+  border-bottom: 3px double var(--ticket-heavy-rule);
+  border-top: 3px double var(--ticket-heavy-rule);
+}
+
+.ticket-family .my-ticket {
+  --ticket-scallop: .17rem;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 12px rgba(37, 30, 18, .14));
+  isolation: isolate;
+}
+/* The paper sits behind the content, so the serrated ends cut only the paper and never the Survivor chip hanging over the corner. */
+.ticket-family .my-ticket::before {
+  background: var(--ticket-paper);
+  border-block: 1px solid var(--ticket-edge);
+  box-shadow: inset 1px 0 var(--ticket-edge), inset -1px 0 var(--ticket-edge);
+  content: "";
+  inset: 0;
+  position: absolute;
+  z-index: -1;
+  /* Serrated left and right ends, the receipt's bite. */
+  -webkit-mask:
+    radial-gradient(circle at 0 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
+    radial-gradient(circle at 100% 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
+  mask:
+    radial-gradient(circle at 0 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
+    radial-gradient(circle at 100% 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
+}
+/* The status stub tears along a perforation, with the receipt's round notches at each end. */
+.ticket-family .my-ticket-footer { border-top: 2px dotted var(--ticket-heavy-rule); position: relative; }
+.ticket-family .my-ticket-footer::before,
+.ticket-family .my-ticket-footer::after {
+  background: var(--ticket-cutout);
+  border: 1px solid var(--ticket-edge);
+  border-radius: 50%;
+  content: "";
+  height: .84rem;
+  position: absolute;
+  top: calc(-.42rem - 1px);
+  width: .84rem;
+}
+.ticket-family .my-ticket-footer::before { left: calc(-1.05rem - .42rem); }
+.ticket-family .my-ticket-footer::after { right: calc(-1.05rem - .42rem); }

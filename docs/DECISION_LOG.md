@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - Ticket and receipt as one family, tried in the Lab
+
+The owner likes today's ticket and receipt but wants them refined into one aesthetic "without losing their defining characteristics".
+A first try (a new combined betting slip) was not a material improvement and was dropped. The Lab now shows the real pieces with a
+Refined look: the receipt printed on the ticket's paper and ink with the ticket's double rules; the ticket given the receipt's serrated
+ends and a perforation with round notches above its status stub. No font or size changes. It is scoped to a `ticket-family` class, so
+nothing changes for players until the owner approves; going live is adding that class on the Slate and Standings.
+
 ## 2026-11-11 - The pool constitution, trimmed
 
 Owner review of the Handbook's constitution. Talk of points is gone: the Standings count winning picks and the most wins at the end of

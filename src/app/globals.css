@@ -19,6 +19,7 @@
 @import "../styles/52-commissioner-numbers.css";
 @import "../styles/60-bowl-pool.css";
 @import "../styles/80-commissioner-assets.css";
+@import "../styles/81-lab.css";
 
 @theme inline {
   --color-background: var(--background);
