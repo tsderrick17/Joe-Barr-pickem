@@ -307,7 +307,7 @@ test("Commissioner wheel: Needs you lists what needs attention, with a way there
   await expect(page).toHaveURL(/\/admin\/health$/);
 });
 
-// The Handbook's pool constitution: three parts (Format, Mechanics, Rules), fifteen articles, each a card of numbered clauses. The sheet scrolls,
+// The Handbook's pool constitution, written to the player: three parts (The basics, The contests, Good to know), ten articles, each a card of numbered clauses.
 // so the window is made tall enough to hold all of it and the constitution is shot by itself.
 for (const [theme, label, width] of [["day", "phone-390", 390], ["day", "desktop-1280", 1280], ["night", "phone-390", 390]] as const) {
   test(`Commissioner handbook: the pool constitution ${theme} at ${label}`, async ({ page }) => {
@@ -318,7 +318,7 @@ for (const [theme, label, width] of [["day", "phone-390", 390], ["day", "desktop
     await page.getByRole("button", { name: "Handbook" }).click();
     const sheet = page.getByRole("dialog", { name: "Handbook" });
     const constitution = sheet.locator(".pool-constitution");
-    await expect(constitution.locator("article")).toHaveCount(15, { timeout: 30_000 });
+    await expect(constitution.locator("article")).toHaveCount(10, { timeout: 30_000 });
     const height = await sheet.locator(".cw-sheet-body").evaluate((body) => body.scrollHeight);
     await page.setViewportSize({ width, height: Math.ceil(height / 0.88) + 80 });
     await page.waitForTimeout(400);
