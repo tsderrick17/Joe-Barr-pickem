@@ -136,7 +136,7 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
     await serve(page, scenario);
     await page.goto("/board");
     await page.locator(".slate-game-row").first().waitFor({ timeout: 30_000 });
-    await expect(page.getByText("Click a poker chip to choose a team.")).toHaveCount(shown ? 1 : 0);
+    await expect(page.getByText("Click a poker chip to choose one team to win each week.")).toHaveCount(shown ? 1 : 0);
   });
 }
 
