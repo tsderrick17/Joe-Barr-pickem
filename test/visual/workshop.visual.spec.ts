@@ -330,3 +330,20 @@ test("a damaged save is ignored value by value: bad easing, zoom and pull fall b
   await expect(page.locator("[data-piece=pennant] .workshop-stage")).toHaveAttribute("style", /--megaphone-raise-ease: ease-in-out/);
   await expect(page.locator(".workshop-count")).toHaveText("1");
 });
+
+// The bottom dial sits on the foot of the screen at every scroll position, top to bottom, on a long page (the Workshop) and a short one (the Lab).
+for (const path of ["/admin/workshop", "/admin/workshop/lab"]) {
+  test(`the dial stays on the foot of the screen while ${path} scrolls`, async ({ page }) => {
+    await openBoard(page, { size: SIZES["phone-390"], path });
+    const dial = page.locator(".cw-dial");
+    await expect(dial).toBeVisible();
+    const most = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    for (const y of [0, most / 3, (2 * most) / 3, most]) {
+      await page.evaluate((top) => window.scrollTo(0, top), y);
+      await page.waitForTimeout(150);
+      const box = (await dial.boundingBox())!;
+      expect(Math.abs(box.y + box.height - SIZES["phone-390"].height), `at ${Math.round(y)}px`).toBeLessThanOrEqual(1);
+      expect(Math.round(box.width)).toBe(SIZES["phone-390"].width);
+    }
+  });
+}

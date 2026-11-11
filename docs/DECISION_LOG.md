@@ -26,6 +26,12 @@ the season is champion. Dropped as repeats or unneeded: the push clause in The l
 early-week clause in Making your picks, Survivor's whole-season share, the playoffs' "not losses either", the Bowl Pool's "one point"
 and its "never counts in Pick'em or Survivor". Forfeit reads "It asks you to confirm 3 times and cannot be undone", and the Commissioner
 clause no longer mentions undoing a forfeit. The Bowl Pool opens "the day after Selection Sunday".
+## 2026-11-11 - The Commissioner dial is sticky, not fixed
+
+On the Commissioner's iPhone home-screen app the bottom dial drifted up to mid-screen while a long page (the Workshop) scrolled, and
+snapped back when scrolling stopped. The dial is now `position: sticky` at the foot of the Commissioner shell, with a negative top margin
+of its own height so the page's layout is unchanged; a sticky bar scrolls with the page itself instead of a separate fixed layer. A behaviour
+test checks the dial's foot sits on the screen's foot at every scroll position on a long and a short page.
 
 ## 2026-11-10 - The Workshop gets a Lab; the Feel test moves there
 
