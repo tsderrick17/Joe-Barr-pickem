@@ -4,10 +4,10 @@ import { signIn } from "./session";
 // The Workshop: every custom piece once, packed into one board, inside the Commissioner area. Its settings stay hidden until a piece's tune button is tapped.
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
 
-async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280"], saved }: { theme?: string; size?: { width: number; height: number }; saved?: string } = {}) {
+async function openBoard(page: Page, { theme = "day", size = SIZES["desktop-1280"], saved, motion = false }: { theme?: string; size?: { width: number; height: number }; saved?: string; motion?: boolean } = {}) {
   await page.setViewportSize(size);
   await signIn(page, theme);
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.emulateMedia({ reducedMotion: motion ? "no-preference" : "reduce" });
   await page.addInitScript(() => window.localStorage.setItem("commissioner-dial-hint", "3"));
   if (saved !== undefined) await page.addInitScript((value) => window.localStorage.setItem("pickem-workshop", value), saved);
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
@@ -274,12 +274,45 @@ test("zoom in tile enlarges one piece in the Workshop only, and is not a setting
   expect(await yourSettings(page)).toBe("Every setting is at its live value.");
 });
 
-test("Play everything plays every piece at once", async ({ page }) => {
-  await openBoard(page);
-  await expect(page.locator(".bowl-team-pick.is-new")).toHaveCount(0);
-  await expect(page.getByLabel("Against the spread: win")).toBeVisible();
-  await page.getByRole("button", { name: "Play everything" }).click();
-  await expect(page.locator(".bowl-team-pick.is-new").first()).toBeVisible();
+/** How many times each piece has played, by its name. */
+const playCounts = (page: Page) => page.locator(".workshop-tile").evaluateAll((tiles) => Object.fromEntries(tiles.map((tile) => [tile.getAttribute("data-piece"), Number(tile.getAttribute("data-plays"))])));
+const total = (counts: Record<string, number>) => Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+// The board plays itself: one piece a beat, round the board in reading order, only pieces on screen, and never the still ones.
+test("the board plays itself, one piece at a time, only what is on screen", async ({ page }) => {
+  await openBoard(page, { motion: true, size: { width: 1280, height: 700 } });
+  await expect(page.getByRole("checkbox", { name: "Play by itself" })).toBeChecked();
+  await expect.poll(async () => total(await playCounts(page)), { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
+  const counts = await playCounts(page);
+  expect(counts.crest, "the first piece in reading order has played").toBeGreaterThan(0);
+  for (const still of ["football", "season-over", "eliminated"]) expect(counts[still], `${still} sits out`).toBe(0);
+  // Below the fold at 700px tall: the season banners and the bottom row never play until scrolled to.
+  for (const below of ["stamp", "tile", "wins"]) expect(counts[below], `${below} is off screen`).toBe(0);
+  await page.locator('[data-piece="wins"]').scrollIntoViewIfNeeded();
+  await expect.poll(async () => (await playCounts(page)).wins, { timeout: 30_000 }).toBeGreaterThan(0);
+});
+
+test("Play by itself turned off, a sheet open, or reduced motion: the board rests", async ({ page }) => {
+  await openBoard(page, { motion: true });
+  await expect.poll(async () => total(await playCounts(page)), { timeout: 10_000 }).toBeGreaterThan(0);
+  await page.getByRole("checkbox", { name: "Play by itself" }).uncheck();
+  const off = total(await playCounts(page));
+  await page.waitForTimeout(3500);
+  expect(total(await playCounts(page)), "turned off").toBe(off);
+  await page.getByRole("checkbox", { name: "Play by itself" }).check();
+  await expect.poll(async () => total(await playCounts(page)), { timeout: 10_000 }).toBeGreaterThan(off);
+  await page.getByRole("button", { name: /^Your settings/ }).click();
+  const open = total(await playCounts(page));
+  await page.waitForTimeout(3500);
+  expect(total(await playCounts(page)), "a sheet is open").toBe(open);
+  await page.getByRole("dialog", { name: "Your settings" }).getByRole("button", { name: "Close" }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(200);
+  const reduced = total(await playCounts(page));
+  await page.waitForTimeout(3500);
+  expect(total(await playCounts(page)), "reduced motion").toBe(reduced);
+  // A tap still plays a piece at once, with the board at rest.
+  await (await nearestMiddle(page, "Play the result stamp")).click();
   await expect(page.getByLabel("Against the spread: loss")).toBeVisible();
 });
 

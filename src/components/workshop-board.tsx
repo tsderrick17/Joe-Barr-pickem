@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { gridArea, layoutPlaces, mergeSaved, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_SAVED_KEY } from "@/lib/workshop-board.js";
+import { memo, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type RefObject } from "react";
+import { gridArea, layoutPlaces, mergeSaved, nextInRipple, WORKSHOP_BEAT_MS, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_RIPPLE, WORKSHOP_SAVED_KEY } from "@/lib/workshop-board.js";
 import { changedSummary, defaultSettings, KNOBS, knobsFor, liveEase, liveKnobs, pieceById, SAVED_RULES, ZoomControl, type Piece, type Settings } from "@/components/workshop-pieces";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 
 /**
  * The Workshop: every custom piece of the pool once, packed into one board with no gaps, each in a tile shaped for it (a map for a phone,
- * a tablet and a computer, in src/lib/workshop-board.js). Tapping a piece plays it. Its settings stay out of sight until its tune button is
+ * a tablet and a computer, in src/lib/workshop-board.js). The board plays itself: one clock, and on each beat the next piece on screen
+ * plays its moment, round the board in reading order. It rests while the tab is hidden, while a sheet is open, when the device asks for
+ * reduced motion, or when Play by itself is turned off. Tapping a piece plays it at once. Its settings stay out of sight until its tune button is
  * tapped, which opens them in a sheet. Settings are remembered on this device; Your settings gives the text to send so a value becomes what
  * players see.
  */
@@ -31,10 +33,10 @@ const tuneIcon = (
 const PLACES = Object.fromEntries(Object.entries(WORKSHOP_LAYOUTS).map(([size, rows]) => [size, layoutPlaces(rows)])) as Record<keyof typeof WORKSHOP_LAYOUTS, Record<string, Parameters<typeof gridArea>[0]>>;
 const areas = (id: string) => ({ "--at-phone": gridArea(PLACES.phone[id]), "--at-tablet": gridArea(PLACES.tablet[id]), "--at-desktop": gridArea(PLACES.desktop[id]) }) as CSSProperties;
 
-/** One piece in its tile. Tapping plays it; the tune button opens its settings. */
-function Tile({ piece, settings, update, labels, selected, onTune, playAll }: { piece: Piece; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: () => void; playAll: number }) {
+/** One piece in its tile. Tapping plays it; the board's clock plays it too (`auto`); the tune button opens its settings. */
+const Tile = memo(function Tile({ piece, settings, update, labels, selected, onTune, auto }: { piece: Piece; settings: Settings; update: Update; labels: boolean; selected: boolean; onTune: (id: string) => void; auto: number }) {
   const [own, setOwn] = useState(0);
-  const plays = own + playAll;   // Play everything plays every piece at once
+  const plays = own + auto;
   const play = () => setOwn((count) => count + 1);
   const tap = piece.tapToPlay ? {
     "aria-label": `Play the ${piece.title.toLowerCase()}`,
@@ -44,14 +46,66 @@ function Tile({ piece, settings, update, labels, selected, onTune, playAll }: { 
     tabIndex: 0,
   } : {};
   return (
-    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} style={areas(piece.id)}>
+    <div className={`workshop-tile ${piece.dark ? "is-dark" : ""} ${selected ? "is-selected" : ""}`} data-piece={piece.id} data-plays={plays} style={areas(piece.id)}>
       <div className={`workshop-stage ${piece.tapToPlay ? "is-playable" : ""}`} style={{ ...piece.style?.(settings), "--asset-zoom": (piece.zoom ?? 1) * (settings.zoom[piece.id] ?? 1) } as CSSProperties} {...tap}>
         {piece.draw({ settings, update, plays, play, copy: "shelf" })}
       </div>
       {labels ? <span className="workshop-label">{piece.title}</span> : null}
-      <button aria-label={`Tune the ${piece.title.toLowerCase()}`} className="workshop-tune" onClick={onTune} type="button">{tuneIcon}</button>
+      <button aria-label={`Tune the ${piece.title.toLowerCase()}`} className="workshop-tune" onClick={() => onTune(piece.id)} type="button">{tuneIcon}</button>
     </div>
   );
+});
+
+/** Whether the device asks for reduced motion, kept up to date. */
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const change = () => setReduced(query.matches);
+    query.addEventListener("change", change);
+    return () => query.removeEventListener("change", change);
+  }, []);
+  return reduced;
+}
+
+/**
+ * The board's one clock. On each beat it plays the next piece in the ripple that is on screen, by adding one to that piece's count; no
+ * piece has a timer of its own. It only runs while `running`, and skips beats while the tab is hidden.
+ */
+function useBoardClock(board: RefObject<HTMLDivElement | null>, running: boolean) {
+  const [auto, setAuto] = useState<Record<string, number>>({});
+  const onScreen = useRef(new Set<string>());
+  const cursor = useRef(-1);
+
+  useEffect(() => {
+    const element = board.current;
+    if (!element) return;
+    const watcher = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const id = (entry.target as HTMLElement).dataset.piece;
+        if (!id) continue;
+        if (entry.isIntersecting) onScreen.current.add(id); else onScreen.current.delete(id);
+      }
+    }, { threshold: 0.6 });
+    element.querySelectorAll<HTMLElement>(".workshop-tile").forEach((tile) => watcher.observe(tile));
+    return () => watcher.disconnect();
+  }, [board]);
+
+  useEffect(() => {
+    if (!running) return;
+    const beat = () => {
+      if (document.hidden) return;
+      const index = nextInRipple(WORKSHOP_RIPPLE, cursor.current, (id: string) => onScreen.current.has(id));
+      if (index < 0) return;
+      cursor.current = index;
+      const id = WORKSHOP_RIPPLE[index];
+      setAuto((current) => ({ ...current, [id]: (current[id] ?? 0) + 1 }));
+    };
+    const timer = window.setInterval(beat, WORKSHOP_BEAT_MS);
+    return () => window.clearInterval(timer);
+  }, [running]);
+
+  return auto;
 }
 
 /** The settings of one piece. */
@@ -86,7 +140,9 @@ export default function WorkshopBoard() {
   const [tuning, setTuning] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [playAll, setPlayAll] = useState(0);
+  const board = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+  const auto = useBoardClock(board, settings.view.autoplay && !reducedMotion && !tuning && !settingsOpen);
 
   useEffect(() => {
     try { window.localStorage.setItem(WORKSHOP_SAVED_KEY, JSON.stringify(settings)); } catch { /* this device keeps nothing; the showroom still works */ }
@@ -102,25 +158,28 @@ export default function WorkshopBoard() {
     <div className="workshop">
       <div aria-label="Workshop" className="workshop-bar" role="group">
         <label className="workshop-switch">
-          <input checked={settings.view.labels} onChange={(event) => { const labels = event.target.checked; update((current) => ({ ...current, view: { labels } })); }} type="checkbox" />
+          <input checked={settings.view.labels} onChange={(event) => { const labels = event.target.checked; update((current) => ({ ...current, view: { ...current.view, labels } })); }} type="checkbox" />
           Show names
         </label>
-        <button className="asset-replay" onClick={() => setPlayAll((count) => count + 1)} type="button">Play everything</button>
+        <label className="workshop-switch">
+          <input checked={settings.view.autoplay} onChange={(event) => { const autoplay = event.target.checked; update((current) => ({ ...current, view: { ...current.view, autoplay } })); }} type="checkbox" />
+          Play by itself
+        </label>
         <button className="asset-replay" onClick={() => setSettingsOpen(true)} type="button">
           Your settings{summary.count ? <span className="workshop-count">{summary.count}</span> : null}
         </button>
       </div>
 
-      <div aria-label="Every piece" className="workshop-board" role="group">
+      <div aria-label="Every piece" className="workshop-board" ref={board} role="group">
         {WORKSHOP_ORDER.map((id) => {
           const piece = pieceById(id);
           if (!piece) return null;
           return <Tile
             key={id}
             labels={settings.view.labels}
-            onTune={() => setTuning(piece.id)}
+            onTune={setTuning}
             piece={piece}
-            playAll={playAll}
+            auto={auto[id] ?? 0}
             selected={tuning === piece.id}
             settings={settings}
             update={update}

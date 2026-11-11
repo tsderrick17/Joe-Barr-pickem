@@ -137,7 +137,8 @@ export type Settings = {
   tiles: { remaining: string; wins: string };
   crest: { title: string; season: string; suffix: string };
   football: { paused: boolean; frame: number };
-  view: { labels: boolean };
+  /** Show names labels every piece; Play by itself runs the board's clock (on unless turned off). Neither is a setting to copy. */
+  view: { labels: boolean; autoplay: boolean };
 };
 
 export const liveKnobs = (): Values => Object.fromEntries(ALL_KNOBS.map((knob) => [knob.key, knob.live]));
@@ -159,7 +160,7 @@ export const defaultSettings = (): Settings => ({
   tiles: { remaining: "12", wins: "7" },
   crest: { title: "BOWL CARD", season: "2026", suffix: "Special" },
   football: { paused: false, frame: 1 },
-  view: { labels: false },
+  view: { labels: false, autoplay: true },
 });
 /** The settings changed from their live values, as the text the Commissioner copies and sends. */
 export function changedSummary(settings: Settings) {

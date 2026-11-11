@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Workshop plays itself (PR 2: the board clock)
+
+- Second part of the living-board plan. Every piece with a moment now plays on its own, in a slow ripple round the board in reading order:
+  one clock, one piece a beat (1.4 seconds), so two or three are moving at once and it never all fires together.
+- Efficient by design: the clock adds one to the next piece's existing play count, so only that tile redraws; no piece has its own timer;
+  only tiles on screen (60% visible) take a turn; the clock rests while the tab is hidden, while a sheet is open, under reduced motion, or
+  when Play by itself is off. No network or database work.
+- Play everything is replaced by the Play by itself switch (on by default, remembered on the device, never a setting to copy). A tap
+  still plays a piece at once. Screenshots are taken under reduced motion, so the board is still in them.
+
 ## 2026-11-10 - The Workshop becomes one living board (PR 1: the board)
 
 - The owner sent a screen recording of a "living bento board" (dozens of small interface pieces packed into one grid, each playing its own
