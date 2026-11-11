@@ -221,6 +221,12 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-replay:hover:not(:disabled) { background: var(--club-paper-2); border-color: var(--club-gold); }
 .asset-replay:disabled { opacity: .45; }
 .asset-row { align-items: center; display: flex; gap: 1rem; }
+/* A piece shown in its real setting: a small line under it saying where it is (picks on the receipt, the line of the pick, the final it
+   was graded on). The piece is zoomed in its tile, so the line's size is set against that zoom. */
+.asset-in-context { align-items: center; display: inline-flex; flex-direction: column; gap: .4rem; }
+.workshop-stage .asset-context { color: var(--club-muted); font: 700 .5rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.workshop-stage .asset-stamp .asset-context { font-size: .32rem; }
+.workshop-tile.is-dark .asset-context { color: var(--club-gold); }
 /* This piece sits outside a receipt strip, so it has never had the strip's paper and rule colours; keep it that way now that they are global roles. */
 .asset-submit { --receipt-paper: initial; --receipt-rule: initial; }
 .asset-submit .slate-receipt-print { width: 8rem; }

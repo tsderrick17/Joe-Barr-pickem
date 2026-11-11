@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Workshop shows pieces where they live (PR 3: in context)
+
+- Last part of the living-board plan. Three pieces that meant little on their own now carry one small muted line saying where they live
+  on the site: the Submit button reads "2 of 2 picked" above it ("Saved" once picks are saved), the pick highlight reads "-3.5 · the pick"
+  under it, and the result stamp shows the final it was graded on, "Won 27-20" for W and "Lost 20-23" for L (the Chiefs at -3.5 cover by
+  winning by 7 and miss by losing by 3), so the line changes with the stamp as the board plays it.
+- The line uses the Workshop label's existing style (small Arial capitals, muted; gold on a dark tile). The other pieces already read as
+  themselves and are left as they are. No existing text changes size or font.
+
 ## 2026-11-10 - The Workshop plays itself (PR 2: the board clock)
 
 - Second part of the living-board plan. Every piece with a moment now plays on its own, in a slow ripple round the board in reading order:
