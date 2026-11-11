@@ -52,24 +52,14 @@
   z-index: -1;
   /* Serrated left and right ends, the receipt's bite. */
   -webkit-mask:
-    radial-gradient(circle at 0 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
-    radial-gradient(circle at 100% 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
+    radial-gradient(circle at 0 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
+    radial-gradient(circle at 100% 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
   mask:
-    radial-gradient(circle at 0 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
-    radial-gradient(circle at 100% 50%, #0000 var(--ticket-scallop), #000 calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
+    radial-gradient(circle at 0 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) left / 51% calc(var(--ticket-scallop) * 3) repeat-y,
+    radial-gradient(circle at 100% 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) right / 51% calc(var(--ticket-scallop) * 3) repeat-y;
 }
 /* The status stub tears along a perforation, with the receipt's round notches at each end. */
 .ticket-family .my-ticket-footer { border-top: 2px dotted var(--ticket-heavy-rule); position: relative; }
-.ticket-family .my-ticket-footer::before,
-.ticket-family .my-ticket-footer::after {
-  background: var(--ticket-cutout);
-  border: 1px solid var(--ticket-edge);
-  border-radius: 50%;
-  content: "";
-  height: .84rem;
-  position: absolute;
-  top: calc(-.42rem - 1px);
-  width: .84rem;
-}
-.ticket-family .my-ticket-footer::before { left: calc(-1.05rem - .42rem); }
-.ticket-family .my-ticket-footer::after { right: calc(-1.05rem - .42rem); }
+/* Each notch is one rule of its own (the stylesheet budget counts a selector defined twice). */
+.ticket-family .my-ticket-footer::before { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-radius: 50%; content: ""; height: .84rem; left: calc(-1.05rem - .42rem); position: absolute; top: calc(-.42rem - 1px); width: .84rem; }
+.ticket-family .my-ticket-footer::after { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-radius: 50%; content: ""; height: .84rem; position: absolute; right: calc(-1.05rem - .42rem); top: calc(-.42rem - 1px); width: .84rem; }
