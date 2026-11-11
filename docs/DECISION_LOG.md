@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - The Commissioner dial is sticky, not fixed
+
+On the Commissioner's iPhone home-screen app the bottom dial drifted up to mid-screen while a long page (the Workshop) scrolled, and
+snapped back when scrolling stopped. The dial is now `position: sticky` at the foot of the Commissioner shell, with a negative top margin
+of its own height so the page's layout is unchanged; a sticky bar scrolls with the page itself instead of a separate fixed layer. A behaviour
+test checks the dial's foot sits on the screen's foot at every scroll position on a long and a short page.
+
 ## 2026-11-10 - The Workshop gets a Lab; the Feel test moves there
 
 The Commissioner wanted a safe place to play with design prototypes (the offseason shortlist) on the real site and a real phone.

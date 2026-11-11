@@ -390,7 +390,7 @@ measure database requests or end-to-end route time.
   `/admin/odds`, `/admin/limits` and `/admin/workshop` (the Workshop showroom) and `/admin/workshop/lab` (the Workshop's Lab, the same spoke: Showroom and Lab tabs at the top of both; Commissioner-only try-outs, today the haptics Feel test, which moved there from Notifications; nothing in the Lab reads or changes pool data). One read of `/api/admin/operations-map` for the whole area colours the rings and fills
   the hub's Needs you list (`spokeStatus`, `needsYou`): a stage needing attention marks Game day (Season for the schedule stage), open watchdog
   incidents mark Health red, and Odds credits shows credits used (amber from 88% of the limit). Every page shares the bar with the
-  Handbook and the bottom dial (`src/app/admin/layout.tsx`); the dial's rules (where a drag lands, the cancel, the flick, the settle) are
+  Handbook and the bottom dial (`src/app/admin/layout.tsx`; the dial is sticky at the foot of the page, not fixed to the screen, because an iPhone home-screen app let a fixed bar drift up mid-screen while scrolling); the dial's rules (where a drag lands, the cancel, the flick, the settle) are
   `releaseTarget`, `dialPlace` and `swingAt`. There are no fold-down drawers on the pages: every tool of the old Today, Performance, Season and
   Bowl Pool tabs is on its page in plain view. The Handbook sheet holds the gameday runbook and the pool constitution
   (`src/components/commissioner-handbook.tsx`): written to the player: three parts (The basics, The contests, Good to know)
