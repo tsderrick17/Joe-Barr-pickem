@@ -289,6 +289,13 @@
   --ticket-small-ink: var(--brown-36);
   --ticket-open-ink: var(--themed-text-7);
   --ticket-bar: var(--brown-13);
+  /* Lamp-lit (a Workshop Lab try-out) is a night look: by day it changes nothing. */
+  --lamp-pool: none;
+  --lamp-felt-light: none;
+  --lamp-glow: drop-shadow(0 0 0 transparent);
+  --lamp-ticket-paper: var(--ticket-paper);
+  --lamp-paper: var(--club-paper);
+  --lamp-note-display: block;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -552,6 +559,13 @@ html[data-theme="night"] {
   --ticket-small-ink: #bdb19b;
   --ticket-open-ink: #bdb19b;
   --ticket-bar: var(--sand-89);
+  /* Lamp-lit at night: one warm lamp over the middle of the table, shadow around it, warmer paper. */
+  --lamp-pool: radial-gradient(ellipse 60% 42% at 50% 6%, rgba(255, 190, 110, .2), transparent 72%), radial-gradient(ellipse 85% 70% at 50% 35%, transparent 45%, rgba(0, 0, 0, .55) 100%);
+  --lamp-felt-light: radial-gradient(ellipse 55% 50% at 50% 28%, rgba(255, 196, 120, .24), transparent 70%), radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0, 0, 0, .55) 100%);
+  --lamp-glow: drop-shadow(0 0 22px rgba(255, 190, 110, .14));
+  --lamp-ticket-paper: repeating-linear-gradient(0deg, rgba(255, 214, 150, .035) 0 1px, transparent 1px 4px), rgb(50 40 28);
+  --lamp-paper: rgb(44 35 25);
+  --lamp-note-display: none;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,

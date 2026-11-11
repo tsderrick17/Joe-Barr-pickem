@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - Lamp-lit night, tried in the Lab
+
+From the offseason shortlist: night as "the lounge after dark", best judged on the Survivor table. A Lamp-lit switch on the Lab shelf puts
+the try-outs under one warm lamp at night: a pool of light from above, shadow around it, warmer paper, a glow on the felt, ticket and
+receipt. The look lives in `--lamp-*` tokens that are empty by day (src/styles/00-tokens.css), so it adds no night-only rules (the
+stylesheet keeps its six). Lab only; players' night mode is unchanged.
+
 ## 2026-11-11 - Survivor as a card table, tried in the Lab
 
 From the offseason shortlist the owner loved both the poker and the craps idea for Survivor, kept the list view, and wanted a player's
