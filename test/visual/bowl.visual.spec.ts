@@ -106,8 +106,7 @@ test("Bowl Pool loading screen at phone-390", async ({ page }) => {
   await expect(page).toHaveScreenshot("bowl-loading-phone-390.png");
 });
 
-// "How it works" (a Commissioner preview for now): with Bowl picks saved the short rules show and the rest is folded; with none saved
-// everything is open; a tap opens the fold.
+// "How it works": with Bowl picks saved every instruction is folded away; with none saved everything is open; a tap opens the fold.
 const HOW_STATES = [
   ["folded", "picked", "day", 390, false], ["folded", "picked", "day", 1280, false], ["folded", "picked", "night", 390, false],
   ["opened", "picked", "day", 390, true], ["opened", "picked", "day", 1280, true], ["new-player", "not-picked", "day", 390, false],
@@ -131,7 +130,7 @@ for (const [state, picks, theme, width, open] of HOW_STATES) {
     await settleNetwork(page);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     const toggle = page.getByRole("button", { name: "How it works" });
-    const tiebreakerRule = page.getByText("Tiebreaker is total points in Championship game.");
+    const tiebreakerRule = page.getByText("Ties go to the closest guess at the National Championship's total points.");
     await expect(toggle).toHaveAttribute("aria-expanded", picks === "picked" ? "false" : "true");
     if (picks === "picked") await expect(tiebreakerRule).toBeHidden();
     if (open) {

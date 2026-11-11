@@ -53,7 +53,7 @@ export default function BowlPoolPage() {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [submissionError, setSubmissionError] = useState("");
   const [selectionFeedback, setSelectionFeedback] = useState<{ gameId: string; side: "favorite" | "underdog"; token: number } | null>(null);
-  // How the instructions start (src/lib/how-it-works.js): a Commissioner preview for now, folded once Bowl picks have been saved.
+  // How the instructions start (src/lib/how-it-works.js): open for a new player, folded once Bowl picks have been saved.
   const [howItWorks, setHowItWorks] = useState<"open" | "folded" | null>(null);
   const [rulesToggled, setRulesToggled] = useState<boolean | null>(null);
   const rulesFoldId = useId();
@@ -78,7 +78,7 @@ export default function BowlPoolPage() {
       setGames(nextGames);
       setChampionshipGameId(payload.season?.championship_game_id ?? null);
       if (payload.optedIn !== undefined) setOptedIn(payload.optedIn);
-      setHowItWorks(howItWorksStart({ preview: payload.isCommissioner === true, familiar: Boolean(payload.ownPicks?.length || payload.ownPreviewSelections?.length) }));
+      setHowItWorks(howItWorksStart({ familiar: Boolean(payload.ownPicks?.length || payload.ownPreviewSelections?.length) }));
       const guess = payload.entry?.championship_total_guess == null ? "" : String(payload.entry.championship_total_guess);
       setChampionshipTotalGuess(guess);
       setSavedChampionshipTotalGuess(guess);
@@ -217,14 +217,11 @@ export default function BowlPoolPage() {
           {optedIn === true ? <section className="bowl-pool-board mt-3 border border-slate-300 bg-(color:--themed-bg-26) p-2 sm:p-6" id="bowl-selections">
           <div className="bowl-title-row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 pb-4">
             <BowlCrest seasonYear={currentSeasonYear()} title="BOWL POOL" />
-            {howItWorks === null ? <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul> : <>
-              {/* The short rules stay in view; How it works opens the rest. */}
-              <ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Pick every bowl, including playoffs, against the spread.</li><li>Click a team to pick it, then click SUBMIT to save.</li></ul>
-              <div className="bowl-how"><HowItWorksToggle className="bowl-how-toggle" controls={rulesFoldId} onToggle={() => setRulesToggled(!rulesOpen)} open={rulesToggled ?? howItWorks !== "folded"} /></div>
-              <div className={`how-fold ${rulesOpen ? "is-open" : ""}`} id={rulesFoldId} inert={!rulesOpen}>
-                <div className="how-fold-inner"><ul aria-label="More Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Tiebreaker is total points in Championship game.</li></ul></div>
-              </div>
-            </>}
+            {/* Every instruction folds away under How it works once a player has saved Bowl picks. */}
+            <div className="bowl-how"><HowItWorksToggle className="bowl-how-toggle" controls={rulesFoldId} onToggle={() => setRulesToggled(!rulesOpen)} open={rulesOpen} /></div>
+            <div className={`how-fold ${rulesOpen ? "is-open" : ""}`} id={rulesFoldId} inert={!rulesOpen}>
+              <div className="how-fold-inner"><ul aria-label="Bowl Pool instructions" className="bowl-rules-compact"><li>Participation is optional.</li><li>Pick every bowl, including playoffs, against the spread.</li><li>Click a team to pick it, then click SUBMIT to save.</li><li>A game with no pick counts as a loss.</li><li>Selections lock and are revealed to others at kickoff.</li><li>Ties go to the closest guess at the National Championship&apos;s total points.</li></ul></div>
+            </div>
             {!poolLocked ? <div className="bowl-optout"><button onClick={() => void changeOptIn(false)} type="button">Opt out</button></div> : null}
           </div>
           <div className="bowl-schedule mt-4 overflow-hidden border border-slate-300 sm:mt-5">
@@ -241,7 +238,7 @@ export default function BowlPoolPage() {
               </div>
             ))}
           </div>
-          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-base font-bold text-slate-700">Tiebreaker<span className="text-sm font-normal leading-5 text-slate-600">Predict total points scored in National Championship game, closest to the final wins.</span><input aria-label="Total points in the National Championship" className="w-[6rem] border border-slate-400 bg-(color:--themed-bg-26) px-3 py-2 text-lg font-normal disabled:cursor-not-allowed disabled:bg-(color:--themed-bg-25)" disabled={championshipLocked} inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => { setSubmissionError(""); setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3)); }} /></label>
+          <label className="mt-5 flex flex-col gap-2 border-t border-slate-200 pt-4 text-base font-bold text-slate-700">Tiebreaker<span className="text-sm font-normal leading-5 text-slate-600">Guess the total points both teams score in the National Championship. If players tie on wins, the closest guess wins, over or under.</span><input aria-label="Total points in the National Championship" className="w-[6rem] border border-slate-400 bg-(color:--themed-bg-26) px-3 py-2 text-lg font-normal disabled:cursor-not-allowed disabled:bg-(color:--themed-bg-25)" disabled={championshipLocked} inputMode="numeric" min="0" max="200" type="number" value={championshipTotalGuess} onChange={(event) => { setSubmissionError(""); setChampionshipTotalGuess(event.target.value.replace(/\D/g, "").slice(0, 3)); }} /></label>
         </section> : null}
         </>
       ) : null}
