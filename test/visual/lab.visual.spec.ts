@@ -59,3 +59,37 @@ test("the Lab remembers the try-out on this device and in the address", async ({
   await expect(page.locator(".lab-family")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Ticket & receipt" })).toHaveAttribute("aria-pressed", "true");
 });
+
+for (const theme of ["day", "night"]) {
+  for (const [label, size] of Object.entries(SIZES)) {
+    for (const week of ["Week 3", "Week 7", "Week 9"]) {
+      test(`Lab Survivor table, ${week}, ${theme} at ${label}`, async ({ page }) => {
+        await openLab(page, "survivor", { theme, size });
+        await page.getByRole("group", { name: "Week" }).getByRole("button", { name: week }).click();
+        await holdStill(page);
+        await expect(page.locator(".lab-survivor-room")).toHaveScreenshot(`lab-survivor-${week.toLowerCase().replace(/ /g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+      });
+    }
+  }
+}
+
+test("Lab Survivor table: a seat's weeks fanned out", async ({ page }) => {
+  await openLab(page, "survivor");
+  await page.getByRole("button", { name: /^Marge/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Marge's weeks" });
+  await expect(sheet.locator(".lab-fan li")).toHaveCount(7);   // six wins, then the loss in week 7
+  await expect(sheet.locator(".lab-fan li.is-lost")).toHaveCount(1);
+  await holdStill(page);
+  await expect(sheet).toHaveScreenshot("lab-survivor-seat-sheet-day-phone-390.png", { maxDiffPixels: 12 });
+});
+
+test("Lab Survivor table: the felt shows this week's chips, sweeps a losing team, and List shows the same league", async ({ page }) => {
+  await openLab(page, "survivor");
+  await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Week 3" }).click();
+  await expect(page.getByRole("img", { name: "Bengals: Hank, lost" })).toBeVisible();   // Hank's Bengals lost in week 3
+  await expect(page.locator(".lab-box.is-swept")).toHaveCount(2);   // the Bengals and the Dolphins
+  await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);   // Gus (week 2), Hank and Bev (week 3)
+  await page.getByRole("group", { name: "View" }).getByRole("button", { name: "List" }).click();
+  await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
+  await expect(page.locator(".lab-felt")).toHaveCount(0);
+});
