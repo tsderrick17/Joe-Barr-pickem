@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { gridArea, layoutPlaces, layoutProblems, mergeSaved, WORKSHOP_LAYOUTS, WORKSHOP_ORDER } from "../src/lib/workshop-board.js";
+import { gridArea, layoutPlaces, layoutProblems, mergeSaved, nextInRipple, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_RIPPLE, WORKSHOP_STILL } from "../src/lib/workshop-board.js";
 
 const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "wins", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner-pickem", "banner-bowl", "banner-survivor"];
 
@@ -28,6 +28,17 @@ test("a broken layout is caught: a ragged row, a missing piece, an unknown one, 
   assert.deepEqual(layoutProblems([["chip", "nope"]], ["chip", "stamp"]), ["stamp is not on the board", "nope is not a piece"]);
   assert.deepEqual(layoutProblems([["chip", "stamp", "chip"]], ["chip", "stamp"]), ["chip is not one rectangle"]);
   assert.deepEqual(layoutProblems([["chip", "stamp"], ["stamp", "chip"]], ["chip", "stamp"]), ["chip is not one rectangle", "stamp is not one rectangle"]);
+});
+
+test("the ripple takes every piece with a moment in reading order, and skips any that cannot play now", () => {
+  assert.deepEqual(WORKSHOP_RIPPLE, WORKSHOP_ORDER.filter((id) => !WORKSHOP_STILL.includes(id)));
+  assert.equal(WORKSHOP_RIPPLE.length, 12);
+  const order = ["a", "b", "c", "d"];
+  assert.equal(nextInRipple(order, -1, () => true), 0);
+  assert.equal(nextInRipple(order, 3, () => true), 0);   // round again from the top
+  assert.equal(nextInRipple(order, 0, (id) => id === "d"), 3);   // pieces off screen are skipped
+  assert.equal(nextInRipple(order, 2, (id) => id === "a"), 0);
+  assert.equal(nextInRipple(order, 1, () => false), -1);   // nothing on screen: nothing plays
 });
 
 test("a piece's place becomes its grid area", () => {

@@ -47,6 +47,24 @@ export const gridArea = ({ row, column, rows, columns }) => `${row} / ${column} 
 export const WORKSHOP_ORDER = [...new Set(WORKSHOP_LAYOUTS.desktop.flat())];
 
 /**
+ * The board plays itself: one clock, and on each beat the next piece in turn plays its moment, so two or three are moving at once and the
+ * ripple runs round the board in reading order. Pieces with no moment to replay sit out: the football turns all the time, and the two
+ * season-closed banners are still.
+ */
+export const WORKSHOP_BEAT_MS = 1400;
+export const WORKSHOP_STILL = ["football", "season-over", "eliminated"];
+export const WORKSHOP_RIPPLE = WORKSHOP_ORDER.filter((id) => !WORKSHOP_STILL.includes(id));
+
+/** The place in `order` of the next piece after `cursor` that can play now (on screen), or -1 when none can. */
+export function nextInRipple(order, cursor, canPlay) {
+  for (let step = 1; step <= order.length; step++) {
+    const index = (((cursor + step) % order.length) + order.length) % order.length;
+    if (canPlay(order[index])) return index;
+  }
+  return -1;
+}
+
+/**
  * Problems with a layout against the list of pieces: a row of the wrong width, a piece missing, one that does not exist, or one whose
  * cells are not a single filled rectangle. Empty means every piece is on the board once and the board has no gaps.
  */
