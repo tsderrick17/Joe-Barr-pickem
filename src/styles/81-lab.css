@@ -60,9 +60,9 @@
 }
 /* The status stub tears along a perforation, with the receipt's round notches at each end. */
 .ticket-family .my-ticket-footer { border-top: 2px dotted var(--ticket-heavy-rule); position: relative; }
-/* Each notch is one rule of its own (the stylesheet budget counts a selector defined twice). */
-.ticket-family .my-ticket-footer::before { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-radius: 50%; content: ""; height: .84rem; left: calc(-1.05rem - .42rem); position: absolute; top: calc(-.42rem - 1px); width: .84rem; }
-.ticket-family .my-ticket-footer::after { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-radius: 50%; content: ""; height: .84rem; position: absolute; right: calc(-1.05rem - .42rem); top: calc(-.42rem - 1px); width: .84rem; }
+/* Each notch is a half circle bitten into the edge, one rule of its own (the stylesheet budget counts a selector defined twice). */
+.ticket-family .my-ticket-footer::before { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-left: 0; border-radius: 0 999px 999px 0; content: ""; height: .84rem; left: -1.05rem; position: absolute; top: calc(-.42rem - 1px); width: .42rem; }
+.ticket-family .my-ticket-footer::after { background: var(--ticket-cutout); border: 1px solid var(--ticket-edge); border-radius: 999px 0 0 999px; border-right: 0; content: ""; height: .84rem; position: absolute; right: -1.05rem; top: calc(-.42rem - 1px); width: .42rem; }
 
 /* ---- Survivor table: a card table ----
    Green felt on the Wheel's deep greens, a brass rail from the Wheel's brass. On the felt, the layout: AFC and NFC, a row per division,
