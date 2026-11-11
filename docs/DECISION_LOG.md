@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - Pool stats: bar figures under the axis, the two tables level
+
+- The owner asked for the Weekly records figures (22%, 33%, 44%) to sit below the axis, not inside the columns, and for the two
+  tables at the bottom (What ... picks, Most picked teams) to line up perfectly.
+- A column chart with coin-flip marks now prints each figure just under the axis, above the column's name; the plot keeps its
+  height (the chart is 16px taller to make room). Only Pool stats draws marks, so no other chart changes.
+- The teams table's sort buttons no longer make its header taller (the button keeps its 32px tap area by reaching into the
+  cell's padding), and the heavier line before Home takes one pixel from that row's padding, so the two tables match row for row.
+  A behavior test checks every row edge at 1280px for the league and a player.
+
 ## 2026-11-10 - The pool constitution is written to the player
 
 - The owner read the first version in the Handbook and asked for it to be shifted from a technical standpoint to a

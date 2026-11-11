@@ -531,6 +531,28 @@ for (const width of [390, 560, 768, 1280]) {
   });
 }
 
+// Pool stats on a wide screen: the splits table and the teams table sit side by side and line up exactly, header and every row, for the
+// league and for a player (the teams table's sort buttons never make its header taller; the heavier line before Home never pushes a row down).
+test("Pool stats: the two tables side by side line up row for row", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin/stats");
+  const section = page.locator("[aria-labelledby=pool-stats-title]");
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible({ timeout: 30_000 });
+  const edges = (heading: RegExp) => section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: heading }) })
+    .locator("tr").evaluateAll((rows) => rows.map((row) => { const box = row.getBoundingClientRect(); return [Math.round(box.top), Math.round(box.bottom)]; }));
+  for (const name of ["The league", "Connor"]) {
+    await section.getByRole("group", { name: "Show" }).getByRole("button", { name }).click();
+    const splits = await edges(/^What .* picks$/);
+    const teams = await edges(/picked teams$/);
+    expect(splits.length, `${name}: header and five rows`).toBe(6);
+    // A player may have picked fewer than five teams: each row the teams table has starts level with the splits row beside it.
+    expect(teams.map(([top]) => top), `${name}: the teams table lines up with the splits table`).toEqual(splits.slice(0, teams.length).map(([top]) => top));
+    if (name === "The league") expect(teams, "the league: both tables end level too").toEqual(splits);
+  }
+});
+
 // Record / Other Stats is a two-way switch: tapping either half flips to the other view, and the halves are exactly the same size.
 test("either half of the Record / Other Stats switch flips the All-Time Table", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });

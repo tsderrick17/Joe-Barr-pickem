@@ -142,7 +142,7 @@ function WeeksChart({ weeks, label }: { weeks: Weeks; label: string }) {
   return <DashChart
     capLabels
     format={(value) => `${Math.round(value)}%`}
-    height={190}
+    height={206}
     kind="columns"
     label={label}
     markLabel="Coin flip"

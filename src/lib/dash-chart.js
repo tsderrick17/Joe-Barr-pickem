@@ -18,8 +18,8 @@ export function ticks(min, max, count = 4) {
 }
 
 /** The plot area inside a chart `width` x `height`, leaving room for the y labels, the x labels and, when asked, end labels on the right. */
-export function plotArea(width, height, { left = 34, endLabels = false } = {}) {
-  const margin = { left, right: endLabels ? 46 : 8, top: 18, bottom: 22 };
+export function plotArea(width, height, { left = 34, endLabels = false, bottom = 22 } = {}) {
+  const margin = { left, right: endLabels ? 46 : 8, top: 18, bottom };
   return { ...margin, width: Math.max(0, width - margin.left - margin.right), height: Math.max(0, height - margin.top - margin.bottom) };
 }
 
