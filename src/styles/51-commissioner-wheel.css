@@ -134,10 +134,11 @@
   background: linear-gradient(to top, var(--cw-deep) 0%, var(--cw-green) 70%, rgba(22, 58, 46, 0) 100%);
   bottom: 0;
   height: calc(94px + env(safe-area-inset-bottom));
-  left: 0;
+  /* Sticky at the foot of the page, not fixed to the screen: an iPhone home-screen app lets a fixed bar drift up mid-screen
+     while it scrolls, and a sticky one scrolls with the page itself. The negative margin keeps it taking no room, as before. */
+  margin-top: calc(-94px - env(safe-area-inset-bottom));
   overflow: hidden;
-  position: fixed;
-  right: 0;
+  position: sticky;
   touch-action: none;
   user-select: none;
   -webkit-touch-callout: none;
