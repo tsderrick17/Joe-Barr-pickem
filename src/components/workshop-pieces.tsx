@@ -323,7 +323,8 @@ export const PIECES: Piece[] = [
     knobGroup: "submit",
     style: (settings) => cssVars("submit", settings.knobs),
     draw: ({ settings, plays }) => (
-      <div className="asset-submit slate-receipt-ticket" key={plays}>
+      <div className="asset-submit asset-in-context slate-receipt-ticket" key={plays}>
+        <span className="asset-context">{settings.submitState === "unsaved" ? "2 of 2 picked" : "Saved"}</span>
         {/* the tile itself is the button that replays it; this one is only the look */}
         <button aria-hidden="true" className={`slate-receipt-print ${settings.submitState === "unsaved" ? "needs-attention" : ""}`} tabIndex={-1} type="button">SUBMIT</button>
       </div>
@@ -340,8 +341,9 @@ export const PIECES: Piece[] = [
     easeTarget: "highlight",
     style: (settings) => ({ ...cssVars("highlight", settings.knobs), ...easeVars("highlight", settings) }),
     draw: ({ settings: { strokeText, knobs }, plays, copy }) => (
-      <span className="asset-highlight" key={plays}>
+      <span className="asset-highlight asset-in-context" key={plays}>
         <span className="slate-team-label slate-team-label--selected slate-team-label--from-left slate-team-label--new" style={strokeJitter(`asset-${copy}-${plays}`, { x: knobs.jitterX, y: knobs.jitterY, turn: knobs.jitterTurn })}><span>{strokeText || "Chiefs"}</span></span>
+        <span className="asset-context">−3.5 · the pick</span>
       </span>
     ),
     controls: (settings, update) => <>
@@ -428,7 +430,11 @@ export const PIECES: Piece[] = [
     tapToPlay: true,
     draw: ({ settings: { stamp }, plays }) => {
       const result = plays % 2 === 0 ? stamp.result : stamp.result === "win" ? "loss" : "win";
-      return <span className="asset-stamp"><AtsResultStamp result={result} tilted={stamp.tilted === "yes"} variant={stamp.variant} /></span>;
+      // The stamp beside the final it was graded on: the Chiefs at -3.5 cover by winning by 7, and miss by losing by 3.
+      return <span className="asset-stamp asset-in-context">
+        <AtsResultStamp result={result} tilted={stamp.tilted === "yes"} variant={stamp.variant} />
+        <span className="asset-context">{result === "win" ? "Won 27–20" : "Lost 20–23"}</span>
+      </span>;
     },
     controls: ({ stamp }, update) => <>
       <Choice label="Result" onChange={(result) => update((current) => ({ ...current, stamp: { ...current.stamp, result } }))} options={[["win", "W"], ["loss", "L"]] as const} value={stamp.result} />
