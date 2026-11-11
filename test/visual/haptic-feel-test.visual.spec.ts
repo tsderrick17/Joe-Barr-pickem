@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
 
-// The Commissioner's "Feel test" on the Notifications page. The phone is scripted: an Android phone records every vibration it is asked for, an iPhone
+// The Commissioner's "Feel test" in the Workshop's Lab (it moved there from Notifications). The phone is scripted: an Android phone records every vibration it is asked for, an iPhone
 // records every flip of the hidden switch that gives its tick. Nothing real is vibrated.
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 type Kind = "android" | "iphone" | "computer";
@@ -19,10 +19,11 @@ async function scriptDevice(page: Page, kind: Kind) {
   }, [kind, IPHONE]);
 }
 
-async function open(page: Page, kind: Kind, { commissioner = true, theme = "day", width = 390 } = {}) {
+async function open(page: Page, kind: Kind, { commissioner = true, theme = "day", width = 390, path = "/admin/workshop/lab" } = {}) {
   await page.setViewportSize({ width, height: 900 });
   await signIn(page, theme);
   await scriptDevice(page, kind);
+  await page.addInitScript(() => window.localStorage.setItem("commissioner-dial-hint", "3"));
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: {
@@ -30,8 +31,10 @@ async function open(page: Page, kind: Kind, { commissioner = true, theme = "day"
     firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false,
   } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
-  await page.goto("/profile");
-  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible({ timeout: 30_000 });
+  await page.goto(path);
+  if (path === "/profile") await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible({ timeout: 30_000 });
+  else await expect(page.getByRole("navigation", { name: "Workshop" }).getByRole("link", { name: "Lab" })).toHaveAttribute("aria-current", "page", { timeout: 30_000 });
+  if (path !== "/profile" && commissioner) await expect(page.locator("[data-haptic-test]")).toBeVisible({ timeout: 30_000 });
   return { section: page.locator("[data-haptic-test]") };
 }
 
@@ -42,7 +45,7 @@ for (const [kind, label] of [["android", "Android phone"], ["iphone", "iPhone"]]
     const { section } = await open(page, kind);
     await expect(section).toHaveAttribute("data-haptic-test", kind);
     await page.evaluate(() => document.fonts.ready);
-    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; }" });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; } .cw-dial { display: none !important; }" });
     await expect(section).toHaveScreenshot(`feel-test-${kind}-day-phone-390.png`);
   });
 }
@@ -50,7 +53,7 @@ for (const [kind, label] of [["android", "Android phone"], ["iphone", "iPhone"]]
 test("Feel test at night", async ({ page }) => {
   const { section } = await open(page, "android", { theme: "night" });
   await page.evaluate(() => document.fonts.ready);
-  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; }" });
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } nav { position: static !important; } .cw-dial { display: none !important; }" });
   await expect(section).toHaveScreenshot("feel-test-android-night-phone-390.png");
 });
 
@@ -72,7 +75,7 @@ test("on an iPhone the finger's tap on a choice flips the hidden switch over it,
   for (const [index, name] of ["Tick", "Light tick", "Lock-in"].entries()) {
     const button = section.getByRole("button", { name: new RegExp(`^${name}`) });
     // The finger lands on the invisible switch label laid over the button, not on code.
-    await button.scrollIntoViewIfNeeded();
+    await button.evaluate((el) => el.scrollIntoView({ block: "center" }));
     const box = (await button.boundingBox())!;
     expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.hasAttribute("data-haptic-tap") ?? false, [box.x + box.width / 2, box.y + box.height / 2])).toBe(true);
     await button.click();
@@ -146,7 +149,23 @@ test("a computer says it has no haptics and does nothing", async ({ page }) => {
   await expect(section.getByRole("status")).toContainText("nothing (this device has no haptics)");
 });
 
-test("only the Commissioner sees the Feel test", async ({ page }) => {
+test("only the Commissioner sees the Feel test, and only in the Lab", async ({ page }) => {
   await open(page, "android", { commissioner: false });
+  await expect(page.getByText("Commissioner only.")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("[data-haptic-test]")).toHaveCount(0);
+});
+
+test("Notifications no longer holds the Feel test, even for the Commissioner", async ({ page }) => {
+  await open(page, "android", { path: "/profile" });
+  await expect(page.locator("[data-haptic-test]")).toHaveCount(0);
+});
+
+test("the Workshop's Showroom and Lab tabs lead to each other", async ({ page }) => {
+  await open(page, "android", { width: 1280 });
+  const tabs = page.getByRole("navigation", { name: "Workshop" });
+  await tabs.getByRole("link", { name: "Showroom" }).click();
+  await expect(page.locator(".workshop-board")).toBeVisible({ timeout: 30_000 });
+  await expect(tabs.getByRole("link", { name: "Showroom" })).toHaveAttribute("aria-current", "page");
+  await tabs.getByRole("link", { name: "Lab" }).click();
+  await expect(page.locator("[data-haptic-test]")).toBeVisible({ timeout: 30_000 });
 });

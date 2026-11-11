@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import MyTicket, { type TicketPick } from "@/components/my-ticket";
 import PickemScoreboard, { type PickemScoreboardRow } from "@/components/pickem-scoreboard";
 import SlateGameRow, { type SlateGameRowData } from "@/components/slate-game-row";
-import { fetchWithSession } from "@/lib/auth-session";
+import { useCommissionerAccess } from "@/lib/use-commissioner-access";
 import { countPickemWins } from "@/lib/standings";
 
 type Side = "left" | "right";
@@ -294,22 +294,6 @@ function EmailPreview({ rows, scenario }: { rows: PickemScoreboardRow[]; scenari
     <a className="mt-6 inline-block bg-[#007e72] px-4 py-3 text-sm font-bold text-white" href="/board">Open Pick&apos;em</a>
     <p className="mt-6 text-xs leading-5 text-slate-500">This preview is sample content. It does not create a reminder, email a player, or expose a private pick.</p>
   </section>;
-}
-
-type Access = "checking" | "allowed" | "denied";
-
-/** The rehearsal is the Commissioner's tool: it is drawn only once the account has answered as the Commissioner (a signed-out visitor is sent to sign in by the header). */
-function useCommissionerAccess(): Access {
-  const [access, setAccess] = useState<Access>("checking");
-  useEffect(() => {
-    let active = true;
-    fetchWithSession("/api/profile")
-      .then((response) => response.ok ? response.json() as Promise<{ isCommissioner?: boolean }> : Promise.reject(new Error("The account could not be read.")))
-      .then((player) => { if (active) setAccess(player.isCommissioner ? "allowed" : "denied"); })
-      .catch(() => { if (active) setAccess("denied"); });
-    return () => { active = false; };
-  }, []);
-  return access;
 }
 
 export default function PreviewPage() {

@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-10 - The Workshop gets a Lab; the Feel test moves there
+
+The Commissioner wanted a safe place to play with design prototypes (the offseason shortlist) on the real site and a real phone.
+
+- The Lab is a second room of the Workshop at `/admin/workshop/lab`, not a new Wheel spoke: the Wheel stays at ten spokes, and the address starts with `/admin/workshop`, so the bar, title and dial treat it as the Workshop.
+- Both Workshop pages show two tabs, Showroom and Lab (the Pool stats name-chip style, green when current).
+- The Lab is Commissioner-only: a player who types the address sees "Commissioner only." and nothing else.
+- Nothing in the Lab reads or writes pool data, so it adds no database, network or Vercel cost.
+- The haptics Feel test left Notifications for everyone and lives in the Lab; its heading is plain "FEEL TEST".
+- Offseason prototypes (betting slip, Survivor table, lamp-lit night) will be added to the Lab one PR each, before anything reaches players.
+
 ## 2026-11-10 - The Workshop shows pieces where they live (PR 3: in context)
 
 - Last part of the living-board plan. Three pieces that meant little on their own now carry one small muted line saying where they live

@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState, type CSSProperties, typ
 import { gridArea, layoutPlaces, mergeSaved, nextInRipple, WORKSHOP_BEAT_MS, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_RIPPLE, WORKSHOP_SAVED_KEY } from "@/lib/workshop-board.js";
 import { changedSummary, defaultSettings, KNOBS, knobsFor, liveEase, liveKnobs, pieceById, SAVED_RULES, ZoomControl, type Piece, type Settings } from "@/components/workshop-pieces";
 import { Sheet } from "@/components/commissioner/wheel-parts";
+import { WorkshopTabs } from "@/components/workshop-tabs";
 
 /**
  * The Workshop: every custom piece of the pool once, packed into one board with no gaps, each in a tile shaped for it (a map for a phone,
@@ -156,7 +157,8 @@ export default function WorkshopBoard() {
 
   return (
     <div className="workshop">
-      <div aria-label="Workshop" className="workshop-bar" role="group">
+      <WorkshopTabs current="showroom" />
+      <div aria-label="Workshop settings" className="workshop-bar" role="group">
         <label className="workshop-switch">
           <input checked={settings.view.labels} onChange={(event) => { const labels = event.target.checked; update((current) => ({ ...current, view: { ...current.view, labels } })); }} type="checkbox" />
           Show names
