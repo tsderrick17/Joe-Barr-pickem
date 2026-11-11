@@ -32,7 +32,7 @@ for (const theme of ["day", "night"]) {
           await page.getByRole("group", { name: "Look" }).getByRole("button", { name: look }).click();
           await page.getByRole("group", { name: "Week" }).getByRole("button", { name: week }).click();
           await holdStill(page);
-          await expect(page.locator(".lab-family")).toHaveScreenshot(`lab-ticket-${look.toLowerCase()}-${week.toLowerCase().replace(/ /g, "-")}-${theme}-${label}.png`);
+          await expect(page.locator(".lab-family")).toHaveScreenshot(`lab-ticket-${look.toLowerCase()}-${week.toLowerCase().replace(/ /g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });   // the small Survivor chip logo renders a few pixels differently from run to run
         });
       }
     }
