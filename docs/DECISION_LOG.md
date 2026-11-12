@@ -31,6 +31,14 @@ each style keeping its number and pace. Two fixes there: the large counter's dig
 defined only on the Bowl pages, so the Workshop's stages now carry them too; and the pull-to-refresh strip, drawn 390px wide then
 zoomed, was cut off on a phone, so it is drawn as wide as its tile has room for. Briefly a tap made the counters land on a random
 number; the owner dropped that, since the number can be typed in the settings.
+## 2026-11-11 - Ticket family: notches and perforations cut through the paper
+
+The owner asked for a convincingness pass on the refined ticket's perforation and notches. The ticket's paper is now two layers, the
+body and the status stub, each filling its own piece of the ticket (the ticket lays out on a grid only for this). The notches and a row
+of small punched holes are cut out of the paper with masks, half on each layer, so the page shows through them and the drop shadow
+falls into them; before, the notches were painted circles in the page colour, which did not match the Lab's background, and the
+perforation was a heavy dotted rule. The serrated ends lose their dashed hairline and stay plain bites, like the receipt's. The
+receipt's perforations become the same punched holes instead of long dashes. Lab only (`ticket-family`); no font or text changes.
 
 ## 2026-11-11 - The clubhouse, tried in the Lab
 
