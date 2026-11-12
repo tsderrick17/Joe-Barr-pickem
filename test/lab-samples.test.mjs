@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { LAB_DIVISIONS, LAB_PLAYERS, LAB_SLATE, LAB_SURVIVOR, LAB_TEAM_NAMES, labAtsResult, labLineFor, labSurvivorAt } from "../src/lib/lab-samples.js";
+import { LAB_DIVISIONS, LAB_PLAYERS, LAB_SLATE, LAB_SURVIVOR, LAB_TEAM_NAMES, labAtsResult, labLineFor, labSurvivorAt, labSurvivorChampion } from "../src/lib/lab-samples.js";
 import { LAB_SHELF, labChoice } from "../src/lib/lab-shelf.js";
 
 const TEAMS = LAB_DIVISIONS.flatMap((division) => division.teams);
@@ -33,6 +33,12 @@ test("the table as of a week: who is out, from which week, and the team on the f
   assert.equal(gus.weeks.length, 2);
   const week9 = labSurvivorAt(9);
   assert.deepEqual(week9.filter((seat) => !seat.out).map((seat) => seat.name), ["Walt", "Rosie", "Dottie", "Earl", "June"]);
+});
+
+test("the sample season ends with one player standing in week 12: the champion", () => {
+  assert.equal(labSurvivorChampion(11), null);
+  assert.equal(labSurvivorChampion(12), "Earl");
+  assert.deepEqual(labSurvivorAt(12).filter((seat) => !seat.out).map((seat) => seat.name), ["Earl"]);
 });
 
 test("sample lines and against-the-spread results read like the pool's: a push is a loss", () => {

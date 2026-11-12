@@ -560,11 +560,11 @@ html[data-theme="night"] {
   --ticket-open-ink: #bdb19b;
   --ticket-bar: var(--sand-89);
   /* Lamp-lit at night: one warm lamp over the middle of the table, shadow around it, warmer paper. */
-  --lamp-pool: radial-gradient(ellipse 60% 42% at 50% 6%, rgba(255, 190, 110, .2), transparent 72%), radial-gradient(ellipse 85% 70% at 50% 35%, transparent 45%, rgba(0, 0, 0, .55) 100%);
-  --lamp-felt-light: radial-gradient(ellipse 55% 50% at 50% 28%, rgba(255, 196, 120, .24), transparent 70%), radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0, 0, 0, .55) 100%);
+  --lamp-pool: radial-gradient(ellipse 72% 52% at 50% 0%, rgba(255, 196, 120, .24) 0%, rgba(255, 186, 110, .15) 28%, rgba(255, 178, 104, .07) 52%, rgba(255, 170, 100, .02) 70%, transparent 82%), radial-gradient(ellipse 110% 85% at 50% 32%, transparent 46%, rgba(0, 0, 0, .3) 72%, rgba(0, 0, 0, .58) 100%);
+  --lamp-felt-light: radial-gradient(ellipse 60% 55% at 50% 26%, rgba(255, 200, 128, .22) 0%, rgba(255, 190, 116, .12) 35%, rgba(255, 180, 108, .04) 62%, transparent 80%), radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(0, 0, 0, .28) 78%, rgba(0, 0, 0, .5) 100%);
   --lamp-glow: drop-shadow(0 0 22px rgba(255, 190, 110, .14));
   --lamp-ticket-paper: repeating-linear-gradient(0deg, rgba(255, 214, 150, .035) 0 1px, transparent 1px 4px), rgb(50 40 28);
-  --lamp-paper: rgb(44 35 25);
+  --lamp-paper: rgb(50 40 28);
   --lamp-note-display: none;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,

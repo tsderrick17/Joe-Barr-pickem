@@ -85,7 +85,7 @@ function StandingsRoom() {
       {view === "board" ? (
         <div className="lab-leaderboard">
           <header><p>LEAD PIPE LOCKS</p><h3>LEADERS</h3><span>{round === "wildcard" ? "WILD CARD" : "WEEK 10"}</span></header>
-          <div aria-hidden="true" className="lab-leaderboard-heads"><span>POS</span><span>PLAYER</span><span>WINS</span><span>BACK</span></div>
+          <div aria-hidden="true" className="lab-leaderboard-heads"><span>POS</span><span className="is-player">PLAYER</span><span>WINS</span><span>BACK</span></div>
           <ol>
             {rows.map((row) => (
               <li className={row.out ? "is-out" : ""} key={row.name}>

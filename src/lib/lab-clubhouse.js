@@ -113,7 +113,7 @@ export function labLeaderboard({ round, moment }) {
  * @param {{ moment: string, viewer?: string }} options
  */
 export function labSurvivorBoard({ moment, viewer = LAB_VIEWER }) {
-  const run = LAB_SURVIVOR[viewer] ?? [];
+  const run = (LAB_SURVIVOR[viewer] ?? []).slice(0, 9);
   const lostAt = run.findIndex(([, result]) => result === "L");
   const out = lostAt >= 0;
   // The week on the board is week 10: every earlier pick is used.

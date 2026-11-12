@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - Survivor table rebuilt, lamp-lit polished, Pad skins tried (Lab)
+
+The owner liked the Survivor table but found it far from showing the right information simply, and asked for the divisions to line
+up. It is rebuilt against a checklist of everything the Survivor list shows: who is in or out, the week and team that ended a run,
+this week's pick (face down until kickoff, or NO PICK YET), the week's result (a swept box), every team used (tap a seat), how many
+are left, any earlier week (a stepper), the champion, and a cleared felt in the playoffs. AFC and NFC run East, North, South, West
+with the division names in one column, so each row reads straight across; a test measures that the rows line up. The sample season
+now runs to week 12, when one player is left. Lamp-lit gets a smoother pool of light with no visible edge, one paper tone, and reaches
+the clubhouse and the skins. Pad skins (split-flap, scratch-off, tote board, bowling sheet, ballpark) are tried on one sample Pick'em
+Pad: the same rows and picks in every skin, another player's pick covered until kickoff. Lab only, sample players only.
+
 ## 2026-11-12 - The clubhouse, round two (Lab)
 
 From the owner's review ("awesome", expand the leaderboard and the Slate board; plaques elevated; the Bowl program not understood):
