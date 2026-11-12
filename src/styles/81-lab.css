@@ -221,15 +221,13 @@
 .lab-bigboard.is-survivor .lab-board-cell.is-used .lab-board-team { opacity: .45; }
 .lab-bigboard.is-survivor .lab-board-trace { display: none; }
 
-/* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, then a second rule settles
-   inside it, the double gilt frame of a club's honours board. Nothing repeats; reduced motion shows the frame at once. */
+/* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, and stays: a single line,
+   no second rule. Nothing repeats; reduced motion shows the line at once. */
 @property --gilt-sweep { inherits: false; initial-value: 360deg; syntax: "<angle>"; }
 .lab-board-trace { border-radius: 2px; inset: -1px; pointer-events: none; position: absolute; }
 .trace-gilt .is-picked .lab-board-trace { --gilt-sweep: 360deg; animation: gilt-draw 620ms cubic-bezier(.3, .1, .2, 1) both; border: 1.5px solid var(--cw-gold); -webkit-mask: conic-gradient(black var(--gilt-sweep), transparent 0); mask: conic-gradient(black var(--gilt-sweep), transparent 0); }
-.trace-gilt .is-picked .lab-board-trace::after { animation: gilt-settle 300ms 560ms ease-out both; border: 1px solid rgba(230, 207, 152, .75); border-radius: 1px; content: ""; inset: 3px; position: absolute; }
 .trace-gilt .is-picked .lab-board-team { color: var(--cw-gold-lt); }
 @keyframes gilt-draw { from { --gilt-sweep: 0deg; } to { --gilt-sweep: 360deg; } }
-@keyframes gilt-settle { from { opacity: 0; } to { opacity: 1; } }
 /* Brass inlay: the picked cell becomes a small brass plate, the lettering engraved into it. */
 .trace-brass .is-picked { background: linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 50%, var(--cw-brass-3)); border-color: rgba(42, 31, 0, .5); box-shadow: inset 0 1px 0 rgba(255, 253, 247, .6), inset 0 -1px 0 rgba(42, 31, 0, .35); }
 .trace-brass .is-picked .lab-board-team,
@@ -237,8 +235,7 @@
 /* Lit line: only the number warms to gold, with a thin gold rule beneath it. */
 .trace-lit .is-picked .lab-board-line { border-bottom: 1px solid var(--cw-gold); color: var(--cw-gold-lt); }
 @media (prefers-reduced-motion: reduce) {
-  .trace-gilt .is-picked .lab-board-trace,
-  .trace-gilt .is-picked .lab-board-trace::after { animation: none; }
+  .trace-gilt .is-picked .lab-board-trace { animation: none; }
 }
 
 /* Trophy Room: a lit case; plaques of engraved brass on walnut. Only the trophy moves in the real room; here a plaque never moves. */
@@ -406,3 +403,46 @@
   .lab-flapchar,
   .skin-scratch .lab-pad-pick:not(.is-hidden) .lab-pad-slip { animation: none; }
 }
+
+/* ---- Tote board: the Pick'em Pad and the Slate as the racetrack's board ----
+   The Pad keeps today's columns (wins, player, two picks) and adds Survivor's chips in its own column. Green housing with a gold
+   keyline, black panels, amber lamp numbers. Each pick panel is team, line, then a fixed lamp slot, so every W and L in a column
+   shares one centre line. No font or size changes to the data. */
+.lab-tote-room { display: grid; gap: 16px; }
+.lab-tote { background: rgb(18 40 30); border-radius: 6px; box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); color: rgb(240 236 226); margin: 0 auto; max-width: 560px; padding: 12px 10px 10px; width: 100%; }
+.lab-tote header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
+.lab-tote h3 { font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: .2em; margin: 0; }
+.lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
+.lab-tote table { border-collapse: separate; border-spacing: 0 4px; table-layout: fixed; width: 100%; }
+.lab-tote th, .lab-tote td { font-size: .8rem; padding: 0 4px; text-align: left; vertical-align: middle; }
+.lab-tote thead th { color: rgba(240, 236, 226, .75); font-size: .56rem; font-weight: 800; letter-spacing: .14em; padding-bottom: 2px; }
+.lab-tote thead th:first-child { text-align: center; }
+.lab-tote tbody th, .lab-tote tbody td { background: rgb(8 10 9); border-right: 2px solid rgb(18 40 30); height: 2.4rem; }
+.lab-tote tr.is-you th, .lab-tote tr.is-you td { box-shadow: inset 0 1px 0 rgba(201, 164, 95, .7), inset 0 -1px 0 rgba(201, 164, 95, .7); }
+.lab-tote-col-wins { width: 2.4rem; }
+.lab-tote-col-pick { width: 29%; }
+.lab-tote-col-surv { width: 3rem; }
+.lab-tote .lab-tote-wins { color: rgb(255 176 46); font-family: "Courier New", monospace; font-weight: 900; text-align: center; text-shadow: 0 0 4px rgba(255, 160, 40, .9), 0 0 10px rgba(255, 140, 30, .5); }
+.lab-tote-name { font-weight: 800; letter-spacing: .06em; overflow: hidden; white-space: nowrap; }
+/* Team, line, lamp: the lamp slot has one width in every row, so the W and L line up down the column. */
+.lab-tote-slip { align-items: center; color: rgb(190 240 200); display: grid; font-family: "Courier New", monospace; gap: 4px; grid-template-columns: auto 1fr 1.3rem; white-space: nowrap; }
+.lab-tote-slip small { font-size: .7rem; opacity: .8; }
+.lab-tote-mark { border-radius: 2px; display: block; font-family: Georgia, serif; font-size: .95rem; font-weight: 700; height: 1.3rem; line-height: 1.3rem; text-align: center; width: 1.3rem; }
+.lab-tote-mark.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+.lab-tote-mark.is-l { color: rgb(252 120 110); text-shadow: 0 0 6px rgba(252, 120, 110, .7); }
+/* Survivor: the real chip, centred in its column, its W or L lamp beside it. */
+.lab-tote .lab-tote-surv { text-align: center; }
+.lab-tote-chip { align-items: center; display: inline-flex; gap: 2px; }
+.lab-tote-chip .lab-tote-mark { font-size: .8rem; width: .9rem; }
+.lab-tote-chip-back { background: repeating-conic-gradient(rgb(22 58 46) 0 30deg, rgb(244 239 227) 30deg 60deg); border: 2px solid var(--cw-gold); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, .5); display: inline-block; height: 1.7rem; vertical-align: middle; width: 1.7rem; }
+.lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
+/* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
+.lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: center; }
+.lab-tote-cover.is-lamps i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
+.lab-tote-cover.is-lamps b { color: rgb(110 231 150); font-family: "Courier New", monospace; font-size: .7rem; letter-spacing: .1em; margin-left: 4px; text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+/* Sealed: a small gold seal stamped over the panel. */
+.lab-tote-cover.is-sealed b { background: linear-gradient(var(--cw-brass-3), var(--cw-gold)); border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); color: var(--cw-pip-ink); font-size: .58rem; letter-spacing: .14em; padding: 3px 7px; }
+/* Face down: the panel turned over, its back in the Survivor chip's pattern. */
+.lab-tote-cover.is-facedown { background: repeating-linear-gradient(45deg, rgb(22 58 46) 0 4px, rgb(30 74 58) 4px 8px); border: 1px solid rgba(201, 164, 95, .6); border-radius: 2px; height: 1.6rem; margin: 0 2px; }
+/* The Slate in the same housing: the tote board's green and gold around the black board. */
+.lab-bigboard.is-tote { background: rgb(8 10 9); border-color: rgb(18 40 30); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); }

@@ -79,10 +79,13 @@ export function labStandard(name, { round, moment, viewer = LAB_VIEWER }) {
   const survivorTeam = round === "regular" ? LAB_WEEK10_SURVIVOR[name] ?? null : null;
   const survivorGame = survivorTeam ? games.find((game) => game.away === survivorTeam || game.home === survivorTeam) : null;
   const survivorHidden = Boolean(survivorGame) && name !== viewer && !labKickedOff(games, survivorGame.id, moment);
+  // Survivor is straight up once its game is final (in the sample, a kicked-off game is final); a tie is a loss.
+  const survivorOther = survivorGame ? (survivorGame.home === survivorTeam ? survivorGame.away : survivorGame.home) : null;
+  const survivorResult = survivorGame && labKickedOff(games, survivorGame.id, moment) ? (survivorGame.final[survivorTeam] > survivorGame.final[survivorOther] ? "W" : "L") : null;
   return {
     name,
     slats,
-    survivor: survivorTeam ? { team: survivorHidden ? null : survivorTeam, hidden: survivorHidden } : null,
+    survivor: survivorTeam ? { team: survivorHidden ? null : survivorTeam, hidden: survivorHidden, result: survivorHidden ? null : survivorResult } : null,
   };
 }
 

@@ -107,6 +107,56 @@ test("Lab Survivor table: the divisions line up, East to West, AFC beside NFC on
   expect(rows[0].map((row) => row.top)).toEqual(rows[1].map((row) => row.top));
 });
 
+// The tote board: the Pick'em Pad (today's columns plus Survivor's chips) and the Slate in one housing. Each state gets a picture,
+// phone and desktop by day, phone at night.
+const TOTE_SHOTS: Array<[string, Array<[string, string]>]> = [
+  ["pad-before-kickoff-lamps", []],
+  ["pad-before-kickoff-sealed", [["Pick made", "Sealed"]]],
+  ["pad-before-kickoff-face-down", [["Pick made", "Face down"]]],
+  ["pad-game-day", [["Moment", "Game day"]]],
+  ["pad-graded", [["Moment", "Graded"]]],
+  ["slate", [["Board", "The Slate"]]],
+];
+for (const [shot, choices] of TOTE_SHOTS) {
+  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+    test(`Lab tote board, ${shot}, ${theme} at ${label}`, async ({ page }) => {
+      await openLab(page, "tote", { theme, size: SIZES[label] });
+      for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await holdStill(page);
+      await expect(page.locator(".lab-tote-room")).toHaveScreenshot(`lab-tote-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+    });
+  }
+}
+
+test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and lines up every W and L", async ({ page }) => {
+  await openLab(page, "tote");
+  const pad = page.locator(".lab-tote");
+  await expect(pad.locator("thead th")).toHaveText(["W", "PLAYER", "PICK 1", "PICK 2", "SURVSurvivor"]);
+  await expect(pad.locator("tbody tr")).toHaveCount(10);
+  // Before kickoff: two hidden picks for each of nine players (Walt sees his own), and the Survivor picks of the four others still in.
+  await expect(pad.getByRole("img", { name: "Pick in, hidden until kickoff" })).toHaveCount(18);
+  await expect(pad.getByRole("img", { name: "Survivor pick in, hidden until kickoff" })).toHaveCount(4);
+  await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
+  await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
+  // Every W and L in a pick column sits on the same centre line.
+  for (const column of [3, 4]) {
+    const centres = await pad.locator(`tbody td:nth-child(${column}) .lab-tote-mark`).evaluateAll((marks) => marks.map((mark) => Math.round(mark.getBoundingClientRect().left + mark.getBoundingClientRect().width / 2)));
+    expect(centres.length).toBe(10);
+    expect(new Set(centres).size).toBe(1);
+  }
+});
+
+test("the tote Slate frames a pick with a single gilt line", async ({ page }) => {
+  await openLab(page, "tote");
+  await page.getByRole("group", { name: "Board" }).getByRole("button", { name: "The Slate" }).click();
+  await expect(page.locator(".lab-bigboard.is-tote")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Pick highlight" })).toHaveCount(0);
+  const trace = page.locator(".lab-board-cell.is-picked .lab-board-trace").first();
+  expect(await trace.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
+});
+
 // Pick'em Pad skins: five materials for one pad. Each skin gets a picture on game day, phone by day and at night; the scratch-off before kickoff too.
 const SKIN_NAMES = ["Split-flap", "Scratch-off", "Tote board", "Bowling sheet", "Ballpark"];
 for (const skin of SKIN_NAMES) {
