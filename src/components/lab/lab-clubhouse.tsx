@@ -13,7 +13,8 @@ import { teamLogoScale } from "@/lib/team-logo-scale.js";
  *  - Standings: the clubhouse leaderboard of hand-set number plates, and each player's picks on a golf standard (the white sign on a
  *    pole carried round the course), raised by tapping their row or all at once "on the course".
  *  - The Slate: the big board, a gilt frame drawn round a pick, and Survivor picked on the same board.
- *  - Trophy Room: engraved brass plaques on walnut, the season's countdown, and a new champion's pennant swinging in.
+ *  - Trophy Room: quiet engraved brass plaques on walnut (indented corners, a diamond rule, dotted leaders), the season's countdown,
+ *    and a new champion's pennant swinging in.
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
 
@@ -202,48 +203,22 @@ const CHAMPIONS: Array<{ season: string } & Record<Pool, string>> = [
   { season: "2024", pickem: "Earl", survivor: "Walt", bowl: "June" },
   { season: "2023", pickem: "Walt", survivor: "Lou", bowl: "Earl" },
 ];
-/** Titles a player had in a pool up to and including a season: the stars engraved beside their name. */
-const titlesTo = (pool: Pool, name: string, season: string) => CHAMPIONS.filter((year) => year.season <= season && year[pool] === name).length;
 
-/** A small engraved mark for each pool: crossed pencils (Pick'em), a chip (Survivor), a pennant (Bowl Pool). */
-function PoolMark({ pool }: { pool: Pool }) {
-  return (
-    <svg aria-hidden="true" className="lab-plaque-mark" focusable="false" viewBox="0 0 12 12">
-      {pool === "pickem" ? <><path d="M2 10 9.5 2.5M10 10 2.5 2.5" /><path d="M1.6 10.4 2.6 9.4M10.4 10.4 9.4 9.4" /></> : null}
-      {pool === "survivor" ? <><circle cx="6" cy="6" r="4.6" /><circle cx="6" cy="6" r="2.2" /><path d="M6 1.4V3M6 9V10.6M1.4 6H3M9 6H10.6" /></> : null}
-      {pool === "bowl" ? <><path d="M2.2 1.5V11" /><path d="M2.6 2 10.2 4.6 2.6 7.2Z" /></> : null}
-    </svg>
-  );
-}
-
-/** A laurel sprig engraved at the top of each plaque: two curved branches of leaves meeting at a small stem. */
-function Laurel() {
-  const leaves = [0, 1, 2, 3];
-  return (
-    <svg aria-hidden="true" className="lab-plaque-laurel" focusable="false" viewBox="0 0 60 16">
-      {[-1, 1].map((side) => (
-        <g key={side} transform={`translate(30 14) scale(${side} 1)`}>
-          <path d="M1 0C8 0 16 -3 24 -9" />
-          {leaves.map((index) => <ellipse cx={6 + index * 5.2} cy={-1.4 - index * 1.9} key={index} rx="2.6" ry="1.1" transform={`rotate(${-18 - index * 6} ${6 + index * 5.2} ${-1.4 - index * 1.9})`} />)}
-          {leaves.map((index) => <ellipse cx={8 + index * 5.2} cy={1.6 - index * 2.3} key={`b${index}`} rx="2.4" ry="1" transform={`rotate(${22 - index * 9} ${8 + index * 5.2} ${1.6 - index * 2.3})`} />)}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
+/**
+ * A season's plaque, kept quiet: satin brass with indented corners on walnut, one engraved keyline, the year over a diamond
+ * rule, and each champion at the end of a dotted leader.
+ */
 function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
   return (
     <article aria-label={`${year.season} champions`} className="lab-plaque">
-      <span aria-hidden="true" className="lab-plaque-screws" />
       <div className="lab-plaque-plate">
-        <Laurel />
         <p className="lab-plaque-season">{year.season}</p>
+        <span aria-hidden="true" className="lab-plaque-rule" />
         <dl>
           {(["pickem", "survivor", "bowl"] as const).map((pool) => (
             <div key={pool}>
-              <dt><PoolMark pool={pool} />{POOL_LABEL[pool]}</dt>
-              <dd>{year[pool]}<span aria-label={`${titlesTo(pool, year[pool], year.season)} titles`} className="lab-plaque-stars">{"★".repeat(titlesTo(pool, year[pool], year.season))}</span></dd>
+              <dt>{POOL_LABEL[pool]}</dt>
+              <dd>{year[pool]}</dd>
             </div>
           ))}
         </dl>

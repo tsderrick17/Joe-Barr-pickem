@@ -280,6 +280,15 @@
   --receipt-metric-label-ink: #596579;
   --receipt-metric-due-ink: var(--red-39);
   --receipt-metric-divider: var(--receipt-rule);
+  /* The Bowl Pool's own receipt: a navy stub with gold lettering, cream paper, gold rules. */
+  --bowl-slip-stub: rgb(22 34 58);
+  --bowl-slip-stub-ink: rgb(230 214 180);
+  --bowl-slip-gold: rgb(179 139 77);
+  --bowl-slip-paper: rgb(251 248 241);
+  --bowl-slip-box: rgb(244 239 226);
+  --bowl-slip-ink: rgb(22 34 58);
+  --bowl-slip-label: rgb(109 102 86);
+  --bowl-slip-shadow: drop-shadow(0 6px 12px rgba(22, 34, 58, .18));
   /* Ticket (My ticket) colours. */
   --ticket-paper: repeating-linear-gradient(0deg, rgba(46, 39, 30, .025) 0 1px, transparent 1px 4px), #f3ead6;
   --ticket-edge: #756b5b;
@@ -537,6 +546,12 @@ html[data-theme="night"] {
   --receipt-metric-label-ink: #a8c1c4;
   --receipt-metric-due-ink: #ffaaa1;
   --receipt-metric-divider: var(--blue-40);
+  --bowl-slip-stub: rgb(13 20 40);
+  --bowl-slip-paper: rgb(27 31 43);
+  --bowl-slip-box: rgb(32 37 58);
+  --bowl-slip-ink: rgb(240 232 214);
+  --bowl-slip-label: rgb(185 177 156);
+  --bowl-slip-shadow: drop-shadow(0 8px 18px rgba(0, 0, 0, .42));
   /* Form fields at night. Day sets none of these, so fields keep their own look by day; the fields layer and the desk's own
      field rules read them. */
   --field-edge: var(--blue-40);
