@@ -1,4 +1,3 @@
-import Link from "next/link";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { ticketCompletion } from "@/lib/ticket-completion";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
@@ -84,7 +83,7 @@ export default function MyTicket({
       <div className={`my-ticket-columns ${isPlayoff ? "is-playoff" : ""} ${!isPlayoff && !showSurvivor ? "is-single" : ""}`}>
         <div className={`my-ticket-section ${isPlayoff ? "my-ticket-playoff" : ""}`}>
           <div className="my-ticket-section-heading">
-            <Link className="my-ticket-section-link" href="/board">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</Link>
+            <span className="my-ticket-section-link">{isPlayoff ? "PLAYOFF ATS" : "PICK'EM ATS"}</span>
             <strong>GAME LINES</strong>
           </div>
           <ol className={`my-ticket-picks ${isPlayoff ? `is-playoff-picks--${maxPicks}` : ""}`}>
@@ -118,7 +117,7 @@ export default function MyTicket({
 
         {showSurvivor ? <div className="my-ticket-section my-ticket-survivor">
           <div className="my-ticket-section-heading">
-            <Link className="my-ticket-section-link" href="/board#slate-matchups">SURVIVOR WINNER</Link>
+            <span className="my-ticket-section-link">SURVIVOR WINNER</span>
             <strong>STRAIGHT-UP</strong>
           </div>
           {survivorPick ? (

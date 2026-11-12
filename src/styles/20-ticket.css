@@ -116,12 +116,6 @@
   line-height: 1.2;
   padding-bottom: .08rem;
 }
-.my-ticket-section-link:hover,
-.my-ticket-section-link:focus-visible {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: .18rem;
-}
 .my-ticket-picks {
   margin-top: .35rem;
 }
@@ -158,6 +152,9 @@
   letter-spacing: -.01em;
 }
 .my-ticket-result {
+  /* The stamp is a little taller than the team's line of text. It sits on the line without stretching it, so a
+     graded ticket is exactly as tall as it was before its results came in. */
+  margin-block: -.2rem;
   top: -.1rem;
   vertical-align: middle;
 }
