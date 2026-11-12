@@ -166,7 +166,8 @@ test("Lamp-lit is remembered, and by day it only shows a note", async ({ page })
   await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Lamp-lit" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
 });
 
-// The clubhouse: each page as a room. Each room's states get a picture: phone and desktop by day, phone at night.
+// The clubhouse: a lobby drawn to fit one phone screen, and a room behind each thing in it. The lobby and each room's states get a
+// picture: phone and desktop by day, phone at night.
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["Standings", "leaderboard-game-day", []],
   ["Standings", "leaderboard-before-kickoff", [["Moment", "Before kickoff"]]],
@@ -181,32 +182,70 @@ const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["Trophy Room", "trophies-crowning", [["Scene", "A champion is crowned"]]],
 ];
 const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
+for (const [theme, label] of CLUB_SIZES) {
+  test(`Lab clubhouse, lobby, ${theme} at ${label}`, async ({ page }) => {
+    await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
+    await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+    await holdStill(page);
+    await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-lobby-${theme}-${label}.png`, { maxDiffPixels: 12 });
+  });
+}
 for (const [room, shot, choices] of CLUB_SHOTS) {
   for (const [theme, label] of CLUB_SIZES) {
     test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
       await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: room }).click();
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
       await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
     });
   }
 }
 
-test("the clubhouse doors lead to each room, one at a time", async ({ page }) => {
+test("the lobby fits one phone screen, opens every room in one tap, and every room has one way back", async ({ page }) => {
   await openLab(page, "clubhouse");
-  const doors = page.getByRole("navigation", { name: "Clubhouse rooms" });
-  await expect(doors.getByRole("button")).toHaveCount(3);
-  await expect(page.locator(".lab-leaderboard > ol > li")).toHaveCount(10);
-  await doors.getByRole("button", { name: "The Slate" }).click();
-  await expect(page.locator(".lab-bigboard li")).toHaveCount(4);
-  await expect(page.locator(".lab-leaderboard")).toHaveCount(0);
-  await doors.getByRole("button", { name: "Trophy Room" }).click();
+  const lobby = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(lobby.getByRole("button")).toHaveCount(6);
+  // The whole room is on screen at once on a phone: nothing to pan or swipe, and every button is a comfortable size for a thumb.
+  const box = (await lobby.boundingBox())!;
+  expect(box.height).toBeLessThanOrEqual(640);
+  expect(box.width).toBeLessThanOrEqual(390);
+  for (const button of await lobby.getByRole("button").all()) expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+  // Each thing in the room carries a line of news from the same sample data its room shows.
+  await expect(lobby.getByRole("button", { name: "Standings" })).toContainText("You: T2");
+  await expect(lobby.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
+  const rooms: Array<[string, string]> = [
+    ["Standings", ".lab-leaderboard"], ["The Slate", ".lab-bigboard"], ["Trophy Room", ".lab-wall"], ["Survivor", ".lab-survivor-room"],
+    ["The Bar", ".lab-stand-in"], ["Bowl Pool", ".lab-stand-in"],
+  ];
+  for (const [name, inside] of rooms) {
+    await lobby.getByRole("button", { name }).click();
+    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    await expect(page.locator(inside)).toBeVisible();
+    await expect(lobby).toHaveCount(0);
+    await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+    await expect(lobby).toBeVisible();
+  }
+});
+
+test("the Trophy Room is one tall wall: banners for the pool chosen, the trophies, then a plaque per season", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room" }).click();
+  const banners = page.getByRole("region", { name: "Banners" });
+  await expect(banners.getByRole("listitem")).toHaveText(["Earl: 2026, 2024", "Walt: 2025, 2023"]);
+  await banners.getByRole("group", { name: "Whose banners" }).getByRole("button", { name: "Survivor" }).click();
+  await expect(banners.getByRole("listitem")).toHaveCount(4);
+  await expect(page.getByRole("region", { name: "Trophies" }).getByRole("img")).toBeVisible();
   await expect(page.locator(".lab-plaque")).toHaveCount(4);
+  // Top to bottom, the way you would look at a real wall.
+  const tops = await Promise.all(["Banners", "Trophies", "Plaques"].map(async (name) => (await page.getByRole("region", { name }).boundingBox())!.y));
+  expect(tops).toEqual([...tops].sort((a, b) => a - b));
 });
 
 test("the leaderboard raises a player's standard, and other players' picks stay hidden until kickoff", async ({ page }) => {
   await openLab(page, "clubhouse");
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Standings" }).click();
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
   // The viewer's own standard is raised to start, with their picks showing.
   await expect(page.getByRole("figure", { name: "Walt's picks" }).locator("li.is-hidden")).toHaveCount(0);
