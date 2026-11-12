@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The clubhouse, round two (Lab)
+
+From the owner's review ("awesome", expand the leaderboard and the Slate board; plaques elevated; the Bowl program not understood):
+the leaderboard shows every player and each player's picks on a golf standard (the white sign on a pole carried round a course),
+raised by tapping a row or all at once "on the course". The Slate board gets a classy pick highlight, a gold hairline drawn once
+round the pick that settles into a double gilt rule (Brass inlay and Lit line alongside to compare), and Survivor is picked on the
+same board. The Trophy Room's plaques become engraved brass on walnut with a laurel, screws, each pool's mark and a star per title,
+with a season countdown plate and a new champion's pennant swinging in; only the pennant moves, once. The Bowl Pool room is removed.
+Another player's picks, Survivor included, stay hidden until their game kicks off, exactly as on the real pages; a unit test holds
+the sample data to that. Lab only, sample players only.
+
 ## 2026-11-12 - The refined receipt goes live; today's ticket stays, two fixes
 
 Owner's review of the Lab: today's ticket is the better ticket, and the refined receipt should go live. On the Slate the NFL
