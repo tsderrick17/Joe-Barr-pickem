@@ -10,18 +10,18 @@ export const WORKSHOP_SAVED_KEY = "pickem-workshop";
  * maps: a phone (2 columns), a tablet (4) and a computer (6). The tiles are in the computer's reading order on the page.
  */
 const C = "crest", F = "football", S = "submit", H = "highlight", K = "chip", P = "pull", M = "pennant", T = "tile", X = "stamp";
-const N = "banner", E = "eliminated", O = "season-over";
+const N = "banner", E = "eliminated";
 export const WORKSHOP_LAYOUTS = {
   phone: [
-    [C, C], [S, S], [F, H], [F, K], [P, P], [T, N], [X, N], [M, M], [E, E], [O, O],
+    [C, C], [S, S], [F, H], [F, K], [P, P], [T, N], [X, N], [M, M], [E, E],
   ],
   tablet: [
     [C, C, C, C], [F, F, S, S], [F, F, H, H], [P, P, P, P], [K, K, T, T],
-    [N, N, M, M], [N, N, X, X], [E, E, E, E], [O, O, O, O],
+    [N, N, M, M], [N, N, X, X], [E, E, E, E],
   ],
   desktop: [
     [C, C, C, C, F, F], [S, S, H, K, F, F], [P, P, P, P, M, M],
-    [N, N, E, E, E, E], [N, N, O, O, O, O], [N, N, X, X, T, T],
+    [N, N, E, E, E, E], [N, N, X, X, T, T],
   ],
 };
 
@@ -48,10 +48,10 @@ export const WORKSHOP_ORDER = [...new Set(WORKSHOP_LAYOUTS.desktop.flat())];
 /**
  * The board plays itself: one clock, and on each beat the next piece in turn plays its moment, so two or three are moving at once and the
  * ripple runs round the board in reading order. Pieces with no moment to replay sit out: the football turns all the time, and the two
- * season-closed banners are still.
+ * out-of-the-race banner is still.
  */
 export const WORKSHOP_BEAT_MS = 1400;
-export const WORKSHOP_STILL = ["football", "season-over", "eliminated"];
+export const WORKSHOP_STILL = ["football", "eliminated"];
 export const WORKSHOP_RIPPLE = WORKSHOP_ORDER.filter((id) => !WORKSHOP_STILL.includes(id));
 
 /** The place in `order` of the next piece after `cursor` that can play now (on screen), or -1 when none can. */

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { gridArea, layoutPlaces, layoutProblems, mergeSaved, nextInRipple, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_RIPPLE, WORKSHOP_STILL } from "../src/lib/workshop-board.js";
 
-const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner"];
+const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "eliminated", "pull", "banner"];
 
 test("saved settings are used only where they still fit, so an old or damaged save never breaks the board", () => {
   const defaults = { knobs: { pace: 140, "--tilt": 45 }, chip: { team: "KC", spinning: false }, words: "Chiefs" };

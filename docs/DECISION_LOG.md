@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - No off-season banner; the ticket returns August 1
+
+Owner: leave the Pick'em Pad alone in the off-season, with no special note, and bring the ticket back on August 1. Once the Super
+Bowl is graded, Standings shows no ticket and no "See you next season!" banner, and the Slate shows no receipt and no banner; the
+pages are otherwise the read-only record they were. The ticket and receipt come back by themselves when the phase turns to the new
+season on August 1. The banner stays for a player who is out of the playoff race or has forfeited, during the season only. The
+Workshop's "Season over banner" piece goes with it.
+
 ## 2026-11-11 - Megaphone lettering centred; Workshop banners and flap counters each one tile
 
 A one-line school name on the Bowl Pool megaphone was centred at x 50.5, right of the middle of the cone's open stretch (mouthpiece
