@@ -27,6 +27,19 @@ test("choose a team, submit, and the receipt says saved", async ({ page }) => {
   await receipt.getByRole("button", { name: "SUBMIT" }).click();
   await expect(receipt).toContainText(/PICKS SAVED|DUE|NEEDED/);
   await expect(receipt).not.toContainText(/READY TO SAVE/);
+  // The saved receipt prints its status line; a receipt that has only been loaded does not.
+  await expect(receipt.locator(".slate-receipt-pickem em")).toHaveClass(/is-printed/);
+});
+
+test("a receipt that has only been loaded does not print", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day", "visual-player");
+  await serve(page, (route) => route.fulfill({ json: { message: "saved" } }));
+  await page.goto("/board");
+  const receipt = page.locator("[aria-label='Your weekly receipt']");
+  await expect(receipt).toBeVisible({ timeout: 30000 });
+  await page.locator(".slate-game-row button").first().click();
+  await expect(receipt.locator(".slate-receipt-pickem em")).not.toHaveClass(/is-printed/);
 });
 
 test("a failed save keeps the pick and shows the reason", async ({ page }) => {

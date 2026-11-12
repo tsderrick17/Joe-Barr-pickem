@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { memo, type CSSProperties } from "react";
+import { memo, useState, type CSSProperties } from "react";
 import { HapticTap } from "@/components/haptic-tap";
 import { haptic } from "@/lib/haptics-client";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
@@ -49,6 +49,14 @@ type Props = {
  */
 function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, selectedTeams, selectedPickCount, pickemHasUnsavedChanges, survivor, selectionWarning, swapPrompt = null, onSwap, onCancelSwap, onSubmit, onRemove }: Props) {
   const hasUnsavedChanges = pickemHasUnsavedChanges || survivor.hasUnsavedChanges;
+  // Each save that goes through prints the status lines once more (a save ends with nothing left unsaved).
+  const [wasSubmitting, setWasSubmitting] = useState(isSubmitting);
+  const [prints, setPrints] = useState(0);
+  if (wasSubmitting !== isSubmitting) {
+    setWasSubmitting(isSubmitting);
+    if (!isSubmitting && !hasUnsavedChanges) setPrints((count) => count + 1);
+  }
+  const printed = prints > 0 ? "is-printed" : "";
   const survivorReceipt = survivor.teamName || (survivor.status === "complete" ? "COMPLETE" : survivor.status === "eliminated" ? "OUT" : "OPEN");
   // Saved selections arrive asynchronously. Keep the receipt neutral until
   // they do so, rather than briefly presenting an incorrect OPEN ticket.
@@ -144,7 +152,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
             </span>
           )) : <strong className="is-due">PICK DUE</strong>}
         </div>
-        <em className={pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : <>{selectedPickCount}/{selectionLimit}{pickemReceiptStatus === "OPEN" && duePickCount > 0 ? null : <> · {receiptStatusLabel(pickemReceiptStatus)}</>}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
+        <em className={`${pickemReceiptStatus === "CHANGED" ? "is-unsaved" : pickemReceiptStatus === "FILLED" ? "is-complete" : ""} ${printed}`} key={`pickem-${prints}`}>{receiptIsLoading ? "CHECKING" : <>{selectedPickCount}/{selectionLimit}{pickemReceiptStatus === "OPEN" && duePickCount > 0 ? null : <> · {receiptStatusLabel(pickemReceiptStatus)}</>}{pickemReceiptStateDetail ? <small> · {pickemReceiptStateDetail}</small> : null}</>}</em>
       </div>
       {survivor.show ? (
         <div className="slate-receipt-pool slate-receipt-survivor">
@@ -152,7 +160,7 @@ function SlateReceipt({ isLoading, isSubmitting, periodType, selectionLimit, sel
           <div aria-label={!receiptIsLoading && survivor.details ? survivor.details.name : undefined} className={`slate-receipt-survivor-pick ${survivor.hasUnsavedChanges && survivor.controlsEnabled ? "is-awaiting-lock" : ""}`} role={!receiptIsLoading && survivor.details ? "img" : undefined}>
             {!receiptIsLoading && survivor.details ? <SurvivorPokerChip abbreviation={survivor.details.abbreviation} size="summary" teamName={survivor.details.name} tooltip={survivor.details.name} /> : <strong className={survivorReceiptStatus === "OPEN" ? "is-due" : survivorReceiptStatus === "OUT" ? "is-out" : "is-quiet"}>{receiptIsLoading ? "CHECKING" : survivorReceipt}</strong>}
           </div>
-          <em className={survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
+          <em className={`${survivorReceiptStatus === "CHANGED" ? "is-unsaved" : survivorReceiptStatus === "FILLED" ? "is-complete" : ""} ${printed}`} key={`survivor-${prints}`}>{receiptIsLoading ? "CHECKING" : receiptStatusLabel(survivorReceiptStatus)}</em>
         </div>
       ) : null}
       {swapPrompt ? (
