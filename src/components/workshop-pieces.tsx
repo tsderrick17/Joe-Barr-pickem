@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { BowlCrest, BowlMegaphone } from "@/components/bowl-pool-marks";
 import BowlScoreTile from "@/components/bowl-score-tile";
@@ -22,7 +22,7 @@ import { ChoiceChips } from "@/components/commissioner/choice-chips";
 export type Knob = { key: string; label: string; min: number; max: number; step: number; unit: string; live: number };
 
 /** Every piece on the board, in the order they are listed below. */
-const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "wins", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner-pickem", "banner-bowl", "banner-survivor"];
+const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner"];
 
 /** The three trophy banners hang in the pool's colour (red Pick'em, blue Bowl, green Survivor), given here as oklch lightness, chroma and hue. */
 const CLOTH = {
@@ -96,15 +96,6 @@ const PENNANT_TEAMS = {
   OSU: { full_name: "Ohio State Buckeyes", short_name: "Ohio State", abbreviation: "OSU", primary_color: "bb0000", secondary_color: "666666" },
   TEX: { full_name: "Texas Longhorns", short_name: "Texas", abbreviation: "TEX", primary_color: "bf5700", secondary_color: "ffffff" },
 } as const;
-/** The number a split-flap tile lands on when it is played: a fresh one each time (0 to 42, about a season of bowl games), the same for
- * the same play so a redraw does not change it, and never the number it showed before. At rest it shows the number typed in its settings. */
-export function flapNumber(plays: number, typed: number) {
-  const pick = (n: number) => { let x = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0; x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35) >>> 0; return ((x ^ (x >>> 16)) >>> 0) % 43; };
-  if (plays <= 0) return typed;
-  const before = plays === 1 ? typed : pick(plays - 1), next = pick(plays);
-  return next === before ? (next + 1) % 43 : next;
-}
-
 /** The loading football has 108 frames in one turn. Paused, a frame is picked by hand; playing, it runs as it does for players. */
 export const FOOTBALL_FRAMES = 108;
 
@@ -133,6 +124,8 @@ const easeVars = (target: EaseTarget, settings: Settings): CSSProperties => {
 export type Settings = {
   ease: Record<EaseTarget, EaseKey>;
   banners: Record<Pool, { tag: string; name: string; years: string }>;
+  /** The pool whose banner hangs on the board (one at a time). */
+  bannerPool: Pool;
   /** How far the pull-to-refresh chain is pulled when it is at rest (0 to 1.3; the chain is planted from 0.5 and armed at 1). */
   pullAt: number;
   /** Showing a piece larger or smaller in its tile; only the Workshop's view, never a setting to copy. */
@@ -144,6 +137,8 @@ export type Settings = {
   strokeText: string;
   submitState: "unsaved" | "saved";
   tiles: { remaining: string; wins: string };
+  /** Which split-flap counter the board starts on: the large games-left one or a player's small wins one. A tap turns to the other. */
+  flapStyle: "large" | "small";
   crest: { title: string; season: string; suffix: string };
   football: { paused: boolean; frame: number };
   /** Show names labels every piece; Play by itself runs the board's clock (on unless turned off). Neither is a setting to copy. */
@@ -159,6 +154,7 @@ export const defaultSettings = (): Settings => ({
     bowl: { tag: "Bowl Pool champion", name: "Connor", years: "2024" },
     survivor: { tag: "Survivor champion", name: "Gary", years: "2025, 2022" },
   },
+  bannerPool: "pickem",
   pullAt: 1,
   zoom: Object.fromEntries(PIECE_IDS.map((id) => [id, 1])),
   chip: { team: "KC", state: "available", size: "ticket", spinning: false },
@@ -167,6 +163,7 @@ export const defaultSettings = (): Settings => ({
   strokeText: "Chiefs",
   submitState: "unsaved",
   tiles: { remaining: "12", wins: "7" },
+  flapStyle: "large",
   crest: { title: "BOWL CARD", season: "2026", suffix: "Special" },
   football: { paused: false, frame: 1 },
   view: { labels: false, autoplay: true },
@@ -195,7 +192,8 @@ export type Piece = {
   dark?: boolean;
   /** A tap on the tile plays it; a piece with its own button (the chip) leaves this off. */
   tapToPlay?: boolean;
-  knobGroup?: string;
+  /** Its knobs: one group, or the group for what it is showing now (the banner's pool, the counter's style). */
+  knobGroup?: string | ((settings: Settings) => string);
   /** The piece's easing is a setting too (its choice reads and resets with the rest). */
   easeTarget?: EaseTarget;
   style?: (settings: Settings) => CSSProperties;
@@ -259,7 +257,7 @@ function TextField({ label, value, onChange, maxLength = 24, numeric = false }: 
 const PULL_WIDTH = 390, PULL_HEIGHT = 56, PULL_MS = 1400;   // the header's own size; a full pull takes this long
 
 /** The pull-down-to-refresh scene. It sits where the slider puts it; a tap plays a whole pull, as a finger would, dust and all. */
-function PullDemo({ at, plays }: { at: number; plays: number }) {
+function PullDemo({ at, plays, width }: { at: number; plays: number; width: number }) {
   const [run, setRun] = useState<{ progress: number; since: number } | null>(null);
   useEffect(() => {
     if (plays === 0) return;
@@ -276,7 +274,26 @@ function PullDemo({ at, plays }: { at: number; plays: number }) {
   }, [plays]);
   const progress = run ? run.progress : at;
   const landed = progress >= PUFF_AT;
-  return <PullChainScene height={PULL_HEIGHT} landed={landed} progress={progress} since={run && landed ? run.since : 1000} stretchedSince={null} width={PULL_WIDTH} />;
+  return <PullChainScene height={PULL_HEIGHT} landed={landed} progress={progress} since={run && landed ? run.since : 1000} stretchedSince={null} width={width} />;
+}
+
+/** The strip drawn as wide as its tile has room for at the tile's zoom (live it is as wide as the screen), so none of it is cut off. */
+function PullFit({ at, plays }: { at: number; plays: number }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(PULL_WIDTH);
+  useEffect(() => {
+    const stage = box.current?.parentElement;
+    if (!stage) return;
+    const watch = new ResizeObserver(() => {
+      const style = getComputedStyle(stage);
+      const zoom = Number(style.getPropertyValue("--asset-zoom")) || 1;
+      const room = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      setWidth(Math.max(120, Math.min(PULL_WIDTH, Math.floor(room / zoom))));
+    });
+    watch.observe(stage);
+    return () => watch.disconnect();
+  }, []);
+  return <div className="pull-chain asset-pull" ref={box} style={{ height: PULL_HEIGHT, width }}><PullDemo at={at} plays={plays} width={width} /></div>;
 }
 
 /** "2025, 2023" as years, at most six. */
@@ -378,23 +395,23 @@ export const PIECES: Piece[] = [
   },
   {
     id: "tile",
-    title: "Games remaining tile",
-    note: "The large split-flap counter on the Bowl Card: how many bowl games are left. Live, it picks a pace between 120 and 160 ms a flip. Tap it and it flips to a new number.",
+    title: "Split-flap counter",
+    note: "The Bowl Card's split-flap counters: the large one is how many bowl games are left, the small one a player's wins beside their name. Live, each picks a pace between 120 and 160 ms a flip. Tap it to turn to the other style.",
     zoom: 1.6,
     tapToPlay: true,
-    knobGroup: "tile",
-    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.pace}-${tiles.remaining}`} large pace={knobs.pace} settled value={flapNumber(plays, Number(tiles.remaining || 0))} />,
-    controls: ({ tiles }, update) => <TextField label="Games left" maxLength={2} numeric onChange={(remaining) => update((current) => ({ ...current, tiles: { ...current.tiles, remaining } }))} value={tiles.remaining} />,
-  },
-  {
-    id: "wins",
-    title: "Player wins tile",
-    note: "The small split-flap counter beside each player on the Bowl Card: their wins. Live, it picks a pace between 120 and 160 ms a flip. Tap it and it flips to a new number.",
-    zoom: 2,
-    tapToPlay: true,
-    knobGroup: "wins",
-    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.paceWins}-${tiles.wins}`} pace={knobs.paceWins} settled value={flapNumber(plays, Number(tiles.wins || 0))} />,
-    controls: ({ tiles }, update) => <TextField label="Player wins" maxLength={2} numeric onChange={(wins) => update((current) => ({ ...current, tiles: { ...current.tiles, wins } }))} value={tiles.wins} />,
+    knobGroup: ({ flapStyle }) => (flapStyle === "large" ? "tile" : "wins"),
+    draw: ({ settings: { tiles, knobs, flapStyle }, plays }) => {
+      // Each play turns to the other style, as the stamp turns W to L.
+      const large = (plays % 2 === 0) === (flapStyle === "large");
+      return large
+        ? <BowlScoreTile key={`large-${plays}-${knobs.pace}-${tiles.remaining}`} large pace={knobs.pace} settled value={Number(tiles.remaining || 0)} />
+        : <span className="asset-flap-small"><BowlScoreTile key={`small-${plays}-${knobs.paceWins}-${tiles.wins}`} pace={knobs.paceWins} settled value={Number(tiles.wins || 0)} /></span>;
+    },
+    controls: ({ tiles, flapStyle }, update) => <>
+      <Choice label="Style" onChange={(style) => update((current) => ({ ...current, flapStyle: style }))} options={[["large", "Games left"], ["small", "Player wins"]] as const} value={flapStyle} />
+      <TextField label="Games left" maxLength={2} numeric onChange={(remaining) => update((current) => ({ ...current, tiles: { ...current.tiles, remaining } }))} value={tiles.remaining} />
+      <TextField label="Player wins" maxLength={2} numeric onChange={(wins) => update((current) => ({ ...current, tiles: { ...current.tiles, wins } }))} value={tiles.wins} />
+    </>,
   },
   {
     id: "football",
@@ -491,7 +508,7 @@ export const PIECES: Piece[] = [
     note: "The first-down chain that comes down when the Home Screen app is pulled to refresh: the pole drops and lands in a puff of dust, then the down counter slides from 4 to 1, the signal to let go. Slide to pull it by hand; tap to watch a whole pull.",
     zoom: 2.2,
     tapToPlay: true,
-    draw: ({ settings, plays }) => <div className="pull-chain asset-pull" style={{ height: PULL_HEIGHT, width: PULL_WIDTH }}><PullDemo at={settings.pullAt} plays={plays} /></div>,
+    draw: ({ settings, plays }) => <PullFit at={settings.pullAt} plays={plays} />,
     controls: ({ pullAt }, update) => (
       <label className="asset-knob">
         <span>Pulled</span>
@@ -500,29 +517,31 @@ export const PIECES: Piece[] = [
       </label>
     ),
   },
-  ...POOLS.map((pool): Piece => ({
-    id: `banner-${pool}`,
-    title: CLOTH[pool].title,
-    note: "A champion's banner as it hangs over the Trophy Room's table: cut-felt lettering on a swallowtailed cloth that waves and sways. Tap it to hang it again. Change the words, or turn the cloth's colour.",
+  {
+    id: "banner",
+    title: "Trophy banner",
+    note: "A champion's banner as it hangs over the Trophy Room's table: cut-felt lettering on a swallowtailed cloth that waves and sways. Tap it to hang it again. Choose the pool, change the words, or turn the cloth's colour.",
     zoom: 1.3,
     dark: true,
     tapToPlay: true,
-    knobGroup: `banner-${pool}`,
+    knobGroup: ({ bannerPool }) => `banner-${bannerPool}`,
     draw: ({ settings, plays }) => {
+      const pool = settings.bannerPool;
       const { tag, name, years } = settings.banners[pool];
       const list = parseYears(years);
       const look = clothVars(pool, settings.knobs);
       return (
         <div className="trophy-rafters asset-rafters" data-pool={pool} style={look}>
-          <div className={plays > 0 ? "trophy-banner" : undefined} key={plays} style={{ "--i": 0, width: "8.6rem" } as CSSProperties}>
-            <TrophyBanner index={POOLS.indexOf(pool)} key={`${plays}-${JSON.stringify(look)}-${tag}-${name}-${list.join()}`} name={name} tag={tag} years={list} />
+          <div className={plays > 0 ? "trophy-banner" : undefined} key={`${plays}-${pool}`} style={{ "--i": 0, width: "8.6rem" } as CSSProperties}>
+            <TrophyBanner index={POOLS.indexOf(pool)} key={`${plays}-${pool}-${JSON.stringify(look)}-${tag}-${name}-${list.join()}`} name={name} tag={tag} years={list} />
           </div>
         </div>
       );
     },
-    controls: ({ banners }, update) => {
+    controls: ({ banners, bannerPool: pool }, update) => {
       const set = (change: Partial<Settings["banners"][Pool]>) => update((current) => ({ ...current, banners: { ...current.banners, [pool]: { ...current.banners[pool], ...change } } }));
       return <>
+        <Choice label="Pool" onChange={(choice) => update((current) => ({ ...current, bannerPool: choice }))} options={POOLS.map((key) => [key, CLOTH[key].title.replace(" banner", "")] as const)} value={pool} />
         <TextField label="Title" maxLength={24} onChange={(tag) => set({ tag })} value={banners[pool].tag} />
         <TextField label="Name" maxLength={14} onChange={(name) => set({ name })} value={banners[pool].name} />
         <label className="asset-choice">
@@ -531,7 +550,7 @@ export const PIECES: Piece[] = [
         </label>
       </>;
     },
-  })),
+  },
 ];
 export const pieceById = (id: string) => PIECES.find((piece) => piece.id === id);
 
@@ -552,6 +571,8 @@ export const SAVED_RULES = {
     "stamp.tilted": ["yes", "no"],
     pennantTeam: Object.keys(PENNANT_TEAMS),
     submitState: ["unsaved", "saved"],
+    bannerPool: POOLS,
+    flapStyle: ["large", "small"],
     ...Object.fromEntries(easeTargets.map((target) => [`ease.${target}`, EASES.map(([key]) => key)])),
   },
 } as { limits: Record<string, [number, number]>; choices: Record<string, string[]> };

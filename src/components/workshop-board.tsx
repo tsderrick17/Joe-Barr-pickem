@@ -111,7 +111,7 @@ function useBoardClock(board: RefObject<HTMLDivElement | null>, running: boolean
 
 /** The settings of one piece. */
 function TuneControls({ piece, settings, update }: { piece: Piece; settings: Settings; update: Update }) {
-  const group = piece.knobGroup;
+  const group = typeof piece.knobGroup === "function" ? piece.knobGroup(settings) : piece.knobGroup;
   const resetGroup = () => update((current) => ({
     ...current,
     knobs: group ? { ...current.knobs, ...Object.fromEntries(KNOBS[group].map((knob) => [knob.key, knob.live])) } : current.knobs,

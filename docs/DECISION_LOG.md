@@ -19,13 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
-## 2026-11-11 - Megaphone lettering centred; Workshop flap tiles land on a new number
+## 2026-11-11 - Megaphone lettering centred; Workshop banners and flap counters each one tile
 
 A one-line school name on the Bowl Pool megaphone was centred at x 50.5, right of the middle of the cone's open stretch (mouthpiece
 x 14 to band x 77), so OREGON sat close to the band. One line is now centred at x 45.5, the same room each side; two-line names
-are unchanged (they need the taller part of the cone near the bell). In the Workshop, tapping the Games remaining or Player wins
-tile now flips it to a new number (0 to 42, never the one it showed) instead of flipping round to the same one; at rest it shows the
-number typed in its settings. The live Bowl Card is unchanged: it always shows the real count.
+are unchanged (they need the taller part of the cone near the bell).
+
+In the Workshop (owner's asks): the three trophy banners become one banner tile with a Pool choice, each pool keeping its own words
+and colour knobs; the Games remaining and Player wins tiles become one split-flap counter that turns between the two styles on a tap,
+each style keeping its number and pace. Two fixes there: the large counter's digits were dark on navy because the Bowl's colours were
+defined only on the Bowl pages, so the Workshop's stages now carry them too; and the pull-to-refresh strip, drawn 390px wide then
+zoomed, was cut off on a phone, so it is drawn as wide as its tile has room for. Briefly a tap made the counters land on a random
+number; the owner dropped that, since the number can be typed in the settings.
 
 ## 2026-11-11 - The clubhouse, tried in the Lab
 

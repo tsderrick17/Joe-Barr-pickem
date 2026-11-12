@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { gridArea, layoutPlaces, layoutProblems, mergeSaved, nextInRipple, WORKSHOP_LAYOUTS, WORKSHOP_ORDER, WORKSHOP_RIPPLE, WORKSHOP_STILL } from "../src/lib/workshop-board.js";
 
-const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "wins", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner-pickem", "banner-bowl", "banner-survivor"];
+const PIECES = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner"];
 
 test("saved settings are used only where they still fit, so an old or damaged save never breaks the board", () => {
   const defaults = { knobs: { pace: 140, "--tilt": 45 }, chip: { team: "KC", spinning: false }, words: "Chiefs" };
@@ -32,7 +32,7 @@ test("a broken layout is caught: a ragged row, a missing piece, an unknown one, 
 
 test("the ripple takes every piece with a moment in reading order, and skips any that cannot play now", () => {
   assert.deepEqual(WORKSHOP_RIPPLE, WORKSHOP_ORDER.filter((id) => !WORKSHOP_STILL.includes(id)));
-  assert.equal(WORKSHOP_RIPPLE.length, 12);
+  assert.equal(WORKSHOP_RIPPLE.length, 9);
   const order = ["a", "b", "c", "d"];
   assert.equal(nextInRipple(order, -1, () => true), 0);
   assert.equal(nextInRipple(order, 3, () => true), 0);   // round again from the top

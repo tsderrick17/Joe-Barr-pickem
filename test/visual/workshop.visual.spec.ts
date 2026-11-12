@@ -76,8 +76,8 @@ for (const width of [390, 768, 1280]) {
     await openBoard(page, { size: { width, height: 900 } });
     await expect(page.locator(".workshop-shelf")).toHaveCount(0);
     const ids = await page.locator(".workshop-tile").evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("data-piece")));
-    expect(ids).toHaveLength(15);
-    expect(new Set(ids).size).toBe(15);
+    expect(ids).toHaveLength(12);
+    expect(new Set(ids).size).toBe(12);
     const { covered, inside, overlaps } = await page.locator(".workshop-board").evaluate((board) => {
       const style = getComputedStyle(board);
       const box = board.getBoundingClientRect();
@@ -155,8 +155,8 @@ test("settings stay hidden until a tune button is tapped; then every control wor
 
 test("settings are remembered on this device, and a damaged save falls back to the live values", async ({ page }) => {
   await openBoard(page);
-  await (await nearestMiddle(page, "Tune the games remaining tile")).click();
-  await page.getByRole("dialog", { name: "Games remaining tile settings" }).locator(".asset-knob", { hasText: "Time per flip" }).locator("input").fill("300");
+  await (await nearestMiddle(page, "Tune the split-flap counter")).click();
+  await page.getByRole("dialog", { name: "Split-flap counter settings" }).locator(".asset-knob", { hasText: "Time per flip" }).locator("input").fill("300");
   await page.reload();
   await expect(page.locator(".workshop-count")).toHaveText("1", { timeout: 30_000 });
 
@@ -170,7 +170,7 @@ test("Show names labels every piece; the dial and the Wheel button lead back", a
   await openBoard(page);
   await expect(page.locator(".workshop-label")).toHaveCount(0);
   await page.getByLabel("Show names").check();
-  await expect(page.locator(".workshop-label")).toHaveCount(15);
+  await expect(page.locator(".workshop-label")).toHaveCount(12);
   await page.getByRole("link", { name: "Back to the wheel" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.locator(".workshop")).toHaveCount(0);
@@ -191,16 +191,23 @@ test("the wheel's Workshop spoke opens the showroom", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Workshop" })).toBeVisible();
 });
 
-test("the Bowl Card's two split-flap styles are two cards, each tuned on its own", async ({ page }) => {
+test("the split-flap counter shows both Bowl Card styles in one tile: a tap turns to the other, and each style is tuned on its own", async ({ page }) => {
   await openBoard(page);
-  await (await nearestMiddle(page, "Tune the player wins tile")).click();
-  const wins = page.getByRole("dialog", { name: "Player wins tile settings" });
-  await wins.locator(".asset-knob", { hasText: "Time per flip" }).locator("input").fill("250");
-  await wins.getByLabel("Player wins").fill("42");
-  await expect(page.locator("[data-piece=wins] .bowl-score-tile")).toHaveAttribute("data-settled", "true", { timeout: 15_000 });
-  await expect(page.locator("[data-piece=wins] .bowl-score-tile")).toHaveAttribute("aria-label", "42 wins");
-  await expect(page.locator("[data-piece=tile] .bowl-score-tile")).toHaveAttribute("aria-label", "12 wins");
-  await wins.getByRole("button", { name: "Close" }).click();
+  const tile = page.locator("[data-piece=tile]");
+  await expect(tile.locator(".bowl-score-tile.is-large")).toHaveAttribute("aria-label", "12 wins");
+  await expect(tile.locator(".bowl-score-tile.is-large .bowl-flap-half > span").first(), "the large digits are the Bowl's gold, not dark on navy").toHaveCSS("color", "rgb(230, 214, 180)");
+  await (await nearestMiddle(page, "Play the split-flap counter")).click();
+  await expect(tile.locator(".bowl-score-tile:not(.is-large)")).toHaveAttribute("aria-label", "7 wins");
+  await (await nearestMiddle(page, "Play the split-flap counter")).click();
+  await expect(tile.locator(".bowl-score-tile.is-large")).toHaveCount(1);
+  await (await nearestMiddle(page, "Tune the split-flap counter")).click();
+  const panel = page.getByRole("dialog", { name: "Split-flap counter settings" });
+  await panel.getByRole("group", { name: "Style" }).getByRole("button", { name: "Player wins" }).click();
+  await panel.locator(".asset-knob", { hasText: "Time per flip" }).locator("input").fill("250");
+  await panel.getByLabel("Player wins").fill("42");
+  await expect(tile.locator(".bowl-score-tile")).toHaveAttribute("data-settled", "true", { timeout: 15_000 });
+  await expect(tile.locator(".bowl-score-tile")).toHaveAttribute("aria-label", "42 wins");
+  await panel.getByRole("button", { name: "Close" }).click();
   expect(await yourSettings(page)).toBe("Time per flip (paceWins): 250ms, live 140ms");
 });
 
@@ -209,20 +216,6 @@ test("the megaphone rests raised and raises again only when tapped", async ({ pa
   await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(0);
   await (await nearestMiddle(page, "Play the bowl pool megaphone")).click();
   await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(1);
-});
-
-test("a tapped split-flap tile flips to a new number each time, and rests on the number in its settings", async ({ page }) => {
-  await openBoard(page);
-  for (const [piece, name] of [["tile", "Play the games remaining tile"], ["wins", "Play the player wins tile"]]) {
-    const tile = page.locator(`[data-piece=${piece}] .bowl-score-tile`);
-    const seen = [await tile.getAttribute("aria-label")];
-    for (let tap = 0; tap < 3; tap++) {
-      await (await nearestMiddle(page, name)).click();
-      await expect(tile).not.toHaveAttribute("aria-label", seen[seen.length - 1]!);
-      seen.push(await tile.getAttribute("aria-label"));
-    }
-    expect(seen.every((label) => /^\d{1,2} wins$/.test(label ?? "") && Number.parseInt(label!, 10) <= 42), seen.join(", ")).toBe(true);
-  }
 });
 
 test("the pull-to-refresh strip: slide it by hand, or tap to watch a whole pull", async ({ page }) => {
@@ -245,23 +238,41 @@ test("the pull-to-refresh strip: slide it by hand, or tap to watch a whole pull"
   await expect.poll(scene, { timeout: 8000 }).toBe(planted);
 });
 
-test("each trophy banner has its own words and colour: turn the hue, and live puts it back", async ({ page }) => {
+test("one trophy banner at a time: choose the pool, and each pool keeps its own words and colour", async ({ page }) => {
   await openBoard(page);
-  for (const pool of ["pickem", "bowl", "survivor"]) await expect(page.locator(`[data-piece=banner-${pool}] canvas`).first()).toBeAttached();
-  const rafters = page.locator("[data-piece=banner-bowl] .trophy-rafters").first();
+  await expect(page.locator("[data-piece=banner] .trophy-rafters")).toHaveCount(1);
+  const rafters = page.locator("[data-piece=banner] .trophy-rafters").first();
+  await expect(rafters).toHaveAttribute("data-pool", "pickem");
   await expect(rafters, "live colours come from the pool's own style, not from the showroom").not.toHaveAttribute("style", /--banner/);
-  await (await nearestMiddle(page, "Tune the bowl pool banner")).click();
-  const panel = page.getByRole("dialog", { name: "Bowl Pool banner settings" });
+  await (await nearestMiddle(page, "Tune the trophy banner")).click();
+  const panel = page.getByRole("dialog", { name: "Trophy banner settings" });
+  await panel.getByRole("group", { name: "Pool" }).getByRole("button", { name: "Bowl Pool" }).click();
+  await expect(rafters).toHaveAttribute("data-pool", "bowl");
+  await expect(page.locator("[data-piece=banner] canvas").first()).toBeAttached();
   await expect(panel.getByLabel("Title")).toHaveValue("Bowl Pool champion");
   await panel.getByLabel("Name").fill("Rick");
   await panel.getByLabel("Years").fill("2026, 2024, abc");
   await panel.locator(".asset-knob", { hasText: "Turn the hue" }).locator("input").fill("40");
   await expect(rafters).toHaveAttribute("style", /--banner: oklch\(0\.400 0\.140 295\.0\)/);
+  await panel.getByRole("group", { name: "Pool" }).getByRole("button", { name: "Pick’em" }).click();
+  await expect(panel.getByLabel("Title")).toHaveValue("Pick’em champion");
+  await expect(rafters).not.toHaveAttribute("style", /--banner/);
   await panel.getByRole("button", { name: "Close" }).click();
   expect(await yourSettings(page)).toBe("Turn the hue (bowlHue): 40deg, live 0deg");
-  await (await nearestMiddle(page, "Tune the bowl pool banner")).click();
+  await (await nearestMiddle(page, "Tune the trophy banner")).click();
+  await panel.getByRole("group", { name: "Pool" }).getByRole("button", { name: "Bowl Pool" }).click();
   await panel.getByRole("button", { name: "Live values" }).click();
   await expect(rafters).not.toHaveAttribute("style", /--banner/);
+});
+
+test("the pull-to-refresh strip fits its tile on a phone, none of it cut off", async ({ page }) => {
+  await openBoard(page, { size: SIZES["phone-390"] });
+  const stage = page.locator("[data-piece=pull] .workshop-stage");
+  await stage.scrollIntoViewIfNeeded();
+  await expect.poll(async () => stage.evaluate((node) => {
+    const strip = node.querySelector(".asset-pull")!.getBoundingClientRect(), room = node.getBoundingClientRect();
+    return strip.left >= room.left - 1 && strip.right <= room.right + 1;
+  })).toBe(true);
 });
 
 test("an animation's easing is a setting: choose one, see it on the piece and in Your settings, and Live values restores it", async ({ page }) => {
@@ -307,9 +318,9 @@ test("the board plays itself, one piece at a time, only what is on screen", asyn
   expect(counts.crest, "the first piece in reading order has played").toBeGreaterThan(0);
   for (const still of ["football", "season-over", "eliminated"]) expect(counts[still], `${still} sits out`).toBe(0);
   // Below the fold at 700px tall: the season banners and the bottom row never play until scrolled to.
-  for (const below of ["stamp", "tile", "wins"]) expect(counts[below], `${below} is off screen`).toBe(0);
-  await page.locator('[data-piece="wins"]').scrollIntoViewIfNeeded();
-  await expect.poll(async () => (await playCounts(page)).wins, { timeout: 30_000 }).toBeGreaterThan(0);
+  for (const below of ["stamp", "tile"]) expect(counts[below], `${below} is off screen`).toBe(0);
+  await page.locator('[data-piece="tile"]').scrollIntoViewIfNeeded();
+  await expect.poll(async () => (await playCounts(page)).tile, { timeout: 30_000 }).toBeGreaterThan(0);
 });
 
 test("Play by itself turned off, a sheet open, or reduced motion: the board rests", async ({ page }) => {
