@@ -419,9 +419,9 @@
 .lab-tote thead th:first-child { text-align: center; }
 .lab-tote tbody th, .lab-tote tbody td { background: rgb(8 10 9); border-right: 2px solid rgb(18 40 30); height: 2.4rem; }
 .lab-tote tr.is-you th, .lab-tote tr.is-you td { box-shadow: inset 0 1px 0 rgba(201, 164, 95, .7), inset 0 -1px 0 rgba(201, 164, 95, .7); }
-.lab-tote-col-wins { width: 2.4rem; }
-.lab-tote-col-pick { width: 29%; }
-.lab-tote-col-surv { width: 3rem; }
+.lab-tote-col-wins { width: 2rem; }
+.lab-tote-col-pick { width: 27%; }
+.lab-tote-col-surv { width: 3.4rem; }
 .lab-tote .lab-tote-wins { color: rgb(255 176 46); font-family: "Courier New", monospace; font-weight: 900; text-align: center; text-shadow: 0 0 4px rgba(255, 160, 40, .9), 0 0 10px rgba(255, 140, 30, .5); }
 .lab-tote-name { font-weight: 800; letter-spacing: .06em; overflow: hidden; white-space: nowrap; }
 /* Team, line, lamp: the lamp slot has one width in every row, so the W and L line up down the column. */
@@ -432,8 +432,9 @@
 .lab-tote-mark.is-l { color: rgb(252 120 110); text-shadow: 0 0 6px rgba(252, 120, 110, .7); }
 /* Survivor: the real chip, centred in its column, its W or L lamp beside it. */
 .lab-tote .lab-tote-surv { text-align: center; }
-.lab-tote-chip { align-items: center; display: inline-flex; gap: 2px; }
-.lab-tote-chip .lab-tote-mark { font-size: .8rem; width: .9rem; }
+.lab-tote-chip { display: inline-block; position: relative; vertical-align: middle; }
+/* The chip's W or L sits on a small black lamp at its lower right, inside the column. */
+.lab-tote-chip .lab-tote-mark { background: rgb(8 10 9); border-radius: 50%; bottom: -3px; font-size: .7rem; height: 1rem; line-height: 1rem; position: absolute; right: -5px; width: 1rem; }
 .lab-tote-chip-back { background: repeating-conic-gradient(rgb(22 58 46) 0 30deg, rgb(244 239 227) 30deg 60deg); border: 2px solid var(--cw-gold); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, .5); display: inline-block; height: 1.7rem; vertical-align: middle; width: 1.7rem; }
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
