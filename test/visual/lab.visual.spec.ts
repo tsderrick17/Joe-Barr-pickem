@@ -32,16 +32,25 @@ test("the Lab remembers the try-out on this device and in the address", async ({
   await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor table" })).toHaveAttribute("aria-pressed", "true");
 });
 
-for (const theme of ["day", "night"]) {
-  for (const [label, size] of Object.entries(SIZES)) {
-    for (const week of ["Week 3", "Week 7", "Week 9"]) {
-      test(`Lab Survivor table, ${week}, ${theme} at ${label}`, async ({ page }) => {
-        await openLab(page, "survivor", { theme, size });
-        await page.getByRole("group", { name: "Week" }).getByRole("button", { name: week }).click();
-        await holdStill(page);
-        await expect(page.locator(".lab-survivor-room")).toHaveScreenshot(`lab-survivor-${week.toLowerCase().replace(/ /g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });
-      });
-    }
+// The Survivor table: each state gets a picture, phone and desktop by day, phone at night.
+const TABLE_SHOTS: Array<[string, number, string | null]> = [
+  ["week-7-graded", 7, null], ["week-7-before-kickoff", 7, "Before kickoff"], ["week-7-game-day", 7, "Game day"],
+  ["week-3-graded", 3, null], ["week-12-champion", 12, null], ["playoffs", 13, null],
+];
+async function stepTo(page: Page, week: number) {
+  const stepper = page.getByRole("group", { name: "Week" });
+  for (let at = 7; at < week; at++) await stepper.getByRole("button", { name: "Later week" }).click();
+  for (let at = 7; at > week; at--) await stepper.getByRole("button", { name: "Earlier week" }).click();
+}
+for (const [shot, week, moment] of TABLE_SHOTS) {
+  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+    test(`Lab Survivor table, ${shot}, ${theme} at ${label}`, async ({ page }) => {
+      await openLab(page, "survivor", { theme, size: SIZES[label] });
+      await stepTo(page, week);
+      if (moment) await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: moment }).click();
+      await holdStill(page);
+      await expect(page.locator(".lab-survivor-room")).toHaveScreenshot(`lab-survivor-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+    });
   }
 }
 
@@ -55,20 +64,87 @@ test("Lab Survivor table: a seat's weeks fanned out", async ({ page }) => {
   await expect(sheet).toHaveScreenshot("lab-survivor-seat-sheet-day-phone-390.png", { maxDiffPixels: 12 });
 });
 
-test("Lab Survivor table: the felt shows this week's chips, sweeps a losing team, and List shows the same league", async ({ page }) => {
+test("Lab Survivor table: every fact the list shows is on the table, and the table and the list agree", async ({ page }) => {
   await openLab(page, "survivor");
-  await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Week 3" }).click();
-  await expect(page.getByRole("img", { name: "Bengals: Hank, lost" })).toBeVisible();   // Hank's Bengals lost in week 3
-  await expect(page.locator(".lab-box.is-swept")).toHaveCount(2);   // the Bengals and the Dolphins
-  await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);   // Gus (week 2), Hank and Bev (week 3)
+  await stepTo(page, 3);
+  // Week 3, graded: the Bengals (Hank) and Dolphins (Bev) lost and are swept; Gus went out in week 2.
+  await expect(page.getByRole("img", { name: "Bengals: Hank, lost" })).toBeVisible();
+  await expect(page.locator(".lab-box.is-swept")).toHaveCount(2);
+  await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);
+  await expect(page.getByText("OUT · WK 2 · DAL")).toBeVisible();
+  await expect(page.locator(".lab-felt-count")).toHaveText("7 of 10 alive");
+  // Before kickoff: other players' chips are face down on their seats, never on a team; the viewer's own is on the felt; June has not picked.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
+  await expect(page.locator(".lab-box.has-chips")).toHaveCount(1);
+  await expect(page.getByRole("img", { name: /Chiefs: Walt/ })).toBeVisible();
+  await expect(page.getByText("NO PICK YET")).toBeVisible();
+  await expect(page.locator(".lab-stack-chip.is-face-down")).toHaveCount(7);   // nine still in, less Walt (the viewer) and June (no pick yet)
+  await expect(page.locator(".lab-seat.is-out")).toHaveCount(1);   // only Gus: this week's losses have not happened yet
+  // The list from the same data: the same players out.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await page.getByRole("group", { name: "View" }).getByRole("button", { name: "List" }).click();
   await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
   await expect(page.locator(".lab-felt")).toHaveCount(0);
 });
 
+test("Lab Survivor table: the season ends with a champion, and the playoffs clear the felt", async ({ page }) => {
+  await openLab(page, "survivor");
+  await stepTo(page, 12);
+  await expect(page.locator(".lab-felt-count")).toHaveText("Earl wins Survivor");
+  await expect(page.locator(".lab-seat.is-champion")).toHaveCount(1);
+  await expect(page.getByRole("img", { name: "Champion" })).toBeVisible();
+  await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" }).click();
+  await expect(page.getByText("Survivor runs through the regular season. Earl won it in Week 12.")).toBeVisible();
+  await expect(page.locator(".lab-box")).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" })).toBeDisabled();
+});
+
+test("Lab Survivor table: the divisions line up, East to West, AFC beside NFC on a computer", async ({ page }) => {
+  await openLab(page, "survivor", { size: SIZES["desktop-1280"] });
+  const rows = await page.locator(".lab-conference").evaluateAll((blocks) => blocks.map((block) => [...block.querySelectorAll(".lab-division")].map((row) => ({ name: row.querySelector(".lab-division-name")!.textContent, top: Math.round(row.getBoundingClientRect().top) }))));
+  expect(rows[0].map((row) => row.name)).toEqual(["EAST", "NORTH", "SOUTH", "WEST"]);
+  expect(rows[1].map((row) => row.name)).toEqual(["EAST", "NORTH", "SOUTH", "WEST"]);
+  expect(rows[0].map((row) => row.top)).toEqual(rows[1].map((row) => row.top));
+});
+
+// Pick'em Pad skins: five materials for one pad. Each skin gets a picture on game day, phone by day and at night; the scratch-off before kickoff too.
+const SKIN_NAMES = ["Split-flap", "Scratch-off", "Tote board", "Bowling sheet", "Ballpark"];
+for (const skin of SKIN_NAMES) {
+  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+    test(`Lab pad skin, ${skin}, ${theme} at ${label}`, async ({ page }) => {
+      await openLab(page, "skins", { theme, size: SIZES[label] });
+      await page.getByRole("group", { name: "Skin" }).getByRole("button", { name: skin }).click();
+      await holdStill(page);
+      await expect(page.locator(".lab-skins-room")).toHaveScreenshot(`lab-skin-${skin.toLowerCase().replace(/[^a-z]+/g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+    });
+  }
+}
+test("Lab pad skin, Scratch-off before kickoff, day at phone-390", async ({ page }) => {
+  await openLab(page, "skins");
+  await page.getByRole("group", { name: "Skin" }).getByRole("button", { name: "Scratch-off" }).click();
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
+  await holdStill(page);
+  await expect(page.locator(".lab-skins-room")).toHaveScreenshot("lab-skin-scratch-off-before-kickoff-day-phone-390.png", { maxDiffPixels: 12 });
+});
+
+test("every pad skin shows the same standings and picks, and covers another player's pick until kickoff", async ({ page }) => {
+  await openLab(page, "skins");
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
+  for (const skin of SKIN_NAMES) {
+    await page.getByRole("group", { name: "Skin" }).getByRole("button", { name: skin }).click();
+    const pad = page.locator(".lab-pad");
+    await expect(pad.locator("tbody tr")).toHaveCount(10);
+    await expect(pad.getByRole("img", { name: "Hidden until kickoff" })).toHaveCount(18);   // two picks for nine players; Walt sees his own
+    await expect(pad.locator("tr.is-you .lab-pad-cover")).toHaveCount(0);
+  }
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
+  await expect(page.locator(".lab-pad").getByRole("img", { name: "Hidden until kickoff" })).toHaveCount(0);
+  await expect(page.locator(".lab-pad-mark")).toHaveCount(20);
+});
+
 // Lamp-lit: the night look as a lounge after dark. A night mode, so by day it changes nothing but a note saying so.
 for (const [label, size] of Object.entries(SIZES)) {
-  for (const tryOut of ["survivor"]) {
+  for (const tryOut of ["survivor", "clubhouse", "skins"]) {
     test(`Lab lamp-lit ${tryOut}, night at ${label}`, async ({ page }) => {
       await page.addInitScript(() => window.localStorage.setItem("pickem-lab-lamp", "on"));
       await openLab(page, tryOut, { theme: "night", size });

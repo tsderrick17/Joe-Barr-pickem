@@ -26,20 +26,20 @@ export const LAB_TEAM_NAMES = {
 export const LAB_PLAYERS = ["Walt", "Rosie", "Hank", "Dottie", "Gus", "Marge", "Earl", "Bev", "Lou", "June"];
 
 /**
- * Each player's Survivor run, week 1 onward: [team, result]. "W" won, "L" lost (the run ends there). Runs are as long as the
+ * Each player's Survivor run, week 1 onward: [team, result]. The sample season runs to week 12, when the last player standing wins. "W" won, "L" lost (the run ends there). Runs are as long as the
  * player lasted; a run with no "L" is still alive after the last week shown.
  */
 export const LAB_SURVIVOR = {
-  Walt: [["BUF", "W"], ["DET", "W"], ["KC", "W"], ["PHI", "W"], ["BAL", "W"], ["SF", "W"], ["GB", "W"], ["HOU", "W"], ["LAR", "W"]],
-  Rosie: [["KC", "W"], ["BUF", "W"], ["DET", "W"], ["SF", "W"], ["PHI", "W"], ["MIN", "W"], ["CIN", "W"], ["PIT", "W"], ["TB", "W"]],
+  Walt: [["BUF", "W"], ["DET", "W"], ["KC", "W"], ["PHI", "W"], ["BAL", "W"], ["SF", "W"], ["GB", "W"], ["HOU", "W"], ["LAR", "W"], ["DEN", "W"], ["NYJ", "L"]],
+  Rosie: [["KC", "W"], ["BUF", "W"], ["DET", "W"], ["SF", "W"], ["PHI", "W"], ["MIN", "W"], ["CIN", "W"], ["PIT", "W"], ["TB", "W"], ["WAS", "W"], ["ATL", "W"], ["CAR", "L"]],
   Hank: [["PHI", "W"], ["BAL", "W"], ["CIN", "L"]],
-  Dottie: [["DET", "W"], ["KC", "W"], ["BUF", "W"], ["BAL", "W"], ["GB", "W"], ["PHI", "W"], ["SEA", "W"], ["LAC", "W"], ["DEN", "W"]],
+  Dottie: [["DET", "W"], ["KC", "W"], ["BUF", "W"], ["BAL", "W"], ["GB", "W"], ["PHI", "W"], ["SEA", "W"], ["LAC", "W"], ["DEN", "W"], ["PIT", "L"]],
   Gus: [["SF", "W"], ["DAL", "L"]],
   Marge: [["BAL", "W"], ["PHI", "W"], ["SF", "W"], ["DET", "W"], ["KC", "W"], ["BUF", "W"], ["HOU", "L"]],
-  Earl: [["GB", "W"], ["SF", "W"], ["PHI", "W"], ["KC", "W"], ["DET", "W"], ["BAL", "W"], ["BUF", "W"], ["MIN", "W"], ["LAR", "W"]],
+  Earl: [["GB", "W"], ["SF", "W"], ["PHI", "W"], ["KC", "W"], ["DET", "W"], ["BAL", "W"], ["BUF", "W"], ["MIN", "W"], ["LAR", "W"], ["IND", "W"], ["CHI", "W"], ["ARI", "W"]],
   Bev: [["CIN", "W"], ["KC", "W"], ["MIA", "L"]],
   Lou: [["HOU", "W"], ["DET", "W"], ["BAL", "W"], ["BUF", "W"], ["SF", "W"], ["KC", "W"], ["PHI", "W"], ["GB", "W"], ["TB", "L"]],
-  June: [["DAL", "W"], ["BUF", "W"], ["KC", "W"], ["PHI", "W"], ["DET", "W"], ["GB", "W"], ["BAL", "W"], ["SEA", "W"], ["DEN", "W"]],
+  June: [["DAL", "W"], ["BUF", "W"], ["KC", "W"], ["PHI", "W"], ["DET", "W"], ["GB", "W"], ["BAL", "W"], ["SEA", "W"], ["DEN", "W"], ["IND", "W"], ["NO", "L"]],
 };
 
 /**
@@ -57,12 +57,14 @@ export function labSurvivorAt(week) {
   });
 }
 
-/** The Survivor weeks the table can be set to, each a little story: early, the middle with some out, and the last week. */
-export const LAB_SURVIVOR_SCENES = [
-  { id: "week-3", label: "Week 3", week: 3 },
-  { id: "week-7", label: "Week 7", week: 7 },
-  { id: "week-9", label: "Week 9", week: 9 },
-];
+/** The last week of the sample Survivor season: by its end one player is left, the champion. */
+export const LAB_SURVIVOR_LAST_WEEK = 12;
+
+/** The champion once the season is decided: the only seat still in after the last week, else null. */
+export function labSurvivorChampion(week) {
+  const alive = labSurvivorAt(week).filter((seat) => !seat.out);
+  return week >= LAB_SURVIVOR_LAST_WEEK && alive.length === 1 ? alive[0].name : null;
+}
 
 /** A sample week's games for the betting slip: favourite first, the line on the favourite, a final score once graded. */
 export const LAB_SLATE = [
