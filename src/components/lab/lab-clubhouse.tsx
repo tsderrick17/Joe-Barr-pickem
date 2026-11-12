@@ -1,29 +1,30 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import SurvivorPokerChip from "@/components/survivor-poker-chip";
+import TrophyBanner from "@/components/trophy-banner";
+import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { LAB_MOMENTS, LAB_VIEWER, labKickedOff, labLeaderboard, labStandard, labSurvivorBoard } from "@/lib/lab-clubhouse.js";
-import { LAB_SLATE, LAB_TEAM_NAMES, labLineFor } from "@/lib/lab-samples.js";
+import { LAB_SLATE, LAB_TEAM_NAMES, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
 /**
- * Lab try-out: the pages as rooms of one clubhouse, each keeping its own character, with the sample league only.
- *  - Standings: the clubhouse leaderboard of hand-set number plates, and each player's picks on a golf standard (the white sign on a
- *    pole carried round the course), raised by tapping their row or all at once "on the course".
+ * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
+ *  - The lobby is one room drawn to fit one phone screen. Everything in it is a big, labelled thing to tap (the standings board, the
+ *    Slate chalkboard, the trophy mantle, the bar, the Survivor table, the Bowl Pool corner), and each shows a line of live news, so
+ *    many visits need no tap at all. One tap opens a room; one "Back to Clubhouse" button at the top of every room goes back. No swiping.
+ *  - Standings: the leaderboard of hand-set number plates, and each player's picks on a golf standard.
  *  - The Slate: the big board, a gilt frame drawn round a pick, and Survivor picked on the same board.
- *  - Trophy Room: quiet engraved brass plaques on walnut (indented corners, a diamond rule, dotted leaders), the season's countdown,
- *    and a new champion's pennant swinging in.
+ *  - Trophy Room: one tall wall to scroll, the way you would look at a real one: the champions' banners up in the rafters (the real
+ *    banners), the three trophies on the mantle (the real trophies), and a brass plaque for every season down the front of the bar.
+ *  - Survivor: the card table. The bar and the Bowl Pool corner are stand-ins that say what will open there.
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
 
-type Room = "standings" | "slate" | "trophies";
-const ROOMS: Array<{ id: Room; label: string }> = [
-  { id: "standings", label: "Standings" },
-  { id: "slate", label: "The Slate" },
-  { id: "trophies", label: "Trophy Room" },
-];
+type Room = "standings" | "slate" | "trophies" | "survivor" | "bar" | "bowl";
+const ROOM_TITLE: Record<Room, string> = { standings: "Standings", slate: "The Slate", trophies: "Trophy Room", survivor: "Survivor", bar: "The Bar", bowl: "Bowl Pool" };
 
 function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: ReadonlyArray<readonly [T, string]>; value: T; onChange: (value: T) => void }) {
   return (
@@ -227,48 +228,126 @@ function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
   );
 }
 
+/** A pool's champions as the real banners take them: one banner per player, their winning years newest first. */
+function bannersFor(pool: Pool) {
+  const byPlayer = new Map<string, number[]>();
+  for (const year of CHAMPIONS) byPlayer.set(year[pool], [...(byPlayer.get(year[pool]) ?? []), Number(year.season)]);
+  return [...byPlayer].map(([name, years]) => ({ name, years }));
+}
+
 function TrophyRoom() {
+  const [pool, setPool] = useState<Pool>("pickem");
   const [scene, setScene] = useState<"wall" | "crowning">("wall");
   const [crownings, setCrownings] = useState(0);
+  const banners = bannersFor(pool);
   return (
     <div className="lab-room-stack">
       <div className="lab-room-controls">
         <Chips label="Scene" onChange={(next) => { setScene(next); if (next === "crowning") setCrownings((count) => count + 1); }} options={[["wall", "The wall"], ["crowning", "A champion is crowned"]] as const} value={scene} />
       </div>
-      <div className="lab-case">
-        <header>
-          <h3>Trophy Room</h3>
-          <p>Every champion, kept under glass.</p>
-          <div className="lab-case-countdown"><span>THE 2027 SEASON OPENS AUG 1</span><strong>172 DAYS</strong><small>sample date: Feb 10</small></div>
-        </header>
-        {scene === "crowning" ? (
-          <div className="lab-crowning" key={crownings}>
-            <span aria-hidden="true" className="lab-crowning-rod" />
-            <div className="lab-pennant" role="img" aria-label="2026 Pick'em champion: Earl">
-              <span>2026 CHAMPION</span>
-              <strong>EARL</strong>
-              <small>PICK’EM</small>
+      <div className="lab-case lab-wall">
+        <section aria-label="Banners" className="lab-wall-part">
+          <h4>Banners <small>a banner for every champion</small></h4>
+          <Chips label="Whose banners" onChange={setPool} options={[["pickem", "Pick’em"], ["survivor", "Survivor"], ["bowl", "Bowl Pool"]] as const} value={pool} />
+          {scene === "crowning" ? (
+            <div className="lab-crowning" key={crownings}>
+              <span aria-hidden="true" className="lab-crowning-rod" />
+              <div className="lab-pennant" role="img" aria-label="2026 Pick'em champion: Earl">
+                <span>2026 CHAMPION</span>
+                <strong>EARL</strong>
+                <small>PICK’EM</small>
+              </div>
             </div>
+          ) : (
+            <ul aria-label={`${POOL_LABEL[pool]} champions`} className="trophy-rafters lab-wall-rafters" data-pool={pool} key={pool}>
+              {banners.map((banner, index) => (
+                <li className="trophy-banner" key={banner.name} style={{ "--i": index } as CSSProperties}>
+                  <span className="sr-only">{banner.name}: {banner.years.join(", ")}</span>
+                  <TrophyBanner index={index} name={banner.name} tag={`${POOL_LABEL[pool]} champion`} years={banner.years} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section aria-label="Trophies" className="lab-wall-part">
+          <h4>Trophies <small>one for each pool</small></h4>
+          <div className="lab-mantle">
+            <Image alt="The Survivor, Pick’em and Bowl Pool trophies" className="lab-mantle-trophies" height={990} sizes="(min-width: 768px) 30rem, 90vw" src="/trophies/turntable/sm/rest-0.webp" width={1320} />
+            <span aria-hidden="true" className="lab-mantle-shelf" />
+            <ul aria-hidden="true" className="lab-mantle-names"><li>Survivor</li><li>Pick’em</li><li>Bowl Pool</li></ul>
           </div>
-        ) : null}
-        <div className="lab-case-shelf">
-          {CHAMPIONS.map((year) => <Plaque key={year.season} year={year} />)}
-        </div>
+        </section>
+        <section aria-label="Plaques" className="lab-wall-part">
+          <h4>Plaques <small>one for every season</small></h4>
+          <div className="lab-case-shelf">
+            {CHAMPIONS.map((year) => <Plaque key={year.season} year={year} />)}
+          </div>
+        </section>
+        <div className="lab-case-countdown"><span>THE 2027 SEASON OPENS AUG 1</span><strong>172 DAYS</strong><small>sample date: Feb 10</small></div>
       </div>
     </div>
   );
 }
 
-export function LabClubhouse() {
-  const [room, setRoom] = useState<Room>("standings");
+/* ---------------------------------------------------------------- The lobby ---------------------------------------------------------------- */
+
+/** One thing in the room to tap: its name, a line of live news, and its own drawing behind them. */
+function Fixture({ room, news, onEnter, children }: { room: Room; news: string; onEnter: (room: Room) => void; children?: ReactNode }) {
   return (
-    <section aria-label="Clubhouse try-out" className="lab-clubhouse" data-room={room}>
-      <nav aria-label="Clubhouse rooms" className="lab-doors">
-        {ROOMS.map((item) => <button aria-pressed={room === item.id} key={item.id} onClick={() => setRoom(item.id)} type="button"><span aria-hidden="true" className="lab-door-knob" />{item.label}</button>)}
-      </nav>
+    <button className={`lab-fixture is-${room}`} onClick={() => onEnter(room)} type="button">
+      {children}
+      <span className="lab-fixture-name">{ROOM_TITLE[room]}</span>
+      <span className="lab-fixture-news">{news}</span>
+    </button>
+  );
+}
+
+/** The lobby: the whole clubhouse on one phone screen. The news on each fixture comes from the same sample data its room shows. */
+function Lobby({ onEnter }: { onEnter: (room: Room) => void }) {
+  const rows = labLeaderboard({ round: "regular", moment: "gameday" });
+  const you = rows.find((row) => row.name === LAB_VIEWER);
+  const picksIn = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.length;
+  const seats = labSurvivorAt(9);
+  return (
+    <nav aria-label="Clubhouse rooms" className="lab-lobby">
+      <p className="lab-lobby-sign">Lead Pipe Locks Clubhouse</p>
+      <span aria-hidden="true" className="lab-lobby-floor" />
+      <Fixture news={`Leader: ${rows[0].name} · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`} onEnter={onEnter} room="standings">
+        <span aria-hidden="true" className="lab-fixture-plates">{rows.slice(0, 3).map((row) => <i key={row.name}><b>{row.place}</b><b>{row.name.toUpperCase()}</b><b>{row.wins}</b></i>)}</span>
+      </Fixture>
+      <Fixture news={`Week 10 · ${picksIn} picks in`} onEnter={onEnter} room="slate" />
+      <Fixture news="Banners, trophies, plaques" onEnter={onEnter} room="trophies">
+        <Image alt="" className="lab-fixture-trophies" height={990} sizes="12rem" src="/trophies/turntable/sm/rest-0.webp" width={1320} />
+      </Fixture>
+      <Fixture news="Pool chat · 3 new" onEnter={onEnter} room="bar" />
+      <Fixture news={`${seats.filter((seat) => !seat.out).length} of ${seats.length} alive`} onEnter={onEnter} room="survivor" />
+      <Fixture news="Opens Dec 7" onEnter={onEnter} room="bowl" />
+      <p className="lab-lobby-hint">Tap anything in the room to open it.</p>
+    </nav>
+  );
+}
+
+/** A room not built yet: it says plainly what will open here. */
+function StandIn({ children }: { children: ReactNode }) {
+  return <p className="lab-stand-in">{children}</p>;
+}
+
+export function LabClubhouse() {
+  const [room, setRoom] = useState<Room | null>(null);
+  return (
+    <section aria-label="Clubhouse try-out" className="lab-clubhouse" data-room={room ?? "lobby"}>
+      {room === null ? <Lobby onEnter={setRoom} /> : (
+        <header className="lab-room-bar">
+          <button className="lab-room-back" onClick={() => setRoom(null)} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
+          <h3>{ROOM_TITLE[room]}</h3>
+        </header>
+      )}
       {room === "standings" ? <StandingsRoom /> : null}
       {room === "slate" ? <SlateRoom /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
+      {room === "survivor" ? <LabSurvivorTable /> : null}
+      {room === "bar" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
+      {room === "bowl" ? <StandIn>The Bowl Pool opens here, exactly as it works today.</StandIn> : null}
     </section>
   );
 }

@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The clubhouse as one physical space: a first proof (Lab)
+
+The owner wants the whole pool to live in one physical place, a bar or lounge the players move around, as a bigger push for next
+season, and asked for a little more built to prove the idea. It must be intuitive, easy to navigate and friendly to older players, and
+the pool is mostly used on a phone. So the Lab's Clubhouse try-out now opens on a lobby drawn to fit one phone screen: the standings
+board, the Slate chalkboard, the trophy mantle, the bar, the Survivor card table and the Bowl Pool corner are each one big labelled
+button carrying a line of news, so many visits need no tap. One tap opens a room; every room has the same "Back to Clubhouse" button
+in the same place. There is no swiping or panning: the standings already scroll sideways, and a hidden gesture is easy to miss. The
+Trophy Room becomes one tall wall read top to bottom, holding the three sets of championship pieces: banners by player in the rafters
+(the real banners, for the pool chosen), trophies by pool on the mantle (the real trophies), and plaques by year down the bar. The
+rooms open today's screens; the room is the way in, not a new way of working. Lab only, sample players only; the bar and the Bowl
+Pool are stand-ins for now.
+
 ## 2026-11-12 - The Bowl receipt gets its own look; quieter plaques (Lab)
 
 The owner answered the two questions left open by the Lab review. The Bowl Pool's receipt should have its own feel that fits the pool,
