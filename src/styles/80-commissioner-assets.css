@@ -238,8 +238,9 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-highlight { display: inline-block; font-size: 1.05rem; font-weight: 700; max-width: 100%; position: relative; }
 .asset-highlight .slate-team-label { white-space: nowrap; }
 .asset-banner { width: 100%; }
-/* The small split-flap counter is drawn a little larger than the large one's zoom, so its digits read as clearly. */
-.asset-flap-small { display: inline-flex; zoom: 1.25; }
+/* The small split-flap counter is drawn at the large one's size (its flaps are 1.6rem tall to the large one's 2.9rem), so switching style
+   in the Workshop changes only the look. */
+.asset-flap-small { display: inline-flex; zoom: calc(var(--asset-zoom, 1) * 1.8125); }
 /* The pull-to-refresh strip sits in its tile instead of being fixed along the top of the page. */
 .asset-pull.pull-chain { left: auto; position: relative; right: auto; top: auto; z-index: auto; }
 /* A trophy banner on its rafters: just the hanging cloth, with the Trophy Room's own cloth colours. */

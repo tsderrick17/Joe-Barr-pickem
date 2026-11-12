@@ -41,6 +41,22 @@ with a season countdown plate and a new champion's pennant swinging in; only the
 Another player's picks, Survivor included, stay hidden until their game kicks off, exactly as on the real pages; a unit test holds
 the sample data to that. Lab only, sample players only.
 
+## 2026-11-12 - The refined receipt goes live; today's ticket stays, two fixes
+
+Owner's review of the Lab: today's ticket is the better ticket, and the refined receipt should go live. On the Slate the NFL
+receipt is now printed on the ticket's paper and ink, with double rules along its long edges and a row of small punched holes at
+each perforation (the Bowl Pool's receipt keeps its own look). After a save goes through, the receipt's status lines print out
+left to right, Survivor a beat after Pick'em; never on load, and still under reduced motion. On Standings the ticket no longer
+grows when W/L comes in (the stamp sits on its line without stretching it; a test measures the ticket before and after grading),
+and its "PICK'EM ATS" and "SURVIVOR WINNER" headings are plain headings, no longer links to the Slate. The refined ticket and the
+Lab's "Ticket & receipt" try-out are retired.
+
+## 2026-11-12 - Workshop split-flap counter: style from its settings, one size
+
+Owner: the counter switched style on every tap and the two styles were different sizes. The style is now chosen only in its
+settings (a tap flips it again in the same style), and the small player-wins style is drawn at the large one's size (zoom 1.8125,
+its 1.6rem flaps to the large 2.9rem), so switching changes only the look.
+
 ## 2026-11-11 - No off-season banner; the ticket returns August 1
 
 Owner: leave the Pick'em Pad alone in the off-season, with no special note, and bring the ticket back on August 1. Once the Super

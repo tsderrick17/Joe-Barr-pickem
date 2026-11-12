@@ -22,42 +22,14 @@ async function holdStill(page: Page) {
   await page.waitForTimeout(300);
 }
 
-for (const theme of ["day", "night"]) {
-  for (const [label, size] of Object.entries(SIZES)) {
-    for (const look of ["Today", "Refined"]) {
-      for (const week of ["Saved", "Game day", "Graded"]) {
-        if (look === "Today" && week !== "Saved") continue;   // today's look is already covered on the real pages
-        test(`Lab ticket and receipt, ${look}, ${week}, ${theme} at ${label}`, async ({ page }) => {
-          await openLab(page, "ticket", { theme, size });
-          await page.getByRole("group", { name: "Look" }).getByRole("button", { name: look }).click();
-          await page.getByRole("group", { name: "Week" }).getByRole("button", { name: week }).click();
-          await holdStill(page);
-          await expect(page.locator(".lab-family")).toHaveScreenshot(`lab-ticket-${look.toLowerCase()}-${week.toLowerCase().replace(/ /g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });   // the small Survivor chip logo renders a few pixels differently from run to run
-        });
-      }
-    }
-  }
-}
-
-test("the ticket and receipt try-out switches between today's look and the refined family", async ({ page }) => {
-  await openLab(page, "ticket");
-  const family = page.locator(".lab-family");
-  await expect(family).toHaveAttribute("data-look", "refined");
-  await expect(family.getByRole("region", { name: "Your weekly receipt" })).toBeVisible();
-  await expect(family.getByRole("region", { name: /Your current ticket/ })).toBeVisible();
-  await page.getByRole("group", { name: "Look" }).getByRole("button", { name: "Today" }).click();
-  await expect(family).toHaveAttribute("data-look", "today");
-  await expect(family).not.toHaveClass(/ticket-family/);
-});
-
 test("the Lab remembers the try-out on this device and in the address", async ({ page }) => {
   await openLab(page, "feel");
   await expect(page.locator("[data-haptic-test]")).toBeVisible();
-  await page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Ticket & receipt" }).click();
-  await expect(page).toHaveURL(/try=ticket/);
+  await page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor table" }).click();
+  await expect(page).toHaveURL(/try=survivor/);
   await page.goto("/admin/workshop/lab");
-  await expect(page.locator(".lab-family")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Ticket & receipt" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".lab-survivor-room")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor table" })).toHaveAttribute("aria-pressed", "true");
 });
 
 // The Survivor table: each state gets a picture, phone and desktop by day, phone at night.

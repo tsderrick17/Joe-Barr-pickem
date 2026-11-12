@@ -53,7 +53,7 @@ test("sample lines and against-the-spread results read like the pool's: a push i
 });
 
 test("the Lab opens the try-out in the address, else the last one, else the newest; unknown ones are ignored", () => {
-  assert.equal(labChoice("feel", "ticket"), "feel");
+  assert.equal(labChoice("feel", "survivor"), "feel");
   assert.equal(labChoice("nope", "feel"), "feel");
   assert.equal(labChoice(null, null), LAB_SHELF[0].id);
   assert.equal(labChoice(undefined, "nope"), LAB_SHELF[0].id);

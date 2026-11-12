@@ -315,3 +315,42 @@ test("with reduced motion a Bowl Card tile stays still and is not a button", asy
   await expect(page.locator(".bowl-standings-player-row .bowl-score-tile").first()).toHaveAttribute("data-settled", "true");
   await expect(page.locator(".bowl-score-flip")).toHaveCount(0);
 });
+
+// The W/L stamp sits on the line without stretching it: a graded ticket is exactly as tall as the same ticket before its results.
+for (const scenario of ["regular-in", "playoff-wildcard"]) {
+  test(`the ticket keeps its height when results come in (${scenario})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await signIn(page, "day");
+    const graded = homeResponse(scenario);
+    const ungraded = JSON.parse(JSON.stringify(graded));
+    for (const row of ungraded.rows) for (const pick of row.picks) pick.resultMark = "";
+    for (const row of ungraded.survivorRows ?? []) if (row.pick) row.pick.resultMark = "";
+    let home = ungraded;
+    await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+    await page.route("**/api/home**", (route) => route.fulfill({ json: home }));
+    await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+    await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse(scenario) }));
+    await page.route("https://placeholder.invalid/**", (route) => route.abort());
+    await page.goto("/");
+    const ticket = page.locator(".my-ticket");
+    await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await expect(ticket.locator(".my-ticket-result")).toHaveCount(0);
+    const before = (await ticket.boundingBox())!.height;
+    home = graded;
+    await page.reload();
+    await expect(ticket.locator(".my-ticket-result").first()).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    expect((await ticket.boundingBox())!.height).toBeCloseTo(before, 0);
+  });
+}
+
+test("the ticket's section headings are plain headings, not links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "regular-in");
+  await settle(page);
+  const ticket = page.locator(".my-ticket");
+  await expect(ticket.locator(".my-ticket-section-link").first()).toBeVisible();
+  await expect(ticket.getByRole("link")).toHaveCount(0);
+});
