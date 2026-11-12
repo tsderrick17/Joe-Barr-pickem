@@ -4,7 +4,6 @@ import { useState } from "react";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
 import { LabClubhouse } from "@/components/lab/lab-clubhouse";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { LabTicketFamily } from "@/components/lab/lab-ticket-family";
 import { WorkshopTabs } from "@/components/workshop-tabs";
 import { LAB_SHELF, labChoice, type LabTryOut } from "@/lib/lab-shelf.js";
 import { useCommissionerAccess } from "@/lib/use-commissioner-access";
@@ -58,7 +57,6 @@ export default function WorkshopLabPage() {
         <div className={`lab-stage ${lamp ? "is-lamp" : ""}`}>
           {choice === "clubhouse" ? <LabClubhouse /> : null}
           {choice === "survivor" ? <LabSurvivorTable /> : null}
-          {choice === "ticket" ? <LabTicketFamily /> : null}
           {choice === "feel" ? <HapticFeelTest /> : null}
         </div>
       </> : <p className="workshop-lab-intro">{access === "checking" ? "Checking sign-in…" : "Commissioner only."}</p>}

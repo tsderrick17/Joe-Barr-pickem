@@ -6,121 +6,6 @@
 .lab-chips button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
 .lab-shelf { border-bottom: 1px solid var(--club-line); padding-bottom: 14px; }
 
-/* ---- Ticket & receipt ---- */
-.lab-family-room { display: grid; gap: 16px; }
-.lab-family-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: space-between; }
-.lab-family { --ticket-cutout: var(--club-page); display: grid; gap: 10px; }
-.lab-family-label { color: var(--club-muted); font-size: .72rem; font-weight: 700; letter-spacing: .14em; margin: 8px 0 0; text-transform: uppercase; }
-/* The receipt rides at the top of the Slate; in the Lab it stays in place. */
-.lab-family .slate-mini-nav { position: relative; top: auto; }
-
-/* ---- The refined family: one printer, two forms ----
-   Both pieces are printed on the ticket's stock with the ticket's ink. The receipt keeps its strip, chips, SUBMIT, notches and serrated
-   end, and takes the ticket's double rules along its long edges. The ticket keeps its masthead, columns, status and barcode, and takes
-   the receipt's serrated ends and a row of punched holes with round notches above its status stub, so the two read as parts of one slip.
-   No font or text-size changes: only paper, ink, rules and edges. */
-.ticket-family .slate-receipt-strip {
-  --receipt-paper: var(--ticket-paper);
-  --receipt-rule: var(--ticket-edge);
-  --receipt-ink: var(--themed-text-6);
-  --receipt-label-ink: var(--ticket-small-ink);
-  --receipt-link-ink: var(--themed-text-6);
-  --receipt-shadow: drop-shadow(0 6px 12px rgba(37, 30, 18, .14));
-}
-.ticket-family .slate-receipt-ticket::before,
-.ticket-family .slate-receipt-pool::before {
-  border-bottom: 3px double var(--ticket-heavy-rule);
-  border-top: 3px double var(--ticket-heavy-rule);
-}
-/* The receipt's perforations: a row of small punched holes, each with a hairline rim, in the ticket's rhythm (not long dashes). */
-.ticket-family .slate-receipt-pool::after {
-  background:
-    radial-gradient(circle, rgba(37, 30, 18, .12) 0 1.1px, var(--receipt-rule) 1.1px, transparent 1.9px) 50% 0 / 100% 6px repeat-y,
-    var(--receipt-paper);
-  left: -3px;
-  width: 6px;
-}
-
-/* The ticket is two pieces of one paper: the body and the status stub. Each is its own layer, so the notches and the perforation are
-   cut clean through the paper (the page shows through and the shadow falls into them), not painted on. The ticket lays out on a grid
-   only so each layer can fill its own piece: the body's rows, then the stub's row. */
-.ticket-family .my-ticket {
-  --ticket-scallop: .17rem;
-  --ticket-scallop-pitch: calc(var(--ticket-scallop) * 3);
-  --ticket-notch: .5rem;
-  --ticket-hole: 1.1px;
-  --ticket-hole-pitch: 6px;
-  /* Serrated left and right ends, the receipt's bite. */
-  --ticket-bite-left: radial-gradient(circle at 0 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) 0 0 / 100% var(--ticket-scallop-pitch) repeat-y;
-  --ticket-bite-right: radial-gradient(circle at 100% 50%, transparent var(--ticket-scallop), black calc(var(--ticket-scallop) + .5px)) 0 0 / 100% var(--ticket-scallop-pitch) repeat-y;
-  background: none;
-  border: 0;
-  box-shadow: none;
-  display: grid;
-  filter: drop-shadow(0 6px 12px rgba(37, 30, 18, .14));
-  grid-template-columns: minmax(0, 1fr);
-  /* Room for every part above the stub (empty rows take no space), then the stub. */
-  grid-template-rows: repeat(6, auto) [stub] auto;
-  isolation: isolate;
-}
-.ticket-family .my-ticket-footer { border-top: 0; grid-row: stub; }
-/* The body: its two bottom corners bitten into half notches, and half of each perforation hole along its bottom edge. */
-.ticket-family .my-ticket::before {
-  background:
-    radial-gradient(circle at 0 100%, transparent var(--ticket-notch), var(--ticket-edge) var(--ticket-notch), var(--ticket-edge) calc(var(--ticket-notch) + 1px), transparent calc(var(--ticket-notch) + 1px)),
-    radial-gradient(circle at 100% 100%, transparent var(--ticket-notch), var(--ticket-edge) var(--ticket-notch), var(--ticket-edge) calc(var(--ticket-notch) + 1px), transparent calc(var(--ticket-notch) + 1px)),
-    radial-gradient(circle at 50% 100%, transparent var(--ticket-hole), var(--ticket-edge) var(--ticket-hole), transparent calc(var(--ticket-hole) + .8px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x,
-    var(--ticket-paper);
-  background-origin: border-box;
-  border-top: 1px solid var(--ticket-edge);
-  content: "";
-  grid-column: auto;
-  grid-row: auto / stub;
-  inset: 0;
-  position: absolute;
-  z-index: -1;
-  -webkit-mask:
-    var(--ticket-bite-left), var(--ticket-bite-right),
-    radial-gradient(circle at 0 100%, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 100% 100%, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 50% 100%, transparent var(--ticket-hole), black calc(var(--ticket-hole) + .5px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x;
-  -webkit-mask-composite: source-in;
-  mask:
-    var(--ticket-bite-left), var(--ticket-bite-right),
-    radial-gradient(circle at 0 100%, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 100% 100%, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 50% 100%, transparent var(--ticket-hole), black calc(var(--ticket-hole) + .5px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x;
-  mask-composite: intersect;
-}
-/* The stub: the other half of each notch and each hole along its top edge, so the two halves meet as whole cuts. */
-.ticket-family .my-ticket::after {
-  background:
-    radial-gradient(circle at 0 0, transparent var(--ticket-notch), var(--ticket-edge) var(--ticket-notch), var(--ticket-edge) calc(var(--ticket-notch) + 1px), transparent calc(var(--ticket-notch) + 1px)),
-    radial-gradient(circle at 100% 0, transparent var(--ticket-notch), var(--ticket-edge) var(--ticket-notch), var(--ticket-edge) calc(var(--ticket-notch) + 1px), transparent calc(var(--ticket-notch) + 1px)),
-    radial-gradient(circle at 50% 0, transparent var(--ticket-hole), var(--ticket-edge) var(--ticket-hole), transparent calc(var(--ticket-hole) + .8px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x,
-    var(--ticket-paper);
-  background-origin: border-box;
-  border-bottom: 1px solid var(--ticket-edge);
-  content: "";
-  grid-column: auto;
-  grid-row: stub / auto;
-  inset: 0;
-  position: absolute;
-  z-index: -1;
-  -webkit-mask:
-    var(--ticket-bite-left), var(--ticket-bite-right),
-    radial-gradient(circle at 0 0, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 100% 0, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 50% 0, transparent var(--ticket-hole), black calc(var(--ticket-hole) + .5px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x;
-  -webkit-mask-composite: source-in;
-  mask:
-    var(--ticket-bite-left), var(--ticket-bite-right),
-    radial-gradient(circle at 0 0, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 100% 0, transparent var(--ticket-notch), black calc(var(--ticket-notch) + .5px)),
-    radial-gradient(circle at 50% 0, transparent var(--ticket-hole), black calc(var(--ticket-hole) + .5px)) 0 0 / var(--ticket-hole-pitch) 100% repeat-x;
-  mask-composite: intersect;
-}
-
 /* ---- Survivor table: a card table ----
    Green felt on the Wheel's deep greens, a brass rail from the Wheel's brass. On the felt, the layout: AFC and NFC, a row per division,
    a box per team; this week's chips sit on the teams taken, and a team that lost has its box swept. Around it, the seats. */
@@ -196,8 +81,6 @@
 .lab-stage.is-lamp { --ticket-paper: var(--lamp-ticket-paper); --club-paper: var(--lamp-paper); isolation: isolate; }
 .lab-stage.is-lamp::before { background: var(--lamp-pool); border-radius: 28px; content: ""; inset: -12px; pointer-events: none; position: absolute; z-index: -1; }
 .lab-stage.is-lamp .lab-felt { background-image: var(--lamp-felt-light), radial-gradient(ellipse at 50% 35%, rgba(255, 255, 255, .1), transparent 65%), repeating-radial-gradient(circle, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px); }
-.lab-stage.is-lamp .my-ticket { filter: var(--lamp-glow) drop-shadow(0 6px 12px rgba(37, 30, 18, .14)); }
-.lab-stage.is-lamp .slate-receipt-strip { filter: var(--lamp-glow) drop-shadow(0 0 .5px var(--receipt-rule)) var(--receipt-shadow); }
 
 /* ---- The clubhouse: each page a room, each keeping its own character ---- */
 .lab-clubhouse { display: grid; gap: 16px; }

@@ -137,7 +137,7 @@ export type Settings = {
   strokeText: string;
   submitState: "unsaved" | "saved";
   tiles: { remaining: string; wins: string };
-  /** Which split-flap counter the board starts on: the large games-left one or a player's small wins one. A tap turns to the other. */
+  /** Which split-flap counter the tile shows: the large games-left one or a player's small wins one, chosen in its settings. */
   flapStyle: "large" | "small";
   crest: { title: string; season: string; suffix: string };
   football: { paused: boolean; frame: number };
@@ -396,14 +396,12 @@ export const PIECES: Piece[] = [
   {
     id: "tile",
     title: "Split-flap counter",
-    note: "The Bowl Card's split-flap counters: the large one is how many bowl games are left, the small one a player's wins beside their name. Live, each picks a pace between 120 and 160 ms a flip. Tap it to turn to the other style.",
+    note: "The Bowl Card's split-flap counters: the large one is how many bowl games are left, the small one a player's wins beside their name. Live, each picks a pace between 120 and 160 ms a flip. Choose the style in its settings; both are shown at the same size. Tap it to flip again.",
     zoom: 1.6,
     tapToPlay: true,
     knobGroup: ({ flapStyle }) => (flapStyle === "large" ? "tile" : "wins"),
     draw: ({ settings: { tiles, knobs, flapStyle }, plays }) => {
-      // Each play turns to the other style, as the stamp turns W to L.
-      const large = (plays % 2 === 0) === (flapStyle === "large");
-      return large
+      return flapStyle === "large"
         ? <BowlScoreTile key={`large-${plays}-${knobs.pace}-${tiles.remaining}`} large pace={knobs.pace} settled value={Number(tiles.remaining || 0)} />
         : <span className="asset-flap-small"><BowlScoreTile key={`small-${plays}-${knobs.paceWins}-${tiles.wins}`} pace={knobs.paceWins} settled value={Number(tiles.wins || 0)} /></span>;
     },

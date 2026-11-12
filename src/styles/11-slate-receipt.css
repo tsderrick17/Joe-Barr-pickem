@@ -681,3 +681,39 @@
 @media (max-width: 379px) {
   .slate-receipt-strip.has-survivor:not(.bowl-receipt-strip) { grid-template-columns: 25% 54% 21%; }
 }
+
+/* The NFL receipt is printed on the ticket's stock with the ticket's ink, so the receipt and the ticket read as one family while each
+   keeps its own shape: double rules along the receipt's long edges, and its perforations a row of small punched holes in the ticket's
+   rhythm instead of long dashes. The Bowl Pool's receipt keeps its own look. */
+.slate-receipt-strip:not(.bowl-receipt-strip) {
+  --receipt-paper: var(--ticket-paper);
+  --receipt-rule: var(--ticket-edge);
+  --receipt-ink: var(--themed-text-6);
+  --receipt-label-ink: var(--ticket-small-ink);
+  --receipt-link-ink: var(--themed-text-6);
+  --receipt-shadow: drop-shadow(0 6px 12px rgba(37, 30, 18, .14));
+}
+.slate-receipt-strip:not(.bowl-receipt-strip) .slate-receipt-ticket::before,
+.slate-receipt-strip:not(.bowl-receipt-strip) .slate-receipt-pool::before {
+  border-bottom: 3px double var(--ticket-heavy-rule);
+  border-top: 3px double var(--ticket-heavy-rule);
+}
+.slate-receipt-strip:not(.bowl-receipt-strip) .slate-receipt-pool::after {
+  background:
+    radial-gradient(circle, rgba(37, 30, 18, .12) 0 1.1px, var(--receipt-rule) 1.1px, transparent 1.9px) 50% 0 / 100% 6px repeat-y,
+    var(--receipt-paper);
+  left: -3px;
+  width: 6px;
+}
+
+/* A saved receipt prints: once SUBMIT goes through, each section's status line runs out under the print head, left to right, the
+   Survivor line a beat after Pick'em. Only after a save, never on load; still with reduced motion. */
+.slate-receipt-strip em.is-printed { animation: receipt-print-line 620ms steps(18, end) both; }
+.slate-receipt-strip .slate-receipt-survivor em.is-printed { animation-delay: 240ms; }
+@keyframes receipt-print-line {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slate-receipt-strip em.is-printed { animation: none; }
+}
