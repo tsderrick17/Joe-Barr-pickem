@@ -316,7 +316,8 @@ export default function HomePage() {
 
   // The off-season shows every table whole: the hide and "− OUT" choices (and their buttons) are suspended until August 1.
   const offSeason = data.seasonPhase === "off_season";
-  // A player out of the playoff race gets the same quiet page as the off-season: no ticket, a banner, until August 1.
+  // A player out of the playoff race gets a quiet page: no ticket, a banner, until August 1. In the off-season the ticket is simply
+  // away and the Pick'em Pad stays as it is, with no note; the ticket comes back with the new season on August 1.
   const viewerEliminated = Boolean(viewerRow?.playoffEliminated);
   const viewerForfeited = Boolean(viewerRow?.forfeited);
   const seasonClosedForViewer = offSeason || viewerEliminated || viewerForfeited;
@@ -342,7 +343,7 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {seasonClosedForViewer ? <SeasonClosedBanner eliminated={!offSeason} forfeited={viewerForfeited && !offSeason} /> : <MyTicket
+        {offSeason ? null : seasonClosedForViewer ? <SeasonClosedBanner forfeited={viewerForfeited} /> : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}

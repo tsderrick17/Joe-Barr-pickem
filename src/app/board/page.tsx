@@ -310,7 +310,7 @@ export default function BoardPage() {
   const selectionLimit = week?.max_picks ?? 2;
 
   const isReadOnly = week?.status === "complete" || playoffEliminated || forfeited || seasonOver;
-  // The off-season, and a player out of the playoff race, get a quiet page: a banner instead of the receipt.
+  // The off-season, and a player out of the playoff race, get a quiet page with no receipt; only a player who is out also gets a banner.
   const seasonClosedForViewer = seasonOver || playoffEliminated || forfeited;
   const survivorSelectedGame = survivorPick
     ? games.find((game) => game.id === survivorPick.gameId) ?? null
@@ -602,7 +602,7 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
       <div className={`mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 sm:px-5 sm:pb-0 md:px-10 ${seasonClosedForViewer ? "pt-5 sm:pt-8" : "pt-0"}`}>
-        {seasonClosedForViewer ? <div className="mt-5"><SeasonClosedBanner eliminated={!seasonOver} forfeited={forfeited && !seasonOver} /></div> : null}
+        {seasonClosedForViewer && !seasonOver ? <div className="mt-5"><SeasonClosedBanner forfeited={forfeited} /></div> : null}
 
         {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}

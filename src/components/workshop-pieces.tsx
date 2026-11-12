@@ -22,7 +22,7 @@ import { ChoiceChips } from "@/components/commissioner/choice-chips";
 export type Knob = { key: string; label: string; min: number; max: number; step: number; unit: string; live: number };
 
 /** Every piece on the board, in the order they are listed below. */
-const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "season-over", "eliminated", "pull", "banner"];
+const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "eliminated", "pull", "banner"];
 
 /** The three trophy banners hang in the pool's colour (red Pick'em, blue Bowl, green Survivor), given here as oklch lightness, chroma and hue. */
 const CLOTH = {
@@ -489,18 +489,11 @@ export const PIECES: Piece[] = [
     </>,
   },
   {
-    id: "season-over",
-    title: "Season over banner",
-    zoom: 0.62,
-    note: "What players see once the season is over.",
-    draw: () => <div className="asset-banner"><SeasonClosedBanner /></div>,
-  },
-  {
     id: "eliminated",
     title: "Out of the race banner",
     zoom: 0.62,
     note: "What players see once they are out of the playoff race.",
-    draw: () => <div className="asset-banner"><SeasonClosedBanner eliminated /></div>,
+    draw: () => <div className="asset-banner"><SeasonClosedBanner /></div>,
   },
   {
     id: "pull",

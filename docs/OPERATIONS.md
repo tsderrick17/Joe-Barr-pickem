@@ -259,7 +259,7 @@ off-season (`public.season_phase()`). Nothing needs doing:
 - the score, line-lock, reminder, reminder-schedule and Bowl workers do not call Vercel (the pg_cron jobs and
   dispatchers return inside Supabase) and, if called, answer `skipped`; the watchdog and the preseason bootstrap
   keep running, and the watchdog does not alert on idle workers;
-- players see "See you next season!" and a read-only record; the Commissioner tools stay open;
+- players see a read-only record with no ticket and no note (the ticket comes back on August 1); the Commissioner tools stay open;
 - on August 1 the bootstrap job runs the annual rollover (blank season, certified cleanup, schedule import), and
   the phase flips back with no button to press. The Bowl Pool stays closed until December 1.
 

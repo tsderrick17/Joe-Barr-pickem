@@ -2,7 +2,7 @@
 
 ## Off-season
 
-After the Super Bowl is graded players see "See you next season!" and a read-only record, and the automatic workers go idle until August 1. Every Commissioner tool stays available. Nothing needs doing; the new season opens by itself on August 1.
+After the Super Bowl is graded players see a read-only record with no ticket (it comes back on August 1), and the automatic workers go idle until August 1. Every Commissioner tool stays available. Nothing needs doing; the new season opens by itself on August 1.
 
 ## Control-center overview
 
