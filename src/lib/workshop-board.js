@@ -9,20 +9,19 @@ export const WORKSHOP_SAVED_KEY = "pickem-workshop";
  * naming the piece that covers it, so the map reads like the board itself. A piece covers one filled rectangle; every cell is covered. Three
  * maps: a phone (2 columns), a tablet (4) and a computer (6). The tiles are in the computer's reading order on the page.
  */
-const C = "crest", F = "football", S = "submit", H = "highlight", K = "chip", P = "pull", M = "pennant", T = "tile", W = "wins", X = "stamp";
-const A = "banner-pickem", B = "banner-bowl", V = "banner-survivor", E = "eliminated", O = "season-over";
+const C = "crest", F = "football", S = "submit", H = "highlight", K = "chip", P = "pull", M = "pennant", T = "tile", X = "stamp";
+const N = "banner", E = "eliminated", O = "season-over";
 export const WORKSHOP_LAYOUTS = {
   phone: [
-    [C, C], [S, S], [F, H], [F, K], [P, P], [T, W], [M, X],
-    [A, B], [A, B], [V, V], [V, V], [E, E], [O, O],
+    [C, C], [S, S], [F, H], [F, K], [P, P], [T, N], [X, N], [M, M], [E, E], [O, O],
   ],
   tablet: [
-    [C, C, C, C], [F, F, S, S], [F, F, H, H], [P, P, P, P], [K, K, T, W],
-    [A, A, B, B], [A, A, B, B], [V, V, M, M], [V, V, X, X], [E, E, E, E], [O, O, O, O],
+    [C, C, C, C], [F, F, S, S], [F, F, H, H], [P, P, P, P], [K, K, T, T],
+    [N, N, M, M], [N, N, X, X], [E, E, E, E], [O, O, O, O],
   ],
   desktop: [
     [C, C, C, C, F, F], [S, S, H, K, F, F], [P, P, P, P, M, M],
-    [A, A, B, B, V, V], [A, A, B, B, V, V], [E, E, E, E, E, E], [O, O, O, X, T, W],
+    [N, N, E, E, E, E], [N, N, O, O, O, O], [N, N, X, X, T, T],
   ],
 };
 

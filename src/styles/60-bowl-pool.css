@@ -3,7 +3,8 @@
    lettering for names and lines, and megaphones in each school's colors.
    Pick'em keeps its newsprint and Survivor its poker felt. */
 .bowl-pool-page,
-.bowl-card-section {
+.bowl-card-section,
+.workshop .workshop-stage {
   --bowl-navy: #16223a;
   --bowl-navy-lift: #1f2f50;
   --bowl-gold: #b38b4d;
@@ -389,7 +390,8 @@ html[data-theme="night"] .bowl-pool-page #bowl-selections { --bowl-paper: var(--
   will-change: transform;
   z-index: 2;
 }
-.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink); }
+.bowl-card-section .bowl-standings-player-row .bowl-standings-sticky .bowl-score-tile .bowl-flap-half > span,
+.workshop-stage .bowl-score-tile .bowl-flap-half > span { color: var(--flap-ink); }
 /* Flat flaps: no 3D, so no perspective or hidden back faces to draw. */
 
 /* Each digit is sealed off: a flip redraws that digit only, never the table around it. */
