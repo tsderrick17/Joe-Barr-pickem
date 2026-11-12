@@ -241,7 +241,7 @@ test("the Slate board: a pick gets its frame; Survivor marks used teams and move
   await expect(board.locator(".lab-board-cell:not(:disabled)")).toHaveCount(0);
 });
 
-test("the Trophy Room: engraved plaques with each pool's mark and a star per title; a new champion's pennant swings in", async ({ page }) => {
+test("the Trophy Room: engraved plaques with a star per title; a new champion's pennant swings in", async ({ page }) => {
   await openLab(page, "clubhouse");
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room" }).click();
   await expect(page.getByRole("article", { name: "2025 champions" }).getByLabel("2 titles")).toHaveCount(1);

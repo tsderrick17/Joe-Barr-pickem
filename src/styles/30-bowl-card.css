@@ -6,7 +6,7 @@
 @media (min-width: 640px) { .bowl-receipt-frame-inner { padding-inline: 21px; width: min(64rem, calc(100% + 3rem)); } }
 @media (min-width: 768px) { .bowl-receipt-frame-inner { padding-inline: 41px; } }
 .bowl-receipt-strip { align-items: stretch; }
-.bowl-receipt-strip .slate-receipt-ticket { justify-content: space-between; min-width: 0; }
+.bowl-receipt-strip .slate-receipt-ticket { --receipt-paper: var(--bowl-slip-stub); --receipt-label-ink: var(--bowl-slip-stub-ink); justify-content: space-between; min-width: 0; }
 .bowl-receipt-strip .slate-receipt-print { margin-bottom: auto; margin-top: auto; }
 .bowl-receipt-strip .slate-receipt-pool { min-width: 0; }
 .bowl-receipt-strip .slate-receipt-pool > span { align-self: center; }

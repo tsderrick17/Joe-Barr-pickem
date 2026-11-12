@@ -509,3 +509,32 @@ section.pickem-ledger.bowl-card-section .bowl-standings-head-end { background: v
 .bowl-pool-page .bowl-how { margin: .35rem auto 0; max-width: 34rem; padding-left: 1.1rem; }
 .bowl-pool-page .bowl-how .how-toggle { color: var(--bowl-ink); font-size: .68rem; font-weight: 700; letter-spacing: .12em; min-height: 2.25rem; padding: 0; text-transform: uppercase; }
 .bowl-pool-page #bowl-selections .how-fold .bowl-rules-compact { margin-top: 0; padding-bottom: .1rem; }
+
+/* ---- The Bowl receipt: the Bowl Pool's own slip, not the NFL receipt in other colours.
+   A navy stub with gold lettering, torn from cream paper along a row of gold-rimmed holes; gold double rules along the long edges,
+   like the keyline around the Bowl card; the crest's three stars after BOWL POOL. Same shape, size and words as before. */
+.bowl-receipt-strip {
+  --receipt-paper: var(--bowl-slip-paper);
+  --receipt-rule: var(--bowl-slip-gold);
+  --receipt-ink: var(--bowl-slip-ink);
+  --receipt-label-ink: var(--bowl-slip-ink);
+  --receipt-shadow: var(--bowl-slip-shadow);
+  --receipt-metrics-edge: var(--bowl-slip-gold);
+  --receipt-metric-divider: var(--bowl-slip-gold);
+  --receipt-metric-ink: var(--bowl-slip-ink);
+  --receipt-metric-label-ink: var(--bowl-slip-label);
+  --receipt-note-ink: var(--bowl-slip-label);
+}
+.bowl-receipt-strip .slate-receipt-ticket::before,
+.bowl-receipt-strip .slate-receipt-pool::before { border-bottom: 3px double var(--bowl-slip-gold); border-top: 3px double var(--bowl-slip-gold); }
+.bowl-receipt-strip .slate-receipt-pool::after {
+  background:
+    radial-gradient(circle, var(--bowl-slip-paper) 0 1.1px, var(--bowl-slip-gold) 1.1px, transparent 1.9px) 50% 0 / 100% 6px repeat-y,
+    var(--bowl-slip-stub);
+  left: -3px;
+  width: 6px;
+}
+.bowl-receipt-strip .bowl-receipt-metric { background: var(--bowl-slip-box); }
+.bowl-receipt-strip .receipt-printing-status { color: var(--bowl-slip-stub-ink); }
+.bowl-receipt-strip .receipt-printing-marks i { background: var(--bowl-slip-gold); }
+.bowl-receipt-summary > span::after { color: var(--bowl-slip-gold); content: "★ ★ ★"; font-size: .9em; letter-spacing: .2em; margin-left: .7em; }

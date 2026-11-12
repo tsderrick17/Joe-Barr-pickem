@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The Bowl receipt gets its own look; quieter plaques (Lab)
+
+The owner answered the two questions left open by the Lab review. The Bowl Pool's receipt should have its own feel that fits the pool,
+not the NFL receipt's: it is now a navy stub with gold lettering torn from cream paper along gold-rimmed holes, with gold double rules
+(the Bowl card's keyline) and the crest's three stars after BOWL POOL. Its shape, size, words, lettering and the SUBMIT button are
+unchanged, and its colours are set once as tokens for day and night. The Trophy Room plaques in the Lab should be restrained with a
+few deliberate, classy details: the screws, pool marks and glare are gone; what stays is satin brass with indented corners, one
+engraved keyline that follows them, the year between two laurel sprigs, a diamond rule, dotted leaders and a small star per title.
+
 ## 2026-11-12 - Survivor table rebuilt, lamp-lit polished, Pad skins tried (Lab)
 
 The owner liked the Survivor table but found it far from showing the right information simply, and asked for the divisions to line
