@@ -4,6 +4,7 @@ import { useState } from "react";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
 import { LabClubhouse } from "@/components/lab/lab-clubhouse";
 import { LabPadSkins } from "@/components/lab/lab-pad-skins";
+import { LabToteBoard } from "@/components/lab/lab-tote-board";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { WorkshopTabs } from "@/components/workshop-tabs";
 import { LAB_SHELF, labChoice, type LabTryOut } from "@/lib/lab-shelf.js";
@@ -56,6 +57,7 @@ export default function WorkshopLabPage() {
         </div>
         {lamp ? <p className="workshop-lab-intro lab-lamp-note">Lamp-lit shows in night mode: switch to night with the moon at the top.</p> : null}
         <div className={`lab-stage ${lamp ? "is-lamp" : ""}`}>
+          {choice === "tote" ? <LabToteBoard /> : null}
           {choice === "skins" ? <LabPadSkins /> : null}
           {choice === "clubhouse" ? <LabClubhouse /> : null}
           {choice === "survivor" ? <LabSurvivorTable /> : null}

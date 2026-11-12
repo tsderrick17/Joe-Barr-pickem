@@ -16,7 +16,7 @@ import { teamLogoScale } from "@/lib/team-logo-scale.js";
  *    Slate chalkboard, the trophy mantle, the bar, the Survivor table, the Bowl Pool corner), and each shows a line of live news, so
  *    many visits need no tap at all. One tap opens a room; one "Back to Clubhouse" button at the top of every room goes back. No swiping.
  *  - Standings: the leaderboard of hand-set number plates, and each player's picks on a golf standard.
- *  - The Slate: the big board, a gilt frame drawn round a pick, and Survivor picked on the same board.
+ *  - The Slate: the big board, a gilt line drawn round a pick, and Survivor picked on the same board.
  *  - Trophy Room: one tall wall to scroll, the way you would look at a real one: the champions' banners up in the rafters (the real
  *    banners), the three trophies on the mantle (the real trophies), and a brass plaque for every season down the front of the bar.
  *  - Survivor: the card table. The bar and the Bowl Pool corner are stand-ins that say what will open there.
@@ -117,7 +117,8 @@ function StandingsRoom() {
 type Trace = "gilt" | "brass" | "lit";
 type SlateScene = "picking" | "gameday" | "out";
 
-function SlateRoom() {
+/** The Slate's big board. `tote` sets it in the tote board's housing with the gilt line only, as the Tote board try-out shows it. */
+export function SlateRoom({ tote = false }: { tote?: boolean }) {
   const [scene, setScene] = useState<SlateScene>("picking");
   const [trace, setTrace] = useState<Trace>("gilt");
   const [mode, setMode] = useState<"ats" | "survivor">("ats");
@@ -145,9 +146,9 @@ function SlateRoom() {
     <div className="lab-room-stack">
       <div className="lab-room-controls">
         <Chips label="Moment" onChange={setScene} options={[["picking", "Picking"], ["gameday", "Game day"], ["out", "Out of Survivor"]] as const} value={scene} />
-        <Chips label="Pick highlight" onChange={setTrace} options={[["gilt", "Gilt edge"], ["brass", "Brass inlay"], ["lit", "Lit line"]] as const} value={trace} />
+        {tote ? null : <Chips label="Pick highlight" onChange={setTrace} options={[["gilt", "Gilt edge"], ["brass", "Brass inlay"], ["lit", "Lit line"]] as const} value={trace} />}
       </div>
-      <div className={`lab-bigboard is-${mode} trace-${trace}`}>
+      <div className={`lab-bigboard is-${mode} trace-${tote ? "gilt" : trace}${tote ? " is-tote" : ""}`}>
         <header>
           <h3>THE BOARD</h3>
           <span>WEEK 10 · {mode === "ats" ? `PICKS ${picks.length} OF 2` : survivor.out ? `SURVIVOR · OUT WK ${survivor.outWeek}` : chip ? `SURVIVOR · ${chip}` : "SURVIVOR · OPEN"}</span>
