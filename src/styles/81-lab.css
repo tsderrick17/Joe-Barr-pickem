@@ -201,66 +201,155 @@
 
 /* ---- The clubhouse: each page a room, each keeping its own character ---- */
 .lab-clubhouse { display: grid; gap: 16px; }
+.lab-room-stack { display: grid; gap: 14px; }
+.lab-room-controls { display: grid; gap: 8px; }
 /* The doors: one per room, a brass knob on each. */
-.lab-doors { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); }
+.lab-doors { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
 .lab-doors button { align-items: center; background: linear-gradient(var(--club-paper), var(--club-page)); border: 1px solid var(--club-line); border-radius: 10px 10px 2px 2px; color: var(--club-ink); cursor: pointer; display: flex; font-size: 12px; font-weight: 700; gap: 6px; justify-content: center; min-height: 52px; padding: 0 6px; text-align: center; }
 .lab-doors button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
 .lab-door-knob { background: radial-gradient(circle at 35% 35%, var(--cw-brass-1), var(--cw-gold) 60%); border-radius: 50%; flex: none; height: 8px; width: 8px; }
+.lab-room-logo { height: 22px; object-fit: contain; width: 22px; }
 
-/* Standings: the leaderboard, white number plates hand-set on a green board. */
-.lab-leaderboard { background: var(--cw-green); border: 6px solid var(--cw-deep); border-radius: 6px; box-shadow: 0 8px 18px rgba(37, 30, 18, .25); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 14px 14px 10px; width: 100%; }
+/* Standings: the leaderboard, white number plates hand-set on a green board. A row lifts its player's standard beneath it. */
+.lab-leaderboard { background: linear-gradient(rgba(255, 255, 255, .04), transparent 40%), var(--cw-green); border: 6px solid var(--cw-deep); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .35), 0 8px 18px rgba(37, 30, 18, .25); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 14px 12px 10px; width: 100%; }
 .lab-leaderboard header { align-items: baseline; border-bottom: 2px solid var(--cw-gold); display: grid; grid-template-columns: 1fr auto; padding-bottom: 8px; }
 .lab-leaderboard header p { color: var(--cw-gold-lt); font-size: .62rem; font-weight: 800; grid-column: 1 / -1; letter-spacing: .24em; margin: 0; }
 .lab-leaderboard h3 { font-family: var(--font-serif); font-size: 1.6rem; letter-spacing: .12em; margin: 0; }
 .lab-leaderboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 800; letter-spacing: .16em; }
-.lab-leaderboard ol { display: grid; gap: 5px; list-style: none; margin: 10px 0 0; padding: 0; }
-.lab-leaderboard li { display: grid; gap: 5px; grid-template-columns: 2.2rem 1fr 2.6rem 2.6rem; }
-.lab-plate { align-items: center; background: linear-gradient(var(--cw-brass-1), var(--cw-cream)); border-radius: 2px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 1px 1px rgba(0, 0, 0, .4); color: var(--cw-deep); display: flex; font-family: Arial, Helvetica, sans-serif; font-size: 1.05rem; font-weight: 900; height: 2.1rem; justify-content: center; }
-.lab-plate.is-name { justify-content: flex-start; letter-spacing: .1em; padding: 0 10px; }
+.lab-leaderboard-heads { color: var(--cw-gold-lt); display: grid; font-size: .56rem; font-weight: 800; gap: 5px; grid-template-columns: 2.4rem minmax(0, 1fr) 2.6rem 2.6rem; letter-spacing: .14em; padding: 8px 0 4px; text-align: center; }
+.lab-leaderboard-heads span:nth-child(2) { padding-left: 10px; text-align: left; }
+.lab-leaderboard ol { display: grid; gap: 5px; list-style: none; margin: 0; padding: 0; }
+.lab-leaderboard-row { background: none; border: 0; color: inherit; cursor: pointer; display: grid; gap: 5px; grid-template-columns: 2.4rem minmax(0, 1fr) 2.6rem 2.6rem; padding: 0; text-align: inherit; width: 100%; }
+.lab-leaderboard-row:focus-visible { outline: 2px solid var(--cw-gold); outline-offset: 2px; }
+.lab-plate { align-items: center; background: linear-gradient(var(--cw-brass-1), var(--cw-cream)); border-radius: 2px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 1px 1px rgba(0, 0, 0, .4); color: var(--cw-deep); display: flex; font-family: Arial, Helvetica, sans-serif; font-size: 1.05rem; font-weight: 900; height: 2.1rem; justify-content: center; min-width: 0; }
+.lab-plate.is-name { gap: 8px; justify-content: flex-start; letter-spacing: .1em; overflow: hidden; padding: 0 10px; }
+.lab-plate.is-name small { background: var(--cw-deep); border-radius: 2px; color: var(--cw-cream); font-size: .56rem; letter-spacing: .14em; padding: 2px 5px; }
 .lab-plate.is-back { color: var(--cw-bad); }
-.lab-leaderboard footer { display: grid; font-size: .58rem; font-weight: 800; gap: 5px; grid-template-columns: 1fr 2.6rem 2.6rem; letter-spacing: .12em; padding-top: 6px; text-align: center; }
-.lab-leaderboard footer span:first-child { grid-column: 2; }
+.lab-leaderboard-row[aria-expanded="true"] .lab-plate { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 0 0 2px var(--cw-gold); }
+/* A player out of the playoff race: the plates turned to their blank green side. */
+.is-out .lab-plate { background: linear-gradient(rgb(31 74 58), rgb(22 58 46)); color: rgba(244, 239, 227, .55); }
+.lab-leaderboard-raised { display: flex; justify-content: center; padding: 12px 0 6px; }
+.lab-leaderboard-note { color: var(--cw-gold-lt); font-size: .62rem; letter-spacing: .08em; margin: 10px 0 0; text-align: center; }
+
+/* The standard: a white sign on a pole, the player's name on the top slat and a slat per pick, as carried round a golf course. */
+.lab-standard { align-items: center; display: grid; justify-items: center; margin: 0; position: relative; width: 11.5rem; }
+.lab-standard-sign { background: linear-gradient(rgb(255 255 253), rgb(240 238 232)); border: 1px solid rgba(31, 27, 22, .35); border-radius: 3px; box-shadow: inset 0 0 0 3px rgb(255 255 253), inset 0 0 0 4px rgba(31, 27, 22, .55), 0 6px 12px rgba(0, 0, 0, .3); color: rgb(24 22 20); padding: 8px 9px 7px; width: 100%; }
+.lab-standard-name { border-bottom: 2px solid rgb(24 22 20); font-family: Arial, Helvetica, sans-serif; font-size: .92rem; font-weight: 900; letter-spacing: .14em; margin: 0 0 4px; padding-bottom: 4px; text-align: center; }
+.lab-standard-name small { color: rgb(110 104 96); font-size: .55rem; letter-spacing: .12em; }
+.lab-standard ol { display: grid; gap: 3px; list-style: none; margin: 0; padding: 0; }
+.lab-standard li { align-items: center; background: rgb(248 247 243); border: 1px solid rgba(31, 27, 22, .14); display: grid; font-family: "Courier New", monospace; font-size: .82rem; gap: 4px; grid-template-columns: 3.1rem 1fr 1.2rem; height: 1.6rem; padding: 0 6px; }
+.lab-standard li b { letter-spacing: .06em; }
+.lab-standard li span { text-align: right; }
+.lab-standard li i { background: rgb(24 22 20); border-radius: 50%; height: 6px; justify-self: center; opacity: .55; width: 6px; }
+.lab-standard li .ats-result-stamp { justify-self: center; margin-block: -.2rem; }
+/* The sign is white by day and night, so its W and L keep their day inks. */
+.lab-standard li.is-w .ats-result-stamp { color: rgb(22 131 78); }
+.lab-standard li.is-l .ats-result-stamp { color: rgb(189 48 40); }
+.lab-standard li.is-hidden { background: repeating-linear-gradient(135deg, rgb(244 243 238) 0 6px, rgb(236 234 228) 6px 12px); grid-template-columns: 1fr; justify-items: center; }
+.lab-standard-lock { font-size: .7rem; opacity: .7; }
+.lab-standard-pole { background: linear-gradient(90deg, rgb(120 110 96), rgb(214 206 190) 45%, rgb(120 110 96)); border-radius: 0 0 2px 2px; height: 2.4rem; width: 6px; }
+.lab-standard-hook { left: calc(50% + 7px); position: absolute; top: calc(100% - 2.1rem); }
+.lab-standard-hook::before { border: 1.5px solid rgb(140 130 116); border-radius: 0 0 6px 6px; border-top: 0; content: ""; height: 6px; left: -3px; position: absolute; top: -4px; width: 8px; }
+.lab-standard-chip-back { background: repeating-conic-gradient(rgb(22 58 46) 0 30deg, rgb(244 239 227) 30deg 60deg); border: 2px solid rgb(22 58 46); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, .35); display: block; height: 1.7rem; width: 1.7rem; }
+.lab-course { display: grid; gap: 22px 12px; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); justify-items: center; }
+.lab-course .lab-standard { width: 100%; }
 
 /* The Slate: the big board at a sportsbook, lit amber lines on black. */
-.lab-bigboard { background: rgb(14 14 12); border: 4px solid rgb(52 50 46); border-radius: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--cw-warn); font-family: "Courier New", monospace; margin: 0 auto; max-width: 640px; padding: 12px; width: 100%; }
+.lab-bigboard { background: rgb(14 14 12); border: 4px solid rgb(52 50 46); border-radius: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--cw-warn); display: grid; font-family: "Courier New", monospace; gap: 10px; margin: 0 auto; max-width: 640px; padding: 12px; width: 100%; }
 .lab-bigboard header { border-bottom: 1px dashed rgba(240, 180, 41, .4); display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; padding-bottom: 8px; }
 .lab-bigboard h3 { font-size: 1.2rem; letter-spacing: .2em; margin: 0; text-shadow: 0 0 6px rgba(240, 180, 41, .55); }
 .lab-bigboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 700; }
+.lab-bigboard .lab-chips { justify-content: center; }
+.lab-bigboard .lab-chips button { background: transparent; border-color: rgba(240, 180, 41, .45); color: var(--cw-gold-lt); font-family: "Courier New", monospace; min-height: 40px; }
+.lab-bigboard .lab-chips button[aria-pressed="true"] { background: var(--cw-gold); border-color: var(--cw-gold); color: rgb(14 14 12); }
 .lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
-.lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px; grid-template-columns: 1fr 3.2rem; padding: 8px 0; }
+.lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px 8px; grid-template-columns: 1fr 1fr; padding: 8px 0 10px; }
 .lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+.lab-board-at { display: none; }
+.lab-board-cell { align-items: center; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 2px; color: inherit; cursor: pointer; display: grid; font: inherit; gap: 2px 6px; grid-template-columns: 1fr auto; min-height: 3.1rem; padding: 6px 9px; position: relative; text-align: left; }
+.lab-board-cell:disabled { cursor: default; }
+.lab-board-cell:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-team { align-items: center; color: var(--cw-cream); display: flex; font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .12em; }
 .lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
-.lab-board-at { display: none; }
-.lab-room-logo { height: 22px; object-fit: contain; width: 22px; }
+.lab-board-tag { color: rgba(244, 239, 227, .6); font-size: .58rem; grid-column: 1 / -1; letter-spacing: .12em; text-decoration: line-through; }
+.lab-board-lock { font-size: .7rem; opacity: .7; position: absolute; right: 6px; top: 4px; }
+.lab-board-cell.is-locked { opacity: .55; }
+.lab-board-chip { position: absolute; right: -8px; top: -10px; z-index: 2; }
+.lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }
+/* Survivor on the board: the lines do not matter, so they dim; used teams are struck. */
+.lab-bigboard.is-survivor .lab-board-line { opacity: .3; text-shadow: none; }
+.lab-bigboard.is-survivor .lab-board-cell.is-used .lab-board-team { opacity: .45; }
+.lab-bigboard.is-survivor .lab-board-trace { display: none; }
 
-/* Trophy Room: a lit case of brass plaques. */
-.lab-case { background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255, 230, 170, .25), transparent 70%), linear-gradient(rgb(46 30 22), rgb(26 17 12)); border: 6px solid rgb(74 50 34); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); padding: 16px; }
+/* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, then a second rule settles
+   inside it, the double gilt frame of a club's honours board. Nothing repeats; reduced motion shows the frame at once. */
+@property --gilt-sweep { inherits: false; initial-value: 360deg; syntax: "<angle>"; }
+.lab-board-trace { border-radius: 2px; inset: -1px; pointer-events: none; position: absolute; }
+.trace-gilt .is-picked .lab-board-trace { --gilt-sweep: 360deg; animation: gilt-draw 620ms cubic-bezier(.3, .1, .2, 1) both; border: 1.5px solid var(--cw-gold); -webkit-mask: conic-gradient(black var(--gilt-sweep), transparent 0); mask: conic-gradient(black var(--gilt-sweep), transparent 0); }
+.trace-gilt .is-picked .lab-board-trace::after { animation: gilt-settle 300ms 560ms ease-out both; border: 1px solid rgba(230, 207, 152, .75); border-radius: 1px; content: ""; inset: 3px; position: absolute; }
+.trace-gilt .is-picked .lab-board-team { color: var(--cw-gold-lt); }
+@keyframes gilt-draw { from { --gilt-sweep: 0deg; } to { --gilt-sweep: 360deg; } }
+@keyframes gilt-settle { from { opacity: 0; } to { opacity: 1; } }
+/* Brass inlay: the picked cell becomes a small brass plate, the lettering engraved into it. */
+.trace-brass .is-picked { background: linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 50%, var(--cw-brass-3)); border-color: rgba(42, 31, 0, .5); box-shadow: inset 0 1px 0 rgba(255, 253, 247, .6), inset 0 -1px 0 rgba(42, 31, 0, .35); }
+.trace-brass .is-picked .lab-board-team,
+.trace-brass .is-picked .lab-board-line { color: var(--cw-pip-ink); text-shadow: 0 1px 0 rgba(255, 253, 247, .45); }
+/* Lit line: only the number warms to gold, with a thin gold rule beneath it. */
+.trace-lit .is-picked .lab-board-line { border-bottom: 1px solid var(--cw-gold); color: var(--cw-gold-lt); }
+@media (prefers-reduced-motion: reduce) {
+  .trace-gilt .is-picked .lab-board-trace,
+  .trace-gilt .is-picked .lab-board-trace::after { animation: none; }
+}
+
+/* Trophy Room: a lit case; plaques of engraved brass on walnut. Only the trophy moves in the real room; here a plaque never moves. */
+.lab-case { background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255, 230, 170, .25), transparent 70%), linear-gradient(rgb(46 30 22), rgb(26 17 12)); border: 6px solid rgb(74 50 34); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); display: grid; gap: 14px; overflow: hidden; padding: 16px; }
 .lab-case header { text-align: center; }
 .lab-case h3 { font-family: var(--font-serif); font-size: 1.5rem; margin: 0; }
-.lab-case header p { color: var(--cw-gold-lt); font-size: .8rem; margin: 2px 0 12px; }
-.lab-case-shelf { border-bottom: 6px solid rgb(74 50 34); display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding-bottom: 10px; }
-.lab-plaque { background: linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 45%, var(--cw-brass-3) 70%, var(--cw-gold)); border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(255, 253, 247, .5), inset 0 0 0 4px rgba(42, 31, 0, .25), 0 3px 6px rgba(0, 0, 0, .5); color: var(--cw-pip-ink); padding: 10px 12px; text-align: center; }
-.lab-plaque-season { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; }
-.lab-plaque dl { display: grid; gap: 3px; margin: 0; }
-.lab-plaque dl div { display: flex; font-size: .8rem; justify-content: space-between; }
-.lab-plaque dt { font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.lab-plaque dd { font-family: var(--font-serif); font-weight: 700; margin: 0; }
-
-/* Bowl Pool: the game-day program, navy and gold. */
-.lab-program { background: rgb(22 34 58); border: 1px solid var(--cw-gold); border-radius: 4px; box-shadow: inset 0 0 0 5px rgb(22 34 58), inset 0 0 0 6px var(--cw-gold), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 22px 20px; width: 100%; }
-.lab-program header { border-bottom: 1px solid rgba(201, 164, 95, .6); padding-bottom: 12px; text-align: center; }
-.lab-program header p { color: var(--cw-gold); font-size: .62rem; font-weight: 800; letter-spacing: .3em; margin: 0; }
-.lab-program h3 { font-family: var(--font-serif); font-size: 1.8rem; font-style: italic; margin: 4px 0; }
-.lab-program header span { color: var(--cw-gold-lt); font-size: .78rem; }
-.lab-program ol { display: grid; list-style: none; margin: 10px 0 0; padding: 0; }
-.lab-program li { align-items: baseline; border-bottom: 1px dotted rgba(201, 164, 95, .45); display: grid; gap: 10px; grid-template-columns: 3.4rem 1fr auto; padding: 9px 0; }
-.lab-program li span { color: var(--cw-gold); font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
-.lab-program li strong { font-family: var(--font-serif); font-size: 1rem; }
-.lab-program li em { color: var(--cw-gold-lt); font-size: .75rem; }
+.lab-case header p { color: var(--cw-gold-lt); font-size: .8rem; margin: 2px 0 0; }
+.lab-case-countdown { align-items: baseline; background: linear-gradient(var(--cw-brass-3), var(--cw-gold)); border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255, 253, 247, .5), 0 2px 4px rgba(0, 0, 0, .45); color: var(--cw-pip-ink); display: inline-flex; flex-wrap: wrap; gap: 0 10px; justify-content: center; margin-top: 10px; padding: 5px 12px; }
+.lab-case-countdown span { font-size: .6rem; font-weight: 800; letter-spacing: .14em; white-space: nowrap; }
+.lab-case-countdown strong { font-family: var(--font-serif); font-size: 1rem; }
+.lab-case-countdown small { flex-basis: 100%; font-size: .55rem; font-style: italic; opacity: .7; }
+.lab-case-shelf { border-bottom: 6px solid rgb(74 50 34); display: grid; gap: 12px; grid-template-columns: minmax(0, 15rem); justify-content: center; padding-bottom: 12px; }
+/* The plaque: a bevelled walnut backing, a brass plate with an engraved double border and four slotted screws at its corners. */
+.lab-plaque { background: linear-gradient(135deg, rgb(92 58 36), rgb(58 34 20) 60%, rgb(76 46 28)); border-radius: 5px; box-shadow: inset 1px 1px 0 rgba(255, 220, 170, .25), inset -1px -1px 0 rgba(0, 0, 0, .5), 0 4px 8px rgba(0, 0, 0, .55); padding: 9px; position: relative; }
+.lab-plaque-plate { background: linear-gradient(170deg, rgba(255, 253, 247, .55), transparent 28%), repeating-linear-gradient(90deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 3px), linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 48%, var(--cw-brass-3) 72%, var(--cw-gold)); border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(42, 31, 0, .45), inset 0 0 0 3px rgba(255, 253, 247, .4), inset 0 0 0 4px rgba(42, 31, 0, .35), 0 1px 2px rgba(0, 0, 0, .5); color: var(--cw-pip-ink); padding: 8px 10px 10px; position: relative; text-align: center; }
+.lab-plaque-screws { background:
+    radial-gradient(circle, rgb(240 226 190) 0 1.6px, rgb(140 112 60) 2.2px, transparent 2.8px) 4px 4px / 6px 6px no-repeat,
+    radial-gradient(circle, rgb(240 226 190) 0 1.6px, rgb(140 112 60) 2.2px, transparent 2.8px) calc(100% - 4px) 4px / 6px 6px no-repeat,
+    radial-gradient(circle, rgb(240 226 190) 0 1.6px, rgb(140 112 60) 2.2px, transparent 2.8px) 4px calc(100% - 4px) / 6px 6px no-repeat,
+    radial-gradient(circle, rgb(240 226 190) 0 1.6px, rgb(140 112 60) 2.2px, transparent 2.8px) calc(100% - 4px) calc(100% - 4px) / 6px 6px no-repeat;
+  inset: 3px; pointer-events: none; position: absolute; z-index: 1; }
+.lab-plaque-laurel { display: block; fill: rgba(42, 31, 0, .55); height: 14px; margin: 0 auto 2px; stroke: rgba(42, 31, 0, .55); stroke-width: .8; width: 52px; }
+.lab-plaque-laurel path { fill: none; }
+.lab-plaque-season { border-bottom: 1px solid rgba(42, 31, 0, .4); font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin: 0 0 5px; padding-bottom: 3px; text-shadow: 0 1px 0 rgba(255, 253, 247, .5); }
+.lab-plaque dl { display: grid; gap: 4px; margin: 0; }
+.lab-plaque dl div { align-items: baseline; display: flex; font-size: .8rem; gap: 6px; justify-content: space-between; }
+.lab-plaque dt { align-items: center; display: flex; font-size: .58rem; font-weight: 800; gap: 4px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.lab-plaque-mark { fill: none; flex: none; height: 10px; stroke: currentColor; stroke-linecap: round; stroke-width: 1.1; width: 10px; }
+.lab-plaque dd { color: rgb(20 14 0); font-family: var(--font-serif); font-weight: 700; margin: 0; text-shadow: 0 1px 0 rgba(255, 253, 247, .45); white-space: nowrap; }
+.lab-plaque-stars { font-size: .55rem; letter-spacing: .05em; margin-left: 3px; vertical-align: .15em; }
+/* A champion is crowned: their pennant swings down from the rod and settles, once. */
+.lab-crowning { display: grid; justify-items: center; }
+.lab-crowning-rod { background: linear-gradient(var(--cw-brass-1), var(--cw-gold) 50%, rgb(140 112 60)); border-radius: 3px; box-shadow: 0 2px 3px rgba(0, 0, 0, .5); height: 6px; width: 9rem; }
+.lab-pennant { animation: pennant-swing 1400ms cubic-bezier(.3, .6, .3, 1) both; background: linear-gradient(rgb(140 30 36), rgb(108 20 26)); box-shadow: inset 0 0 0 2px rgba(230, 207, 152, .55), 0 6px 10px rgba(0, 0, 0, .45); clip-path: polygon(0 0, 100% 0, 100% 78%, 50% 100%, 0 78%); color: var(--cw-gold-lt); display: grid; gap: 2px; justify-items: center; padding: 10px 14px 26px; text-align: center; transform-origin: 50% 0; width: 8rem; }
+.lab-pennant span { font-size: .52rem; font-weight: 800; letter-spacing: .16em; }
+.lab-pennant strong { font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: .06em; }
+.lab-pennant small { font-size: .5rem; font-weight: 800; letter-spacing: .2em; }
+@keyframes pennant-swing {
+  0% { opacity: 0; transform: rotate(-70deg); }
+  35% { opacity: 1; transform: rotate(14deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(2.5deg); }
+  100% { transform: rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-pennant { animation: none; }
+}
 
 @media (min-width: 768px) {
-  .lab-bigboard li { grid-template-columns: 9rem 1fr 4rem 1.6rem 1fr 4rem; }
+  .lab-bigboard li { grid-template-columns: 9rem 1fr 1.6rem 1fr; }
   .lab-board-time { grid-column: auto; }
   .lab-board-at { color: rgba(240, 180, 41, .6); display: block; text-align: center; }
+  .lab-case-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); justify-content: stretch; }
 }
