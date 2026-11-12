@@ -191,23 +191,28 @@ test("the wheel's Workshop spoke opens the showroom", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Workshop" })).toBeVisible();
 });
 
-test("the split-flap counter shows both Bowl Card styles in one tile: a tap turns to the other, and each style is tuned on its own", async ({ page }) => {
+test("the split-flap counter shows either Bowl Card style, chosen in its settings, at the same size; a tap flips it again in the same style", async ({ page }) => {
   await openBoard(page);
   const tile = page.locator("[data-piece=tile]");
-  await expect(tile.locator(".bowl-score-tile.is-large")).toHaveAttribute("aria-label", "12 wins");
-  await expect(tile.locator(".bowl-score-tile.is-large .bowl-flap-half > span").first(), "the large digits are the Bowl's gold, not dark on navy").toHaveCSS("color", "rgb(230, 214, 180)");
+  const large = tile.locator(".bowl-score-tile.is-large");
+  await expect(large).toHaveAttribute("aria-label", "12 wins");
+  await expect(large.locator(".bowl-flap-half > span").first(), "the large digits are the Bowl's gold, not dark on navy").toHaveCSS("color", "rgb(230, 214, 180)");
+  const largeBox = await tile.locator(".bowl-flap").first().boundingBox();
   await (await nearestMiddle(page, "Play the split-flap counter")).click();
-  await expect(tile.locator(".bowl-score-tile:not(.is-large)")).toHaveAttribute("aria-label", "7 wins");
-  await (await nearestMiddle(page, "Play the split-flap counter")).click();
-  await expect(tile.locator(".bowl-score-tile.is-large")).toHaveCount(1);
+  await expect(large, "a tap keeps the style").toHaveCount(1);
   await (await nearestMiddle(page, "Tune the split-flap counter")).click();
   const panel = page.getByRole("dialog", { name: "Split-flap counter settings" });
   await panel.getByRole("group", { name: "Style" }).getByRole("button", { name: "Player wins" }).click();
   await panel.locator(".asset-knob", { hasText: "Time per flip" }).locator("input").fill("250");
   await panel.getByLabel("Player wins").fill("42");
-  await expect(tile.locator(".bowl-score-tile")).toHaveAttribute("data-settled", "true", { timeout: 15_000 });
-  await expect(tile.locator(".bowl-score-tile")).toHaveAttribute("aria-label", "42 wins");
+  const small = tile.locator(".bowl-score-tile:not(.is-large)");
+  await expect(small).toHaveAttribute("data-settled", "true", { timeout: 15_000 });
+  await expect(small).toHaveAttribute("aria-label", "42 wins");
   await panel.getByRole("button", { name: "Close" }).click();
+  const smallBox = await tile.locator(".bowl-flap").first().boundingBox();
+  expect(Math.abs(smallBox!.height - largeBox!.height), "both styles are the same size").toBeLessThan(2);
+  await (await nearestMiddle(page, "Play the split-flap counter")).click();
+  await expect(small, "a tap keeps the style").toHaveCount(1);
   expect(await yourSettings(page)).toBe("Time per flip (paceWins): 250ms, live 140ms");
 });
 

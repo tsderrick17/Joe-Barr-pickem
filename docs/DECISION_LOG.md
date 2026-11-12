@@ -19,6 +19,12 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - Workshop split-flap counter: style from its settings, one size
+
+Owner: the counter switched style on every tap and the two styles were different sizes. The style is now chosen only in its
+settings (a tap flips it again in the same style), and the small player-wins style is drawn at the large one's size (zoom 1.8125,
+its 1.6rem flaps to the large 2.9rem), so switching changes only the look.
+
 ## 2026-11-11 - No off-season banner; the ticket returns August 1
 
 Owner: leave the Pick'em Pad alone in the off-season, with no special note, and bring the ticket back on August 1. Once the Super
