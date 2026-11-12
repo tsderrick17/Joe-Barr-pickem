@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The tote board, built out for the Pad and the Slate (Lab)
+
+The owner's favourite of the Pad skins is the tote board, on both the Pad and the Slate, so it gets its own try-out with the two as
+one family. The Pad keeps today's format exactly (wins, player, two picks; no place), and every W and L in a pick column sits on one
+centre line. Survivor's poker chips are kept, as the owner asked, in their own column on the same board. The owner asked for something
+better than a padlock for a pick that is made but hidden; three are offered to choose from (Lamps dark, Sealed, Face down), each
+saying "made" without saying which team. The owner liked the gilt edge on the Slate but not the second border it finished with, so
+the gilt is now a single line everywhere in the Lab. Lab only; players see none of it.
+
 ## 2026-11-12 - The clubhouse as one physical space: a first proof (Lab)
 
 The owner wants the whole pool to live in one physical place, a bar or lounge the players move around, as a bigger push for next

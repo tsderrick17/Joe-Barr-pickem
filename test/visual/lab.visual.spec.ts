@@ -135,7 +135,7 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("thead th")).toHaveText(["W", "PLAYER", "PICK 1", "PICK 2", "SURVSurvivor"]);
   await expect(pad.locator("tbody tr")).toHaveCount(10);
   // Before kickoff: two hidden picks for each of nine players (Walt sees his own), and the Survivor picks of the four others still in.
-  await expect(pad.getByRole("img", { name: "Pick in, hidden until kickoff" })).toHaveCount(18);
+  await expect(pad.getByRole("img", { name: "Pick in, hidden until kickoff", exact: true })).toHaveCount(18);
   await expect(pad.getByRole("img", { name: "Survivor pick in, hidden until kickoff" })).toHaveCount(4);
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
