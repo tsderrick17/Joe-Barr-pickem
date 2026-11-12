@@ -25,8 +25,9 @@ The owner answered the two questions left open by the Lab review. The Bowl Pool'
 not the NFL receipt's: it is now a navy stub with gold lettering torn from cream paper along gold-rimmed holes, with gold double rules
 (the Bowl card's keyline) and the crest's three stars after BOWL POOL. Its shape, size, words, lettering and the SUBMIT button are
 unchanged, and its colours are set once as tokens for day and night. The Trophy Room plaques in the Lab should be restrained with a
-few deliberate, classy details: the screws, pool marks and glare are gone; what stays is satin brass with indented corners, one
-engraved keyline that follows them, the year between two laurel sprigs, a diamond rule, dotted leaders and a small star per title.
+few deliberate, classy details: the screws, laurel, pool marks and glare are gone; what stays is satin brass with indented corners, one
+engraved keyline that follows them, the year over a diamond rule and dotted leaders. The stars beside repeat
+champions went too: their meaning was not clear.
 
 ## 2026-11-12 - Survivor table rebuilt, lamp-lit polished, Pad skins tried (Lab)
 

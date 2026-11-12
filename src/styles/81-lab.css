@@ -223,7 +223,7 @@
 .lab-case-countdown small { flex-basis: 100%; font-size: .55rem; font-style: italic; opacity: .7; }
 .lab-case-shelf { border-bottom: 6px solid rgb(74 50 34); display: grid; gap: 12px; grid-template-columns: minmax(0, 15rem); justify-content: center; padding-bottom: 12px; }
 /* The plaque, kept quiet: satin brass on bevelled walnut. Its details are few and deliberate: indented corners (the walnut shows in
-   each), one engraved keyline that follows them, the year between two laurel sprigs, a diamond rule, dotted leaders to each name. */
+   each), one engraved keyline that follows them, the year over a diamond rule, dotted leaders to each name. */
 .lab-plaque { background: linear-gradient(135deg, rgb(92 58 36), rgb(58 34 20) 60%, rgb(76 46 28)); border-radius: 4px; box-shadow: inset 1px 1px 0 rgba(255, 220, 170, .25), inset -1px -1px 0 rgba(0, 0, 0, .5), 0 4px 8px rgba(0, 0, 0, .55); padding: 8px; }
 .lab-plaque-plate {
   --plaque-corner: 7px;
@@ -252,9 +252,7 @@
     linear-gradient(var(--ink), var(--ink)) 100% 50% / 1px calc(100% - 12.5px) no-repeat;
   content: ""; inset: 4px; pointer-events: none; position: absolute;
 }
-.lab-plaque-season { align-items: center; display: flex; font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; gap: 7px; justify-content: center; line-height: 1.1; margin: 0; text-shadow: 0 1px 0 rgba(255, 253, 247, .5); }
-.lab-plaque-sprig { fill: rgba(42, 31, 0, .5); flex: none; height: 11px; stroke: rgba(42, 31, 0, .5); stroke-width: .8; width: 22px; }
-.lab-plaque-sprig path { fill: none; }
+.lab-plaque-season { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; letter-spacing: .08em; line-height: 1.1; margin: 0; text-shadow: 0 1px 0 rgba(255, 253, 247, .5); }
 /* A hairline either side of a small diamond. */
 .lab-plaque-rule { background: linear-gradient(90deg, rgba(42, 31, 0, .45) 0 calc(50% - 7px), transparent calc(50% - 7px) calc(50% + 7px), rgba(42, 31, 0, .45) calc(50% + 7px)) 50% / 100% 1px no-repeat; display: block; height: 7px; margin: 4px 6px 6px; position: relative; }
 .lab-plaque-rule::before { background: rgba(42, 31, 0, .6); content: ""; height: 4px; left: calc(50% - 2px); position: absolute; top: 1.5px; transform: rotate(45deg); width: 4px; }
@@ -263,7 +261,6 @@
 .lab-plaque dt { align-items: baseline; display: flex; flex: 1; font-size: .58rem; font-weight: 800; gap: 5px; letter-spacing: .1em; min-width: 0; text-transform: uppercase; white-space: nowrap; }
 .lab-plaque dt::after { border-bottom: 1px dotted rgba(42, 31, 0, .5); content: ""; flex: 1; min-width: .5rem; }
 .lab-plaque dd { color: rgb(20 14 0); font-family: var(--font-serif); font-weight: 700; margin: 0; text-shadow: 0 1px 0 rgba(255, 253, 247, .45); white-space: nowrap; }
-.lab-plaque-stars { font-size: .5rem; letter-spacing: .05em; margin-left: 3px; opacity: .8; vertical-align: .2em; }
 /* A champion is crowned: their pennant swings down from the rod and settles, once. */
 .lab-crowning { display: grid; justify-items: center; }
 .lab-crowning-rod { background: linear-gradient(var(--cw-brass-1), var(--cw-gold) 50%, rgb(140 112 60)); border-radius: 3px; box-shadow: 0 2px 3px rgba(0, 0, 0, .5); height: 6px; width: 9rem; }

@@ -241,10 +241,10 @@ test("the Slate board: a pick gets its frame; Survivor marks used teams and move
   await expect(board.locator(".lab-board-cell:not(:disabled)")).toHaveCount(0);
 });
 
-test("the Trophy Room: engraved plaques with a star per title; a new champion's pennant swings in", async ({ page }) => {
+test("the Trophy Room: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
   await openLab(page, "clubhouse");
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room" }).click();
-  await expect(page.getByRole("article", { name: "2025 champions" }).getByLabel("2 titles")).toHaveCount(1);
+  await expect(page.getByRole("article", { name: "2025 champions" }).getByRole("definition")).toHaveText(["Walt", "Dottie", "Rosie"]);
   await expect(page.locator(".lab-pennant")).toHaveCount(0);
   await page.getByRole("group", { name: "Scene" }).getByRole("button", { name: "A champion is crowned" }).click();
   await expect(page.getByRole("img", { name: "2026 Pick'em champion: Earl" })).toBeVisible();

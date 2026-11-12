@@ -13,7 +13,7 @@ import { teamLogoScale } from "@/lib/team-logo-scale.js";
  *  - Standings: the clubhouse leaderboard of hand-set number plates, and each player's picks on a golf standard (the white sign on a
  *    pole carried round the course), raised by tapping their row or all at once "on the course".
  *  - The Slate: the big board, a gilt frame drawn round a pick, and Survivor picked on the same board.
- *  - Trophy Room: quiet engraved brass plaques on walnut (indented corners, a laurel pair, dotted leaders), the season's countdown,
+ *  - Trophy Room: quiet engraved brass plaques on walnut (indented corners, a diamond rule, dotted leaders), the season's countdown,
  *    and a new champion's pennant swinging in.
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
@@ -203,38 +203,22 @@ const CHAMPIONS: Array<{ season: string } & Record<Pool, string>> = [
   { season: "2024", pickem: "Earl", survivor: "Walt", bowl: "June" },
   { season: "2023", pickem: "Walt", survivor: "Lou", bowl: "Earl" },
 ];
-/** Titles a player had in a pool up to and including a season: the stars engraved beside their name. */
-const titlesTo = (pool: Pool, name: string, season: string) => CHAMPIONS.filter((year) => year.season <= season && year[pool] === name).length;
-
-/** One engraved laurel sprig; the season's year sits between a pair of them. */
-function Sprig({ side }: { side: -1 | 1 }) {
-  const leaves = [0, 1, 2, 3];
-  return (
-    <svg aria-hidden="true" className="lab-plaque-sprig" focusable="false" viewBox="0 0 28 14">
-      <g transform={side === 1 ? "translate(1 12)" : "translate(27 12) scale(-1 1)"}>
-        <path d="M1 0C8 0 16 -3 24 -9" />
-        {leaves.map((index) => <ellipse cx={6 + index * 5.2} cy={-1.4 - index * 1.9} key={index} rx="2.6" ry="1.1" transform={`rotate(${-18 - index * 6} ${6 + index * 5.2} ${-1.4 - index * 1.9})`} />)}
-        {leaves.map((index) => <ellipse cx={8 + index * 5.2} cy={1.6 - index * 2.3} key={`b${index}`} rx="2.4" ry="1" transform={`rotate(${22 - index * 9} ${8 + index * 5.2} ${1.6 - index * 2.3})`} />)}
-      </g>
-    </svg>
-  );
-}
 
 /**
- * A season's plaque, kept quiet: satin brass with indented corners on walnut, one engraved keyline, the year between two laurel
- * sprigs, a diamond rule, and each champion at the end of a dotted leader with a small star per title.
+ * A season's plaque, kept quiet: satin brass with indented corners on walnut, one engraved keyline, the year over a diamond
+ * rule, and each champion at the end of a dotted leader.
  */
 function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
   return (
     <article aria-label={`${year.season} champions`} className="lab-plaque">
       <div className="lab-plaque-plate">
-        <p className="lab-plaque-season"><Sprig side={-1} /><span>{year.season}</span><Sprig side={1} /></p>
+        <p className="lab-plaque-season">{year.season}</p>
         <span aria-hidden="true" className="lab-plaque-rule" />
         <dl>
           {(["pickem", "survivor", "bowl"] as const).map((pool) => (
             <div key={pool}>
               <dt>{POOL_LABEL[pool]}</dt>
-              <dd>{year[pool]}<span aria-label={`${titlesTo(pool, year[pool], year.season)} titles`} className="lab-plaque-stars">{"★".repeat(titlesTo(pool, year[pool], year.season))}</span></dd>
+              <dd>{year[pool]}</dd>
             </div>
           ))}
         </dl>
