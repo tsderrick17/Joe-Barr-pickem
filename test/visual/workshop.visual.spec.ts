@@ -211,6 +211,20 @@ test("the megaphone rests raised and raises again only when tapped", async ({ pa
   await expect(page.locator("[data-piece=pennant] .bowl-team-pick.is-new")).toHaveCount(1);
 });
 
+test("a tapped split-flap tile flips to a new number each time, and rests on the number in its settings", async ({ page }) => {
+  await openBoard(page);
+  for (const [piece, name] of [["tile", "Play the games remaining tile"], ["wins", "Play the player wins tile"]]) {
+    const tile = page.locator(`[data-piece=${piece}] .bowl-score-tile`);
+    const seen = [await tile.getAttribute("aria-label")];
+    for (let tap = 0; tap < 3; tap++) {
+      await (await nearestMiddle(page, name)).click();
+      await expect(tile).not.toHaveAttribute("aria-label", seen[seen.length - 1]!);
+      seen.push(await tile.getAttribute("aria-label"));
+    }
+    expect(seen.every((label) => /^\d{1,2} wins$/.test(label ?? "") && Number.parseInt(label!, 10) <= 42), seen.join(", ")).toBe(true);
+  }
+});
+
 test("the pull-to-refresh strip: slide it by hand, or tap to watch a whole pull", async ({ page }) => {
   await openBoard(page);
   const strip = await nearestMiddle(page, "Play the pull to refresh");

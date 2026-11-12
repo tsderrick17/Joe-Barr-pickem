@@ -96,6 +96,15 @@ const PENNANT_TEAMS = {
   OSU: { full_name: "Ohio State Buckeyes", short_name: "Ohio State", abbreviation: "OSU", primary_color: "bb0000", secondary_color: "666666" },
   TEX: { full_name: "Texas Longhorns", short_name: "Texas", abbreviation: "TEX", primary_color: "bf5700", secondary_color: "ffffff" },
 } as const;
+/** The number a split-flap tile lands on when it is played: a fresh one each time (0 to 42, about a season of bowl games), the same for
+ * the same play so a redraw does not change it, and never the number it showed before. At rest it shows the number typed in its settings. */
+export function flapNumber(plays: number, typed: number) {
+  const pick = (n: number) => { let x = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b) >>> 0; x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35) >>> 0; return ((x ^ (x >>> 16)) >>> 0) % 43; };
+  if (plays <= 0) return typed;
+  const before = plays === 1 ? typed : pick(plays - 1), next = pick(plays);
+  return next === before ? (next + 1) % 43 : next;
+}
+
 /** The loading football has 108 frames in one turn. Paused, a frame is picked by hand; playing, it runs as it does for players. */
 export const FOOTBALL_FRAMES = 108;
 
@@ -370,21 +379,21 @@ export const PIECES: Piece[] = [
   {
     id: "tile",
     title: "Games remaining tile",
-    note: "The large split-flap counter on the Bowl Card: how many bowl games are left. Live, it picks a pace between 120 and 160 ms a flip. Tap it to flip again.",
+    note: "The large split-flap counter on the Bowl Card: how many bowl games are left. Live, it picks a pace between 120 and 160 ms a flip. Tap it and it flips to a new number.",
     zoom: 1.6,
     tapToPlay: true,
     knobGroup: "tile",
-    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.pace}-${tiles.remaining}`} large pace={knobs.pace} settled value={Number(tiles.remaining || 0)} />,
+    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.pace}-${tiles.remaining}`} large pace={knobs.pace} settled value={flapNumber(plays, Number(tiles.remaining || 0))} />,
     controls: ({ tiles }, update) => <TextField label="Games left" maxLength={2} numeric onChange={(remaining) => update((current) => ({ ...current, tiles: { ...current.tiles, remaining } }))} value={tiles.remaining} />,
   },
   {
     id: "wins",
     title: "Player wins tile",
-    note: "The small split-flap counter beside each player on the Bowl Card: their wins. Live, it picks a pace between 120 and 160 ms a flip. Tap it to flip again.",
+    note: "The small split-flap counter beside each player on the Bowl Card: their wins. Live, it picks a pace between 120 and 160 ms a flip. Tap it and it flips to a new number.",
     zoom: 2,
     tapToPlay: true,
     knobGroup: "wins",
-    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.paceWins}-${tiles.wins}`} pace={knobs.paceWins} settled value={Number(tiles.wins || 0)} />,
+    draw: ({ settings: { tiles, knobs }, plays }) => <BowlScoreTile key={`${plays}-${knobs.paceWins}-${tiles.wins}`} pace={knobs.paceWins} settled value={flapNumber(plays, Number(tiles.wins || 0))} />,
     controls: ({ tiles }, update) => <TextField label="Player wins" maxLength={2} numeric onChange={(wins) => update((current) => ({ ...current, tiles: { ...current.tiles, wins } }))} value={tiles.wins} />,
   },
   {

@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-11 - Megaphone lettering centred; Workshop flap tiles land on a new number
+
+A one-line school name on the Bowl Pool megaphone was centred at x 50.5, right of the middle of the cone's open stretch (mouthpiece
+x 14 to band x 77), so OREGON sat close to the band. One line is now centred at x 45.5, the same room each side; two-line names
+are unchanged (they need the taller part of the cone near the bell). In the Workshop, tapping the Games remaining or Player wins
+tile now flips it to a new number (0 to 42, never the one it showed) instead of flipping round to the same one; at rest it shows the
+number typed in its settings. The live Bowl Card is unchanged: it always shows the real count.
+
 ## 2026-11-11 - The clubhouse, tried in the Lab
 
 From the offseason shortlist: the pages as rooms of one clubhouse, each keeping its own character (the owner rejected one uniform house

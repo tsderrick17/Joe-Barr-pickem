@@ -21,7 +21,10 @@ const half = (x: number) => 4.2 + ((x - 14) / 78) * 16.8;
 const across = (x: number) => ({ top: 23.5 - half(x), bottom: 23.5 + half(x), rx: half(x) * 0.31, ry: half(x) });
 const BAND = (() => { const a = across(77), b = across(83.5); return `M77 ${a.top}A${a.rx} ${a.ry} 0 0 0 77 ${a.bottom}L83.5 ${b.bottom}A${b.rx} ${b.ry} 0 0 1 83.5 ${b.top}Z`; })();
 
-/** Rough width of a line of the lettering at font size 1 (Graduate capitals), so only a name that would overrun the cone is condensed to fit. The lettering
+/** One line of lettering is centred on the cone's open stretch, between the mouthpiece (x 14) and the band (x 77); two lines sit nearer the bell,
+ * where the cone is tall enough for both.
+ *
+ * Rough width of a line of the lettering at font size 1 (Graduate capitals), so only a name that would overrun the cone is condensed to fit. The lettering
  * adds `LETTER_SPACING` em after every letter on top of the squeeze, so a squeezed line is made that much shorter to land on the room it was given. */
 const LETTER_SPACING = 0.06;
 const WIDTH: Record<string, number> = { I: 0.36, J: 0.5, L: 0.6, T: 0.62, F: 0.6, E: 0.62, M: 0.9, W: 0.95, " ": 0.3, "'": 0.25, ".": 0.25, "-": 0.4 };
@@ -59,7 +62,7 @@ export function BowlMegaphone({ team, side }: { team: PennantTeam; side: "left" 
           <g className="bowl-megaphone-print">
             {lines.map((line, index) => {
               const size = lines.length > 1 ? 8.4 : 10.2, room = lines.length > 1 ? 33 : 41, spacing = LETTER_SPACING * size * line.length, fits = lineWidth(line, size) + spacing <= room;
-              return <text className="bowl-megaphone-name" fontSize={size} key={index} letterSpacing={`${LETTER_SPACING}em`} x={lines.length > 1 ? 54.5 : 50.5} y={lines.length > 1 ? 18.3 + index * 9.4 : 22.6} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room - spacing })}>{line}</text>;
+              return <text className="bowl-megaphone-name" fontSize={size} key={index} letterSpacing={`${LETTER_SPACING}em`} x={lines.length > 1 ? 54.5 : 45.5} y={lines.length > 1 ? 18.3 + index * 9.4 : 22.6} {...(fits ? {} : { lengthAdjust: "spacingAndGlyphs", textLength: room - spacing })}>{line}</text>;
             })}
           </g>
           <g clipPath={`url(#${cone})`}>
