@@ -29,6 +29,12 @@ grows when W/L comes in (the stamp sits on its line without stretching it; a tes
 and its "PICK'EM ATS" and "SURVIVOR WINNER" headings are plain headings, no longer links to the Slate. The refined ticket and the
 Lab's "Ticket & receipt" try-out are retired.
 
+## 2026-11-12 - Workshop split-flap counter: style from its settings, one size
+
+Owner: the counter switched style on every tap and the two styles were different sizes. The style is now chosen only in its
+settings (a tap flips it again in the same style), and the small player-wins style is drawn at the large one's size (zoom 1.8125,
+its 1.6rem flaps to the large 2.9rem), so switching changes only the look.
+
 ## 2026-11-11 - No off-season banner; the ticket returns August 1
 
 Owner: leave the Pick'em Pad alone in the off-season, with no special note, and bring the ticket back on August 1. Once the Super
