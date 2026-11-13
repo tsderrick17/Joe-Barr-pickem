@@ -1,10 +1,10 @@
-// The clubhouse: a grand beach bungalow, seen from just inside the front, standing on the landing a few steps up. A white-washed
-// vaulted ceiling on natural timber trusses, fans turning; white shiplap walls; pale oak floors; the whole back wall glass, doors
-// opening onto the pool patio, palms and the sea beyond. The real trophies stand in the middle on a stone plinth under a chandelier.
-// The left wall is the sportsbook with the Big Board above it; the bar runs along the back left with the champions' banners hanging
-// from the rafters over it; on the right a grand floor-to-ceiling stone fireplace, the constitution framed on the chimney, the lounge
-// in front of it with the race on the coffee table; the Survivor poker table in the foreground. Units are metres: x left to right,
-// z from the front wall (0) to the back (-RD).
+// The clubhouse: a grand beach bungalow and the ultimate man cave, seen from just inside the front. A natural thatched beach-hut
+// ceiling (no beams) with wooden leaf cabana fans; white shiplap walls; pale oak floors; the whole back wall glass onto the pool
+// patio, palms, tiki torches and the sea. The real trophies stand in the middle, each on its own pedestal, under a chandelier. The
+// left wall is the sportsbook with the Big Board above it, both on brackets turned towards the room; the bar runs along the back
+// left under a neon sign, the champions' banners hanging over it; on the right a grand floor-to-ceiling stone chimney with a TV
+// over the mantel and the constitution framed on it, the lounge in front with the race on the coffee table; the Survivor poker
+// table in the foreground. Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { pennantCup } from "/trophies.js";
 import { hexBase, ivorySpire, crystalSpade, bowlBase, emeraldBase } from "/trophies2.js";
@@ -62,6 +62,39 @@ function fieldstone() {
     }
   }
   return texture(c, [0.9, 1.7]);
+}
+function thatch() {
+  const c = canvas(1024, 1024), g = c.getContext("2d");
+  g.fillStyle = "#8f6f3c"; g.fillRect(0, 0, 1024, 1024);
+  for (let row = 0; row < 12; row++) {
+    const y0 = row * 86 - 10;
+    for (let i = 0; i < 2600; i++) {
+      const x = rand() * 1024, len = 70 + rand() * 60, t = 150 + Math.floor(rand() * 70);
+      g.strokeStyle = `rgba(${t + 46}, ${t + 14}, ${t - 52}, ${0.5 + rand() * 0.45})`; g.lineWidth = 1 + rand() * 2.2;
+      g.beginPath(); g.moveTo(x, y0 + rand() * 10); g.lineTo(x + (rand() - 0.5) * 14, y0 + len); g.stroke();
+    }
+    const shade = g.createLinearGradient(0, y0 + 70, 0, y0 + 96); shade.addColorStop(0, "rgba(50, 32, 12, 0)"); shade.addColorStop(1, "rgba(50, 32, 12, .45)");
+    g.fillStyle = shade; g.fillRect(0, y0 + 70, 1024, 26);
+  }
+  return texture(c, [2, 4]);
+}
+function gameOnTv() {
+  const c = canvas(640, 360), g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 0, 360); gr.addColorStop(0, "#2f7d3a"); gr.addColorStop(1, "#1f5e2a"); g.fillStyle = gr; g.fillRect(0, 0, 640, 360);
+  g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 3;
+  for (let i = 0; i < 9; i++) { const x = 40 + i * 70; g.beginPath(); g.moveTo(x, 70); g.lineTo(x - 30 + i * 4, 360); g.stroke(); }
+  for (let i = 0; i < 14; i++) { g.fillStyle = i % 2 ? "#e6e6e6" : "#c8102e"; g.beginPath(); g.arc(120 + (i % 7) * 60 + (i > 6 ? 30 : 0), 200 + (i > 6 ? 40 : 0), 9, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = "rgba(10,14,20,.88)"; g.fillRect(20, 300, 600, 44);
+  g.font = "700 26px Arial"; g.fillStyle = "#fff"; g.fillText("PIT 17", 40, 331); g.fillText("CLE 14", 170, 331); g.fillStyle = "#f0b429"; g.fillText("4TH  2:41", 470, 331);
+  return texture(c);
+}
+function neon(text) {
+  const c = canvas(1024, 200), g = c.getContext("2d");
+  g.fillStyle = "rgba(0,0,0,0)"; g.fillRect(0, 0, 1024, 200);
+  g.font = "italic 700 104px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.shadowColor = "#ff5fa2"; g.shadowBlur = 30; g.strokeStyle = "#ffd1e6"; g.lineWidth = 7; g.strokeText(text, 512, 104);
+  g.shadowBlur = 12; g.strokeStyle = "#fff"; g.lineWidth = 3; g.strokeText(text, 512, 104);
+  return texture(c);
 }
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
 function jute() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#c9b48a"; g.fillRect(0, 0, 256, 256); for (let y = 0; y < 256; y += 6) for (let x = 0; x < 256; x += 6) { g.fillStyle = `rgba(110, 85, 50, ${0.15 + rand() * 0.2})`; g.fillRect(x + ((y / 6) % 2) * 3, y, 4, 3); } g.strokeStyle = "#8a6a3e"; g.lineWidth = 10; g.strokeRect(10, 10, 236, 236); return texture(c, [1, 1]); }
@@ -139,7 +172,7 @@ export async function buildRoom(q) {
 
   const m = materials();
   const white = std(0xf7f4ec, { roughness: 0.85 });
-  const timber = std(0xb98d5e, { roughness: 0.7 });
+  const timber = std(0x7a5634, { roughness: 0.7 });
   const timberDark = std(0x8a6440, { roughness: 0.65 });
   const brass = m.brass;
   const linen = new THREE.MeshStandardMaterial({ map: linenTex(), roughness: 0.95 });
@@ -161,17 +194,24 @@ export async function buildRoom(q) {
     add(room, box(0.12, 0.14, RD), timber, [side * (RW / 2 - 0.04), WH - 0.07, -RD / 2]);             // wall plate
   }
   const slope = Math.atan2(RIDGE - WH, RW / 2), len = Math.hypot(RW / 2, RIDGE - WH);
-  const ceilTex = new THREE.MeshStandardMaterial({ map: (() => { const t = texture(shiplap(22, "#fbf9f3")); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 2); t.rotation = Math.PI / 2; return t; })(), roughness: 0.9, side: THREE.DoubleSide });
+  const ceilTex = new THREE.MeshStandardMaterial({ map: thatch(), roughness: 1, side: THREE.DoubleSide });
   for (const side of [-1, 1]) add(room, box(len, 0.08, RD), ceilTex, [side * RW / 4, (WH + RIDGE) / 2 + 0.05, -RD / 2], { rot: [0, 0, side * -slope] });
-  add(room, box(0.26, 0.32, RD), timber, [0, RIDGE - 0.12, -RD / 2]);                                  // ridge beam
-  for (const z of [-6.4, -9.6, -12.8]) {                                                   // trusses
-    add(room, box(RW, 0.26, 0.24), timber, [0, WH, z]);
-    add(room, box(0.2, RIDGE - WH, 0.22), timber, [0, (WH + RIDGE) / 2, z]);
-    for (const side of [-1, 1]) {
-      add(room, box(len, 0.24, 0.22), timber, [side * RW / 4, (WH + RIDGE) / 2 - 0.12, z], { rot: [0, 0, side * -slope] });
-      add(room, box(Math.hypot(1.6, 1.2), 0.16, 0.18), timber, [side * 0.9, WH + 0.75, z], { rot: [0, 0, side * Math.atan2(1.2, 1.6)] });
+  // a natural beach hut ceiling: nothing but thatch, no beams; a thatch fringe hangs along the top of each wall
+  for (const side of [-1, 1]) add(room, box(0.1, 0.3, RD), ceilTex, [side * (RW / 2 - 0.08), WH + 0.02, -RD / 2], { cast: false });
+  // cabana fans: a dark wooden hub and five carved wooden leaf blades, hung from the thatch
+  const leaf = new THREE.Shape(); leaf.moveTo(0, 0); leaf.bezierCurveTo(0.12, 0.12, 0.2, 0.55, 0, 0.95); leaf.bezierCurveTo(-0.2, 0.55, -0.12, 0.12, 0, 0);
+  const leafGeo = new THREE.ShapeGeometry(leaf, 16);
+  const bladeWood = std(0x6b4628, { roughness: 0.55, side: THREE.DoubleSide });
+  for (const [fx, fz] of [[-2.1, -7.6], [1.5, -12.2]]) {
+    const top = WH + (RIDGE - WH) * (1 - Math.abs(fx) / (RW / 2)), drop = top - 3.55;
+    add(room, cyl(0.025, 0.025, drop, 8), timberDark, [fx, top - drop / 2, fz]);
+    add(room, cyl(0.16, 0.12, 0.22, 20), timberDark, [fx, 3.5, fz]);
+    for (let b = 0; b < 5; b++) {
+      const a = (b / 5) * Math.PI * 2 + 0.3, arm = new THREE.Group(); arm.position.set(fx, 3.46, fz); arm.rotation.y = a; room.add(arm);
+      const blade = new THREE.Mesh(leafGeo, bladeWood); blade.rotation.set(-Math.PI / 2 + 0.12, 0, -Math.PI / 2); blade.position.set(0.1, 0, 0); blade.castShadow = true; arm.add(blade);
     }
   }
+
   // ----- the back wall: all glass. Doors below, a glazed gable above, slim black frames.
   const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.95, roughness: 0.03, thickness: 0.02, ior: 1.3, transparent: true, opacity: 0.25 });
   const frameMat = std(0x2a2a27, { roughness: 0.4, metalness: 0.4 });
@@ -206,22 +246,23 @@ export async function buildRoom(q) {
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night) }));
   skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
 
-  // ----- the left wall: the sportsbook (odds boards, a SPORTSBOOK sign, a ticket counter) with the Big Board above it
+  // ----- the left wall: the sportsbook (odds boards, a SPORTSBOOK sign, a ticket counter) with the Big Board above it. The boards
+  // stand out from the wall on brackets, turned towards the room so they read from where you stand.
   const book = group("sportsbook");
-  const SZ = -9.6;
+  const SZ = -8.5, TURN = 0.62;
+  const angled = (parent, w, h, y, z, faceMap, glowLevel, housing = 0x111110) => {
+    const g = new THREE.Group(); g.position.set(X0 + 0.14 + (w / 2) * Math.cos(TURN), y, z); g.rotation.y = TURN; parent.add(g);
+    add(g, rbox(w + 0.14, h + 0.14, 0.1, 0.02), std(housing, { roughness: 0.5 }), [0, 0, -0.05]);
+    add(g, new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: faceMap, emissive: 0xffffff, emissiveMap: faceMap, emissiveIntensity: glowLevel }), [0, 0, 0.005], { cast: false });
+    add(parent, box(0.5, 0.05, 0.05), timberDark, [X0 + 0.25, y + h / 2 - 0.1, z]);
+    return g;
+  };
   add(book, new THREE.PlaneGeometry(4.4, 0.36), new THREE.MeshStandardMaterial({ map: sign("SPORTSBOOK", { w: 1536, h: 130, font: "700 88px Georgia, serif" }), roughness: 0.5 }), [X0 + 0.03, 2.62, SZ], { cast: false, rot: [0, Math.PI / 2, 0] });
-  [-1, 0, 1].forEach((k) => {
-    const z = SZ + k * 1.5;
-    add(book, rbox(0.1, 0.95, 1.38, 0.02), std(0x111110, { roughness: 0.5 }), [X0 + 0.07, 1.95, z]);
-    add(book, new THREE.PlaneGeometry(1.26, 0.84), new THREE.MeshStandardMaterial({ map: oddsBoard(k + 1), emissive: 0xffffff, emissiveMap: oddsBoard(k + 1), emissiveIntensity: night ? 1.0 : 0.65 }), [X0 + 0.125, 1.95, z], { cast: false, rot: [0, Math.PI / 2, 0] });
-  });
+  [-1, 0, 1].forEach((k) => angled(book, 1.2, 0.84, 1.9, SZ + k * 1.45, oddsBoard(k + 1), night ? 1.0 : 0.7));
   add(book, rbox(0.8, 1.05, 4.6, 0.03), m.walnut, [X0 + 0.5, 0.525, SZ]);
   add(book, box(0.9, 0.05, 4.7), brass, [X0 + 0.52, 1.07, SZ]);
-  for (let i = 0; i < 9; i++) add(book, cyl(0.012, 0.012, 0.42, 8), brass, [X0 + 0.88, 1.3, SZ - 2.1 + i * 0.52]);
   const board = group("board");
-  add(board, rbox(0.14, 1.5, 3.0, 0.03), std(0x12281e, { roughness: 0.5 }), [X0 + 0.08, 3.45, SZ]);
-  add(board, new THREE.PlaneGeometry(2.8, 1.36), new THREE.MeshStandardMaterial({ map: bigBoardFace(), emissive: 0xffffff, emissiveMap: bigBoardFace(), emissiveIntensity: night ? 0.95 : 0.55 }), [X0 + 0.16, 3.45, SZ], { cast: false, rot: [0, Math.PI / 2, 0] });
-  add(board, box(0.06, 0.04, 3.0), brass, [X0 + 0.16, 4.18, SZ]);
+  angled(board, 2.5, 1.22, 3.5, SZ, bigBoardFace(), night ? 1.0 : 0.62, 0x12281e);
 
   // ----- the bar along the back wall, left of the doors: counter, back bar, stools; banners hang from the rafters above it
   const bar = group("bar");
@@ -240,6 +281,10 @@ export async function buildRoom(q) {
   for (let s = 0; s < 3; s++) add(bar, box(BL, 0.04, 0.3), timber, [BX, 1.5 + s * 0.42, ZB + 0.22]);
   const bottleColors = [0x2f6a4c, 0x7a3a12, 0xd8d0b8, 0x3a1d0c, 0x9a7a2a, 0x24435e];
   for (let s = 0; s < 3; s++) for (let i = 0; i < 11; i++) add(bar, cyl(0.035, 0.04, 0.27 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [BX - BL / 2 + 0.2 + i * 0.3, 1.66 + s * 0.42, ZB + 0.22], { cast: false });
+  const sign2 = add(bar, new THREE.PlaneGeometry(2.6, 0.5), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [BX, 2.5, ZB + 0.5], { cast: false });
+  sign2.renderOrder = 2;
+  add(bar, box(0.5, 0.08, 0.08), brass, [BX + 0.3, 1.55, BZ - 0.1]);
+  for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BX + 0.12 + i * 0.12, 1.36, BZ - 0.1]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BX + 0.12 + i * 0.12, 1.68, BZ - 0.1]); }
   const record = group("record");
   add(record, rbox(0.56, 0.05, 0.42, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [BX - 1.2, 1.19, BZ]);
   add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [BX - 1.2, 1.22, BZ], { cast: false, rot: [-Math.PI / 2, 0, 0] });
@@ -275,10 +320,16 @@ export async function buildRoom(q) {
   for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
   add(fire, rbox(0.42, 0.26, 4.0, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
   const flame = new THREE.PointLight(0xff8a3a, night ? 9 : 3.5, 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
+  const tv = group("tv");
+  const tvMount = new THREE.Group(); tvMount.position.set(X1 - CD - 0.25, 3.25, FZ + 0.1); tvMount.rotation.y = -Math.PI / 2 + 0.55; tv.add(tvMount);
+  add(tvMount, rbox(2.0, 1.16, 0.06, 0.02), std(0x0c0c0d, { roughness: 0.3, metalness: 0.3 }), [0, 0, 0]);
+  add(tvMount, new THREE.PlaneGeometry(1.9, 1.07), new THREE.MeshStandardMaterial({ map: gameOnTv(), emissive: 0xffffff, emissiveMap: gameOnTv(), emissiveIntensity: night ? 1.0 : 0.8 }), [0, 0, 0.032], { cast: false });
+  add(tv, box(0.28, 0.06, 0.06), frameMat, [X1 - CD - 0.12, 3.25, FZ]);
   const charter = group("constitution");
-  add(charter, box(0.06, 1.5, 1.2), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - CD - 0.02, 3.35, FZ]);
-  add(charter, new THREE.PlaneGeometry(1.02, 1.3), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [X1 - CD - 0.06, 3.35, FZ], { cast: false, rot: [0, -Math.PI / 2, 0] });
-  // the lounge: a jute rug, two linen sofas facing each other across the coffee table, a rattan armchair facing the fire
+  add(charter, box(1.2, 1.5, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - CD / 2, 2.5, FZ + 1.92]);
+  add(charter, new THREE.PlaneGeometry(1.02, 1.3), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [X1 - CD / 2, 2.5, FZ + 1.96], { cast: false });
+  add(charter, box(1.3, 0.05, 0.12), brass, [X1 - CD / 2, 3.32, FZ + 1.94]);
+    // the lounge: a jute rug, two linen sofas facing each other across the coffee table, a rattan armchair facing the fire
   add(room, box(4.2, 0.012, 4.0), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.6, 0.006, FZ], { cast: false });
   const sofa = (x, z, facing) => {
     const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = facing; scene.add(s);
@@ -302,29 +353,34 @@ export async function buildRoom(q) {
     add(race, rbox(0.09, 0.045, 0.035, 0.012), std(0x5a3216), [x, 0.46, z]); add(race, rbox(0.03, 0.03, 0.026, 0.008), std(c), [x + 0.01, 0.495, z]);
   });
 
-  // ----- the trophies: the real three on a round stone plinth in the middle of the room, under a brass chandelier
+  // ----- the trophies: the real three, each on its own pedestal with room to breathe, the Pick'em highest in the middle, on a low
+  // round stone dais under a brass chandelier
   const trophies = group("trophies");
-  const TX = -0.35, TZ = -6.3;
-  add(trophies, cyl(1.05, 1.15, 0.35, 64), std(0xece6d8, { roughness: 0.4 }), [TX, 0.175, TZ]);
-  add(trophies, cyl(0.85, 0.9, 0.75, 64), std(0x1f3b2f, { roughness: 0.45 }), [TX, 0.72, TZ]);
-  add(trophies, cyl(0.88, 0.88, 0.035, 64), brass, [TX, 1.1, TZ]);
-  const pieces = [[ivorySpire, hexBase, { fin: "coil", material: "white" }, [0, -0.28]], [pennantCup, bowlBase, { material: "white" }, [-0.48, 0.22]], [crystalSpade, emeraldBase, { material: "white" }, [0.48, 0.22]]].map(([build, base, opts, at]) => {
-    const piece = new THREE.Group(); const b = base(m); piece.add(b); const t = build(m, opts); t.position.y = b.userData.height; piece.add(t); return { piece, at };
+  const TX = -0.35, TZ = -6.0;
+  add(room, cyl(1.75, 1.8, 0.16, 64), std(0xece6d8, { roughness: 0.4 }), [TX, 0.08, TZ]);
+  const pedestals = [[0, -0.25, 1.15], [-1.15, 0.35, 0.8], [1.15, 0.35, 0.8]];
+  for (const [dx, dz, h] of pedestals) {
+    add(trophies, rbox(0.72, h, 0.72, 0.03), std(0x1f3b2f, { roughness: 0.45 }), [TX + dx, 0.16 + h / 2, TZ + dz]);
+    add(trophies, rbox(0.8, 0.05, 0.8, 0.015), brass, [TX + dx, 0.16 + h + 0.025, TZ + dz]);
+  }
+  const pieces = [[ivorySpire, hexBase, { fin: "coil", material: "white" }, 0], [pennantCup, bowlBase, { material: "white" }, 1], [crystalSpade, emeraldBase, { material: "white" }, 2]].map(([build, base, opts, k]) => {
+    const piece = new THREE.Group(); const b = base(m); piece.add(b); const t = build(m, opts); t.position.y = b.userData.height; piece.add(t); return { piece, k };
   });
   const tallest = Math.max(...pieces.map(({ piece }) => new THREE.Box3().setFromObject(piece).getSize(new THREE.Vector3()).y));
-  const ts = 1.75 / tallest;
-  for (const { piece, at: [dx, dz] } of pieces) {
+  const ts = 1.45 / tallest;
+  for (const { piece, k } of pieces) {
+    const [dx, dz, h] = pedestals[k];
     piece.scale.setScalar(ts);
     const pb = new THREE.Box3().setFromObject(piece);
-    piece.position.set(TX + dx, 1.12 - pb.min.y, TZ + dz);
+    piece.position.set(TX + dx, 0.16 + h + 0.05 - pb.min.y, TZ + dz);
     piece.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     trophies.add(piece);
   }
   add(room, cyl(0.012, 0.012, 2.0, 6), brass, [TX, WH + 0.2, TZ]);
   add(room, new THREE.TorusGeometry(0.75, 0.03, 10, 48), brass, [TX, WH - 0.85, TZ], { rot: [Math.PI / 2, 0, 0], cast: false });
   for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; add(room, new THREE.SphereGeometry(0.05, 12, 8), glow(0xffe0a8, night ? 4 : 2), [TX + Math.cos(a) * 0.75, WH - 0.78, TZ + Math.sin(a) * 0.75], { cast: false }); }
-  const trophySpot = new THREE.SpotLight(0xfff4de, night ? 70 : 45, 9, 0.38, 0.6, 1.3);
-  trophySpot.position.set(TX, WH + 1.6, TZ + 2.2); trophySpot.target.position.set(TX, 1.8, TZ); trophySpot.castShadow = true; trophySpot.shadow.mapSize.set(2048, 2048);
+  const trophySpot = new THREE.SpotLight(0xfff4de, night ? 80 : 55, 10, 0.5, 0.6, 1.3);
+  trophySpot.position.set(TX, WH + 1.6, TZ + 2.4); trophySpot.target.position.set(TX, 1.5, TZ); trophySpot.castShadow = true; trophySpot.shadow.mapSize.set(2048, 2048);
   scene.add(trophySpot, trophySpot.target);
 
   add(room, box(6.2, 0.012, 6.4), new THREE.MeshStandardMaterial({ map: (() => { const c = canvas(512, 512), g = c.getContext('2d'); g.fillStyle = '#d6c6a2'; g.fillRect(0, 0, 512, 512); for (let k = 0; k < 9; k++) { g.fillStyle = k % 2 ? 'rgba(47,79,110,.18)' : 'rgba(255,255,255,.12)'; g.fillRect(60 + k * 44, 60, 22, 392); } g.strokeStyle = '#2f4f6e'; g.lineWidth = 14; g.strokeRect(18, 18, 476, 476); g.strokeStyle = '#c9a45f'; g.lineWidth = 5; g.strokeRect(44, 44, 424, 424); for (let i = 0; i < 512; i += 4) { g.fillStyle = `rgba(120,100,70,${0.03 + rand() * 0.04})`; g.fillRect(0, i, 512, 2); } return texture(c); })(), roughness: 1 }), [-0.6, 0.007, -5.0], { cast: false });
@@ -342,7 +398,7 @@ export async function buildRoom(q) {
   });
   for (let a = 0; a < 6; a++) {
     const t = (a / 6) * Math.PI * 2 + Math.PI / 6, cx = PX + Math.cos(t) * 1.45, cz = PZ + Math.sin(t) * 1.05;
-    const c = new THREE.Group(); c.position.set(cx, 0, cz); c.rotation.y = -t - Math.PI / 2; poker.add(c);
+    const c = new THREE.Group(); c.position.set(cx, 0, cz); c.rotation.y = Math.PI / 2 - t; poker.add(c);
     add(c, rbox(0.44, 0.08, 0.44, 0.03), linen, [0, 0.46, 0]); add(c, rbox(0.44, 0.48, 0.06, 0.03), rattan, [0, 0.74, 0.2]);
     for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) add(c, cyl(0.02, 0.02, 0.44, 8), timberDark, [lx, 0.22, lz]);
   }
@@ -352,7 +408,19 @@ export async function buildRoom(q) {
     add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 20), rattan, [x, 0.25 * s, z]);
     for (let f = 0; f < 8; f++) { const a = (f / 8) * Math.PI * 2, fr = add(room, new THREE.ConeGeometry(0.16 * s, 1.3 * s, 4, 1), std(0x3f8a48, { roughness: 0.9 }), [x + Math.cos(a) * 0.4 * s, 1.0 * s, z + Math.sin(a) * 0.4 * s]); fr.scale.set(1, 1, 0.25); fr.rotation.set(Math.sin(a) * 0.9, -a, -Math.cos(a) * 0.9); }
   };
+  const monstera = (x, z, s = 1) => {
+    add(room, cyl(0.28 * s, 0.22 * s, 0.46 * s, 20), std(0xf1ece2, { roughness: 0.6 }), [x, 0.23 * s, z]);
+    for (let f = 0; f < 9; f++) { const a = (f / 9) * Math.PI * 2 + rand(), r = 0.25 + rand() * 0.25, lf = add(room, new THREE.CircleGeometry(0.26 * s, 10), std(0x2f6f3a, { roughness: 0.8, side: THREE.DoubleSide }), [x + Math.cos(a) * r * s, (0.75 + rand() * 0.6) * s, z + Math.sin(a) * r * s], { cast: true }); lf.scale.set(1, 1.4, 1); lf.rotation.set(-0.9 - rand() * 0.4, a, 0); }
+  };
   plant(X1 - 0.6, ZB + 0.8, 1.4); plant(X1 - 0.6, -5.6, 1.2); plant(X0 + 0.55, -6.5, 1.2);
+  monstera(-4.0, ZB + 0.7, 1.1); monstera(2.1, -7.2, 0.9); monstera(-1.0, -12.4, 0.9);
+  add(room, rbox(0.55, 2.4, 0.08, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.35, 1.22, ZB + 2.2], { rot: [0, -0.4, -0.12] });
+  for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
+    add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
+    add(out, cyl(0.07, 0.05, 0.18, 10), std(0x2a2a2a), [x, 1.85, z]);
+    add(out, new THREE.ConeGeometry(0.06, 0.22, 10), glow(0xff8a2a, night ? 3 : 1.2), [x, 2.04, z], { cast: false });
+    if (night) { const l = new THREE.PointLight(0xff9a40, 2.5, 4, 1.6); l.position.set(x, 2.1, z); out.add(l); }
+  }
   if (bowl) {
     const b2 = group("bowl");
     const BBX = 1.5, BBZ = ZB + 1.3;

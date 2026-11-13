@@ -307,7 +307,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
     ["Sportsbook", "The Window", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophies", "Trophy Room", ".lab-wall"],
-    ["The bar: banners and plaques", "Trophy Room", ".lab-wall"], ["Banners", "Trophy Room", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
+    ["Banners", "Trophy Room", ".lab-wall"], ["Plaques", "Trophy Room", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
     ["Record book", "Record book", ".lab-stand-in"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
     ["The race", "The race", ".lab-stand-in"],
   ];
@@ -322,8 +322,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
   }
   for (const [spot, heading, inside] of spots) {
-    // The bar is tapped on its counter, clear of the record book and the laptop that stand on it.
-    await room.getByRole("button", { name: spot, exact: true }).click(spot.startsWith("The bar") ? { position: { x: 10, y: 10 } } : {});
+    await room.getByRole("button", { name: spot, exact: true }).click();
     await expect(page.getByRole("heading", { name: heading, level: 3, exact: true })).toBeVisible();
     await expect(page.locator(inside)).toBeVisible();
     await expect(room).toHaveCount(0);

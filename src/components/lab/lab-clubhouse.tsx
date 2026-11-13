@@ -12,9 +12,9 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 /**
  * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
  *  - The room: a grand beach bungalow drawn in 3D and shown as one picture (by day, and at night with the pool lit), seen from just
- *    inside: a vaulted white ceiling on timber trusses, the whole back wall glass onto the pool patio and the sea. Tap anything in it
- *    to go there: the sportsbook down the left wall (where picks are made) with the Big Board above it, the real trophies in the
- *    middle on a stone plinth under a chandelier, the bar at the back with the banners hanging from the rafters and the plaques on
+ *    inside: a thatched beach-hut ceiling with wooden leaf fans, the whole back wall glass onto the pool patio and the sea. Tap anything in it
+ *    to go there: the sportsbook down the left wall (where picks are made) with the Big Board above it, both turned towards you,
+ *    the real trophies in the middle, each on its own pedestal under a chandelier, the bar at the back with the banners hanging from the rafters and the plaques on
  *    its front, the record book and the laptop (the pool chat, a mail sign when there's a new message) on the bar, the constitution
  *    framed on the grand stone chimney, the race on the coffee table, the Survivor poker table in front, and from Dec 7 the Bowl
  *    Pool's bulletin board, wheeled in by the doors.
@@ -143,16 +143,17 @@ const PICTURES = ROOM_PICTURES as Record<string, Picture>;
 
 /** Each thing in the picture that can be tapped: where it goes, its name, and whether its label shows without "Show labels". */
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label?: "above" | "below"; always?: boolean }> = [
-  { spot: "sportsbook", room: "window", name: "Sportsbook", label: "below", always: true },
-  { spot: "bar", room: "trophies", name: "The bar: banners and plaques", tag: "The bar", label: "below" },
-  { spot: "banners", room: "trophies", name: "Banners" },
+  // The trophies come first so the smaller things standing in front of them stay on top.
   { spot: "trophies", room: "trophies", name: "Trophies", label: "above" },
+  { spot: "sportsbook", room: "window", name: "Sportsbook", label: "below", always: true },
+  { spot: "banners", room: "trophies", name: "Banners", label: "above" },
+  { spot: "plaques", room: "trophies", name: "Plaques" },
   { spot: "board", room: "board", name: "The Big Board", label: "below", always: true },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "above", always: true },
-  { spot: "record", room: "record", name: "Record book", label: "above" },
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
+  { spot: "record", room: "record", name: "Record book", label: "below" },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "above" },
   { spot: "constitution", room: "constitution", name: "Constitution", label: "below" },
-  { spot: "race", room: "race", name: "The race", label: "below" },
+  { spot: "race", room: "race", name: "The race", label: "above" },
   { spot: "survivor", room: "survivor", name: "Survivor", label: "above", always: true },
 ];
 
