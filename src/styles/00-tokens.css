@@ -305,6 +305,9 @@
   --lamp-ticket-paper: var(--ticket-paper);
   --lamp-paper: var(--club-paper);
   --lamp-note-display: block;
+  /* The Lab clubhouse room: its day picture by day, its night picture at night. */
+  --room-day-display: block;
+  --room-night-display: none;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(191, 20, 104, .58) 0%,
     rgba(220, 45, 133, .54) 1.5%,
@@ -581,6 +584,8 @@ html[data-theme="night"] {
   --lamp-ticket-paper: repeating-linear-gradient(0deg, rgba(255, 214, 150, .035) 0 1px, transparent 1px 4px), rgb(50 40 28);
   --lamp-paper: rgb(50 40 28);
   --lamp-note-display: none;
+  --room-day-display: none;
+  --room-night-display: block;
   --team-marker-gradient: linear-gradient(90deg,
     rgba(232, 31, 139, .70) 0%,
     rgba(244, 59, 160, .64) 1.5%,

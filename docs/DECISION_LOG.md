@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
+
+The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in
+which the pool is one bright room, everything in it a place to tap: the Big Board over sliding glass doors onto a pool patio, the
+sportsbook where picks are made, the real trophies in the middle, banners and plaques at the bar, a record book (the stats) and a
+laptop (the pool chat, with a mail sign for a new message) on the bar, the constitution framed over the fireplace, the horse race on
+the coffee table (which stands in for the Season snapshot and playoff charts), the Survivor poker table, and from Dec 7 the Bowl
+Pool's bulletin board wheeled in. A tap opens the New views built in the Lab, not today's pages; both views run on the same data and
+the same pick path. The Window must always be easy to find, so the player's ticket is pinned to the bottom of every screen and the
+sportsbook glows while a pick is owed. The room is drawn in 3D and shipped as still pictures with tap spots (light for phones, no
+3D in the browser), using the real trophy models. Labels only where their news is worth a glance, with "Show labels" and a plain list
+of rooms for anyone who prefers words. Lab only; players see none of it.
+
 ## 2026-11-12 - The clubhouse: one Big Board for everyone's picks, one Window for your own (Lab)
 
 The owner's point: the beauty of today's pool is seeing everyone's picks in one central place, and there should be one place to make

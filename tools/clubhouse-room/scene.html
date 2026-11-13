@@ -1,0 +1,10 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+  try {
+    const { buildRoom } = await import("/room.js?v=" + Date.now());
+    await buildRoom(new URLSearchParams(location.search));
+  } catch (error) { window.__error = String(error && error.stack || error); }
+</script>
