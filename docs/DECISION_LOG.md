@@ -19,6 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The clubhouse: one Big Board for everyone's picks, one Window for your own (Lab)
+
+The owner's point: the beauty of today's pool is seeing everyone's picks in one central place, and there should be one place to make
+both the Pick'em and the Survivor picks. So the clubhouse is built around two pieces of the tote board, the owner's favourite look.
+The Big Board is the centrepiece of the lobby (biggest, at the top): everyone's picks as on today's Pad, Survivor's chips beside them,
+and, at the owner's word, the standings folded into the same board as its other face. The Window is where a player makes every pick:
+two against the spread and the Survivor team, one ticket, one Submit. Survivor stays at the Window for as long as the Survivor pool is
+going (read only for a player who is out), as the owner asked, and leaves once it is decided. The pool chat drops from a full room in
+the lobby to a slim sign by the door, since few people use it. The owner chose dark lamps and a green IN as the one cover for a pick
+that is made but hidden; Sealed and Face down are gone. The Slate's other highlights (Brass inlay, Lit line), the number-plate
+leaderboard and the golf standards are retired with the old Standings and Slate rooms. Lab only; players see none of it.
+
 ## 2026-11-12 - The tote board, built out for the Pad and the Slate (Lab)
 
 The owner's favourite of the Pad skins is the tote board, on both the Pad and the Slate, so it gets its own try-out with the two as

@@ -107,15 +107,17 @@ test("Lab Survivor table: the divisions line up, East to West, AFC beside NFC on
   expect(rows[0].map((row) => row.top)).toEqual(rows[1].map((row) => row.top));
 });
 
-// The tote board: the Pick'em Pad (today's columns plus Survivor's chips) and the Slate in one housing. Each state gets a picture,
-// phone and desktop by day, phone at night.
+// The tote board: the Big Board (everyone's picks, today's Pad columns plus Survivor's chips, and the season standings on its other
+// face) and the Window (every pick a player makes, in one place). Each state gets a picture, phone and desktop by day, phone at night.
 const TOTE_SHOTS: Array<[string, Array<[string, string]>]> = [
-  ["pad-before-kickoff-lamps", []],
-  ["pad-before-kickoff-sealed", [["Pick made", "Sealed"]]],
-  ["pad-before-kickoff-face-down", [["Pick made", "Face down"]]],
-  ["pad-game-day", [["Moment", "Game day"]]],
-  ["pad-graded", [["Moment", "Graded"]]],
-  ["slate", [["Board", "The Slate"]]],
+  ["board-before-kickoff", []],
+  ["board-game-day", [["Moment", "Game day"]]],
+  ["board-graded", [["Moment", "Graded"]]],
+  ["board-season", [["Show", "Season standings"]]],
+  ["window-picking", [["Board", "The Window"]]],
+  ["window-game-day", [["Board", "The Window"], ["Moment", "Game day"]]],
+  ["window-out-of-survivor", [["Board", "The Window"], ["Moment", "Out of Survivor"]]],
+  ["window-survivor-decided", [["Board", "The Window"], ["Moment", "Survivor decided"]]],
 ];
 for (const [shot, choices] of TOTE_SHOTS) {
   for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
@@ -148,13 +150,55 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   }
 });
 
-test("the tote Slate frames a pick with a single gilt line", async ({ page }) => {
+test("the Big Board turns to the season standings with one tap on the board", async ({ page }) => {
   await openLab(page, "tote");
-  await page.getByRole("group", { name: "Board" }).getByRole("button", { name: "The Slate" }).click();
-  await expect(page.locator(".lab-bigboard.is-tote")).toBeVisible();
-  await expect(page.getByRole("group", { name: "Pick highlight" })).toHaveCount(0);
-  const trace = page.locator(".lab-board-cell.is-picked .lab-board-trace").first();
-  expect(await trace.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
+  const board = page.locator(".lab-tote");
+  await board.getByRole("group", { name: "Show" }).getByRole("button", { name: "Season standings" }).click();
+  await expect(board.locator("thead th")).toHaveText(["POS", "PLAYER", "WINS", "BACK"]);
+  await expect(board.locator("tbody tr")).toHaveCount(10);
+  await expect(board.locator("tbody tr").first().locator("td")).toHaveText(["1", /\d+/, "—"]);
+  await board.getByRole("group", { name: "Show" }).getByRole("button", { name: "This week’s picks" }).click();
+  await expect(board.locator("thead th")).toHaveCount(5);
+});
+
+test("the Window takes every pick in one place: two against the spread, the Survivor chip, one ticket, one Submit", async ({ page }) => {
+  await openLab(page, "tote");
+  await page.getByRole("group", { name: "Board" }).getByRole("button", { name: "The Window" }).click();
+  const window = page.locator(".lab-window");
+  const pickem = window.getByRole("region", { name: "Pick’em" });
+  const survivor = window.getByRole("region", { name: "Survivor" });
+  const ticket = window.getByRole("region", { name: "Your ticket" });
+  // A pick is framed by a single gilt line.
+  await expect(pickem.locator(".lab-board-cell.is-picked")).toHaveCount(2);
+  expect(await pickem.locator(".lab-board-cell.is-picked .lab-board-trace").first().evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
+  await pickem.getByRole("button", { name: "Steelers -2.5" }).click();
+  await expect(pickem.locator(".lab-board-cell.is-picked")).toHaveCount(1);
+  await pickem.getByRole("button", { name: "Colts -3.5" }).click();
+  await expect(pickem.getByRole("button", { name: "Colts -3.5" })).toHaveAttribute("aria-pressed", "true");
+  // Survivor: used teams cannot be picked again; one chip at a time.
+  await expect(survivor.getByRole("button", { name: "Eagles" })).toBeDisabled();
+  await expect(survivor.getByText("USED WK 4")).toBeVisible();
+  await survivor.getByRole("button", { name: "Colts" }).click();
+  await expect(survivor.getByRole("button", { name: "Colts" })).toHaveAttribute("aria-pressed", "true");
+  await expect(survivor.getByRole("button", { pressed: true })).toHaveCount(1);
+  await expect(ticket.getByRole("definition")).toHaveText(["IND -3.5", "LAR +3", "IND"]);
+  // One Submit for all three; changing a pick afterwards asks for the change to be sent.
+  await ticket.getByRole("button", { name: "Submit picks" }).click();
+  await expect(ticket.getByRole("button", { name: "Submitted ✓" })).toBeDisabled();
+  await survivor.getByRole("button", { name: "Broncos" }).click();
+  await expect(ticket.getByRole("button", { name: "Submit changes" })).toBeEnabled();
+  // Game day: a game that has kicked off cannot be changed.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
+  await expect(pickem.getByRole("button", { name: "Browns +2.5" })).toBeDisabled();
+  // Out of Survivor: Survivor stays at the Window while the pool goes on, read only.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Out of Survivor" }).click();
+  await expect(survivor).toContainText("lost in week 3");
+  await expect(survivor.getByRole("button")).toHaveCount(0);
+  await expect(ticket.getByRole("term")).toHaveText(["Pick 1", "Pick 2"]);
+  // Survivor decided: the pool is over, so it leaves the Window.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Survivor decided" }).click();
+  await expect(survivor).toHaveCount(0);
+  await expect(ticket).toContainText("won it");
 });
 
 // Pick'em Pad skins: five materials for one pad. Each skin gets a picture on game day, phone by day and at night; the scratch-off before kickoff too.
@@ -219,15 +263,8 @@ test("Lamp-lit is remembered, and by day it only shows a note", async ({ page })
 // The clubhouse: a lobby drawn to fit one phone screen, and a room behind each thing in it. The lobby and each room's states get a
 // picture: phone and desktop by day, phone at night.
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
-  ["Standings", "leaderboard-game-day", []],
-  ["Standings", "leaderboard-before-kickoff", [["Moment", "Before kickoff"]]],
-  ["Standings", "leaderboard-wild-card-graded", [["Week", "Wild Card"], ["Moment", "Graded"]]],
-  ["Standings", "on-the-course-game-day", [["View", "On the course"]]],
-  ["The Slate", "board-gilt", []],
-  ["The Slate", "board-brass", [["Pick highlight", "Brass inlay"]]],
-  ["The Slate", "board-lit", [["Pick highlight", "Lit line"]]],
-  ["The Slate", "board-survivor-game-day", [["Moment", "Game day"], ["Pool", "Survivor"]]],
-  ["The Slate", "board-survivor-out", [["Moment", "Out of Survivor"], ["Pool", "Survivor"]]],
+  ["The Big Board", "big-board", []],
+  ["The Window", "window", []],
   ["Trophy Room", "trophies-wall", []],
   ["Trophy Room", "trophies-crowning", [["Scene", "A champion is crowned"]]],
 ];
@@ -261,17 +298,32 @@ test("the lobby fits one phone screen, opens every room in one tap, and every ro
   const box = (await lobby.boundingBox())!;
   expect(box.height).toBeLessThanOrEqual(640);
   expect(box.width).toBeLessThanOrEqual(390);
-  for (const button of await lobby.getByRole("button").all()) expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+  const fixtures = await Promise.all((await lobby.locator(".lab-fixture").all()).map(async (fixture) => (await fixture.boundingBox())!));
+  expect(fixtures).toHaveLength(5);
+  for (const fixture of fixtures) expect(fixture.height).toBeGreaterThanOrEqual(64);
+  // The Big Board is the centrepiece: the biggest thing in the room, at the top. The Window comes next, full width.
+  const [board, window] = fixtures;
+  for (const other of fixtures.slice(1)) expect(board.height * board.width).toBeGreaterThan(other.height * other.width);
+  expect(board.y).toBeLessThan(window.y);
+  expect(window.width).toBeCloseTo(board.width, 0);
+  // The pool chat is a slim sign at the bottom, smaller than anything else in the room, still big enough to tap.
+  const chat = (await lobby.getByRole("button", { name: /Pool chat/ }).boundingBox())!;
+  expect(chat.height).toBeGreaterThanOrEqual(44);
+  for (const fixture of fixtures) {
+    expect(chat.height).toBeLessThan(fixture.height);
+    expect(chat.y).toBeGreaterThan(fixture.y);
+  }
   // Each thing in the room carries a line of news from the same sample data its room shows.
-  await expect(lobby.getByRole("button", { name: "Standings" })).toContainText("You: T2");
+  await expect(lobby.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
+  await expect(lobby.getByRole("button", { name: "The Window" })).toContainText("Your picks: 3 of 3 in");
   await expect(lobby.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
   const rooms: Array<[string, string]> = [
-    ["Standings", ".lab-leaderboard"], ["The Slate", ".lab-bigboard"], ["Trophy Room", ".lab-wall"], ["Survivor", ".lab-survivor-room"],
-    ["The Bar", ".lab-stand-in"], ["Bowl Pool", ".lab-stand-in"],
+    ["The Big Board", ".lab-tote"], ["The Window", ".lab-window"], ["Trophy Room", ".lab-wall"], ["Survivor", ".lab-survivor-room"],
+    ["Bowl Pool", ".lab-stand-in"], ["Pool chat", ".lab-stand-in"],
   ];
   for (const [name, inside] of rooms) {
     await lobby.getByRole("button", { name }).click();
-    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    await expect(page.getByRole("heading", { name, level: 3, exact: true })).toBeVisible();
     await expect(page.locator(inside)).toBeVisible();
     await expect(lobby).toHaveCount(0);
     await page.getByRole("button", { name: "Back to Clubhouse" }).click();
@@ -291,43 +343,6 @@ test("the Trophy Room is one tall wall: banners for the pool chosen, the trophie
   // Top to bottom, the way you would look at a real wall.
   const tops = await Promise.all(["Banners", "Trophies", "Plaques"].map(async (name) => (await page.getByRole("region", { name }).boundingBox())!.y));
   expect(tops).toEqual([...tops].sort((a, b) => a - b));
-});
-
-test("the leaderboard raises a player's standard, and other players' picks stay hidden until kickoff", async ({ page }) => {
-  await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Standings" }).click();
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
-  // The viewer's own standard is raised to start, with their picks showing.
-  await expect(page.getByRole("figure", { name: "Walt's picks" }).locator("li.is-hidden")).toHaveCount(0);
-  await page.getByRole("button", { name: /ROSIE/ }).click();
-  const rosie = page.getByRole("figure", { name: "Rosie's picks" });
-  await expect(rosie.locator("li.is-hidden")).toHaveCount(2);
-  await expect(rosie.getByRole("img", { name: "Survivor pick hidden until kickoff" })).toBeVisible();
-  await expect(page.getByRole("figure", { name: "Walt's picks" })).toHaveCount(0);
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
-  await expect(rosie.locator("li.is-hidden")).toHaveCount(0);
-  await page.getByRole("group", { name: "View" }).getByRole("button", { name: "On the course" }).click();
-  await expect(page.locator(".lab-course .lab-standard")).toHaveCount(10);
-});
-
-test("the Slate board: a pick gets its frame; Survivor marks used teams and moves the chip to a free team", async ({ page }) => {
-  await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "The Slate" }).click();
-  const board = page.locator(".lab-bigboard");
-  await expect(board.locator(".lab-board-cell.is-picked")).toHaveCount(2);
-  await board.getByRole("button", { name: "Steelers -2.5" }).click();
-  await expect(board.locator(".lab-board-cell.is-picked")).toHaveCount(1);
-  await board.getByRole("button", { name: "Colts -3.5" }).click();
-  await expect(board.getByRole("button", { name: "Colts -3.5" })).toHaveAttribute("aria-pressed", "true");
-  await board.getByRole("group", { name: "Pool" }).getByRole("button", { name: "Survivor" }).click();
-  await expect(board.getByRole("button", { name: "Eagles -3" })).toBeDisabled();
-  await expect(board.getByText("USED WK 4")).toBeVisible();
-  await board.getByRole("button", { name: "Colts -3.5" }).click();
-  await expect(board.getByRole("button", { name: "Colts -3.5" })).toHaveAttribute("aria-pressed", "true");
-  await expect(board.locator(".lab-board-chip")).toHaveCount(1);
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Out of Survivor" }).click();
-  await expect(board.getByText("SURVIVOR · OUT WK 3")).toBeVisible();
-  await expect(board.locator(".lab-board-cell:not(:disabled)")).toHaveCount(0);
 });
 
 test("the Trophy Room: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
