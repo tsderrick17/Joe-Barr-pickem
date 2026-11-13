@@ -103,7 +103,7 @@
 .lab-stage.is-lamp { --ticket-paper: var(--lamp-ticket-paper); --club-paper: var(--lamp-paper); isolation: isolate; }
 .lab-stage.is-lamp::before { background: var(--lamp-pool); content: ""; inset: -28px -16px; -webkit-mask: radial-gradient(ellipse 85% 80% at 50% 40%, black 62%, transparent 100%); mask: radial-gradient(ellipse 85% 80% at 50% 40%, black 62%, transparent 100%); pointer-events: none; position: absolute; z-index: -1; }
 /* Under the lamp every piece catches the same warm light from above; nothing outside the pool glows. */
-.lab-stage.is-lamp .lab-leaderboard,
+.lab-stage.is-lamp .lab-tote,
 .lab-stage.is-lamp .lab-bigboard,
 .lab-stage.is-lamp .lab-case,
 .lab-stage.is-lamp .lab-pad { filter: var(--lamp-glow); }
@@ -115,10 +115,11 @@
 .lab-room-stack { display: grid; gap: 14px; }
 .lab-room-controls { display: grid; gap: 8px; }
 /* The lobby: the whole clubhouse on one phone screen. A walnut wall over a plank floor; everything in the room is a big button with
-   its name and a line of news. Rows: the sign, the standings board, the chalkboard beside the mantle, the bar, then the floor. */
+   its name and a line of news. Rows: the sign, the Big Board, the Window, then on the floor the trophy case beside the Survivor table,
+   the Bowl Pool corner, and by the door a slim sign for the pool chat. */
 .lab-lobby { background: rgb(58 42 32); border: 6px solid rgb(74 50 34); border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; overflow: hidden; padding: 12px; width: 100%; }
 .lab-lobby-sign { color: var(--cw-gold-lt); font-family: var(--font-serif); font-size: 1.1rem; grid-column: 1 / -1; letter-spacing: .04em; margin: 0; text-align: center; }
-.lab-lobby-floor { background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, .18) 46px 47px), rgb(104 74 54); border-top: 5px solid rgb(36 25 18); grid-area: 5 / 1 / 7 / -1; margin: -6px -12px -12px; }
+.lab-lobby-floor { background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, .18) 46px 47px), rgb(104 74 54); border-top: 5px solid rgb(36 25 18); grid-area: 4 / 1 / 8 / -1; margin: -6px -12px -12px; }
 .lab-lobby-hint { color: var(--cw-cream); font-size: .85rem; grid-area: 6 / 1 / 7 / -1; margin: 0; position: relative; text-align: center; }
 .lab-fixture { align-content: end; border: 0; border-radius: 4px; box-shadow: 0 3px 6px rgba(0, 0, 0, .45); color: var(--cw-cream); cursor: pointer; display: grid; gap: 2px; justify-items: center; min-height: 7rem; overflow: hidden; padding: 10px 8px; position: relative; text-align: center; }
 .lab-fixture:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
@@ -126,73 +127,34 @@
 .lab-fixture-name { font-size: 1.05rem; font-weight: 800; position: relative; }
 .lab-fixture-name::after { content: " \203A"; }
 .lab-fixture-news { font-size: .8rem; font-weight: 600; position: relative; }
-/* The standings board: green, gold-framed, the top three on white plates. */
-.lab-fixture.is-standings { background: var(--cw-green); box-shadow: inset 0 0 0 2px var(--cw-gold), 0 3px 6px rgba(0, 0, 0, .45); grid-column: 1 / -1; }
+/* The Big Board: the tote board's green housing, the top three lit, wins in amber. */
+.lab-fixture.is-board { background: rgb(18 40 30); box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .6), 0 3px 6px rgba(0, 0, 0, .45); grid-column: 1 / -1; }
 .lab-fixture-plates { display: grid; gap: 3px; margin-bottom: 4px; max-width: 15rem; width: 100%; }
-.lab-fixture-plates i { display: grid; font-size: .72rem; font-style: normal; gap: 3px; grid-template-columns: 1.6rem 1fr 2rem; }
-.lab-fixture-plates b { background: rgb(250 248 240); border-radius: 1px; color: rgb(20 24 20); padding: 2px 0; }
-/* The Slate: a chalkboard in a wood frame. */
-.lab-fixture.is-slate { background: repeating-linear-gradient(0deg, transparent 0 21px, rgba(233, 239, 233, .14) 21px 22px) 0 12px / 100% 60% no-repeat, rgb(38 48 43); box-shadow: inset 0 0 0 5px rgb(138 106 72), 0 3px 6px rgba(0, 0, 0, .45); }
+.lab-fixture-plates i { display: grid; font-size: .72rem; font-style: normal; gap: 3px; grid-template-columns: 2rem 1fr; }
+.lab-fixture-plates b { background: rgb(8 10 9); border-radius: 1px; color: rgb(240 236 226); padding: 2px 0; }
+.lab-fixture-plates b:first-child { color: rgb(255 176 46); font-family: "Courier New", monospace; text-shadow: 0 0 4px rgba(255, 160, 40, .9); }
+/* The Window: the betting window, black with a gold hairline; a lamp for each pick, lit once it is in. */
+.lab-fixture.is-window { background: rgb(8 10 9); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .6), 0 3px 6px rgba(0, 0, 0, .45); grid-column: 1 / -1; min-height: 5.5rem; }
+.lab-fixture-slots { display: flex; gap: 10px; justify-content: center; margin-bottom: 4px; }
+.lab-fixture-slots i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .7rem; width: .7rem; }
+.lab-fixture-slots i.is-lit { background: rgb(255 176 46); box-shadow: 0 0 6px rgba(255, 160, 40, .9); }
 /* The trophy mantle: the real trophies, their feet lost in shadow so the words read. */
-.lab-fixture.is-trophies { background: rgb(20 13 10); }
+.lab-fixture.is-trophies { background: rgb(20 13 10); grid-area: 4 / 1; }
 .lab-fixture-trophies { height: 135%; inset: 0 0 auto; object-fit: cover; object-position: 50% 0; position: absolute; width: 100%; }
 .lab-fixture.is-trophies::after { background: linear-gradient(transparent 30%, rgba(14, 9, 7, .94) 68%); content: ""; inset: 0; position: absolute; }
 .lab-fixture.is-trophies .lab-fixture-name,
 .lab-fixture.is-trophies .lab-fixture-news { z-index: 1; }
-/* The bar: a counter with a lighter top. */
-.lab-fixture.is-bar { background: linear-gradient(rgb(150 116 80) 0 9px, rgb(107 74 48) 9px); grid-column: 1 / -1; min-height: 4.75rem; }
-/* On the floor: the Survivor card table and the Bowl Pool corner. */
-.lab-fixture.is-survivor { background: radial-gradient(ellipse closest-side, rgb(31 90 60) 0 88%, rgb(138 106 72) 89% 97%, transparent 98%); box-shadow: none; grid-area: 5 / 1; justify-content: center; align-content: center; }
-.lab-fixture.is-bowl { background: var(--bowl-slip-stub); box-shadow: inset 0 0 0 1px var(--bowl-slip-gold), inset 0 0 0 4px var(--bowl-slip-stub), inset 0 0 0 5px var(--bowl-slip-gold), 0 3px 6px rgba(0, 0, 0, .45); color: var(--bowl-slip-stub-ink); grid-area: 5 / 2; align-content: center; }
+/* On the floor: the trophy case, the Survivor card table and the Bowl Pool corner. */
+.lab-fixture.is-survivor { background: radial-gradient(ellipse closest-side, rgb(31 90 60) 0 88%, rgb(138 106 72) 89% 97%, transparent 98%); box-shadow: none; grid-area: 4 / 2; justify-content: center; align-content: center; }
+.lab-fixture.is-bowl { background: var(--bowl-slip-stub); box-shadow: inset 0 0 0 1px var(--bowl-slip-gold), inset 0 0 0 4px var(--bowl-slip-stub), inset 0 0 0 5px var(--bowl-slip-gold), 0 3px 6px rgba(0, 0, 0, .45); color: var(--bowl-slip-stub-ink); grid-area: 5 / 1 / 6 / -1; align-content: center; min-height: 4rem; }
 /* Inside a room: one way back, always in the same place, and the room's name. */
 .lab-room-bar { align-items: center; display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr; }
 .lab-room-back { background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .95rem; font-weight: 800; justify-self: start; min-height: 2.75rem; padding: 0 16px; }
+/* The pool chat: a slim sign by the door, out of the way; few people use it. */
+.lab-lobby-chat { background: transparent; border: 1px solid rgba(230, 207, 152, .35); border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .85rem; font-weight: 700; grid-area: 7 / 1 / 8 / -1; justify-self: center; min-height: 2.75rem; padding: 0 16px; position: relative; }
+.lab-lobby-chat:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-room-bar h3 { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.3rem; margin: 0; }
 .lab-stand-in { background: var(--club-paper); border: 1px dashed var(--club-line); border-radius: 8px; color: var(--club-ink); margin: 0; padding: 28px 16px; text-align: center; }
-
-/* Standings: the leaderboard, white number plates hand-set on a green board. A row lifts its player's standard beneath it. */
-.lab-leaderboard { background: linear-gradient(rgba(255, 255, 255, .04), transparent 40%), var(--cw-green); border: 6px solid var(--cw-deep); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .35), 0 8px 18px rgba(37, 30, 18, .25); color: var(--cw-cream); margin: 0 auto; max-width: 520px; padding: 14px 12px 10px; width: 100%; }
-.lab-leaderboard header { align-items: baseline; border-bottom: 2px solid var(--cw-gold); display: grid; grid-template-columns: 1fr auto; padding-bottom: 8px; }
-.lab-leaderboard header p { color: var(--cw-gold-lt); font-size: .62rem; font-weight: 800; grid-column: 1 / -1; letter-spacing: .24em; margin: 0; }
-.lab-leaderboard h3 { font-family: var(--font-serif); font-size: 1.6rem; letter-spacing: .12em; margin: 0; }
-.lab-leaderboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 800; letter-spacing: .16em; }
-.lab-leaderboard-heads { color: var(--cw-gold-lt); display: grid; font-size: .56rem; font-weight: 800; gap: 5px; grid-template-columns: 2.4rem minmax(0, 1fr) 2.6rem 2.6rem; letter-spacing: .14em; padding: 8px 0 4px; text-align: center; }
-.lab-leaderboard-heads .is-player { padding-left: 10px; text-align: left; }
-.lab-leaderboard ol { display: grid; gap: 5px; list-style: none; margin: 0; padding: 0; }
-.lab-leaderboard-row { background: none; border: 0; color: inherit; cursor: pointer; display: grid; gap: 5px; grid-template-columns: 2.4rem minmax(0, 1fr) 2.6rem 2.6rem; padding: 0; text-align: inherit; width: 100%; }
-.lab-leaderboard-row:focus-visible { outline: 2px solid var(--cw-gold); outline-offset: 2px; }
-.lab-plate { align-items: center; background: linear-gradient(var(--cw-brass-1), var(--cw-cream)); border-radius: 2px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 1px 1px rgba(0, 0, 0, .4); color: var(--cw-deep); display: flex; font-family: Arial, Helvetica, sans-serif; font-size: 1.05rem; font-weight: 900; height: 2.1rem; justify-content: center; min-width: 0; }
-.lab-plate.is-name { gap: 8px; justify-content: flex-start; letter-spacing: .1em; overflow: hidden; padding: 0 10px; }
-.lab-plate.is-name small { background: var(--cw-deep); border-radius: 2px; color: var(--cw-cream); font-size: .56rem; letter-spacing: .14em; padding: 2px 5px; }
-.lab-plate.is-back { color: var(--cw-bad); }
-.lab-leaderboard-row[aria-expanded="true"] .lab-plate { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 0 0 2px var(--cw-gold); }
-/* A player out of the playoff race: the plates turned to their blank green side. */
-.is-out .lab-plate { background: linear-gradient(rgb(31 74 58), rgb(22 58 46)); color: rgba(244, 239, 227, .55); }
-.lab-leaderboard-raised { display: flex; justify-content: center; padding: 12px 0 6px; }
-.lab-leaderboard-note { color: var(--cw-gold-lt); font-size: .62rem; letter-spacing: .08em; margin: 10px 0 0; text-align: center; }
-
-/* The standard: a white sign on a pole, the player's name on the top slat and a slat per pick, as carried round a golf course. */
-.lab-standard { align-items: center; display: grid; justify-items: center; margin: 0; position: relative; width: 11.5rem; }
-.lab-standard-sign { background: linear-gradient(rgb(255 255 253), rgb(240 238 232)); border: 1px solid rgba(31, 27, 22, .35); border-radius: 3px; box-shadow: inset 0 0 0 3px rgb(255 255 253), inset 0 0 0 4px rgba(31, 27, 22, .55), 0 6px 12px rgba(0, 0, 0, .3); color: rgb(24 22 20); padding: 8px 9px 7px; width: 100%; }
-.lab-standard-name { border-bottom: 2px solid rgb(24 22 20); font-family: Arial, Helvetica, sans-serif; font-size: .92rem; font-weight: 900; letter-spacing: .14em; margin: 0 0 4px; padding-bottom: 4px; text-align: center; }
-.lab-standard-name small { color: rgb(110 104 96); font-size: .55rem; letter-spacing: .12em; }
-.lab-standard ol { display: grid; gap: 3px; list-style: none; margin: 0; padding: 0; }
-.lab-standard li { align-items: center; background: rgb(248 247 243); border: 1px solid rgba(31, 27, 22, .14); display: grid; font-family: "Courier New", monospace; font-size: .82rem; gap: 4px; grid-template-columns: 3.1rem 1fr 1.2rem; height: 1.6rem; padding: 0 6px; }
-.lab-standard li b { letter-spacing: .06em; }
-.lab-standard li span { text-align: right; }
-.lab-standard li i { background: rgb(24 22 20); border-radius: 50%; height: 6px; justify-self: center; opacity: .55; width: 6px; }
-.lab-standard li .ats-result-stamp { justify-self: center; margin-block: -.2rem; }
-/* The sign is white by day and night, so its W and L keep their day inks. */
-.lab-standard li.is-w .ats-result-stamp { color: rgb(22 131 78); }
-.lab-standard li.is-l .ats-result-stamp { color: rgb(189 48 40); }
-.lab-standard li.is-hidden { background: repeating-linear-gradient(135deg, rgb(244 243 238) 0 6px, rgb(236 234 228) 6px 12px); grid-template-columns: 1fr; justify-items: center; }
-.lab-standard-lock { font-size: .7rem; opacity: .7; }
-.lab-standard-pole { background: linear-gradient(90deg, rgb(120 110 96), rgb(214 206 190) 45%, rgb(120 110 96)); border-radius: 0 0 2px 2px; height: 2.4rem; width: 6px; }
-.lab-standard-hook { left: calc(50% + 7px); position: absolute; top: calc(100% - 2.1rem); }
-.lab-standard-hook::before { border: 1.5px solid rgb(140 130 116); border-radius: 0 0 6px 6px; border-top: 0; content: ""; height: 6px; left: -3px; position: absolute; top: -4px; width: 8px; }
-.lab-standard-chip-back { background: repeating-conic-gradient(rgb(22 58 46) 0 30deg, rgb(244 239 227) 30deg 60deg); border: 2px solid rgb(22 58 46); border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, .35); display: block; height: 1.7rem; width: 1.7rem; }
-.lab-course { display: grid; gap: 22px 12px; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); justify-items: center; }
-.lab-course .lab-standard { width: 100%; }
 
 /* The Slate: the big board at a sportsbook, lit amber lines on black. */
 .lab-bigboard { background: rgb(14 14 12); border: 4px solid rgb(52 50 46); border-radius: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--cw-warn); display: grid; font-family: "Courier New", monospace; gap: 10px; margin: 0 auto; max-width: 640px; padding: 12px; width: 100%; }
@@ -211,16 +173,9 @@
 .lab-board-cell:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-team { align-items: center; color: var(--cw-cream); display: flex; font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .12em; }
 .lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
-.lab-board-tag { color: rgba(244, 239, 227, .6); font-size: .58rem; grid-column: 1 / -1; letter-spacing: .12em; text-decoration: line-through; }
 .lab-board-lock { font-size: .7rem; opacity: .7; position: absolute; right: 6px; top: 4px; }
 .lab-board-cell.is-locked { opacity: .55; }
-.lab-board-chip { position: absolute; right: -8px; top: -10px; z-index: 2; }
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }
-/* Survivor on the board: the lines do not matter, so they dim; used teams are struck. */
-.lab-bigboard.is-survivor .lab-board-line { opacity: .3; text-shadow: none; }
-.lab-bigboard.is-survivor .lab-board-cell.is-used .lab-board-team { opacity: .45; }
-.lab-bigboard.is-survivor .lab-board-trace { display: none; }
-
 /* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, and stays: a single line,
    no second rule. Nothing repeats; reduced motion shows the line at once. */
 @property --gilt-sweep { inherits: false; initial-value: 360deg; syntax: "<angle>"; }
@@ -228,12 +183,6 @@
 .trace-gilt .is-picked .lab-board-trace { --gilt-sweep: 360deg; animation: gilt-draw 620ms cubic-bezier(.3, .1, .2, 1) both; border: 1.5px solid var(--cw-gold); -webkit-mask: conic-gradient(black var(--gilt-sweep), transparent 0); mask: conic-gradient(black var(--gilt-sweep), transparent 0); }
 .trace-gilt .is-picked .lab-board-team { color: var(--cw-gold-lt); }
 @keyframes gilt-draw { from { --gilt-sweep: 0deg; } to { --gilt-sweep: 360deg; } }
-/* Brass inlay: the picked cell becomes a small brass plate, the lettering engraved into it. */
-.trace-brass .is-picked { background: linear-gradient(135deg, var(--cw-brass-3), var(--cw-gold) 50%, var(--cw-brass-3)); border-color: rgba(42, 31, 0, .5); box-shadow: inset 0 1px 0 rgba(255, 253, 247, .6), inset 0 -1px 0 rgba(42, 31, 0, .35); }
-.trace-brass .is-picked .lab-board-team,
-.trace-brass .is-picked .lab-board-line { color: var(--cw-pip-ink); text-shadow: 0 1px 0 rgba(255, 253, 247, .45); }
-/* Lit line: only the number warms to gold, with a thin gold rule beneath it. */
-.trace-lit .is-picked .lab-board-line { border-bottom: 1px solid var(--cw-gold); color: var(--cw-gold-lt); }
 @media (prefers-reduced-motion: reduce) {
   .trace-gilt .is-picked .lab-board-trace { animation: none; }
 }
@@ -439,11 +388,41 @@
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: center; }
-.lab-tote-cover.is-lamps i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
-.lab-tote-cover.is-lamps b { color: rgb(110 231 150); font-family: "Courier New", monospace; font-size: .7rem; letter-spacing: .1em; margin-left: 4px; text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+.lab-tote-cover i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
+.lab-tote-cover b { color: rgb(110 231 150); font-family: "Courier New", monospace; font-size: .7rem; letter-spacing: .1em; margin-left: 4px; text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
 /* Sealed: a small gold seal stamped over the panel. */
-.lab-tote-cover.is-sealed b { background: linear-gradient(var(--cw-brass-3), var(--cw-gold)); border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); color: var(--cw-pip-ink); font-size: .58rem; letter-spacing: .14em; padding: 3px 7px; }
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
-.lab-tote-cover.is-facedown { background: repeating-linear-gradient(45deg, rgb(22 58 46) 0 4px, rgb(30 74 58) 4px 8px); border: 1px solid rgba(201, 164, 95, .6); border-radius: 2px; height: 1.6rem; margin: 0 2px; }
 /* The Slate in the same housing: the tote board's green and gold around the black board. */
 .lab-bigboard.is-tote { background: rgb(8 10 9); border-color: rgb(18 40 30); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); }
+
+/* The Big Board's two faces: this week's picks and the season standings, turned with one tap on the board itself. */
+.lab-tote .lab-chips { justify-content: center; margin-bottom: 8px; }
+.lab-tote .lab-chips button { background: transparent; border-color: rgba(201, 164, 95, .55); color: rgb(240 236 226); min-height: 40px; }
+.lab-tote .lab-chips button[aria-pressed="true"] { background: var(--cw-gold); border-color: var(--cw-gold); color: rgb(8 10 9); }
+.lab-tote-col-pos { width: 2.6rem; }
+.lab-tote-col-total { width: 3.6rem; }
+.lab-tote thead th.is-centre { text-align: center; }
+.lab-tote .lab-tote-pos { font-family: "Courier New", monospace; font-weight: 900; text-align: center; }
+.lab-tote .lab-tote-back { color: rgb(190 240 200); font-family: "Courier New", monospace; font-weight: 700; text-align: center; }
+
+/* The Window: every pick in one place. The games against the spread, then Survivor's chips on a rack, then one ticket and one Submit. */
+.lab-window { gap: 14px; }
+.lab-window-part { display: grid; gap: 6px; }
+.lab-window-part h4 { color: var(--cw-gold-lt); font-size: .8rem; letter-spacing: .16em; margin: 0; }
+.lab-window-part h4 small { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin-left: 6px; }
+.lab-window-rack { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+.lab-window-rack li { border: 0; display: block; padding: 0; }
+.lab-window-chip { align-items: center; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 4px; color: var(--cw-cream); cursor: pointer; display: grid; font: inherit; gap: 4px; justify-items: center; min-height: 4.4rem; padding: 8px 2px 6px; width: 100%; }
+.lab-window-chip small { font-size: .58rem; letter-spacing: .1em; }
+.lab-window-chip[aria-pressed="true"] { border-color: var(--cw-gold); box-shadow: inset 0 0 0 1px var(--cw-gold); }
+.lab-window-chip:disabled { cursor: default; opacity: .55; }
+.lab-window-chip:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
+.lab-window-out { color: var(--cw-cream); font-size: .8rem; margin: 0; }
+.lab-window-ticket { border-top: 1px dashed rgba(240, 180, 41, .4); display: grid; gap: 10px; padding-top: 10px; }
+.lab-window-ticket dl { display: grid; gap: 4px; margin: 0; }
+.lab-window-ticket dl div { display: flex; gap: 8px; justify-content: space-between; }
+.lab-window-ticket dt { color: rgba(240, 180, 41, .7); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; }
+.lab-window-ticket dd { color: var(--cw-cream); font-weight: 700; margin: 0; }
+.lab-window-submit { background: var(--cw-gold); border: 0; border-radius: 999px; color: rgb(14 14 12); cursor: pointer; font: inherit; font-weight: 800; letter-spacing: .08em; min-height: 3rem; }
+.lab-window-submit:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--cw-gold); color: var(--cw-gold-lt); cursor: default; }
+.lab-window-submit:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
