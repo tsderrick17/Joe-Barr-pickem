@@ -436,6 +436,7 @@ export async function buildRoom(q) {
   const poker = group("survivor");
   const PX = 0.95, PZ = -4.85, PRX = 1.45, PRZ = 0.84, SEATS = 10;
   const oval = (geometry, mat, y, sx, sz, opts) => { const mesh = add(poker, geometry, mat, [PX, y, PZ], opts); mesh.scale.set(sx, 1, sz); return mesh; };
+  const saddle = new THREE.MeshPhysicalMaterial({ color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
   const leather = new THREE.MeshPhysicalMaterial({ color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
   oval(cyl(1, 1, 0.12, 96), m.walnut, 0.72, PRX + 0.06, PRZ + 0.06);                                                                   // apron
   oval(cyl(1, 1, 0.06, 96), m.felt, 0.79, PRX - 0.2, PRZ - 0.2);                                                                       // the felt
@@ -460,13 +461,19 @@ export async function buildRoom(q) {
     for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + cos * (PRX - 0.42) + sin * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + sin * (PRZ - 0.32) - cos * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
     for (let k = 0; k < 4 + (a % 3) * 2; k++) chip(chipColors[(a + (k > 3 ? 1 : 0)) % 5], [PX + cos * (PRX - 0.62) + Math.cos(t + 1.5) * 0.1, 0.83 + k * 0.017, PZ + sin * (PRZ - 0.5) + Math.sin(t + 1.5) * 0.07]);
     const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.36), 0, PZ + sin * (PRZ + 0.36)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
-    // a light, comfortable chair: a padded linen seat, a low curved cane back with a padded band inside it, slim walnut legs
-    add(c, rbox(0.46, 0.05, 0.44, 0.02), chairWood, [0, 0.44, 0]);
-    add(c, rbox(0.42, 0.09, 0.4, 0.04), linen, [0, 0.51, -0.01]);
-    add(c, new THREE.CylinderGeometry(0.24, 0.24, 0.26, 24, 1, true, -1.0, 2.0), caneOpen, [0, 0.74, -0.03]);
-    add(c, new THREE.CylinderGeometry(0.215, 0.215, 0.2, 24, 1, true, -0.95, 1.9), new THREE.MeshStandardMaterial({ map: linen.map, roughness: 0.95, side: THREE.DoubleSide }), [0, 0.73, -0.03]);
-    add(c, new THREE.TorusGeometry(0.24, 0.016, 8, 24, 2.0), chairWood, [0, 0.87, -0.03], { rot: [Math.PI / 2, 0, Math.PI / 2 - 1.0] });
-    for (const [lx, lz] of [[-0.19, -0.18], [0.19, -0.18], [-0.19, 0.18], [0.19, 0.18]]) add(c, cyl(0.017, 0.012, 0.42, 10), chairWood, [lx, 0.21, lz]);
+    // a proper poker chair: four turned legs, a padded leather seat, an upright padded back on two posts leaning back a little,
+    // and wooden arms on front supports
+    for (const [lx, lz] of [[-0.2, -0.19], [0.2, -0.19], [-0.2, 0.19], [0.2, 0.19]]) add(c, cyl(0.024, 0.018, 0.44, 12), chairWood, [lx, 0.22, lz]);
+    for (const lx of [-0.2, 0.2]) add(c, cyl(0.012, 0.012, 0.38, 8), chairWood, [lx, 0.12, 0], { rot: [Math.PI / 2, 0, 0], cast: false });   // stretchers
+    add(c, rbox(0.5, 0.06, 0.48, 0.02), chairWood, [0, 0.47, 0]);
+    add(c, rbox(0.46, 0.09, 0.44, 0.04), saddle, [0, 0.54, -0.01]);
+    for (const lx of [-0.2, 0.2]) add(c, cyl(0.022, 0.022, 0.52, 10), chairWood, [lx, 0.74, 0.22], { rot: [0.12, 0, 0] });
+    add(c, rbox(0.44, 0.26, 0.07, 0.03), saddle, [0, 0.8, 0.245], { rot: [0.12, 0, 0] });
+    add(c, rbox(0.48, 0.05, 0.06, 0.02), chairWood, [0, 0.98, 0.265], { rot: [0.12, 0, 0] });
+    for (const lx of [-0.25, 0.25]) {
+      add(c, rbox(0.06, 0.04, 0.42, 0.015), chairWood, [lx, 0.72, 0.02]);
+      add(c, cyl(0.016, 0.016, 0.2, 8), chairWood, [lx, 0.61, -0.16]);
+    }
   }
 
   // ----- plants in baskets and pots, a surfboard against the wall, and from Dec 7 the Bowl Pool's bulletin board on wheels, wheeled in
@@ -501,7 +508,7 @@ export async function buildRoom(q) {
     // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
     // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-1.05, 0, -2.75); stand.rotation.y = 0.3; b2.add(stand);
+    const stand = new THREE.Group(); stand.position.set(-2.05, 0, -4.4); stand.rotation.y = 0.45; stand.scale.setScalar(0.85); b2.add(stand);
     const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
     add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42, 0]);
     for (const y of [0.87, 1.97]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
