@@ -11,14 +11,19 @@ The room uses the real trophy models, so it borrows the trophy renderer's module
 ## Re-rendering
 
 1. Once: `cd tools/trophy-render && npm install`.
-2. From this folder: `node render.mjs` (about two minutes, software rendering, no graphics card needed). `PNG=1` also writes PNGs,
+2. From this folder: `node render.mjs` (about four minutes, software rendering, no graphics card needed). `PNG=1` also writes PNGs,
    and `node render.mjs <folder>` writes to another folder for design work.
 3. Commit the changed pictures and `src/lib/lab-clubhouse-room.json`, re-record the Lab screenshots (the visual-baselines workflow),
    and open a pull request.
 
 ## Files
 
-- `room.js`: the room (the thatched ceiling and fans, the glass wall and the pool patio, the Big Board and sportsbook, the bar, the
-  stone chimney with the TV, the lounge with the race table, the trophies, the poker table, the Bowl Pool board) and the camera.
-- `render.mjs`: renders the four pictures and writes the tap spots. `shot.mjs`: design work, renders chosen views large to a folder
-  (for example `node shot.mjs out '[["day","scale=3"],["night","scale=3&night=1"]]'`). `scene.html`, `serve.mjs`: the page and static server it drives.
+- `room.js`: the room (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
+  the bar and its mirrored back bar, the Trophy Room and its door, the stone fireplace (lit only at night), the lounge, the oval
+  poker table, the Bowl Pool board), its light (the
+  sun, the room's own reflections, contact shadow, glow) and the camera.
+- `surfaces.js`: what the room is made of: the drawn surfaces (planks, shiplap, fieldstone, thatch, cane, sky, flame) and the one
+  modelled leaf that every fan blade and plant is grown from.
+- `render.mjs`: renders the four pictures and writes the tap spots. `shot.mjs`: design work, renders chosen views to a folder
+  (for example `node shot.mjs out '[["day",""],["fan","zoom=2.2,0.5,0.2"],["night","night=1"]]'`; `zoom=k,x,y` renders the part of the
+  picture centred at x,y, as fractions of it, k times larger, which is how to inspect a detail). `scene.html`, `serve.mjs`: the page and static server it drives.

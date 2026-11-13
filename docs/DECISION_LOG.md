@@ -19,6 +19,32 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-13 - The clubhouse room made convincing, and laid out to be walked through (Lab)
+
+The owner asked for a pass on depth, texture, shadow and mood ("a grand, beautiful, magnificent space"), for fan blades that convince
+("not just one solid flat blade"), and for the sense that a person could walk through the room and use it. So the picture is now lit
+the way a room is: late sun through the glass throwing the window frames across an oak floor, the fill kept low so shadows stay
+deep, the room reflected in its own brass and floor, a soft shadow wherever two things meet, a little glow on what is truly bright.
+The thatch is laid in overhanging courses, the fireplace is mottled fieldstone with raked joints, and each fan blade is a modelled
+palm leaf (pleated, scalloped, keeled on its rib) on a brass iron; the plants are grown from the same leaf.
+
+Then the layout, at the owner's word ("we need to be smarter with where things are placed"):
+- The trophies left the middle of the floor. A first try stood them in a doorway cut through the chimney; the owner found the cutout
+  in the stone awkward. The Trophy Room is now a room of its own off the right side: its wall steps into the clubhouse so its door
+  faces the viewer, with the trophies on their table and the banners (which left the bar) inside. Its page is exactly today's
+  Trophy Room without the stats: the turning table and its banners. The plaques stay on the bar and open their own page.
+- No SPORTSBOOK sign ("it should be implied"). The spreads are one board, as wide as the wall, in type big enough to read.
+- The race did not sit well in the room. It comes out and will be its own Lab try-out.
+- The lounge chairs blocked the way; the lounge now leaves a clear aisle along the bar. The glass doors stand open to the patio.
+- The poker table is a long oval with a seat for every player, moved nearer the lounge to draw the room in; the picture is a little
+  shorter for the same reason.
+Rule kept: nothing is turned to the camera by a trick; a thing that must be seen is given a real wall that faces the viewer.
+
+A third round, at the owner's word: the poker chairs became deep padded club chairs; the bar became more elegant (fluted walnut,
+marble, brass, a mirrored back bar with lit shelves of real bottles and rows of glassware); the TV went; the Bowl Pool's board moved
+out of the back of the room into the open floor by the end of the bar, larger, with the bowl games pinned up; and the fire is lit in
+the night picture and cold by day. Night is the player's own day/night switch, not the clock.
+
 ## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
 
 The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in

@@ -270,9 +270,10 @@ const ROOM_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
 ];
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["The Big Board", "big-board", []],
-  ["Sportsbook", "window", []],
-  ["Trophies", "trophies-wall", []],
-  ["Trophies", "trophies-crowning", [["Scene", "A champion is crowned"]]],
+  ["The Window", "window", []],
+  ["Trophy Room", "trophy-room", []],
+  ["Plaques", "plaques", []],
+  ["Plaques", "plaques-crowning", [["Scene", "A champion is crowned"]]],
 ];
 const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
 for (const [shot, choices, labels] of ROOM_SHOTS) {
@@ -293,6 +294,7 @@ for (const [spot, shot, choices] of CLUB_SHOTS) {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
       await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: spot, exact: true }).click();
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      if (spot === "Trophy Room") await expect(page.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });   // every picture of the table has arrived
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
       await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
@@ -306,10 +308,9 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
-    ["Sportsbook", "The Window", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophies", "Trophy Room", ".lab-wall"],
-    ["Banners", "Trophy Room", ".lab-wall"], ["Plaques", "Trophy Room", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
+    ["The Window", "The Window", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
+    ["Plaques", "Plaques", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
     ["Record book", "Record book", ".lab-stand-in"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
-    ["The race", "The race", ".lab-stand-in"],
   ];
   // Everything is a comfortable size for a thumb, however small it looks in the picture. ("Show labels" is the one control that isn't a spot.)
   await expect(room.getByRole("button")).toHaveCount(spots.length + 1);
@@ -339,7 +340,7 @@ test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
   await room.getByRole("button", { name: "Show labels" }).click();
-  await expect(room.locator(".lab-room-tag")).toHaveCount(9);
+  await expect(room.locator(".lab-room-tag")).toHaveCount(7);
   await room.getByRole("button", { name: "Hide labels" }).click();
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
@@ -351,7 +352,7 @@ test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool
   await expect(room.getByRole("button", { name: "Bowl Pool" })).toBeVisible();
   // The same rooms as a plain list, for anyone who would rather tap a word.
   const list = page.getByRole("group", { name: "Rooms" });
-  await expect(list.getByRole("button")).toHaveText(["The Window", "The Big Board", "Survivor", "Trophy Room", "The race", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
+  await expect(list.getByRole("button")).toHaveText(["The Window", "The Big Board", "Survivor", "Trophy Room", "Plaques", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
   await list.getByRole("button", { name: "Constitution" }).click();
   await expect(page.getByRole("heading", { name: "Constitution", level: 3 })).toBeVisible();
 });
@@ -366,30 +367,34 @@ test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, a
   await expect(ticket.locator("i.is-lit")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
   // It stays on screen inside a room, at the bottom of the window even when the room is long.
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
   await expect(ticket).toBeInViewport();
   await ticket.click();
   await expect(page.getByRole("heading", { name: "The Window", level: 3 })).toBeVisible();
   await expect(ticket).toHaveCount(0);
 });
 
-test("the Trophy Room is one tall wall: banners for the pool chosen, the trophies, then a plaque per season", async ({ page }) => {
+test("the Trophy Room is today's page without the stats: the table turns by its arrows and the front trophy's champions hang below", async ({ page }) => {
   await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
-  const banners = page.getByRole("region", { name: "Banners" });
-  await expect(banners.getByRole("listitem")).toHaveText(["Earl: 2026, 2024", "Walt: 2025, 2023"]);
-  await banners.getByRole("group", { name: "Whose banners" }).getByRole("button", { name: "Survivor" }).click();
-  await expect(banners.getByRole("listitem")).toHaveCount(4);
-  await expect(page.getByRole("region", { name: "Trophies" }).getByRole("img")).toBeVisible();
-  await expect(page.locator(".lab-plaque")).toHaveCount(4);
-  // Top to bottom, the way you would look at a real wall.
-  const tops = await Promise.all(["Banners", "Trophies", "Plaques"].map(async (name) => (await page.getByRole("region", { name }).boundingBox())!.y));
-  expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
+  const table = page.locator(".trophy-display");
+  await expect(table.locator(".trophy-turn-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+  const front = table.getByRole("status").filter({ hasText: "at the front" });
+  await expect(front).toHaveText("Pick’em is at the front");
+  // One banner per champion, in the order they first won, each carrying every year they have won.
+  await expect(table.locator(".trophy-banner")).toHaveText([/Walt[\s\S]*2023[\s\S]*2025/, /Earl[\s\S]*2024[\s\S]*2026/]);
+  await table.getByRole("button", { name: "Bring the next trophy forward" }).click();
+  await expect(front).toHaveText("Bowl Pool is at the front");
+  await expect(table.locator(".trophy-banner")).toHaveCount(4);
+  // Nothing else is on the page: no stats, no plaques.
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.locator(".lab-plaque")).toHaveCount(0);
 });
 
-test("the Trophy Room: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
+test("the plaques on the bar: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
   await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Plaques", exact: true }).click();
+  await expect(page.locator(".lab-plaque")).toHaveCount(4);
   await expect(page.getByRole("article", { name: "2025 champions" }).getByRole("definition")).toHaveText(["Walt", "Dottie", "Rosie"]);
   await expect(page.locator(".lab-pennant")).toHaveCount(0);
   await page.getByRole("group", { name: "Scene" }).getByRole("button", { name: "A champion is crowned" }).click();

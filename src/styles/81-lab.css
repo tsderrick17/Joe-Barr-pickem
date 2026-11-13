@@ -127,9 +127,10 @@
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
-.lab-room-spot.is-record .lab-room-tag,
-.lab-room-spot.is-banners .lab-room-tag { left: 4px; transform: none; }
-.lab-room-spot.is-constitution .lab-room-tag { left: auto; right: 0; transform: none; }
+.lab-room-spot.is-record .lab-room-tag { left: 4px; transform: none; }
+.lab-room-spot.is-constitution .lab-room-tag,
+.lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
+.lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
 .lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
 .lab-room-labels { background: rgba(16, 32, 24, .82); border: 1px solid rgba(201, 164, 95, .7); border-radius: 999px; bottom: 10px; color: var(--cw-cream); cursor: pointer; font-size: .75rem; font-weight: 800; min-height: 2.25rem; padding: 0 12px; position: absolute; right: 10px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
@@ -195,11 +196,7 @@
 .lab-wall-part h4 { font-family: var(--font-serif); font-size: 1.2rem; margin: 0; text-align: center; }
 .lab-wall-part h4 small { color: var(--cw-gold-lt); display: block; font-family: Arial, Helvetica, sans-serif; font-size: .78rem; font-weight: 400; }
 .lab-wall .lab-chips { justify-content: center; }
-.lab-wall .lab-wall-rafters { --banner-size: 5.6rem; border-top: 0; display: flex; flex-wrap: wrap; gap: 0 .6rem; justify-content: center; list-style: none; margin: 0; overflow: visible; padding: 0; }
-.lab-mantle { display: grid; justify-items: center; max-width: 24rem; width: 100%; }
-.lab-mantle-trophies { aspect-ratio: 1320 / 760; height: auto; -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 14% 86%, transparent); mask-image: linear-gradient(90deg, transparent, rgb(0 0 0) 14% 86%, transparent); object-fit: cover; object-position: 50% 0; width: 100%; }
-.lab-mantle-shelf { background: linear-gradient(rgb(150 116 80), rgb(107 74 48)); border-radius: 2px; box-shadow: 0 4px 6px rgba(0, 0, 0, .5); height: 12px; width: 100%; }
-.lab-mantle-names { color: var(--cw-gold-lt); display: grid; font-size: .72rem; font-weight: 800; grid-template-columns: repeat(3, 1fr); letter-spacing: .08em; list-style: none; margin: 8px 0 0; padding: 0; text-align: center; text-transform: uppercase; width: 100%; }
+.lab-wall-table { max-width: 34rem; width: 100%; }
 /* The plaque, kept quiet: satin brass on bevelled walnut. Its details are few and deliberate: indented corners (the walnut shows in
    each), one engraved keyline that follows them, the year over a diamond rule, dotted leaders to each name. */
 .lab-plaque { background: linear-gradient(135deg, rgb(92 58 36), rgb(58 34 20) 60%, rgb(76 46 28)); border-radius: 4px; box-shadow: inset 1px 1px 0 rgba(255, 220, 170, .25), inset -1px -1px 0 rgba(0, 0, 0, .5), 0 4px 8px rgba(0, 0, 0, .55); padding: 8px; }
