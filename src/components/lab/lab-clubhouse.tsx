@@ -15,11 +15,11 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    inside, looking down the room under a thatched beach-hut ceiling with two big palm-leaf fans. There is room to walk: in past
  *    the poker table, along the bar, round the lounge and out through the open doors. Tap anything to go there: the wall that faces
  *    you where picks are made (the Big Board, under it one wide board of the week's spreads, the counter; no sign says
- *    "sportsbook"), the bar down the left wall (the plaques along its front, the record book and the laptop on top: the pool chat, a
+ *    "sportsbook"), the bar down the left wall (the plaques along its front, the laptop on top: the pool chat, a
  *    mail sign when there's a new message), the Trophy Room through its own door on the right (a room to the side: the trophies on
  *    their table, the banners behind; it opens today's turning table and banners), the constitution framed over that door, the
- *    stone fireplace and the lounge beyond it (a TV over the mantel), the oval Survivor poker table in the middle with a seat for
- *    every player, and from Dec 7 the Bowl Pool's bulletin board, wheeled in beside the doors.
+ *    stone fireplace (lit at night) and the lounge beyond it (the record book open on its table), the oval Survivor poker table in the middle with a deep club chair
+ *    for every player, and from Dec 7 the Bowl Pool's bulletin board, wheeled into the open floor by the end of the bar.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
  *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the

@@ -4,12 +4,13 @@
 //  - Ceiling: natural beach-hut thatch laid in courses, no beams, two big palm-leaf fans down the middle.
 //  - Back wall, left: where picks are made, face on: the Big Board, one wide board of spreads under it, the counter. No sign.
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
-//  - Left wall: the bar running down the room, stools along it, the back bar and a neon sign on the wall, the plaques along its
-//    front, the record book and the laptop on top.
+//  - Left wall: the bar running down the room (fluted walnut, marble, brass), leather stools, a mirrored back bar of bottles and
+//    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table).
 //  - Right: the Trophy Room, a room of its own to the side. Its wall steps into the clubhouse so its door faces you (the trophies
 //    on their table and the banners inside, the constitution framed over the door). Beyond it, on the wall the two rooms share,
-//    a grand floor-to-thatch stone fireplace with a TV over the mantel, and the lounge in front, set clear of the aisle.
-//  - Middle: a long oval Survivor poker table with a seat for every player. The floor in front of it is the way in.
+//    a grand floor-to-thatch stone fireplace (lit at night), and the lounge in front, set clear of the aisle.
+//  - Middle: a long oval Survivor poker table with a deep club chair for every player. The floor in front of it is the way in.
+//    From Dec 7 the Bowl Pool's board stands in the open floor by the end of the bar.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { pennantCup } from "/trophies.js";
@@ -37,20 +38,6 @@ const rbox = (w, h, d, r = 0.04) => new RoundedBoxGeometry(w, h, d, 3, r);
 const cyl = (rt, rb, h, seg = 32) => new THREE.CylinderGeometry(rt, rb, h, seg);
 
 // ---------- textures
-function gameOnTv() {
-  const c = canvas(640, 360), g = c.getContext("2d");
-  for (let i = 0; i < 10; i++) { g.fillStyle = i % 2 ? "#2c7a3a" : "#348a43"; g.fillRect(i * 64, 0, 64, 360); }
-  g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 3;
-  for (let i = 1; i < 10; i++) { g.beginPath(); g.moveTo(i * 64, 44); g.lineTo(i * 64, 360); g.stroke(); }
-  g.fillStyle = "rgba(255,255,255,.8)"; g.font = "700 30px Arial"; g.textAlign = "center";
-  ["2 0", "3 0", "4 0", "5 0", "4 0"].forEach((n, i) => g.fillText(n, 128 + i * 128, 330));
-  g.fillStyle = "#1f6fe0"; g.fillRect(316, 44, 5, 316); g.fillStyle = "#ffd60a"; g.fillRect(444, 44, 5, 316);
-  for (let i = 0; i < 11; i++) { const y = 80 + i * 22; g.fillStyle = "#101418"; g.beginPath(); g.arc(300 - (i % 3) * 22, y, 8, 0, Math.PI * 2); g.fill(); g.fillStyle = "#f4f4f4"; g.beginPath(); g.arc(338 + (i % 4) * 20, y + 6, 8, 0, Math.PI * 2); g.fill(); }
-  g.fillStyle = "rgba(10,14,20,.92)"; g.fillRect(0, 0, 640, 44);
-  g.font = "700 24px Arial"; g.textAlign = "left"; g.fillStyle = "#fff"; g.fillText("PIT  17", 20, 30); g.fillText("CLE  14", 170, 30);
-  g.fillStyle = "#f0b429"; g.fillText("4TH  2:41", 340, 30); g.fillStyle = "#fff"; g.fillText("3RD & 4", 500, 30);
-  return texture(c);
-}
 function neon(text) {
   const c = canvas(1024, 200), g = c.getContext("2d");
   g.fillStyle = "rgba(0,0,0,0)"; g.fillRect(0, 0, 1024, 200);
@@ -273,40 +260,86 @@ export async function buildRoom(q) {
 
   // ----- the left wall: the bar, running down the room. Counter and stools, the back bar and a neon sign on the wall, lanterns
   // over it, the plaques along its front; the champions' banners hang over it one behind another, each facing the door.
+  // The bar: a fluted walnut front on a brass kick plate, a thick marble top with a brass foot rail below, green leather stools on
+  // brass. Behind it a back bar of walnut and antique mirror: three glass shelves of real bottles lit from beneath, glassware in rows
+  // on the back counter, and the neon over the mirror.
   const bar = group("bar");
-  const BXc = X0 + 0.95, BZ = -8.5, BL = 5.6;
-  add(bar, rbox(0.75, 1.1, BL, 0.03), m.walnut, [BXc, 0.55, BZ]);
-  add(bar, rbox(0.95, 0.07, BL + 0.12, 0.02), std(0xe8e2d4, { roughness: 0.25 }), [BXc, 1.13, BZ]);          // pale stone top
-  add(bar, cyl(0.025, 0.025, BL, 12), brass, [BXc + 0.45, 0.22, BZ], { rot: [Math.PI / 2, 0, 0] });
+  const BXc = X0 + 0.95, BZ = -8.5, BL = 5.6, FRONT = BXc + 0.375;
+  add(bar, rbox(0.75, 1.02, BL, 0.02), m.walnut, [BXc, 0.53, BZ]);
+  for (let k = 0; k < Math.floor(BL / 0.075); k++) add(bar, cyl(0.026, 0.026, 0.78, 10, 1), m.walnut, [FRONT, 0.55, BZ - BL / 2 + 0.06 + k * 0.075], { cast: false });   // flutes
+  add(bar, box(0.03, 0.12, BL), brass, [FRONT + 0.02, 0.06, BZ]);                                                                      // kick plate
+  add(bar, rbox(0.06, 0.07, BL + 0.04, 0.015), m.walnut, [FRONT + 0.02, 1.0, BZ]);                                                    // moulding under the top
+  add(bar, rbox(0.98, 0.09, BL + 0.14, 0.035), m.marble, [BXc + 0.02, 1.1, BZ]);                                                     // the marble top
+  add(bar, cyl(0.028, 0.028, BL, 16), brass, [FRONT + 0.16, 0.22, BZ], { rot: [Math.PI / 2, 0, 0] });                                  // foot rail
+  for (let k = 0; k < 5; k++) add(bar, cyl(0.012, 0.016, 0.2, 10), brass, [FRONT + 0.08, 0.2, BZ - BL / 2 + 0.4 + k * (BL - 0.8) / 4], { rot: [0, 0, Math.PI / 2] });
   const plaques = group("plaques");
-  for (let i = 0; i < 5; i++) { const z = BZ + 2.2 - i * 1.1; add(plaques, box(0.03, 0.32, 0.46), timberDark, [BXc + 0.39, 0.62, z]); add(plaques, box(0.02, 0.24, 0.38), brass, [BXc + 0.41, 0.62, z]); }
+  for (let i = 0; i < 5; i++) { const z = BZ + 2.2 - i * 1.1; add(plaques, rbox(0.03, 0.32, 0.46, 0.008), timberDark, [FRONT + 0.035, 0.62, z]); add(plaques, box(0.02, 0.24, 0.38), brass, [FRONT + 0.055, 0.62, z]); }
+  const stoolLeather = new THREE.MeshPhysicalMaterial({ color: 0x1f4a36, roughness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.4, sheen: 0.4, sheenColor: new THREE.Color(0x4f8a6a) });
   for (let i = 0; i < 5; i++) {
-    const z = BZ + 2.2 - i * 1.1;
-    add(bar, cyl(0.21, 0.21, 0.07, 24), rattan, [BXc + 0.9, 0.78, z]);
-    add(bar, cyl(0.03, 0.05, 0.75, 10), brass, [BXc + 0.9, 0.38, z]);
-    add(bar, new THREE.TorusGeometry(0.15, 0.012, 6, 24), brass, [BXc + 0.9, 0.3, z], { rot: [Math.PI / 2, 0, 0] });
+    const z = BZ + 2.2 - i * 1.1, sx = BXc + 0.92;
+    add(bar, rbox(0.4, 0.09, 0.38, 0.04), stoolLeather, [sx, 0.79, z]);                                                               // the seat
+    add(bar, rbox(0.06, 0.26, 0.34, 0.03), stoolLeather, [sx + 0.18, 0.97, z], { rot: [0, 0, -0.12] });                               // a low back
+    add(bar, cyl(0.15, 0.15, 0.02, 24), brass, [sx, 0.73, z]);
+    add(bar, cyl(0.025, 0.035, 0.66, 12), brass, [sx, 0.38, z]);
+    add(bar, cyl(0.2, 0.22, 0.03, 28), brass, [sx, 0.015, z]);
+    add(bar, new THREE.TorusGeometry(0.15, 0.011, 8, 28), brass, [sx, 0.3, z], { rot: [Math.PI / 2, 0, 0] });
   }
-  add(bar, box(0.06, 1.9, BL), std(0x1f3b2f, { roughness: 0.6 }), [X0 + 0.04, 2.15, BZ]);                    // the back bar's panel
-  add(bar, box(0.1, 0.08, BL + 0.1), timberDark, [X0 + 0.06, 3.12, BZ]);
-  for (let s = 0; s < 2; s++) add(bar, box(0.28, 0.04, BL - 0.2), timber, [X0 + 0.2, 1.5 + s * 0.42, BZ]);
-  const bottleColors = [0x2f6a4c, 0x7a3a12, 0xd8d0b8, 0x3a1d0c, 0x9a7a2a, 0x24435e];
-  for (let s = 0; s < 2; s++) for (let i = 0; i < 17; i++) add(bar, cyl(0.035, 0.04, 0.27 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [X0 + 0.2, 1.66 + s * 0.42, BZ - BL / 2 + 0.3 + i * 0.31], { cast: false });
-  add(bar, new THREE.PlaneGeometry(2.2, 0.43), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [X0 + 0.085, 2.5, -10.3], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  // the back bar
+  const WALL = X0 + 0.02;
+  add(bar, rbox(0.46, 0.92, BL, 0.02), m.walnut, [WALL + 0.23, 0.46, BZ]);                                                           // back counter
+  add(bar, rbox(0.5, 0.04, BL + 0.04, 0.01), m.marble, [WALL + 0.25, 0.94, BZ]);
+  add(bar, box(0.03, 1.36, BL - 0.3), new THREE.MeshStandardMaterial({ color: 0xb8a888, metalness: 1, roughness: 0.12, envMapIntensity: 1.1 }), [WALL + 0.02, 1.66, BZ], { cast: false });   // antique mirror
+  for (const z of [BZ - BL / 2 + 0.08, BZ + BL / 2 - 0.08, BZ - BL / 6, BZ + BL / 6]) add(bar, box(0.06, 1.42, 0.1), m.walnut, [WALL + 0.04, 1.66, z]);   // pilasters
+  add(bar, box(0.08, 0.86, BL + 0.1), m.walnut, [WALL + 0.04, 2.8, BZ]);                                                              // the panel above, where the neon hangs
+  add(bar, rbox(0.14, 0.1, BL + 0.2, 0.02), m.walnut, [WALL + 0.07, 3.27, BZ]);                                                       // cornice
+  add(bar, box(0.03, 0.03, BL), brass, [WALL + 0.1, 2.38, BZ]);
+  const bottleGlass = (color, clear) => new THREE.MeshPhysicalMaterial({ color, roughness: 0.06, metalness: 0, transmission: clear ? 0.85 : 0.45, thickness: 0.06, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2 });
+  const shapes = {
+    whiskey: [[0, 0], [0.038, 0], [0.04, 0.01], [0.04, 0.17], [0.034, 0.2], [0.014, 0.225], [0.013, 0.27], [0, 0.27]],
+    wine: [[0, 0], [0.034, 0], [0.036, 0.01], [0.036, 0.17], [0.03, 0.21], [0.013, 0.245], [0.012, 0.31], [0, 0.31]],
+    gin: [[0, 0], [0.044, 0], [0.046, 0.01], [0.046, 0.15], [0.03, 0.18], [0.013, 0.19], [0.013, 0.23], [0, 0.23]],
+    liqueur: [[0, 0], [0.04, 0], [0.042, 0.02], [0.034, 0.1], [0.04, 0.17], [0.02, 0.2], [0.011, 0.22], [0.011, 0.25], [0, 0.25]],
+  };
+  const lathe = Object.fromEntries(Object.entries(shapes).map(([k, pts]) => [k, new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 20)]));
+  const bottleKinds = [["whiskey", 0x8a4a14, false], ["wine", 0x2f5a3c, false], ["gin", 0xdfeee6, true], ["whiskey", 0xa8641c, false], ["liqueur", 0x6a1a14, false], ["gin", 0x9fc8d8, true], ["wine", 0x3a1d0c, false], ["whiskey", 0xc0802a, false], ["liqueur", 0x1d3557, false]];
+  const labelInks = [0xf3ead3, 0x111111, 0xe6cf98, 0xf7f4ec, 0x1f4a36];
+  const SHELVES = [1.16, 1.58, 2.0];
+  SHELVES.forEach((y, sIndex) => {
+    add(bar, box(0.24, 0.016, BL - 0.4), glass, [WALL + 0.14, y, BZ], { cast: false });
+    add(bar, box(0.01, 0.012, BL - 0.4), glow(0xffd9a0, night ? 2.2 : 1.1), [WALL + 0.24, y - 0.014, BZ], { cast: false });              // a lamp strip under the shelf's front edge
+    let z = BZ - BL / 2 + 0.3;
+    for (let i = 0; z < BZ + BL / 2 - 0.3; i++) {
+      const [kind, color, clear] = bottleKinds[(i * 4 + sIndex * 3) % bottleKinds.length], h = shapes[kind].at(-1)[1];
+      if (Math.abs(z - (BZ - BL / 6)) < 0.08 || Math.abs(z - (BZ + BL / 6)) < 0.08) { z += 0.12; continue; }                        // leave the pilasters clear
+      const bottle = add(bar, lathe[kind], bottleGlass(color, clear), [WALL + 0.13 + (i % 2) * 0.03, y + 0.008, z], { cast: false });
+      bottle.scale.setScalar(sIndex === 2 ? 0.9 : 1);
+      add(bar, cyl(0.014, 0.014, 0.03, 10), [brass, std(0x111111, { roughness: 0.4 }), std(0x8c1e24, { roughness: 0.4 })][i % 3], [WALL + 0.13 + (i % 2) * 0.03, y + 0.008 + h * bottle.scale.y + 0.012, z], { cast: false });
+      add(bar, new THREE.PlaneGeometry(0.05, 0.05 + (i % 2) * 0.02), std(labelInks[(i + sIndex) % labelInks.length], { roughness: 0.7 }), [WALL + 0.13 + (i % 2) * 0.03 + (kind === "gin" ? 0.047 : 0.041), y + 0.09, z], { cast: false, rot: [0, Math.PI / 2, 0] });
+      z += 0.085 + (i % 3) * 0.012;
+    }
+    if (night) { const l = new THREE.PointLight(0xffc98a, 0.9, 2.2, 1.6); l.position.set(WALL + 0.4, y + 0.2, BZ); bar.add(l); }
+  });
+  // glassware on the back counter: rocks glasses and coupes in neat rows, upturned on a bar mat
+  const crystal = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, transmission: 1, thickness: 0.02, ior: 1.5, clearcoat: 1, envMapIntensity: 1.4, side: THREE.DoubleSide });
+  const rocks = new THREE.LatheGeometry([[0, 0], [0.036, 0], [0.04, 0.004], [0.042, 0.085], [0.038, 0.085], [0.034, 0.012], [0, 0.012]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
+  const coupe = new THREE.LatheGeometry([[0, 0], [0.032, 0], [0.032, 0.006], [0.005, 0.012], [0.004, 0.09], [0.03, 0.1], [0.055, 0.13], [0.052, 0.132], [0.028, 0.104], [0, 0.098]].map(([r, y]) => new THREE.Vector2(r, y)), 22);
+  add(bar, box(0.3, 0.008, 1.4), std(0x111111, { roughness: 0.9 }), [WALL + 0.3, 0.965, BZ + 1.6], { cast: false });
+  for (let r = 0; r < 2; r++) for (let k = 0; k < 9; k++) add(bar, k % 3 === 2 ? coupe : rocks, crystal, [WALL + 0.22 + r * 0.12, 0.97, BZ + 1.0 + k * 0.14 + r * 0.07], { cast: false });
+  add(bar, new THREE.PlaneGeometry(2.2, 0.43), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -9.6], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
-  for (const z of [BZ + 2.55, BZ - 0.45, BZ - 2.5]) {                                                        // rattan lamps standing on the bar
-    add(bar, cyl(0.07, 0.09, 0.03, 16), brass, [BXc - 0.12, 1.18, z]);
-    add(bar, cyl(0.012, 0.012, 0.34, 8), brass, [BXc - 0.12, 1.35, z]);
-    add(bar, cyl(0.1, 0.16, 0.24, 20), rattan, [BXc - 0.12, 1.6, z]);
-    add(bar, cyl(0.05, 0.05, 0.1, 12), glow(0xffd28a, night ? 3 : 1.2), [BXc - 0.12, 1.56, z], { cast: false });
-    if (night) { const l = new THREE.PointLight(0xffc27a, 1.6, 3, 1.6); l.position.set(BXc + 0.1, 1.7, z); bar.add(l); }
+  add(bar, new THREE.LatheGeometry([[0, 0], [0.04, 0], [0.045, 0.14], [0.03, 0.17], [0.03, 0.2], [0.012, 0.22], [0, 0.23]].map(([r, y]) => new THREE.Vector2(r, y)), 20), new THREE.MeshStandardMaterial({ color: 0xd8dbe0, metalness: 1, roughness: 0.18 }), [BXc + 0.1, 1.145, BZ - 2.1]);
+  for (const dz of [0, 0.12]) add(bar, coupe, crystal, [BXc + 0.18, 1.145, BZ - 1.8 + dz], { cast: false });
+  for (const z of [BZ + 2.55, BZ - 2.5]) {                                                                                             // brass lamps with pleated shades
+    add(bar, cyl(0.07, 0.09, 0.03, 20), brass, [BXc - 0.12, 1.16, z]);
+    add(bar, cyl(0.012, 0.012, 0.36, 8), brass, [BXc - 0.12, 1.34, z]);
+    add(bar, cyl(0.07, 0.14, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0xf3ead3, emissive: 0xffd9a0, emissiveIntensity: night ? 0.9 : 0.3, roughness: 0.9, side: THREE.DoubleSide }), [BXc - 0.12, 1.58, z], { cast: false });
+    if (night) { const l = new THREE.PointLight(0xffc27a, 1.6, 3, 1.6); l.position.set(BXc + 0.1, 1.6, z); bar.add(l); }
   }
-  const record = group("record");
-  add(record, rbox(0.42, 0.05, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [BXc, 1.19, BZ + 0.75]);
-  add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [BXc, 1.22, BZ + 0.75], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2] });
   const chat = group("chat");
-  add(chat, rbox(0.27, 0.02, 0.38, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BXc + 0.05, 1.18, BZ - 1.75]);
-  const lid = new THREE.Group(); lid.position.set(BXc - 0.08, 1.19, BZ - 1.75); lid.rotation.set(0, Math.PI / 2, 0); chat.add(lid);
+  add(chat, rbox(0.27, 0.02, 0.38, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BXc + 0.05, 1.18, BZ - 0.1]);
+  const lid = new THREE.Group(); lid.position.set(BXc - 0.08, 1.19, BZ - 0.1); lid.rotation.set(0, Math.PI / 2, 0); chat.add(lid);
   const lidTilt = new THREE.Group(); lidTilt.rotation.x = -0.3; lid.add(lidTilt);
   add(lidTilt, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
   add(lidTilt, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
@@ -337,24 +370,23 @@ export async function buildRoom(q) {
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
   stoneBlock(0.28, 0.3, 2.78, [X1 - CD - 0.14, 1.97, FZ]);
   add(fire, box(0.04, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.01, 1.16, FZ], { cast: false });
-  add(fire, box(0.02, 0.5, 1.5), glow(0xb8380a, night ? 1.4 : 0.9), [X1 - CD - 0.035, 0.78, FZ], { cast: false });                  // embers glowing on the back of the firebox
-  const fireMat = new THREE.MeshBasicMaterial({ map: fireTongue(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
-  fireMat.color.setScalar(night ? 3.2 : 2.4);
-  [[-0.46, 0.5], [-0.24, 0.78], [0.0, 0.95], [0.22, 0.72], [0.44, 0.48], [-0.12, 0.6], [0.12, 0.66]].forEach(([dz, h], i) => {
-    for (const turn of [-0.45, 0.5]) veil.push(add(fire, new THREE.PlaneGeometry(h * 0.52, h), fireMat, [X1 - CD - 0.11 - (i % 3) * 0.035, 0.58 + h / 2, FZ + dz], { cast: false, receive: false, rot: [0, -Math.PI / 2 + turn, 0] }));
-  });
+  // The fire is lit at night. By day it is laid but cold: logs on the grate, a little pale ash.
+  add(fire, box(0.5, 0.04, 1.3), std(0x1c1814, { roughness: 1 }), [X1 - CD - 0.14, 0.52, FZ], { cast: false });                      // the grate
+  if (night) {
+    add(fire, box(0.02, 0.5, 1.5), glow(0xb8380a, 1.4), [X1 - CD - 0.035, 0.78, FZ], { cast: false });                                // embers glowing on the back of the firebox
+    const fireMat = new THREE.MeshBasicMaterial({ map: fireTongue(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+    fireMat.color.setScalar(3.2);
+    [[-0.46, 0.5], [-0.24, 0.78], [0.0, 0.95], [0.22, 0.72], [0.44, 0.48], [-0.12, 0.6], [0.12, 0.66]].forEach(([dz, h], i) => {
+      for (const turn of [-0.45, 0.5]) veil.push(add(fire, new THREE.PlaneGeometry(h * 0.52, h), fireMat, [X1 - CD - 0.11 - (i % 3) * 0.035, 0.58 + h / 2, FZ + dz], { cast: false, receive: false, rot: [0, -Math.PI / 2 + turn, 0] }));
+    });
+    const flame = new THREE.PointLight(0xff8a3a, 9, 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
+  } else add(fire, box(0.3, 0.02, 1.0), std(0xb8b2a8, { roughness: 1 }), [X1 - CD - 0.14, 0.55, FZ], { cast: false });              // cold ash
   for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
   add(fire, rbox(0.42, 0.26, 3.8, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
   const ball = add(fire, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [X1 - CD - 0.1, 2.47, FZ + 1.35]); ball.scale.set(1, 0.95, 1.6);
   add(fire, box(0.012, 0.012, 0.2), white, [X1 - CD - 0.1, 2.57, FZ + 1.35], { cast: false });
   add(fire, rbox(0.03, 0.3, 0.38, 0.008), timberDark, [X1 - CD - 0.02, 2.54, FZ - 1.3], { rot: [0, 0, 0.12] });
   add(fire, box(0.005, 0.22, 0.3), std(0x9fc4dd), [X1 - CD - 0.04, 2.54, FZ - 1.3], { cast: false, rot: [0, 0, 0.12] });
-  const flame = new THREE.PointLight(0xff8a3a, night ? 9 : 3.5, 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
-  const tv = group("tv");
-  const tvMount = new THREE.Group(); tvMount.position.set(X1 - CD - 0.25, 3.25, FZ + 0.1); tvMount.rotation.y = -Math.PI / 2 + 0.55; tv.add(tvMount);
-  add(tvMount, rbox(2.0, 1.16, 0.06, 0.02), std(0x0c0c0d, { roughness: 0.3, metalness: 0.3 }), [0, 0, 0]);
-  add(tvMount, new THREE.PlaneGeometry(1.9, 1.07), new THREE.MeshStandardMaterial({ map: gameOnTv(), emissive: 0xffffff, emissiveMap: gameOnTv(), emissiveIntensity: night ? 1.0 : 0.8 }), [0, 0, 0.032], { cast: false });
-  add(tv, box(0.28, 0.06, 0.06), frameMat, [X1 - CD - 0.12, 3.25, FZ]);
   const charter = group("constitution");
   add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 3.5, JOG + 0.03]);
   add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 3.5, JOG + 0.065], { cast: false });
@@ -381,7 +413,10 @@ export async function buildRoom(q) {
   }
   add(room, rbox(0.75, 0.06, 1.3, 0.02), m.walnut, [0.65, 0.4, FZ]);                                                                   // the low table
   for (const dx of [-0.3, 0.3]) for (const dz of [-0.56, 0.56]) add(room, cyl(0.03, 0.022, 0.37, 10), m.walnut, [0.65 + dx, 0.185, FZ + dz]);
-  add(room, rbox(0.26, 0.05, 0.34, 0.01), std(0x1d3557, { roughness: 0.6 }), [0.6, 0.455, FZ + 0.3]); add(room, rbox(0.24, 0.04, 0.32, 0.01), std(0xe8e2d4, { roughness: 0.6 }), [0.62, 0.5, FZ + 0.31], { rot: [0, 0.2, 0] });
+  // the record book (the pool's stats) lies open on the low table, where anyone in the lounge can leaf through it
+  const record = group("record");
+  add(record, rbox(0.42, 0.05, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [0.62, 0.455, FZ + 0.25], { rot: [0, 0.15, 0] });
+  add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [0.62, 0.484, FZ + 0.25], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2 + 0.15] });
   const tableBall = add(room, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [0.68, 0.52, FZ - 0.3]); tableBall.scale.set(1.5, 0.92, 0.92);
 
   // ----- the Trophy Room, through its door: as on today's page, the three real trophies on their round mahogany table under a lamp
@@ -431,12 +466,19 @@ export async function buildRoom(q) {
     for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + cos * (PRX - 0.3) + sin * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + sin * (PRZ - 0.24) - cos * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
     for (let k = 0; k < 4 + (a % 3) * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(a + (k > 3 ? 1 : 0)) % 5], { roughness: 0.4 }), [PX + cos * (PRX - 0.5) + Math.cos(t + 1.5) * 0.11, 0.83 + k * 0.017, PZ + sin * (PRZ - 0.42) + Math.sin(t + 1.5) * 0.08], { cast: false });
     const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.4), 0, PZ + sin * (PRZ + 0.4)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
-    // a barrel-back club chair: woven cane wrapped round the back between two rails, a loose linen cushion, turned legs
-    add(c, rbox(0.46, 0.05, 0.46, 0.02), chairWood, [0, 0.45, 0]); add(c, rbox(0.42, 0.09, 0.4, 0.04), linen, [0, 0.51, -0.02]);
-    add(c, new THREE.CylinderGeometry(0.27, 0.27, 0.36, 24, 1, true, -0.95, 1.9), caneOpen, [0, 0.82, -0.04]);
-    for (const y of [0.63, 1.01]) add(c, new THREE.TorusGeometry(0.27, 0.02, 8, 24, 1.9), chairWood, [0, y, -0.04], { rot: [Math.PI / 2, 0, Math.PI / 2 - 0.95] });
-    for (const sx of [-1, 1]) { add(c, cyl(0.02, 0.016, 1.01, 10), chairWood, [sx * 0.22, 0.505, 0.117]); add(c, cyl(0.02, 0.015, 0.45, 10), chairWood, [sx * 0.19, 0.225, -0.18]); }
+    // a deep club chair: a thick linen seat cushion, a padded back that wraps round into low arms, a cane shell behind it, short legs
+    add(c, rbox(0.56, 0.16, 0.54, 0.05), chairWood, [0, 0.27, 0]);
+    add(c, rbox(0.5, 0.14, 0.48, 0.07), linen, [0, 0.42, -0.02]);
+    add(c, new THREE.CylinderGeometry(0.3, 0.3, 0.5, 28, 1, true, -1.35, 2.7), caneOpen, [0, 0.6, 0.02]);
+    add(c, new THREE.TorusGeometry(0.3, 0.022, 8, 28, 2.7), chairWood, [0, 0.85, 0.02], { rot: [Math.PI / 2, 0, Math.PI / 2 - 1.35] });
+    for (let k = -2; k <= 2; k++) {                                                                                                    // the padded back, in tufted panels
+      const a = k * 0.32, pad = add(c, rbox(0.17, 0.36, 0.09, 0.04), linen, [Math.sin(a) * 0.235, 0.66, 0.02 + Math.cos(a) * 0.235]);
+      pad.rotation.set(-0.1 * Math.cos(a), a, 0);
+    }
+    for (const side of [-1, 1]) add(c, rbox(0.08, 0.15, 0.36, 0.035), linen, [side * 0.27, 0.56, -0.06]);                              // the arms
+    for (const [lx, lz] of [[-0.22, -0.2], [0.22, -0.2], [-0.22, 0.2], [0.22, 0.2]]) add(c, cyl(0.022, 0.016, 0.2, 10), chairWood, [lx, 0.1, lz]);
   }
+
 
   // ----- plants in baskets and pots, a surfboard against the wall, and from Dec 7 the Bowl Pool's bulletin board on wheels, wheeled in
   // beside the open doors
@@ -467,14 +509,23 @@ export async function buildRoom(q) {
     if (night) { const l = new THREE.PointLight(0xff9a40, 2.5, 4, 1.6); l.position.set(x, 2.1, z); out.add(l); }
   }
   if (bowl) {
+    // From Dec 7 the Bowl Pool's board is wheeled in and stands in the open floor by the end of the bar, turned a little into the
+    // room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const BBX = -0.15, BBZ = ZB + 0.9;
-    add(b2, box(1.4, 1.0, 0.05), std(0xb98a5a, { roughness: 1 }), [BBX, 1.45, BBZ]);
-    add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 1.98, BBZ]); add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 0.92, BBZ]);
-    for (const dx of [-0.72, 0.72]) { add(b2, box(0.05, 1.9, 0.05), timberDark, [BBX + dx, 0.95, BBZ]); add(b2, box(0.05, 0.05, 0.55), timberDark, [BBX + dx, 0.12, BBZ]); for (const dz of [-0.24, 0.24]) add(b2, cyl(0.05, 0.05, 0.04, 16), std(0x222222), [BBX + dx, 0.05, BBZ + dz], { rot: [0, 0, Math.PI / 2] }); }
-    [[-0.38, 0.16, 0xf6f1e3], [0.2, 0.2, 0xf6f1e3], [0.36, -0.2, 0x1b2a4a], [-0.26, -0.22, 0xf6f1e3]].forEach(([dx, dy, c]) => add(b2, box(0.38, 0.32, 0.01), std(c), [BBX + dx, 1.45 + dy, BBZ + 0.035], { cast: false }));
-    const pc = canvas(256, 128), pg = pc.getContext("2d"); pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(256, 64); pg.lineTo(0, 128); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 34px Georgia"; pg.fillText("BOWLS", 24, 76);
-    add(b2, new THREE.PlaneGeometry(0.55, 0.27), new THREE.MeshStandardMaterial({ map: texture(pc), transparent: true, alphaTest: 0.5 }), [BBX, 2.12, BBZ + 0.04], { cast: false });
+    const stand = new THREE.Group(); stand.position.set(-1.45, 0, -6.9); stand.rotation.y = 0.25; b2.add(stand);
+    const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
+    add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42, 0]);
+    for (const y of [0.87, 1.97]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
+    for (const x of [-0.78, 0.78]) { add(stand, rbox(0.07, 1.98, 0.08, 0.015), m.walnut, [x, 1.0, 0]); add(stand, rbox(0.08, 0.06, 0.6, 0.015), m.walnut, [x, 0.08, 0]); for (const dz of [-0.26, 0.26]) add(stand, cyl(0.045, 0.045, 0.035, 16), std(0x1a1a1a, { roughness: 0.6 }), [x, 0.045, dz], { rot: [0, 0, Math.PI / 2] }); }
+    const card = (lines) => { const c = canvas(256, 200), g = c.getContext("2d"); g.fillStyle = "#f6f1e3"; g.fillRect(0, 0, 256, 200); g.fillStyle = "#1b2a4a"; g.fillRect(0, 0, 256, 44); g.fillStyle = "#e6cf98"; g.font = "700 26px Georgia"; g.textAlign = "center"; g.fillText(lines[0], 128, 31); g.fillStyle = "#1b2a4a"; g.font = "700 30px Arial"; lines.slice(1).forEach((line, i) => g.fillText(line, 128, 92 + i * 46)); return texture(c); };
+    [["ROSE BOWL", "OSU -3.5", "ORE +3.5"], ["SUGAR BOWL", "UGA -6", "TEX +6"], ["ORANGE BOWL", "PSU -2.5", "FSU +2.5"], ["COTTON BOWL", "ND -1", "TCU +1"], ["FIESTA BOWL", "MICH -4", "UTAH +4"], ["PEACH BOWL", "LSU -7", "UCF +7"]].forEach((lines, i) => {
+      const x = -0.48 + (i % 3) * 0.48, y = 1.66 - Math.floor(i / 3) * 0.47, tilt = [0.04, -0.03, 0.02, -0.04, 0.03, -0.02][i];
+      add(stand, new THREE.PlaneGeometry(0.42, 0.33), new THREE.MeshStandardMaterial({ map: card(lines), roughness: 0.85 }), [x, y, 0.024], { cast: false, rot: [0, 0, tilt] });
+      add(stand, new THREE.SphereGeometry(0.012, 10, 8), std([0xd4342c, 0x1d3557, 0xf0b429][i % 3], { roughness: 0.3 }), [x, y + 0.14, 0.03], { cast: false });
+    });
+    const pc = canvas(512, 160), pg = pc.getContext("2d"); pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(512, 80); pg.lineTo(0, 160); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 52px Georgia"; pg.fillText("BOWL POOL", 26, 98);
+    add(stand, new THREE.PlaneGeometry(0.8, 0.25), new THREE.MeshStandardMaterial({ map: texture(pc), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), [-0.32, 2.14, 0.0], { cast: false });
+    add(stand, cyl(0.01, 0.01, 0.3, 8), brass, [-0.72, 2.12, 0]);
   }
 
   // ----- light: late-afternoon sun raking in through the glass and across the floor, or a warm evening with the pool and the

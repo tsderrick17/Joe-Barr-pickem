@@ -40,6 +40,11 @@ Then the layout, at the owner's word ("we need to be smarter with where things a
   shorter for the same reason.
 Rule kept: nothing is turned to the camera by a trick; a thing that must be seen is given a real wall that faces the viewer.
 
+A third round, at the owner's word: the poker chairs became deep padded club chairs; the bar became more elegant (fluted walnut,
+marble, brass, a mirrored back bar with lit shelves of real bottles and rows of glassware); the TV went; the Bowl Pool's board moved
+out of the back of the room into the open floor by the end of the bar, larger, with the bowl games pinned up; and the fire is lit in
+the night picture and cold by day. Night is the player's own day/night switch, not the clock.
+
 ## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
 
 The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in

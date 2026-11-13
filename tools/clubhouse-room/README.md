@@ -19,7 +19,8 @@ The room uses the real trophy models, so it borrows the trophy renderer's module
 ## Files
 
 - `room.js`: the room (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
-  the bar, the Trophy Room and its door, the stone fireplace, the lounge, the oval poker table, the Bowl Pool board), its light (the
+  the bar and its mirrored back bar, the Trophy Room and its door, the stone fireplace (lit only at night), the lounge, the oval
+  poker table, the Bowl Pool board), its light (the
   sun, the room's own reflections, contact shadow, glow) and the camera.
 - `surfaces.js`: what the room is made of: the drawn surfaces (planks, shiplap, fieldstone, thatch, cane, sky, flame) and the one
   modelled leaf that every fan blade and plant is grown from.
