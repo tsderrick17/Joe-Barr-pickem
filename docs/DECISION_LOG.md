@@ -19,6 +19,21 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-13 - The clubhouse room made convincing, and clear to walk (Lab)
+
+The owner asked for a pass on depth, texture, shadow and mood ("a grand, beautiful, magnificent space"), for fan blades that convince
+("not just one solid flat blade"), and for the sense that a person could walk through the room and use it. So the picture is now lit
+the way a room is: late sun through the glass throwing the window frames across an oak floor, the fill kept low so shadows stay
+deep, the room reflected in its own brass and floor, a soft shadow wherever two things meet, a little glow on what is truly bright.
+The thatch is laid in overhanging courses, the chimney is mottled fieldstone with raked joints, and each fan blade is a modelled palm
+leaf (pleated, scalloped, keeled on its rib) on a brass iron; the plants are grown from the same leaf. To clear the floor the trophies
+left the middle of the room: they stand just inside a doorway cut through the near end of the chimney, and that doorway is the Trophy
+Room, which opens the same turning table as today's. The owner disliked the literal SPORTSBOOK sign ("it should be implied") and three
+odds screens: the wall now says it with the Big Board, one screen of spreads to one side and betting windows behind brass grilles.
+The race could not be seen, so the lounge was opened toward the door and the race given its own long table: a mechanical racing game
+with rails, furlong poles, a finish pole and six thoroughbreds under jockeys. The view was turned a little so the doorway sits wholly
+in the picture. Rule kept: nothing is turned to the camera by a trick. Still to build: the race's own view (tap to run the season back).
+
 ## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
 
 The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in
