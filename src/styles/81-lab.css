@@ -114,45 +114,40 @@
 .lab-clubhouse { display: grid; gap: 16px; }
 .lab-room-stack { display: grid; gap: 14px; }
 .lab-room-controls { display: grid; gap: 8px; }
-/* The lobby: the whole clubhouse on one phone screen. A walnut wall over a plank floor; everything in the room is a big button with
-   its name and a line of news. Rows: the sign, the Big Board, the Window, then on the floor the trophy case beside the Survivor table,
-   the Bowl Pool corner, and by the door a slim sign for the pool chat. */
-.lab-lobby { background: rgb(58 42 32); border: 6px solid rgb(74 50 34); border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; overflow: hidden; padding: 12px; width: 100%; }
-.lab-lobby-sign { color: var(--cw-gold-lt); font-family: var(--font-serif); font-size: 1.1rem; grid-column: 1 / -1; letter-spacing: .04em; margin: 0; text-align: center; }
-.lab-lobby-floor { background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(0, 0, 0, .18) 46px 47px), rgb(104 74 54); border-top: 5px solid rgb(36 25 18); grid-area: 4 / 1 / 8 / -1; margin: -6px -12px -12px; }
-.lab-lobby-hint { color: var(--cw-cream); font-size: .85rem; grid-area: 6 / 1 / 7 / -1; margin: 0; position: relative; text-align: center; }
-.lab-fixture { align-content: end; border: 0; border-radius: 4px; box-shadow: 0 3px 6px rgba(0, 0, 0, .45); color: var(--cw-cream); cursor: pointer; display: grid; gap: 2px; justify-items: center; min-height: 7rem; overflow: hidden; padding: 10px 8px; position: relative; text-align: center; }
-.lab-fixture:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
-.lab-fixture:active { transform: translateY(1px); }
-.lab-fixture-name { font-size: 1.05rem; font-weight: 800; position: relative; }
-.lab-fixture-name::after { content: " \203A"; }
-.lab-fixture-news { font-size: .8rem; font-weight: 600; position: relative; }
-/* The Big Board: the tote board's green housing, the top three lit, wins in amber. */
-.lab-fixture.is-board { background: rgb(18 40 30); box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .6), 0 3px 6px rgba(0, 0, 0, .45); grid-column: 1 / -1; }
-.lab-fixture-plates { display: grid; gap: 3px; margin-bottom: 4px; max-width: 15rem; width: 100%; }
-.lab-fixture-plates i { display: grid; font-size: .72rem; font-style: normal; gap: 3px; grid-template-columns: 2rem 1fr; }
-.lab-fixture-plates b { background: rgb(8 10 9); border-radius: 1px; color: rgb(240 236 226); padding: 2px 0; }
-.lab-fixture-plates b:first-child { color: rgb(255 176 46); font-family: "Courier New", monospace; text-shadow: 0 0 4px rgba(255, 160, 40, .9); }
-/* The Window: the betting window, black with a gold hairline; a lamp for each pick, lit once it is in. */
-.lab-fixture.is-window { background: rgb(8 10 9); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .6), 0 3px 6px rgba(0, 0, 0, .45); grid-column: 1 / -1; min-height: 5.5rem; }
-.lab-fixture-slots { display: flex; gap: 10px; justify-content: center; margin-bottom: 4px; }
-.lab-fixture-slots i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .7rem; width: .7rem; }
-.lab-fixture-slots i.is-lit { background: rgb(255 176 46); box-shadow: 0 0 6px rgba(255, 160, 40, .9); }
-/* The trophy mantle: the real trophies, their feet lost in shadow so the words read. */
-.lab-fixture.is-trophies { background: rgb(20 13 10); grid-area: 4 / 1; }
-.lab-fixture-trophies { height: 135%; inset: 0 0 auto; object-fit: cover; object-position: 50% 0; position: absolute; width: 100%; }
-.lab-fixture.is-trophies::after { background: linear-gradient(transparent 30%, rgba(14, 9, 7, .94) 68%); content: ""; inset: 0; position: absolute; }
-.lab-fixture.is-trophies .lab-fixture-name,
-.lab-fixture.is-trophies .lab-fixture-news { z-index: 1; }
-/* On the floor: the trophy case, the Survivor card table and the Bowl Pool corner. */
-.lab-fixture.is-survivor { background: radial-gradient(ellipse closest-side, rgb(31 90 60) 0 88%, rgb(138 106 72) 89% 97%, transparent 98%); box-shadow: none; grid-area: 4 / 2; justify-content: center; align-content: center; }
-.lab-fixture.is-bowl { background: var(--bowl-slip-stub); box-shadow: inset 0 0 0 1px var(--bowl-slip-gold), inset 0 0 0 4px var(--bowl-slip-stub), inset 0 0 0 5px var(--bowl-slip-gold), 0 3px 6px rgba(0, 0, 0, .45); color: var(--bowl-slip-stub-ink); grid-area: 5 / 1 / 6 / -1; align-content: center; min-height: 4rem; }
+/* The room: one 3D picture of the clubhouse (its day or night picture, by the --room-* tokens), a tap spot over each thing in it, a
+   few labels, the "Show labels" switch, then the plain list of rooms. A spot is never smaller than a thumb, whatever it sits over. */
+.lab-room { border-radius: 8px; box-shadow: 0 8px 18px rgba(37, 30, 18, .3); margin-inline: auto; max-width: 30rem; overflow: hidden; position: relative; width: 100%; }
+.lab-room-picture { display: var(--room-day-display); height: 100%; inset: 0; object-fit: cover; position: absolute; width: 100%; }
+.lab-room-picture.is-night { display: var(--room-night-display); }
+.lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; transform: translate(-50%, -50%); }
+.lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
+.lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 40% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
+@keyframes room-owed { from { opacity: .55; } to { opacity: 1; } }
+.lab-room-tag { background: rgba(16, 32, 24, .9); border: 1px solid rgba(201, 164, 95, .8); border-radius: 6px; color: var(--cw-cream); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 3px 7px; pointer-events: none; position: absolute; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.lab-room-tag.is-above { bottom: calc(100% + 2px); }
+.lab-room-tag.is-below { top: calc(100% + 2px); }
+.lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
+.lab-room-spot.is-record .lab-room-tag,
+.lab-room-spot.is-banners .lab-room-tag { left: 4px; transform: none; }
+.lab-room-spot.is-constitution .lab-room-tag { left: auto; right: 0; transform: none; }
+.lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
+.lab-room-labels { background: rgba(16, 32, 24, .82); border: 1px solid rgba(201, 164, 95, .7); border-radius: 999px; bottom: 10px; color: var(--cw-cream); cursor: pointer; font-size: .75rem; font-weight: 800; min-height: 2.25rem; padding: 0 12px; position: absolute; right: 10px; }
+.lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
+.lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
+/* Your ticket, pinned to the bottom of every clubhouse screen: a lamp for each pick and the next deadline; it opens the Window. */
+.lab-room-ticket { align-items: center; background: rgb(251 247 236); border: 0; border-radius: 6px; border-top: 3px dashed var(--cw-gold); bottom: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, .35); color: rgb(29 42 34); cursor: pointer; display: grid; gap: 2px 12px; grid-template-columns: 1fr auto; margin-inline: auto; max-width: 30rem; padding: 10px 14px; position: sticky; text-align: left; width: 100%; z-index: 3; }
+.lab-room-ticket b { font-size: .95rem; letter-spacing: .04em; }
+.lab-room-ticket > span:not(.lab-room-lamps) { color: rgb(74 74 64); font-size: .78rem; grid-column: 1; }
+.lab-room-lamps { align-items: center; display: flex; gap: 8px; grid-column: 2; grid-row: 1 / 3; }
+.lab-room-lamps i { background: rgb(58 52 36); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .3); height: .9rem; width: .9rem; }
+.lab-room-lamps i.is-lit { background: rgb(255 176 46); box-shadow: 0 0 8px rgba(255, 160, 40, .9); }
+.lab-room-lamps em { font-size: 1.2rem; font-style: normal; }
+@media (prefers-reduced-motion: reduce) {
+  .lab-room-spot.is-owed::before { animation: none; }
+}
 /* Inside a room: one way back, always in the same place, and the room's name. */
 .lab-room-bar { align-items: center; display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr; }
 .lab-room-back { background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .95rem; font-weight: 800; justify-self: start; min-height: 2.75rem; padding: 0 16px; }
-/* The pool chat: a slim sign by the door, out of the way; few people use it. */
-.lab-lobby-chat { background: transparent; border: 1px solid rgba(230, 207, 152, .35); border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .85rem; font-weight: 700; grid-area: 7 / 1 / 8 / -1; justify-self: center; min-height: 2.75rem; padding: 0 16px; position: relative; }
-.lab-lobby-chat:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-room-bar h3 { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.3rem; margin: 0; }
 .lab-stand-in { background: var(--club-paper); border: 1px dashed var(--club-line); border-radius: 8px; color: var(--club-ink); margin: 0; padding: 28px 16px; text-align: center; }
 

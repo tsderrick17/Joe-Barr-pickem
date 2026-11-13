@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
+
+The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in
+which the pool is one bright room, everything in it a place to tap: the Big Board over sliding glass doors onto a pool patio, the
+sportsbook where picks are made, the real trophies in the middle, banners and plaques at the bar, a record book (the stats) and a
+laptop (the pool chat, with a mail sign for a new message) on the bar, the constitution framed over the fireplace, the horse race on
+the coffee table (which stands in for the Season snapshot and playoff charts), the Survivor poker table, and from Dec 7 the Bowl
+Pool's bulletin board wheeled in. A tap opens the New views built in the Lab, not today's pages; both views run on the same data and
+the same pick path. The Window must always be easy to find, so the player's ticket is pinned to the bottom of every screen and the
+sportsbook glows while a pick is owed. The owner wants a room people want to be in, magnificent, bright and airy like a beach bungalow, seen from inside under a ceiling (not an open-topped box), with the trophies prominent and a grand stone fireplace. Boards turned to the camera on brackets looked wrong (the owner: "we need to be smarter about decisions like that"), so the rule for the room is that nothing is angled to the viewer by a trick: what has to be read (the Big Board, the sportsbook) hangs on the wall that faces you, and the side walls carry what looks right in perspective (the bar, the chimney). The ceiling is thatch with no beams, and the fans are two showy wide-leaf cabana fans down the middle. The room is drawn in 3D and shipped as still pictures with tap spots (light for phones, no
+3D in the browser), using the real trophy models. Labels only where their news is worth a glance, with "Show labels" and a plain list
+of rooms for anyone who prefers words. Lab only; players see none of it.
+
 ## 2026-11-12 - The clubhouse: one Big Board for everyone's picks, one Window for your own (Lab)
 
 The owner's point: the beauty of today's pool is seeing everyone's picks in one central place, and there should be one place to make

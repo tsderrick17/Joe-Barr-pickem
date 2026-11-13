@@ -260,28 +260,38 @@ test("Lamp-lit is remembered, and by day it only shows a note", async ({ page })
   await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Lamp-lit" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
 });
 
-// The clubhouse: a lobby drawn to fit one phone screen, and a room behind each thing in it. The lobby and each room's states get a
-// picture: phone and desktop by day, phone at night.
+// The clubhouse: one 3D room (a picture by day and at night) with a tap spot over each thing in it, and a room behind each spot. The
+// room's states and each room get a picture: phone and desktop by day, phone at night.
+const ROOM_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
+  ["room", [], false],
+  ["room-labels", [], true],
+  ["room-from-dec-7", [["Time of year", "From Dec 7"]], false],
+  ["room-all-in", [["Picks", "All in"], ["Chat", "Nothing new"]], false],
+];
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["The Big Board", "big-board", []],
-  ["The Window", "window", []],
-  ["Trophy Room", "trophies-wall", []],
-  ["Trophy Room", "trophies-crowning", [["Scene", "A champion is crowned"]]],
+  ["Sportsbook", "window", []],
+  ["Trophies", "trophies-wall", []],
+  ["Trophies", "trophies-crowning", [["Scene", "A champion is crowned"]]],
 ];
 const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
-for (const [theme, label] of CLUB_SIZES) {
-  test(`Lab clubhouse, lobby, ${theme} at ${label}`, async ({ page }) => {
-    await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
-    await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-    await holdStill(page);
-    await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-lobby-${theme}-${label}.png`, { maxDiffPixels: 12 });
-  });
-}
-for (const [room, shot, choices] of CLUB_SHOTS) {
+for (const [shot, choices, labels] of ROOM_SHOTS) {
   for (const [theme, label] of CLUB_SIZES) {
     test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
-      await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: room }).click();
+      for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      if (labels) await page.getByRole("button", { name: "Show labels" }).click();
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await holdStill(page);
+      await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+    });
+  }
+}
+for (const [spot, shot, choices] of CLUB_SHOTS) {
+  for (const [theme, label] of CLUB_SIZES) {
+    test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
+      await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
+      await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: spot, exact: true }).click();
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
@@ -290,50 +300,82 @@ for (const [room, shot, choices] of CLUB_SHOTS) {
   }
 }
 
-test("the lobby fits one phone screen, opens every room in one tap, and every room has one way back", async ({ page }) => {
+test("the clubhouse room: everything in it opens its room in one tap, every spot is thumb-sized, and every room has one way back", async ({ page }) => {
   await openLab(page, "clubhouse");
-  const lobby = page.getByRole("navigation", { name: "Clubhouse rooms" });
-  await expect(lobby.getByRole("button")).toHaveCount(6);
-  // The whole room is on screen at once on a phone: nothing to pan or swipe, and every button is a comfortable size for a thumb.
-  const box = (await lobby.boundingBox())!;
-  expect(box.height).toBeLessThanOrEqual(640);
-  expect(box.width).toBeLessThanOrEqual(390);
-  const fixtures = await Promise.all((await lobby.locator(".lab-fixture").all()).map(async (fixture) => (await fixture.boundingBox())!));
-  expect(fixtures).toHaveLength(5);
-  for (const fixture of fixtures) expect(fixture.height).toBeGreaterThanOrEqual(64);
-  // The Big Board is the centrepiece: the biggest thing in the room, at the top. The Window comes next, full width.
-  const [board, window] = fixtures;
-  for (const other of fixtures.slice(1)) expect(board.height * board.width).toBeGreaterThan(other.height * other.width);
-  expect(board.y).toBeLessThan(window.y);
-  expect(window.width).toBeCloseTo(board.width, 0);
-  // The pool chat is a slim sign at the bottom, smaller than anything else in the room, still big enough to tap.
-  const chat = (await lobby.getByRole("button", { name: /Pool chat/ }).boundingBox())!;
-  expect(chat.height).toBeGreaterThanOrEqual(44);
-  for (const fixture of fixtures) {
-    expect(chat.height).toBeLessThan(fixture.height);
-    expect(chat.y).toBeGreaterThan(fixture.y);
-  }
-  // Each thing in the room carries a line of news from the same sample data its room shows.
-  await expect(lobby.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
-  await expect(lobby.getByRole("button", { name: "The Window" })).toContainText("Your picks: 3 of 3 in");
-  await expect(lobby.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
-  const rooms: Array<[string, string]> = [
-    ["The Big Board", ".lab-tote"], ["The Window", ".lab-window"], ["Trophy Room", ".lab-wall"], ["Survivor", ".lab-survivor-room"],
-    ["Bowl Pool", ".lab-stand-in"], ["Pool chat", ".lab-stand-in"],
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
+  expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
+  const spots: Array<[string, string, string]> = [
+    ["Sportsbook", "The Window", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophies", "Trophy Room", ".lab-wall"],
+    ["Banners", "Trophy Room", ".lab-wall"], ["Plaques", "Trophy Room", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
+    ["Record book", "Record book", ".lab-stand-in"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
+    ["The race", "The race", ".lab-stand-in"],
   ];
-  for (const [name, inside] of rooms) {
-    await lobby.getByRole("button", { name }).click();
-    await expect(page.getByRole("heading", { name, level: 3, exact: true })).toBeVisible();
-    await expect(page.locator(inside)).toBeVisible();
-    await expect(lobby).toHaveCount(0);
-    await page.getByRole("button", { name: "Back to Clubhouse" }).click();
-    await expect(lobby).toBeVisible();
+  // Everything is a comfortable size for a thumb, however small it looks in the picture. ("Show labels" is the one control that isn't a spot.)
+  await expect(room.getByRole("button")).toHaveCount(spots.length + 1);
+  for (const button of await room.getByRole("button").all()) {
+    const box = (await button.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(36);
   }
+  for (const spot of await room.locator(".lab-room-spot").all()) {
+    const box = (await spot.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+  }
+  for (const [spot, heading, inside] of spots) {
+    await room.getByRole("button", { name: spot, exact: true }).click();
+    await expect(page.getByRole("heading", { name: heading, level: 3, exact: true })).toBeVisible();
+    await expect(page.locator(inside)).toBeVisible();
+    await expect(room).toHaveCount(0);
+    await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+    await expect(room).toBeVisible();
+  }
+});
+
+test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool board from Dec 7, and the plain list of rooms", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  // Only the things whose news is worth a glance carry a label; "Show labels" names everything.
+  await expect(room.locator(".lab-room-tag")).toHaveCount(3);
+  await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
+  await expect(room.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
+  await room.getByRole("button", { name: "Show labels" }).click();
+  await expect(room.locator(".lab-room-tag")).toHaveCount(9);
+  await room.getByRole("button", { name: "Hide labels" }).click();
+  // The laptop on the bar shows a mail sign only when there's a new message.
+  await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
+  await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
+  await expect(room.getByRole("img", { name: "New message" })).toHaveCount(0);
+  // The Bowl Pool's bulletin board is wheeled in on Dec 7, and not before.
+  await expect(room.getByRole("button", { name: "Bowl Pool" })).toHaveCount(0);
+  await page.getByRole("group", { name: "Time of year" }).getByRole("button", { name: "From Dec 7" }).click();
+  await expect(room.getByRole("button", { name: "Bowl Pool" })).toBeVisible();
+  // The same rooms as a plain list, for anyone who would rather tap a word.
+  const list = page.getByRole("group", { name: "Rooms" });
+  await expect(list.getByRole("button")).toHaveText(["The Window", "The Big Board", "Survivor", "Trophy Room", "The race", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
+  await list.getByRole("button", { name: "Constitution" }).click();
+  await expect(page.getByRole("heading", { name: "Constitution", level: 3 })).toBeVisible();
+});
+
+test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, and opens the Window", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  const ticket = page.locator(".lab-room-ticket");
+  await expect(ticket).toBeVisible();
+  await expect(ticket.locator("i.is-lit")).toHaveCount(2);
+  await expect(page.locator(".lab-room-spot.is-sportsbook.is-owed")).toHaveCount(1);
+  await page.getByRole("group", { name: "Picks" }).getByRole("button", { name: "All in" }).click();
+  await expect(ticket.locator("i.is-lit")).toHaveCount(3);
+  await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
+  // It stays on screen inside a room, at the bottom of the window even when the room is long.
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
+  await expect(ticket).toBeInViewport();
+  await ticket.click();
+  await expect(page.getByRole("heading", { name: "The Window", level: 3 })).toBeVisible();
+  await expect(ticket).toHaveCount(0);
 });
 
 test("the Trophy Room is one tall wall: banners for the pool chosen, the trophies, then a plaque per season", async ({ page }) => {
   await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room" }).click();
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
   const banners = page.getByRole("region", { name: "Banners" });
   await expect(banners.getByRole("listitem")).toHaveText(["Earl: 2026, 2024", "Walt: 2025, 2023"]);
   await banners.getByRole("group", { name: "Whose banners" }).getByRole("button", { name: "Survivor" }).click();
@@ -347,7 +389,7 @@ test("the Trophy Room is one tall wall: banners for the pool chosen, the trophie
 
 test("the Trophy Room: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
   await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room" }).click();
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophies", exact: true }).click();
   await expect(page.getByRole("article", { name: "2025 champions" }).getByRole("definition")).toHaveText(["Walt", "Dottie", "Rosie"]);
   await expect(page.locator(".lab-pennant")).toHaveCount(0);
   await page.getByRole("group", { name: "Scene" }).getByRole("button", { name: "A champion is crowned" }).click();
