@@ -1,16 +1,21 @@
-// The clubhouse: a grand beach bungalow and the ultimate man cave, seen from just inside the front. A natural thatched beach-hut
-// ceiling (no beams) with wooden leaf cabana fans; white shiplap walls; pale oak floors; the whole back wall glass onto the pool
-// patio, palms, tiki torches and the sea. The real trophies stand in the middle, each on its own pedestal, under a chandelier. The
-// left wall is the sportsbook with the Big Board above it, both on brackets turned towards the room; the bar runs along the back
-// left under a neon sign, the champions' banners hanging over it; on the right a grand floor-to-ceiling stone chimney with a TV
-// over the mantel and the constitution framed on it, the lounge in front with the race on the coffee table; the Survivor poker
-// table in the foreground. Units are metres: x left to right, z from the front wall (0) to the back (-RD).
+// The clubhouse: a grand beach bungalow and the ultimate man cave, seen from just inside the front, looking down the room. Nothing
+// in it is turned to the camera by a trick: what has to be read hangs on the wall that faces you, and the side walls carry the
+// things that look right in perspective.
+//  - Ceiling: natural beach-hut thatch, no beams, two big wide-leaf cabana fans down the middle.
+//  - Back wall, left: the sportsbook, face on: the Big Board, the SPORTSBOOK sign, the odds boards and the ticket counter.
+//  - Back wall, right: glass onto the pool patio, palms, tiki torches and the sea.
+//  - Left wall: the bar running down the room, stools along it, the back bar and a neon sign on the wall, the champions' banners
+//    hanging over it one behind another, the plaques along its front, the record book and the laptop on top.
+//  - Right wall: a grand floor-to-ceiling stone chimney, a TV over the mantel, the constitution framed on it; the lounge in front
+//    with the race on the coffee table.
+//  - Middle: the real trophies, each on its own pedestal. Foreground: the Survivor poker table.
+// Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { pennantCup } from "/trophies.js";
 import { hexBase, ivorySpire, crystalSpade, bowlBase, emeraldBase } from "/trophies2.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-const RW = 8.4, RD = 15, WH = 4.2, RIDGE = 7.2;
+const RW = 8.4, RD = 13.6, WH = 4.2, RIDGE = 7.2;
 const X0 = -RW / 2, X1 = RW / 2, ZB = -RD;
 
 // ---------- helpers
@@ -99,6 +104,15 @@ function neon(text) {
   g.shadowColor = "#ff5fa2"; g.shadowBlur = 30; g.strokeStyle = "#ffd1e6"; g.lineWidth = 7; g.strokeText(text, 512, 104);
   g.shadowBlur = 12; g.strokeStyle = "#fff"; g.lineWidth = 3; g.strokeText(text, 512, 104);
   return texture(c);
+}
+function leafBlade() {
+  const c = canvas(256, 512), g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 256, 0); gr.addColorStop(0, "#5a3418"); gr.addColorStop(0.5, "#8a5a2e"); gr.addColorStop(1, "#5a3418");
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 512);
+  g.strokeStyle = "rgba(40, 22, 8, .55)"; g.lineWidth = 3;
+  for (let i = 0; i < 16; i++) { const y = 500 - i * 30; for (const side of [-1, 1]) { g.beginPath(); g.moveTo(128, y); g.quadraticCurveTo(128 + side * 60, y - 34, 128 + side * 124, y - 86); g.stroke(); } }
+  g.strokeStyle = "#c79a5c"; g.lineWidth = 7; g.beginPath(); g.moveTo(128, 512); g.lineTo(128, 0); g.stroke();
+  const t = texture(c); t.repeat.set(1 / 0.7, 1); t.offset.set(0.5, 0); return t;
 }
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
 function jute() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#c9b48a"; g.fillRect(0, 0, 256, 256); for (let y = 0; y < 256; y += 6) for (let x = 0; x < 256; x += 6) { g.fillStyle = `rgba(110, 85, 50, ${0.15 + rand() * 0.2})`; g.fillRect(x + ((y / 6) % 2) * 3, y, 4, 3); } g.strokeStyle = "#8a6a3e"; g.lineWidth = 10; g.strokeRect(10, 10, 236, 236); return texture(c, [1, 1]); }
@@ -202,19 +216,23 @@ export async function buildRoom(q) {
   for (const side of [-1, 1]) add(room, box(len, 0.08, RD), ceilTex, [side * RW / 4, (WH + RIDGE) / 2 + 0.05, -RD / 2], { rot: [0, 0, side * -slope] });
   // a natural beach hut ceiling: nothing but thatch, no beams; a thatch fringe hangs along the top of each wall
   for (const side of [-1, 1]) add(room, box(0.1, 0.3, RD), ceilTex, [side * (RW / 2 - 0.08), WH + 0.02, -RD / 2], { cast: false });
-  // cabana fans: a dark wooden hub and five carved wooden leaf blades, hung from the thatch
-  const leaf = new THREE.Shape(); leaf.moveTo(0, 0); leaf.bezierCurveTo(0.12, 0.12, 0.2, 0.55, 0, 0.95); leaf.bezierCurveTo(-0.2, 0.55, -0.12, 0.12, 0, 0);
-  const leafGeo = new THREE.ShapeGeometry(leaf, 16);
-  const bladeWood = std(0x7d5632, { roughness: 0.55, side: THREE.DoubleSide });
-  for (const [fx, fz] of [[1.75, -4.9], [-1.75, -10.6]]) {
-    const top = WH + (RIDGE - WH) * (1 - Math.abs(fx) / (RW / 2)), hub = 4.95, drop = top - hub;
-    add(room, cyl(0.03, 0.03, drop, 8), timberDark, [fx, top - drop / 2, fz]);
-    add(room, cyl(0.17, 0.13, 0.24, 20), timberDark, [fx, hub, fz]);
-    add(room, new THREE.SphereGeometry(0.1, 16, 12), glow(0xffe6b8, night ? 3 : 1.4), [fx, hub - 0.19, fz], { cast: false });
+  // cabana fans: two big ones down the middle of the room, wide carved-leaf blades, brass fittings, a frosted light under each
+  const leaf = new THREE.Shape(); leaf.moveTo(0, 0); leaf.bezierCurveTo(0.36, 0.1, 0.44, 0.62, 0, 1.0); leaf.bezierCurveTo(-0.44, 0.62, -0.36, 0.1, 0, 0);
+  const leafGeo = new THREE.ShapeGeometry(leaf, 24);
+  const bladeWood = new THREE.MeshStandardMaterial({ map: leafBlade(), roughness: 0.5, side: THREE.DoubleSide });
+  for (const [fx, fz, spin] of [[-0.1, -6.0, 0.3], [0.1, -10.2, 0.9]]) {
+    const top = WH + (RIDGE - WH) * (1 - Math.abs(fx) / (RW / 2)), hub = 5.05, drop = top - hub;
+    add(room, cyl(0.03, 0.03, drop, 8), brass, [fx, top - drop / 2, fz]);
+    add(room, cyl(0.1, 0.16, 0.16, 20), brass, [fx, hub + 0.2, fz]);
+    add(room, cyl(0.2, 0.17, 0.24, 24), timberDark, [fx, hub, fz]);
+    add(room, new THREE.TorusGeometry(0.2, 0.02, 8, 32), brass, [fx, hub - 0.1, fz], { rot: [Math.PI / 2, 0, 0], cast: false });
+    const bowl2 = add(room, new THREE.SphereGeometry(0.19, 20, 14), glow(0xffe9c4, night ? 3.2 : 1.5), [fx, hub - 0.2, fz], { cast: false }); bowl2.scale.set(1, 0.6, 1);
     for (let b = 0; b < 5; b++) {
-      const a = (b / 5) * Math.PI * 2 + 0.3, arm = new THREE.Group(); arm.position.set(fx, hub - 0.05, fz); arm.rotation.y = a; room.add(arm);
-      const blade = new THREE.Mesh(leafGeo, bladeWood); blade.scale.setScalar(1.55); blade.rotation.set(-Math.PI / 2 + 0.16, 0, -Math.PI / 2); blade.position.set(0.12, 0, 0); blade.castShadow = true; arm.add(blade);
+      const arm = new THREE.Group(); arm.position.set(fx, hub - 0.04, fz); arm.rotation.set(0, (b / 5) * Math.PI * 2 + spin, -0.1); room.add(arm);
+      add(arm, box(0.3, 0.025, 0.07), brass, [0.3, 0, 0]);
+      const blade = new THREE.Mesh(leafGeo, bladeWood); blade.scale.setScalar(1.6); blade.rotation.set(-Math.PI / 2 + 0.16, 0, -Math.PI / 2); blade.position.set(0.32, 0, 0); blade.castShadow = true; arm.add(blade);
     }
+    if (night) { const l = new THREE.PointLight(0xffd9a0, 5, 7, 1.5); l.position.set(fx, hub - 0.4, fz); scene.add(l); }
   }
 
   // ----- the back wall: all glass. Doors below, a glazed gable above, slim black frames.
@@ -251,76 +269,78 @@ export async function buildRoom(q) {
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night) }));
   skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
 
-  // ----- the left wall: the sportsbook (odds boards, a SPORTSBOOK sign, a ticket counter) with the Big Board above it. The boards
-  // stand out from the wall on brackets, turned towards the room so they read from where you stand.
+  // ----- the back wall, left: the sportsbook, face on. A white shiplap wall from the floor to the thatch; on it the Big Board, the
+  // SPORTSBOOK sign and a row of odds boards; the ticket counter in front.
   const book = group("sportsbook");
-  const SZ = -9.1, TURN = 0.62;
-  const angled = (parent, w, h, y, z, faceMap, glowLevel, housing = 0x111110, turn = TURN) => {
-    const g = new THREE.Group(); g.position.set(X0 + 0.14 + (w / 2) * Math.cos(turn), y, z); g.rotation.y = turn; parent.add(g);
-    add(g, rbox(w + 0.14, h + 0.14, 0.1, 0.02), std(housing, { roughness: 0.5 }), [0, 0, -0.05]);
-    add(g, new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: faceMap, emissive: 0xffffff, emissiveMap: faceMap, emissiveIntensity: glowLevel }), [0, 0, 0.005], { cast: false });
-    add(parent, box(0.5, 0.05, 0.05), timberDark, [X0 + 0.25, y + h / 2 - 0.1, z]);
-    return g;
+  const SX1 = -0.5, SX = (X0 + SX1) / 2, SWALL = ZB + 0.12, roofAt = (x) => WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2));
+  const wallShape = new THREE.Shape(); wallShape.moveTo(X0, 0); wallShape.lineTo(SX1, 0); wallShape.lineTo(SX1, roofAt(SX1)); wallShape.lineTo(X0, WH); wallShape.closePath();
+  add(room, new THREE.ShapeGeometry(wallShape), new THREE.MeshStandardMaterial({ map: wallTex(0.25, 1 / 4.2), roughness: 0.85 }), [0, 0, SWALL], { cast: false });
+  add(room, box(0.14, roofAt(SX1), 0.2), timberDark, [SX1, roofAt(SX1) / 2, SWALL]);
+  const lit = (parent, w, h, x, y, faceMap, level, housing = 0x111110) => {
+    add(parent, rbox(w + 0.14, h + 0.14, 0.1, 0.02), std(housing, { roughness: 0.5 }), [x, y, SWALL + 0.05]);
+    add(parent, new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: faceMap, emissive: 0xffffff, emissiveMap: faceMap, emissiveIntensity: level }), [x, y, SWALL + 0.105], { cast: false });
   };
-  // the SPORTSBOOK header, on the same brackets and at the same angle as the Big Board above it, so it reads whole from the door
-  { const g = new THREE.Group(); g.position.set(X0 + 0.14 + 1.2 * Math.cos(TURN), 2.6, SZ); g.rotation.y = TURN; book.add(g);
-    add(g, rbox(2.4, 0.32, 0.06, 0.015), std(0x1f4a36, { roughness: 0.5 }), [0, 0, -0.03]);
-    add(g, new THREE.PlaneGeometry(2.34, 0.27), new THREE.MeshStandardMaterial({ map: sign("SPORTSBOOK", { w: 1536, h: 176, font: "700 108px Georgia, serif" }), roughness: 0.5 }), [0, 0, 0.004], { cast: false }); }
-  [-1, 0, 1].forEach((k) => angled(book, 1.15, 0.8, 1.88, SZ + k * 1.52, oddsBoard(k + 1), night ? 1.0 : 0.7, 0x111110, 0.5));
-  add(book, rbox(0.8, 1.05, 4.6, 0.03), m.walnut, [X0 + 0.5, 0.525, SZ]);
-  add(book, box(0.9, 0.05, 4.7), brass, [X0 + 0.52, 1.07, SZ]);
+  add(book, rbox(3.3, 0.34, 0.06, 0.015), std(0x1f4a36, { roughness: 0.5 }), [SX + 0.1, 2.36, SWALL + 0.03]);
+  add(book, new THREE.PlaneGeometry(3.22, 0.28), new THREE.MeshStandardMaterial({ map: sign("SPORTSBOOK", { w: 2048, h: 178, font: "700 112px Georgia, serif" }), roughness: 0.5 }), [SX + 0.1, 2.36, SWALL + 0.065], { cast: false });
+  [-1, 0, 1].forEach((k) => lit(book, 0.96, 0.66, SX + 0.1 + k * 1.1, 1.72, oddsBoard(k + 1), night ? 1.0 : 0.7));
+  add(book, rbox(3.4, 1.05, 0.7, 0.03), m.walnut, [SX + 0.1, 0.525, ZB + 0.75]);
+  add(book, box(3.5, 0.05, 0.8), brass, [SX + 0.1, 1.075, ZB + 0.75]);
+  for (const dx of [-1.0, 0.2, 1.2]) add(book, box(0.2, 0.03, 0.12), white, [SX + dx, 1.115, ZB + 0.8], { cast: false });       // ticket pads
+  add(book, cyl(0.05, 0.04, 0.1, 12), brass, [SX + 1.5, 1.15, ZB + 0.8]);
   const board = group("board");
-  angled(board, 2.4, 1.17, 3.5, SZ, bigBoardFace(), night ? 1.0 : 0.62, 0x12281e);
+  lit(board, 3.1, 1.57, SX + 0.1, 3.45, bigBoardFace(), night ? 1.0 : 0.62, 0x12281e);
+  add(board, box(3.3, 0.04, 0.05), brass, [SX + 0.1, 4.33, SWALL + 0.1]);
 
-  // ----- the bar along the back wall, left of the doors: counter, back bar, stools; banners hang from the rafters above it
+  // ----- the left wall: the bar, running down the room. Counter and stools, the back bar and a neon sign on the wall, lanterns
+  // over it, the plaques along its front; the champions' banners hang over it one behind another, each facing the door.
   const bar = group("bar");
-  const BX = -2.3, BZ = ZB + 1.4, BL = 3.4;
-  add(bar, rbox(BL, 1.1, 0.75, 0.03), m.walnut, [BX, 0.55, BZ]);
-  add(bar, rbox(BL + 0.12, 0.07, 0.95, 0.02), std(0xe8e2d4, { roughness: 0.25 }), [BX, 1.13, BZ]);           // pale stone top
-  add(bar, cyl(0.025, 0.025, BL, 12), brass, [BX, 0.22, BZ + 0.45], { rot: [0, 0, Math.PI / 2] });
+  const BXc = X0 + 0.95, BZ = -8.5, BL = 5.6;
+  add(bar, rbox(0.75, 1.1, BL, 0.03), m.walnut, [BXc, 0.55, BZ]);
+  add(bar, rbox(0.95, 0.07, BL + 0.12, 0.02), std(0xe8e2d4, { roughness: 0.25 }), [BXc, 1.13, BZ]);          // pale stone top
+  add(bar, cyl(0.025, 0.025, BL, 12), brass, [BXc + 0.45, 0.22, BZ], { rot: [Math.PI / 2, 0, 0] });
   const plaques = group("plaques");
-  for (let i = 0; i < 4; i++) { add(plaques, box(0.42, 0.3, 0.03), timberDark, [BX - 1.2 + i * 0.8, 0.62, BZ + 0.39]); add(plaques, box(0.34, 0.22, 0.02), brass, [BX - 1.2 + i * 0.8, 0.62, BZ + 0.41]); }
-  for (let i = 0; i < 4; i++) {
-    const x = BX - 1.2 + i * 0.8;
-    add(bar, cyl(0.21, 0.21, 0.07, 24), rattan, [x, 0.78, BZ + 0.8]);
-    add(bar, cyl(0.03, 0.05, 0.75, 10), brass, [x, 0.38, BZ + 0.8]);
-    add(bar, new THREE.TorusGeometry(0.15, 0.012, 6, 24), brass, [x, 0.3, BZ + 0.8], { rot: [Math.PI / 2, 0, 0] });
+  for (let i = 0; i < 5; i++) { const z = BZ + 2.2 - i * 1.1; add(plaques, box(0.03, 0.32, 0.46), timberDark, [BXc + 0.39, 0.62, z]); add(plaques, box(0.02, 0.24, 0.38), brass, [BXc + 0.41, 0.62, z]); }
+  for (let i = 0; i < 5; i++) {
+    const z = BZ + 2.2 - i * 1.1;
+    add(bar, cyl(0.21, 0.21, 0.07, 24), rattan, [BXc + 0.9, 0.78, z]);
+    add(bar, cyl(0.03, 0.05, 0.75, 10), brass, [BXc + 0.9, 0.38, z]);
+    add(bar, new THREE.TorusGeometry(0.15, 0.012, 6, 24), brass, [BXc + 0.9, 0.3, z], { rot: [Math.PI / 2, 0, 0] });
   }
-  add(bar, rbox(BL + 0.3, 3.0, 0.1, 0.02), std(0x1f3b2f, { roughness: 0.6 }), [BX, 1.5, ZB + 0.08]);                // the back bar's panelled wall
-  add(bar, box(BL + 0.4, 0.08, 0.16), timberDark, [BX, 3.02, ZB + 0.08]);
-  for (let s = 0; s < 2; s++) add(bar, box(BL, 0.04, 0.3), timber, [BX, 1.5 + s * 0.42, ZB + 0.26]);
+  add(bar, box(0.06, 1.9, BL), std(0x1f3b2f, { roughness: 0.6 }), [X0 + 0.04, 2.15, BZ]);                    // the back bar's panel
+  add(bar, box(0.1, 0.08, BL + 0.1), timberDark, [X0 + 0.06, 3.12, BZ]);
+  for (let s = 0; s < 2; s++) add(bar, box(0.28, 0.04, BL - 0.2), timber, [X0 + 0.2, 1.5 + s * 0.42, BZ]);
   const bottleColors = [0x2f6a4c, 0x7a3a12, 0xd8d0b8, 0x3a1d0c, 0x9a7a2a, 0x24435e];
-  for (let s = 0; s < 2; s++) for (let i = 0; i < 11; i++) add(bar, cyl(0.035, 0.04, 0.27 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [BX - BL / 2 + 0.2 + i * 0.3, 1.66 + s * 0.42, ZB + 0.26], { cast: false });
-  const sign2 = add(bar, new THREE.PlaneGeometry(2.5, 0.49), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [BX, 2.62, ZB + 0.16], { cast: false });
-  sign2.renderOrder = 2;
-  add(bar, box(0.5, 0.08, 0.08), brass, [BX + 0.3, 1.55, BZ - 0.1]);
-  for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BX + 0.12 + i * 0.12, 1.36, BZ - 0.1]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BX + 0.12 + i * 0.12, 1.68, BZ - 0.1]); }
+  for (let s = 0; s < 2; s++) for (let i = 0; i < 17; i++) add(bar, cyl(0.035, 0.04, 0.27 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [X0 + 0.2, 1.66 + s * 0.42, BZ - BL / 2 + 0.3 + i * 0.31], { cast: false });
+  add(bar, new THREE.PlaneGeometry(2.8, 0.55), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [X0 + 0.085, 2.56, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
+  for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
+  for (const z of [BZ + 2.55, BZ - 0.45, BZ - 2.5]) {                                                        // rattan lamps standing on the bar
+    add(bar, cyl(0.07, 0.09, 0.03, 16), brass, [BXc - 0.12, 1.18, z]);
+    add(bar, cyl(0.012, 0.012, 0.34, 8), brass, [BXc - 0.12, 1.35, z]);
+    add(bar, cyl(0.1, 0.16, 0.24, 20), rattan, [BXc - 0.12, 1.6, z]);
+    add(bar, cyl(0.05, 0.05, 0.1, 12), glow(0xffd28a, night ? 3 : 1.2), [BXc - 0.12, 1.56, z], { cast: false });
+    if (night) { const l = new THREE.PointLight(0xffc27a, 1.6, 3, 1.6); l.position.set(BXc + 0.1, 1.7, z); bar.add(l); }
+  }
   const record = group("record");
-  add(record, rbox(0.56, 0.05, 0.42, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [BX - 1.2, 1.19, BZ]);
-  add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [BX - 1.2, 1.22, BZ], { cast: false, rot: [-Math.PI / 2, 0, 0] });
+  add(record, rbox(0.42, 0.05, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [BXc, 1.19, BZ + 1.65]);
+  add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [BXc, 1.22, BZ + 1.65], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2] });
   const chat = group("chat");
-  add(chat, rbox(0.38, 0.02, 0.27, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BX + 1.25, 1.18, BZ + 0.05]);
-  const lid = new THREE.Group(); lid.position.set(BX + 1.25, 1.19, BZ - 0.08); lid.rotation.x = -0.3; chat.add(lid);
-  add(lid, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
-  add(lid, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
-  // banners, on one brass rail hung from the thatch over the bar, high enough to clear the neon
+  add(chat, rbox(0.27, 0.02, 0.38, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BXc + 0.05, 1.18, BZ + 0.1]);
+  const lid = new THREE.Group(); lid.position.set(BXc - 0.08, 1.19, BZ + 0.1); lid.rotation.set(0, Math.PI / 2, 0); chat.add(lid);
+  const lidTilt = new THREE.Group(); lidTilt.rotation.x = -0.3; lid.add(lidTilt);
+  add(lidTilt, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
+  add(lidTilt, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
   const banners = group("banners");
-  const RAIL_Y = 4.5, railX0 = BX - 0.75, railX1 = railX0 + 4 * 0.82;
-  add(room, cyl(0.016, 0.016, railX1 - railX0 + 0.5, 8), brass, [(railX0 + railX1) / 2, RAIL_Y, ZB + 1.6], { rot: [0, 0, Math.PI / 2] });
-  for (const x of [railX0 + 0.2, railX1 - 0.2]) { const top = WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2)); add(room, cyl(0.008, 0.008, top - RAIL_Y, 6), brass, [x, (top + RAIL_Y) / 2, ZB + 1.6]); }
-  ["#8c1e24", "#1f4a36", "#1d3557", "#8c1e24", "#1f4a36"].forEach((color, i) => {
+  ["#8c1e24", "#1f4a36", "#1d3557", "#8c1e24"].forEach((color, i) => {
     const c = canvas(256, 600), g = c.getContext("2d");
     g.fillStyle = color; g.beginPath(); g.moveTo(0, 0); g.lineTo(256, 0); g.lineTo(256, 480); g.lineTo(128, 600); g.lineTo(0, 480); g.closePath(); g.fill();
     g.strokeStyle = "#e6cf98"; g.lineWidth = 12; g.stroke(); g.fillStyle = "#e6cf98"; g.textAlign = "center";
-    g.font = "700 52px Georgia"; g.fillText("CHAMPS", 128, 200); g.font = "700 72px Georgia"; g.fillText(String(2022 + i), 128, 300);
-    add(banners, new THREE.PlaneGeometry(0.64, 1.5), new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 }), [railX0 + i * 0.82, RAIL_Y - 0.77, ZB + 1.6], { cast: false });
+    g.font = "700 52px Georgia"; g.fillText("CHAMPS", 128, 200); g.font = "700 72px Georgia"; g.fillText(String(2026 - i), 128, 300);
+    const x = X0 + 0.72, z = -7.6 - i * 1.15, top = 4.5;
+    add(banners, new THREE.PlaneGeometry(0.68, 1.6), new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 }), [x, top - 0.82, z], { cast: false });
+    add(banners, cyl(0.014, 0.014, 0.78, 6), brass, [x, top, z], { rot: [0, 0, Math.PI / 2] });
+    for (const dx of [-0.3, 0.3]) add(room, cyl(0.005, 0.005, roofAt(x + dx) - top, 4), brass, [x + dx, (roofAt(x + dx) + top) / 2, z], { cast: false });
   });
-  for (const x of [BX - 1.5, BX + 1.5]) {                                                                  // lantern pendants at the ends of the bar
-    const top = WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2));
-    add(bar, cyl(0.008, 0.008, top - 2.55, 6), frameMat, [x, (top + 2.55) / 2, BZ]);
-    add(bar, cyl(0.13, 0.2, 0.36, 20), rattan, [x, 2.35, BZ]);
-    add(bar, cyl(0.07, 0.07, 0.14, 12), glow(0xffd28a, night ? 3 : 1.2), [x, 2.3, BZ], { cast: false });
-  }
 
   // ----- the right wall: a grand fieldstone fireplace, floor to ceiling, the constitution on the chimney; the lounge in front
   const fire = group("fireplace");
@@ -346,9 +366,9 @@ export async function buildRoom(q) {
   add(tvMount, new THREE.PlaneGeometry(1.9, 1.07), new THREE.MeshStandardMaterial({ map: gameOnTv(), emissive: 0xffffff, emissiveMap: gameOnTv(), emissiveIntensity: night ? 1.0 : 0.8 }), [0, 0, 0.032], { cast: false });
   add(tv, box(0.28, 0.06, 0.06), frameMat, [X1 - CD - 0.12, 3.25, FZ]);
   const charter = group("constitution");
-  add(charter, box(0.98, 1.24, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - CD + 0.6, 2.5, FZ + 1.92]);
-  add(charter, new THREE.PlaneGeometry(0.84, 1.07), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [X1 - CD + 0.6, 2.5, FZ + 1.96], { cast: false });
-  add(charter, box(0.7, 0.04, 0.12), brass, [X1 - CD + 0.6, 3.2, FZ + 1.96]);
+  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - CD + 0.46, 2.6, FZ + 1.92]);
+  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [X1 - CD + 0.46, 2.6, FZ + 1.96], { cast: false });
+  add(charter, box(0.5, 0.04, 0.12), brass, [X1 - CD + 0.46, 3.14, FZ + 1.96]);
     // the lounge: a jute rug, two linen sofas facing each other across the coffee table, a rattan armchair facing the fire
   add(room, box(4.2, 0.012, 4.0), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.6, 0.006, FZ], { cast: false });
   const sofa = (x, z, facing) => {
@@ -374,9 +394,9 @@ export async function buildRoom(q) {
   });
 
   // ----- the trophies: the real three, each on its own pedestal with room to breathe, the Pick'em highest in the middle, on a low
-  // round stone dais under a brass chandelier
+  // round stone dais under the first fan
   const trophies = group("trophies");
-  const TX = -0.35, TZ = -6.0;
+  const TX = -0.1, TZ = -6.0;
   add(room, cyl(1.75, 1.8, 0.16, 64), std(0xece6d8, { roughness: 0.4 }), [TX, 0.08, TZ]);
   const pedestals = [[0, -0.25, 1.15], [-1.15, 0.35, 0.8], [1.15, 0.35, 0.8]];
   for (const [dx, dz, h] of pedestals) {
@@ -396,11 +416,6 @@ export async function buildRoom(q) {
     piece.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     trophies.add(piece);
   }
-  const CY = 4.75, ctop = WH + (RIDGE - WH) * (1 - Math.abs(TX) / (RW / 2));
-  add(room, cyl(0.012, 0.012, ctop - CY, 6), brass, [TX, (ctop + CY) / 2, TZ]);
-  for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2; add(room, cyl(0.006, 0.006, 0.86, 4), brass, [TX + Math.cos(a) * 0.37, CY + 0.36, TZ + Math.sin(a) * 0.37], { rot: [Math.sin(a) * 1.05, 0, -Math.cos(a) * 1.05], cast: false }); }
-  add(room, new THREE.TorusGeometry(0.75, 0.03, 10, 48), brass, [TX, CY, TZ], { rot: [Math.PI / 2, 0, 0], cast: false });
-  for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; add(room, new THREE.SphereGeometry(0.05, 12, 8), glow(0xffe0a8, night ? 4 : 2), [TX + Math.cos(a) * 0.75, CY + 0.07, TZ + Math.sin(a) * 0.75], { cast: false }); }
   const trophySpot = new THREE.SpotLight(0xfff4de, night ? 80 : 55, 10, 0.5, 0.6, 1.3);
   trophySpot.position.set(TX, WH + 1.6, TZ + 2.4); trophySpot.target.position.set(TX, 1.5, TZ); trophySpot.castShadow = true; trophySpot.shadow.mapSize.set(2048, 2048);
   scene.add(trophySpot, trophySpot.target);
@@ -451,8 +466,8 @@ export async function buildRoom(q) {
     for (let f = 0; f < 9; f++) { const a = (f / 9) * Math.PI * 2 + rand(), r = 0.25 + rand() * 0.25, lf = add(room, new THREE.CircleGeometry(0.26 * s, 10), std(0x2f6f3a, { roughness: 0.8, side: THREE.DoubleSide }), [x + Math.cos(a) * r * s, (0.75 + rand() * 0.6) * s, z + Math.sin(a) * r * s], { cast: true }); lf.scale.set(1, 1.4, 1); lf.rotation.set(-0.9 - rand() * 0.4, a, 0); }
   };
   plant(X1 - 0.6, ZB + 0.8, 1.4); plant(X1 - 0.6, -5.6, 1.2);
-  monstera(-4.0, ZB + 0.7, 1.1); monstera(2.1, -7.2, 0.9); monstera(-1.0, -12.4, 0.9);
-  add(room, rbox(0.55, 2.4, 0.08, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.35, 1.22, ZB + 2.2], { rot: [0, -0.4, -0.12] });
+  monstera(2.1, -7.2, 0.9); monstera(-0.05, ZB + 0.8, 1.0);
+  add(room, rbox(0.55, 2.4, 0.08, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.35, 1.22, ZB + 1.2], { rot: [0, -0.4, -0.12] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
     add(out, cyl(0.07, 0.05, 0.18, 10), std(0x2a2a2a), [x, 1.85, z]);
@@ -461,7 +476,7 @@ export async function buildRoom(q) {
   }
   if (bowl) {
     const b2 = group("bowl");
-    const BBX = 1.5, BBZ = ZB + 1.3;
+    const BBX = 1.5, BBZ = ZB + 0.9;
     add(b2, box(1.4, 1.0, 0.05), std(0xb98a5a, { roughness: 1 }), [BBX, 1.45, BBZ]);
     add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 1.98, BBZ]); add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 0.92, BBZ]);
     for (const dx of [-0.72, 0.72]) { add(b2, box(0.05, 1.9, 0.05), timberDark, [BBX + dx, 0.95, BBZ]); add(b2, box(0.05, 0.05, 0.55), timberDark, [BBX + dx, 0.12, BBZ]); for (const dz of [-0.24, 0.24]) add(b2, cyl(0.05, 0.05, 0.04, 16), std(0x222222), [BBX + dx, 0.05, BBZ + dz], { rot: [0, 0, Math.PI / 2] }); }
@@ -487,7 +502,7 @@ export async function buildRoom(q) {
   // ----- camera: standing on the landing just inside the front door, looking down the room to the glass wall and the sea
   const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 82), W / H, 0.1, 200);
   camera.position.set(...(q.get("cam") ?? "0.3,3.0,-0.3").split(",").map(Number));
-  camera.lookAt(...(q.get("look") ?? "-0.4,1.45,-9").split(",").map(Number));
+  camera.lookAt(...(q.get("look") ?? "-0.25,1.45,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
 
   const outSpots = {};

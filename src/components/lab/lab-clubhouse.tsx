@@ -12,12 +12,12 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 /**
  * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
  *  - The room: a grand beach bungalow drawn in 3D and shown as one picture (by day, and at night with the pool lit), seen from just
- *    inside: a thatched beach-hut ceiling with wooden leaf fans, the whole back wall glass onto the pool patio and the sea. Tap anything in it
- *    to go there: the sportsbook down the left wall (where picks are made) with the Big Board above it, both turned towards you,
- *    the real trophies in the middle, each on its own pedestal under a chandelier, the bar at the back with the banners hanging from the rafters and the plaques on
- *    its front, the record book and the laptop (the pool chat, a mail sign when there's a new message) on the bar, the constitution
- *    framed on the grand stone chimney (a TV over its mantel, a game on), the race on the coffee table, the Survivor poker table in front, and from Dec 7 the Bowl
- *    Pool's bulletin board, wheeled in by the doors.
+ *    inside, looking down the room under a thatched beach-hut ceiling with two big wide-leaf fans. Tap anything in it to go there:
+ *    the sportsbook on the wall that faces you (the Big Board, the odds boards, the ticket counter: where picks are made), the real
+ *    trophies in the middle, each on its own pedestal, the bar down the left wall (the champions' banners hanging over it, the
+ *    plaques along its front, the record book and the laptop on top: the pool chat, a mail sign when there's a new message), the
+ *    constitution framed on the grand stone chimney (a TV over its mantel, a game on), the race on the coffee table, the Survivor
+ *    poker table in front, and from Dec 7 the Bowl Pool's bulletin board, wheeled in by the glass doors.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
  *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the
@@ -148,7 +148,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "sportsbook", room: "window", name: "Sportsbook", label: "below", always: true },
   { spot: "banners", room: "trophies", name: "Banners", label: "above" },
   { spot: "plaques", room: "trophies", name: "Plaques" },
-  { spot: "board", room: "board", name: "The Big Board", label: "below", always: true },
+  { spot: "board", room: "board", name: "The Big Board", label: "above", always: true },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "above", always: true },
   { spot: "record", room: "record", name: "Record book", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
