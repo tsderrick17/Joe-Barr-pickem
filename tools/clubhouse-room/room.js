@@ -1,14 +1,15 @@
 // The clubhouse: a grand beach bungalow and the ultimate man cave, seen from just inside the front, looking down the room. Nothing
 // in it is turned to the camera by a trick: what has to be read hangs on the wall that faces you, and the side walls carry the
 // things that look right in perspective.
-//  - Ceiling: natural beach-hut thatch, no beams, two big wide-leaf cabana fans down the middle.
-//  - Back wall, left: the sportsbook, face on: the Big Board, the SPORTSBOOK sign, the odds boards and the ticket counter.
-//  - Back wall, right: glass onto the pool patio, palms, tiki torches and the sea.
-//  - Left wall: the bar running down the room, stools along it, the back bar and a neon sign on the wall, the champions' banners
-//    hanging over it one behind another, the plaques along its front, the record book and the laptop on top.
-//  - Right wall: a grand floor-to-ceiling stone chimney, a TV over the mantel, the constitution framed on it; the lounge in front
-//    with the race on the coffee table.
-//  - Middle: the real trophies, each on its own pedestal. Foreground: the Survivor poker table.
+//  - Ceiling: natural beach-hut thatch laid in courses, no beams, two big palm-leaf fans down the middle.
+//  - Back wall, left: where picks are made, face on: the Big Board, one wide board of spreads under it, the counter. No sign.
+//  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
+//  - Left wall: the bar running down the room, stools along it, the back bar and a neon sign on the wall, the plaques along its
+//    front, the record book and the laptop on top.
+//  - Right: the Trophy Room, a room of its own to the side. Its wall steps into the clubhouse so its door faces you (the trophies
+//    on their table and the banners inside, the constitution framed over the door). Beyond it, on the wall the two rooms share,
+//    a grand floor-to-thatch stone fireplace with a TV over the mantel, and the lounge in front, set clear of the aisle.
+//  - Middle: a long oval Survivor poker table with a seat for every player. The floor in front of it is the way in.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { pennantCup } from "/trophies.js";
@@ -61,16 +62,16 @@ function neon(text) {
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
 function jute() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#c9b48a"; g.fillRect(0, 0, 256, 256); for (let y = 0; y < 256; y += 6) for (let x = 0; x < 256; x += 6) { g.fillStyle = `rgba(110, 85, 50, ${0.15 + rand() * 0.2})`; g.fillRect(x + ((y / 6) % 2) * 3, y, 4, 3); } g.strokeStyle = "#8a6a3e"; g.lineWidth = 10; g.strokeRect(10, 10, 236, 236); return texture(c, [1, 1]); }
 function spreadsFace() {
-  const c = canvas(640, 560), g = c.getContext("2d");
-  g.fillStyle = "#070706"; g.fillRect(0, 0, 640, 560);
-  g.font = "700 34px 'Courier New', monospace"; g.textBaseline = "middle";
-  g.fillStyle = "#f0b429"; g.fillText("THIS WEEK", 28, 36); g.textAlign = "right"; g.fillText("SPREAD", 612, 36); g.textAlign = "left";
-  g.fillStyle = "rgba(240,180,41,.35)"; g.fillRect(24, 62, 592, 2);
-  [["PIT", "CLE", 2.5], ["IND", "WAS", 3.5], ["LAR", "PHI", 3], ["SF", "DEN", 1.5], ["KC", "BUF", 6.5], ["DAL", "NYG", 4]].forEach(([a, b, line], i) => {
-    const y = 104 + i * 78;
-    g.font = "700 30px 'Courier New', monospace"; g.fillStyle = "#f4efe3"; g.fillText(a, 32, y); g.fillText(b, 32, y + 32);
-    g.textAlign = "right"; g.fillStyle = "#ffb02e"; g.shadowColor = "#ff9a20"; g.shadowBlur = 10; g.fillText(`-${line}`, 608, y); g.fillText(`+${line}`, 608, y + 32); g.shadowBlur = 0; g.textAlign = "left";
-    g.fillStyle = "rgba(244,239,227,.12)"; g.fillRect(24, y + 54, 592, 1);
+  const c = canvas(1860, 552), g = c.getContext("2d");
+  g.fillStyle = "#070706"; g.fillRect(0, 0, 1860, 552);
+  g.textBaseline = "middle"; g.font = "700 40px 'Courier New', monospace"; g.fillStyle = "#f0b429"; g.fillText("THIS WEEK’S SPREADS", 36, 36);
+  g.fillStyle = "rgba(240,180,41,.35)"; g.fillRect(28, 66, 1804, 3);
+  [["PIT", 2.5, "at CLE · THU"], ["IND", 3.5, "vs WAS · SUN"], ["LAR", 3, "at PHI · SUN"], ["SF", 1.5, "vs DEN · SUN"], ["KC", 6.5, "vs BUF · SUN"], ["DAL", 4, "at NYG · MON"]].forEach(([team, line, rest], i) => {
+    const x = 40 + (i % 3) * 610, y = 150 + Math.floor(i / 3) * 236;
+    g.font = "700 124px 'Courier New', monospace"; g.fillStyle = "#f4efe3"; g.fillText(team, x, y);
+    g.textAlign = "right"; g.fillStyle = "#ffb02e"; g.shadowColor = "#ff9a20"; g.shadowBlur = 16; g.fillText(`-${line}`, x + 560, y); g.shadowBlur = 0; g.textAlign = "left";
+    g.font = "700 46px 'Courier New', monospace"; g.fillStyle = "rgba(244,239,227,.62)"; g.fillText(rest, x + 4, y + 98);
+    if (i % 3) { g.fillStyle = "rgba(244,239,227,.14)"; g.fillRect(x - 26, y - 70, 2, 200); }
   });
   return texture(c);
 }
@@ -105,7 +106,7 @@ function pavers() { const c = canvas(512, 512), g = c.getContext("2d"); g.fillSt
 export async function buildRoom(q) {
   const night = q.get("night") === "1";
   const bowl = q.get("bowl") === "1";
-  const W = Number(q.get("w") ?? 390), H = Number(q.get("h") ?? 700), scale = Number(q.get("scale") ?? 2);
+  const W = Number(q.get("w") ?? 390), H = Number(q.get("h") ?? 630), scale = Number(q.get("scale") ?? 2);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -199,14 +200,30 @@ export async function buildRoom(q) {
     const l = new THREE.PointLight(0xffd9a0, night ? 5 : 1.4, 7, 1.5); l.position.set(fx, hub - 0.45, fz); scene.add(l);
   }
 
-  // ----- the back wall: all glass. Doors below, a glazed gable above, slim black frames.
+  // ----- the back wall, right: glass from the floor to the thatch, and the doors stand open. Four tall sliding doors, pushed back in
+  // pairs to either side, leave the middle of the wall open to the patio; a linen sheer hangs at each side; the gable above is glazed.
   const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.95, roughness: 0.03, thickness: 0.02, ior: 1.3, transparent: true, opacity: 0.25 });
   const frameMat = std(0x2a2a27, { roughness: 0.4, metalness: 0.4 });
-  const gable = new THREE.Shape(); gable.moveTo(X0, 0); gable.lineTo(X1, 0); gable.lineTo(X1, WH); gable.lineTo(0, RIDGE); gable.lineTo(X0, WH); gable.closePath();
+  const TRANSOM = 2.9, GX0 = -0.43, GX1 = 2.52, LEAF = (GX1 - GX0) / 4;
+  const gable = new THREE.Shape(); gable.moveTo(X0, TRANSOM); gable.lineTo(X1, TRANSOM); gable.lineTo(X1, WH); gable.lineTo(0, RIDGE); gable.lineTo(X0, WH); gable.closePath();
   add(room, new THREE.ShapeGeometry(gable), glass, [0, 0, ZB], { cast: false });
-  for (let i = 0; i <= 9; i++) { const x = X0 + (i * RW) / 9, h = WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2)); add(room, box(0.06, h, 0.1), frameMat, [x, h / 2, ZB]); }
-  add(room, box(RW, 0.08, 0.12), frameMat, [0, 2.9, ZB]); add(room, box(RW, 0.06, 0.12), frameMat, [0, 0.03, ZB]);
+  for (let i = 0; i <= 9; i++) { const x = X0 + (i * RW) / 9, h = WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2)) - TRANSOM; add(room, box(0.06, h, 0.1), frameMat, [x, TRANSOM + h / 2, ZB]); }
+  add(room, box(RW, 0.08, 0.12), frameMat, [0, TRANSOM, ZB]); add(room, box(GX1 - GX0, 0.03, 0.2), frameMat, [(GX0 + GX1) / 2, 0.015, ZB + 0.03]);
   for (const side of [-1, 1]) add(room, box(len, 0.08, 0.12), frameMat, [side * RW / 4, (WH + RIDGE) / 2, ZB], { rot: [0, 0, side * -slope] });
+  const door = (x0, z) => {
+    for (const x of [x0 + 0.025, x0 + LEAF - 0.025]) add(room, box(0.05, TRANSOM - 0.08, 0.04), frameMat, [x, (TRANSOM - 0.04) / 2, z]);
+    for (const y of [0.06, TRANSOM - 0.08]) add(room, box(LEAF, 0.06, 0.04), frameMat, [x0 + LEAF / 2, y, z]);
+    add(room, new THREE.PlaneGeometry(LEAF - 0.1, TRANSOM - 0.2), glass, [x0 + LEAF / 2, TRANSOM / 2, z], { cast: false });
+  };
+  door(GX0, ZB); door(GX0 + 0.07, ZB + 0.06); door(GX1 - LEAF, ZB); door(GX1 - LEAF - 0.07, ZB + 0.06);
+  const sheer = new THREE.MeshStandardMaterial({ color: 0xfbf8f0, roughness: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+  for (const [x, lean] of [[GX0 + LEAF + 0.02, 1], [GX1 - LEAF - 0.02, -1]]) {
+    const cloth = new THREE.PlaneGeometry(0.5, TRANSOM - 0.1, 30, 10), cp = cloth.attributes.position;
+    for (let i = 0; i < cp.count; i++) { const u = cp.getX(i) / 0.5 + 0.5, down = 0.5 - cp.getY(i) / (TRANSOM - 0.1); cp.setZ(i, 0.035 * Math.sin(u * Math.PI * 9) + 0.22 * down * down * (lean > 0 ? u : 1 - u)); }   // gathered, and lifting a little on the breeze
+    cloth.computeVertexNormals();
+    add(room, cloth, sheer, [x, (TRANSOM - 0.1) / 2, ZB + 0.16], { cast: false });
+  }
+  add(room, cyl(0.012, 0.012, GX1 - GX0, 8), brass, [(GX0 + GX1) / 2, TRANSOM - 0.08, ZB + 0.16], { rot: [0, 0, Math.PI / 2], cast: false });
 
   // ----- outside: the pool patio, loungers, palms, the sea and the sky
   const out = group(null);
@@ -231,8 +248,8 @@ export async function buildRoom(q) {
   skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
 
   // ----- the back wall, left: the sportsbook, face on. A white shiplap wall from the floor to the thatch; on it the Big Board, the
-  // one screen of this week's spreads to one side, and the betting windows behind their brass grilles over the counter. No sign says
-  // what it is: the board, the windows and the counter say it.
+  // under it one board of this week's spreads as wide as the wall allows, in type big enough to read, and the counter in front. No
+  // sign says what it is: the boards and the counter say it.
   const book = group("sportsbook");
   const SX1 = -0.5, SX = (X0 + SX1) / 2, SWALL = ZB + 0.12, roofAt = (x) => WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2));
   const wallShape = new THREE.Shape(); wallShape.moveTo(X0, 0); wallShape.lineTo(SX1, 0); wallShape.lineTo(SX1, roofAt(SX1)); wallShape.lineTo(X0, WH); wallShape.closePath();
@@ -242,21 +259,14 @@ export async function buildRoom(q) {
     add(parent, rbox(w + 0.14, h + 0.14, 0.1, 0.02), std(housing, { roughness: 0.5 }), [x, y, SWALL + 0.05]);
     add(parent, new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: faceMap, emissive: 0xffffff, emissiveMap: faceMap, emissiveIntensity: level }), [x, y, SWALL + 0.105], { cast: false });
   };
-  lit(book, 1.08, 0.94, SX - 1.06, 1.8, spreadsFace(), night ? 1.0 : 0.7);
-  for (const wx of [SX + 0.22, SX + 1.24]) {
-    add(book, rbox(0.92, 1.2, 0.09, 0.02), m.walnut, [wx, 1.72, SWALL + 0.045]);
-    add(book, new THREE.PlaneGeometry(0.78, 1.06), new THREE.MeshStandardMaterial({ color: 0x120c08, emissive: 0x4a2a0c, emissiveIntensity: night ? 0.7 : 0.35, roughness: 1 }), [wx, 1.72, SWALL + 0.092], { cast: false });         // lamplight in the cage behind
-    for (let k = 0; k < 9; k++) add(book, cyl(0.007, 0.007, 0.8, 6), brass, [wx - 0.32 + k * 0.08, 1.84, SWALL + 0.1], { cast: false });
-    for (const y of [1.44, 2.24]) add(book, box(0.78, 0.022, 0.022), brass, [wx, y, SWALL + 0.1], { cast: false });
-    add(book, new THREE.TorusGeometry(0.39, 0.012, 6, 24, Math.PI), brass, [wx, 1.84, SWALL + 0.1], { cast: false });
+  lit(book, 3.1, 0.92, SX + 0.1, 1.98, spreadsFace(), night ? 1.0 : 0.7);
+  add(book, rbox(2.9, 1.05, 0.7, 0.03), m.walnut, [SX - 0.15, 0.525, ZB + 0.75]);
+  add(book, box(3.0, 0.05, 0.8), brass, [SX - 0.15, 1.075, ZB + 0.75]);
+  for (const dx of [-1.2, -0.15, 0.9]) add(book, box(0.2, 0.03, 0.12), white, [SX + dx, 1.115, ZB + 0.8], { cast: false });       // ticket pads
+  for (const dx of [-0.7, 0.4]) {                                                                                                    // banker's lamps
+    add(book, cyl(0.06, 0.075, 0.02, 16), brass, [SX + dx, 1.11, ZB + 0.72]); add(book, cyl(0.008, 0.008, 0.22, 8), brass, [SX + dx, 1.22, ZB + 0.72]);
+    add(book, cyl(0.05, 0.05, 0.24, 14, 1), new THREE.MeshStandardMaterial({ color: 0x1f6a46, emissive: 0x2f9a5c, emissiveIntensity: night ? 1.2 : 0.5, roughness: 0.3 }), [SX + dx, 1.35, ZB + 0.72], { rot: [0, 0, Math.PI / 2], cast: false });
   }
-  add(book, cyl(0.06, 0.075, 0.02, 16), brass, [SX + 0.73, 1.11, ZB + 0.72]);                                                          // a banker's lamp between the windows
-  add(book, cyl(0.008, 0.008, 0.24, 8), brass, [SX + 0.73, 1.23, ZB + 0.72]);
-  add(book, cyl(0.05, 0.05, 0.24, 14, 1), new THREE.MeshStandardMaterial({ color: 0x1f6a46, emissive: 0x2f9a5c, emissiveIntensity: night ? 1.2 : 0.5, roughness: 0.3 }), [SX + 0.73, 1.37, ZB + 0.72], { rot: [0, 0, Math.PI / 2], cast: false });
-  add(book, rbox(3.4, 1.05, 0.7, 0.03), m.walnut, [SX + 0.1, 0.525, ZB + 0.75]);
-  add(book, box(3.5, 0.05, 0.8), brass, [SX + 0.1, 1.075, ZB + 0.75]);
-  for (const dx of [-1.0, 0.2, 1.2]) add(book, box(0.2, 0.03, 0.12), white, [SX + dx, 1.115, ZB + 0.8], { cast: false });       // ticket pads
-  add(book, cyl(0.05, 0.04, 0.1, 12), brass, [SX + 1.5, 1.15, ZB + 0.8]);
   const board = group("board");
   lit(board, 3.1, 1.57, SX + 0.1, 3.45, bigBoardFace(), night ? 1.0 : 0.62, 0x12281e);
   add(board, box(3.3, 0.04, 0.05), brass, [SX + 0.1, 4.33, SWALL + 0.1]);
@@ -300,29 +310,29 @@ export async function buildRoom(q) {
   const lidTilt = new THREE.Group(); lidTilt.rotation.x = -0.3; lid.add(lidTilt);
   add(lidTilt, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
   add(lidTilt, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
-  const banners = group("banners");
-  ["#8c1e24", "#1f4a36", "#1d3557", "#8c1e24"].forEach((color, i) => {
+  const pennant = (color, year) => {
     const c = canvas(256, 600), g = c.getContext("2d");
     g.fillStyle = color; g.beginPath(); g.moveTo(0, 0); g.lineTo(256, 0); g.lineTo(256, 480); g.lineTo(128, 600); g.lineTo(0, 480); g.closePath(); g.fill();
     g.strokeStyle = "#e6cf98"; g.lineWidth = 12; g.stroke(); g.fillStyle = "#e6cf98"; g.textAlign = "center";
-    g.font = "700 52px Georgia"; g.fillText("CHAMPS", 128, 200); g.font = "700 72px Georgia"; g.fillText(String(2026 - i), 128, 300);
-    const x = X0 + 0.65, z = -8.6 - i * 0.9, top = 4.5;
-    add(banners, new THREE.PlaneGeometry(0.68, 1.6), new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 }), [x, top - 0.82, z], { cast: false });
-    add(banners, cyl(0.014, 0.014, 0.78, 6), brass, [x, top, z], { rot: [0, 0, Math.PI / 2] });
-    for (const dx of [-0.3, 0.3]) add(room, cyl(0.005, 0.005, roofAt(x + dx) - top, 4), brass, [x + dx, (roofAt(x + dx) + top) / 2, z], { cast: false });
-  });
+    g.font = "700 52px Georgia"; g.fillText("CHAMPS", 128, 200); g.font = "700 72px Georgia"; g.fillText(String(year), 128, 300);
+    return new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 });
+  };
 
-  // ----- the right wall: a grand fieldstone fireplace, floor to ceiling, the constitution on the chimney; the lounge in front
+  // ----- the right side of the room. The Trophy Room is a room of its own off this side: its wall steps into the clubhouse and its
+  // door faces you. Beyond the door, on the wall the two rooms share, the grand fieldstone fireplace rises from the floor to the thatch.
+  const JOG = -7.4, WALLX = 2.52, DOOR = { x0: 2.68, x1: 3.5, top: 2.5 }, CX = (DOOR.x0 + DOOR.x1) / 2;
+  const shiplapMat = () => new THREE.MeshStandardMaterial({ ...shiplap([1 / 1.04, 1 / 2.08]), bumpScale: 1.6, roughness: 0.85 });
+  const jog = new THREE.Shape(); jog.moveTo(WALLX, 0); jog.lineTo(X1, 0); jog.lineTo(X1, WH + 0.1); jog.lineTo(WALLX, roofAt(WALLX) + 0.1); jog.closePath();
+  const way = new THREE.Path(); way.moveTo(DOOR.x0, 0); way.lineTo(DOOR.x0, DOOR.top); way.lineTo(DOOR.x1, DOOR.top); way.lineTo(DOOR.x1, 0); way.closePath(); jog.holes.push(way);
+  add(room, new THREE.ExtrudeGeometry(jog, { depth: 0.16, bevelEnabled: false }), shiplapMat(), [0, 0, JOG - 0.16]);
+  add(room, tile(box(0.16, roofAt(WALLX) + 0.1, JOG - 0.16 - ZB), 1.04, 2.08), wallMat, [WALLX + 0.08, (roofAt(WALLX) + 0.1) / 2, (JOG - 0.16 + ZB) / 2]);
+  add(room, box(0.05, 0.18, JOG - ZB), white, [WALLX - 0.02, 0.09, (JOG + ZB) / 2]);
   const fire = group("fireplace");
-  const FZ = -9.6, CD = 1.7, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
+  const FZ = -10.0, CD = 2.2, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
   const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
-  // The chimney is one stone mass, floor to thatch. Its near end is cut through by a doorway under a timber lintel: the Trophy Room.
-  const DOOR = { x0: 2.74, x1: 3.64, top: 2.5, deep: 0.9 }, NEAR = FZ + 1.9;
-  stoneBlock(CD, RIDGE, 3.8 - DOOR.deep, [X1 - CD / 2, RIDGE / 2, FZ - DOOR.deep / 2]);
-  stoneBlock(DOOR.x0 - (X1 - CD), DOOR.top, DOOR.deep, [(DOOR.x0 + X1 - CD) / 2, DOOR.top / 2, NEAR - DOOR.deep / 2]);
-  stoneBlock(X1 - DOOR.x1, DOOR.top, DOOR.deep, [(DOOR.x1 + X1) / 2, DOOR.top / 2, NEAR - DOOR.deep / 2]);
-  stoneBlock(CD, RIDGE - DOOR.top, DOOR.deep, [X1 - CD / 2, (RIDGE + DOOR.top) / 2, NEAR - DOOR.deep / 2]);
-  stoneBlock(0.6, 0.5, 4.8, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
+  const breastTop = roofAt(X1 - CD) + 0.1;
+  stoneBlock(WALLX - (X1 - CD), breastTop, 3.6, [(WALLX + X1 - CD) / 2, breastTop / 2, FZ]);
+  stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
   // the fireplace proper: a stone surround standing proud of the chimney, the firebox set back between its jambs
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
   stoneBlock(0.28, 0.3, 2.78, [X1 - CD - 0.14, 1.97, FZ]);
@@ -334,7 +344,7 @@ export async function buildRoom(q) {
     for (const turn of [-0.45, 0.5]) veil.push(add(fire, new THREE.PlaneGeometry(h * 0.52, h), fireMat, [X1 - CD - 0.11 - (i % 3) * 0.035, 0.58 + h / 2, FZ + dz], { cast: false, receive: false, rot: [0, -Math.PI / 2 + turn, 0] }));
   });
   for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
-  add(fire, rbox(0.42, 0.26, 4.0, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
+  add(fire, rbox(0.42, 0.26, 3.8, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
   const ball = add(fire, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [X1 - CD - 0.1, 2.47, FZ + 1.35]); ball.scale.set(1, 0.95, 1.6);
   add(fire, box(0.012, 0.012, 0.2), white, [X1 - CD - 0.1, 2.57, FZ + 1.35], { cast: false });
   add(fire, rbox(0.03, 0.3, 0.38, 0.008), timberDark, [X1 - CD - 0.02, 2.54, FZ - 1.3], { rot: [0, 0, 0.12] });
@@ -346,13 +356,12 @@ export async function buildRoom(q) {
   add(tvMount, new THREE.PlaneGeometry(1.9, 1.07), new THREE.MeshStandardMaterial({ map: gameOnTv(), emissive: 0xffffff, emissiveMap: gameOnTv(), emissiveIntensity: night ? 1.0 : 0.8 }), [0, 0, 0.032], { cast: false });
   add(tv, box(0.28, 0.06, 0.06), frameMat, [X1 - CD - 0.12, 3.25, FZ]);
   const charter = group("constitution");
-  const CX = (DOOR.x0 + DOOR.x1) / 2;
-  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 3.72, NEAR + 0.03]);
-  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 3.72, NEAR + 0.065], { cast: false });
-  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 4.26, NEAR + 0.07]);
-  // The lounge, open toward the door so you can walk straight in: a jute rug, a linen sofa facing you from the far side, two cane
-  // armchairs facing the fire, and between them the race.
-  add(room, box(4.0, 0.012, 3.5), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.3, 0.006, -9.5], { cast: false });
+  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 3.5, JOG + 0.03]);
+  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 3.5, JOG + 0.065], { cast: false });
+  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 4.04, JOG + 0.07]);
+  // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
+  // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
+  add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
   const sofa = (x, z, facing) => {
     const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = facing; scene.add(s);
     // a deep slip-covered sofa on a cane plinth: three loose seat cushions, three back cushions, rolled arms, two navy pillows
@@ -363,97 +372,65 @@ export async function buildRoom(q) {
     for (const dx of [-1.16, 1.16]) add(s, rbox(0.24, 0.5, 0.98, 0.11), linen, [dx, 0.45, 0]);
     for (const dx of [-0.82, 0.82]) add(s, rbox(0.44, 0.4, 0.16, 0.075), navy, [dx, 0.66, -0.1], { rot: [-0.3, dx > 0 ? -0.25 : 0.25, 0] });
   };
-  sofa(0.45, -10.85, 0);
-  for (const z of [-8.75, -9.85]) {
-    const chair = new THREE.Group(); chair.position.set(-1.4, 0, z); chair.rotation.y = Math.PI / 2; scene.add(chair);
+  sofa(0.55, FZ - 1.45, 0);
+  for (const z of [FZ + 0.55, FZ - 0.55]) {
+    const chair = new THREE.Group(); chair.position.set(-0.55, 0, z); chair.rotation.y = Math.PI / 2; scene.add(chair);
     add(chair, rbox(0.85, 0.3, 0.8, 0.1), rattan, [0, 0.24, 0]); add(chair, rbox(0.85, 0.62, 0.14, 0.07), rattan, [0, 0.58, -0.36]); add(chair, rbox(0.7, 0.14, 0.64, 0.06), linen, [0, 0.45, 0.04]);
     for (const dx of [-0.42, 0.42]) add(chair, rbox(0.1, 0.24, 0.76, 0.045), rattan, [dx, 0.52, 0.0]);
     for (const dx of [-0.36, 0.36]) for (const dz of [-0.32, 0.32]) add(chair, cyl(0.025, 0.02, 0.1, 8), chairWood, [dx, 0.05, dz]);
   }
-  // The race: an old mechanical racing game, long and low on its own walnut table. A dirt straight between white rails on green
-  // baize, furlong poles along the far rail, the red and white finish pole at the fireplace end, and six thoroughbreds (each under
-  // a jockey in his own silks, each riding a brass rod in its slot) strung out down the stretch.
-  const race = group("race");
-  const RX = 0.45, RZ = -9.3, RL = 2.2, RDp = 0.95, RH = 0.5, T0 = RX - RL / 2 + 0.2, T1 = RX + RL / 2 - 0.24, TY = RH + 0.016;
-  add(race, rbox(RL, 0.09, RDp, 0.03), m.walnut, [RX, RH - 0.045, RZ]);
-  add(race, rbox(RL - 0.2, 0.1, RDp - 0.2, 0.02), m.walnut, [RX, RH - 0.14, RZ]);
-  for (const dx of [-1, 1]) for (const dz of [-1, 1]) add(race, cyl(0.045, 0.03, RH - 0.09, 12), m.walnut, [RX + dx * (RL / 2 - 0.12), (RH - 0.09) / 2, RZ + dz * (RDp / 2 - 0.12)]);
-  add(race, box(RL - 0.1, 0.012, RDp - 0.1), m.felt, [RX, RH + 0.006, RZ]);
-  add(race, box(RL - 0.2, 0.012, 0.56), std(0xb88a58, { roughness: 1 }), [RX, RH + 0.01, RZ]);
-  for (let lane = 0; lane < 6; lane++) add(race, box(T1 - T0 + 0.1, 0.004, 0.006), std(0x2a1a10), [(T0 + T1) / 2, TY, RZ - 0.2 + lane * 0.08], { cast: false });
-  for (const dz of [-0.29, 0.29]) {
-    add(race, box(RL - 0.2, 0.012, 0.012), white, [RX, RH + 0.085, RZ + dz]);
-    for (let k = 0; k <= 16; k++) add(race, box(0.009, 0.075, 0.009), white, [RX - RL / 2 + 0.1 + k * ((RL - 0.2) / 16), RH + 0.05, RZ + dz], { cast: false });
-  }
-  for (let k = 1; k < 8; k++) {
-    const x = T0 + (k / 8) * (T1 - T0);
-    add(race, cyl(0.007, 0.007, 0.2, 8), white, [x, RH + 0.11, RZ - 0.33]); add(race, new THREE.SphereGeometry(0.016, 10, 8), std(k % 2 ? 0x1f4a36 : 0xd4342c, { roughness: 0.4 }), [x, RH + 0.22, RZ - 0.33]);
-  }
-  for (let k = 0; k < 8; k++) add(race, cyl(0.014, 0.014, 0.045, 12), std(k % 2 ? 0xf7f4ec : 0xd4342c, { roughness: 0.4 }), [T1, RH + 0.035 + k * 0.045, RZ - 0.33]);
-  add(race, new THREE.SphereGeometry(0.026, 14, 10), m.gold, [T1, RH + 0.41, RZ - 0.33]);
-  add(race, box(0.012, 0.004, 0.56), white, [T1, TY + 0.002, RZ], { cast: false });
-  add(race, box(0.03, 0.14, 0.6), white, [T0 - 0.08, RH + 0.08, RZ]);                                                                     // the starting gate
-  const horse = (coat, silks, cap) => {
-    const h = new THREE.Group(), hide = std(coat, { roughness: 0.45 }), ball = (rx, ry, rz, mat, at, rot) => { const b = add(h, new THREE.SphereGeometry(1, 16, 12), mat, at, { rot }); b.scale.set(rx, ry, rz); return b; };
-    ball(0.1, 0.046, 0.036, hide, [0, 0.125, 0]);
-    add(h, cyl(0.02, 0.03, 0.11, 10), hide, [0.1, 0.175, 0], { rot: [0, 0, -0.95] });
-    ball(0.046, 0.022, 0.02, hide, [0.165, 0.2, 0], [0, 0, -0.45]);
-    for (const dz of [-0.012, 0.012]) add(h, new THREE.ConeGeometry(0.008, 0.024, 6), hide, [0.135, 0.232, dz]);
-    add(h, cyl(0.006, 0.014, 0.1, 6), std(0x1a120c), [-0.125, 0.125, 0], { rot: [0, 0, 1.15] });                                           // the tail, streaming
-    for (const [x, lean, dz] of [[0.075, 0.75, 0.017], [0.06, 1.0, -0.017], [-0.07, -0.8, 0.017], [-0.055, -1.05, -0.017]]) add(h, cyl(0.011, 0.007, 0.115, 6), hide, [x + Math.sin(lean) * 0.045, 0.085, dz], { rot: [0, 0, lean] });
-    add(h, box(0.07, 0.005, 0.076), white, [0, 0.168, 0]);
-    ball(0.032, 0.03, 0.026, std(silks, { roughness: 0.5 }), [0.012, 0.2, 0], [0, 0, -0.5]);
-    add(h, new THREE.SphereGeometry(0.017, 12, 10), std(cap, { roughness: 0.4 }), [0.048, 0.236, 0]);
-    add(h, cyl(0.004, 0.004, 0.09, 6), brass, [0, 0.045, 0], { cast: false });
-    return h;
-  };
-  [[0x5a3216, 0xd4342c, 0xf7f4ec, 0.86], [0x2e1a0e, 0x1d3557, 0xf0b429, 0.79], [0x7a3f1c, 0xf0b429, 0x1f4a36, 0.74], [0x8a8a88, 0x2f6a46, 0xf7f4ec, 0.6], [0x16110d, 0xf7f4ec, 0xd4342c, 0.51], [0x6a3a1a, 0x7a3a8c, 0xf0b429, 0.36]].forEach(([coat, silks, cap, at], lane) => {
-    const h = horse(coat, silks, cap); h.position.set(T0 + at * (T1 - T0) - 0.17, TY, RZ - 0.2 + lane * 0.08); race.add(h);
-  });
+  add(room, rbox(0.75, 0.06, 1.3, 0.02), m.walnut, [0.65, 0.4, FZ]);                                                                   // the low table
+  for (const dx of [-0.3, 0.3]) for (const dz of [-0.56, 0.56]) add(room, cyl(0.03, 0.022, 0.37, 10), m.walnut, [0.65 + dx, 0.185, FZ + dz]);
+  add(room, rbox(0.26, 0.05, 0.34, 0.01), std(0x1d3557, { roughness: 0.6 }), [0.6, 0.455, FZ + 0.3]); add(room, rbox(0.24, 0.04, 0.32, 0.01), std(0xe8e2d4, { roughness: 0.6 }), [0.62, 0.5, FZ + 0.31], { rot: [0, 0.2, 0] });
+  const tableBall = add(room, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [0.68, 0.52, FZ - 0.3]); tableBall.scale.set(1.5, 0.92, 0.92);
 
-  // ----- the Trophy Room: through the doorway in the chimney's near end. The real three trophies stand just inside under their own
-  // lamp, the gold cup in front, so the doorway says what is through it; the floor of the room is left clear to walk.
+  // ----- the Trophy Room, through its door: as on today's page, the three real trophies on their round mahogany table under a lamp
+  // and the champions' banners hanging behind. Dark green walls so the gold carries to the door.
   const trophies = group("trophies");
-  add(trophies, rbox(DOOR.x1 - DOOR.x0 + 0.34, 0.26, 0.2, 0.02), timberDark, [CX, DOOR.top + 0.1, NEAR + 0.06]);
-  add(fire, box(DOOR.x1 - DOOR.x0, DOOR.top, 0.04), std(0x16291f, { roughness: 0.6 }), [CX, DOOR.top / 2, NEAR - DOOR.deep + 0.03], { cast: false });
-  add(fire, box(DOOR.x1 - DOOR.x0, 0.02, DOOR.deep), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [CX, 0.011, NEAR - DOOR.deep / 2], { cast: false });
-  const stands = [[pennantCup, bowlBase, { material: "white" }, 0, -0.36, 0.92, 0.44, 0.8], [ivorySpire, hexBase, { fin: "coil", material: "white" }, -0.29, -0.68, 1.2, 0.32, 0.66], [crystalSpade, emeraldBase, { material: "white" }, 0.29, -0.68, 1.2, 0.32, 0.6]];
-  for (const [build, base, opts, dx, dz, h, wide, tall] of stands) {
-    add(trophies, rbox(wide, h, wide, 0.02), std(0x1f3b2f, { roughness: 0.45 }), [CX + dx, h / 2, NEAR + dz]);
-    add(trophies, rbox(wide + 0.06, 0.04, wide + 0.06, 0.012), brass, [CX + dx, h + 0.02, NEAR + dz]);
+  for (const x of [DOOR.x0 - 0.035, DOOR.x1 + 0.035]) add(trophies, box(0.09, DOOR.top, 0.26), timberDark, [x, DOOR.top / 2, JOG - 0.06]);
+  add(trophies, rbox(DOOR.x1 - DOOR.x0 + 0.3, 0.14, 0.28, 0.015), timberDark, [CX, DOOR.top + 0.07, JOG - 0.06]);
+  const INNER = JOG - 0.16, BACK = -9.9, hunter = std(0x16291f, { roughness: 0.7 });
+  add(room, box(X1 - WALLX - 0.16, 3.5, 0.05), hunter, [(WALLX + 0.16 + X1) / 2, 1.75, BACK], { cast: false });
+  for (const x of [WALLX + 0.175, X1 - 0.015]) add(room, box(0.03, 3.5, INNER - BACK), hunter, [x, 1.75, (INNER + BACK) / 2], { cast: false });
+  add(room, box(X1 - WALLX - 0.16, 0.05, INNER - BACK), hunter, [(WALLX + 0.16 + X1) / 2, 3.5, (INNER + BACK) / 2], { cast: false });
+  add(room, new THREE.ExtrudeGeometry((() => { const inner = new THREE.Shape(); inner.moveTo(WALLX + 0.16, 0); inner.lineTo(X1, 0); inner.lineTo(X1, 3.5); inner.lineTo(WALLX + 0.16, 3.5); inner.closePath(); inner.holes.push(way); return inner; })(), { depth: 0.02, bevelEnabled: false }), hunter, [0, 0, INNER - 0.02], { cast: false });
+  const TCX = 3.3, TCZ = -8.5;
+  add(trophies, cyl(0.52, 0.52, 0.06, 48), m.walnut, [TCX, 0.77, TCZ]); add(trophies, new THREE.TorusGeometry(0.52, 0.012, 8, 48), brass, [TCX, 0.77, TCZ], { rot: [Math.PI / 2, 0, 0], cast: false });
+  add(trophies, cyl(0.09, 0.2, 0.74, 20), m.walnut, [TCX, 0.37, TCZ]); add(trophies, cyl(0.3, 0.32, 0.05, 32), m.walnut, [TCX, 0.025, TCZ]);
+  for (const [build, base, opts, dx, dz] of [[ivorySpire, hexBase, { fin: "coil", material: "white" }, -0.04, 0.28], [crystalSpade, emeraldBase, { material: "white" }, -0.27, -0.14], [pennantCup, bowlBase, { material: "white" }, 0.27, -0.14]]) {
     const piece = new THREE.Group(), foot = base(m), top = build(m, opts); top.position.y = foot.userData.height; piece.add(foot, top);
-    piece.scale.setScalar(tall / new THREE.Box3().setFromObject(piece).getSize(new THREE.Vector3()).y);
-    piece.position.set(CX + dx, h + 0.04 - new THREE.Box3().setFromObject(piece).min.y, NEAR + dz);
+    piece.scale.setScalar(0.62 / new THREE.Box3().setFromObject(piece).getSize(new THREE.Vector3()).y);
+    piece.position.set(TCX + dx, 0.8 - new THREE.Box3().setFromObject(piece).min.y, TCZ + dz);
     piece.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     trophies.add(piece);
   }
-  const trophyLamp = new THREE.SpotLight(0xffe2b4, night ? 26 : 20, 5, 0.85, 0.7, 1.2);
-  trophyLamp.position.set(CX, DOOR.top - 0.08, NEAR - 0.1); trophyLamp.target.position.set(CX, 1.1, NEAR - 0.6); scene.add(trophyLamp, trophyLamp.target);
-  add(fire, box(0.5, 0.03, 0.08), glow(0xffe2b4, night ? 3 : 2), [CX, DOOR.top - 0.02, NEAR - 0.12], { cast: false });
+  [["#8c1e24", 2026, 2.9], ["#1f4a36", 2025, 3.36], ["#1d3557", 2024, 3.82]].forEach(([color, year, x]) => add(trophies, new THREE.PlaneGeometry(0.4, 0.94), pennant(color, year), [x, 1.93, BACK + 0.12], { cast: false }));
+  add(trophies, cyl(0.012, 0.012, 1.4, 8), brass, [3.36, 2.41, BACK + 0.12], { rot: [0, 0, Math.PI / 2], cast: false });
+  const trophyLamp = new THREE.SpotLight(0xffe2b4, night ? 34 : 28, 6, 0.75, 0.7, 1.2);
+  trophyLamp.position.set(TCX, 3.3, TCZ + 0.5); trophyLamp.target.position.set(TCX, 1.0, TCZ - 0.25); scene.add(trophyLamp, trophyLamp.target);
+  const bannerLamp = new THREE.PointLight(0xffe2b4, night ? 3 : 2.4, 3, 1.4); bannerLamp.position.set(3.5, 2.7, BACK + 0.7); scene.add(bannerLamp);
 
-  // ----- Survivor: the poker table in the foreground, left of centre
+  // ----- Survivor: a long oval poker table in the middle of the room with a seat for every player (ten), a hand dealt to each, the
+  // board and the pot in the middle. It sits close to the lounge, which draws the room in; the floor in front of it is the way in.
   const poker = group("survivor");
-  const PX = 1.5, PZ = -3.5;
+  const PX = 0.7, PZ = -5.5, PRX = 1.5, PRZ = 0.86, SEATS = 10;
   const oval = (rx, rz, h, mat, y) => { const mesh = add(poker, cyl(1, 1, h, 64), mat, [PX, y, PZ]); mesh.scale.set(rx, 1, rz); return mesh; };
-  oval(1.1, 0.75, 0.08, m.felt, 0.78);
-  const rail = new THREE.Mesh(new THREE.TorusGeometry(1, 0.075, 14, 80), std(0x2a1a12, { roughness: 0.45 }));
-  rail.rotation.x = Math.PI / 2; rail.scale.set(1.13, 0.78, 1); rail.position.set(PX, 0.82, PZ); rail.castShadow = true; poker.add(rail);
-  add(poker, cyl(0.28, 0.45, 0.74, 24), std(0x2a1a12, { roughness: 0.45 }), [PX, 0.37, PZ]);
+  oval(PRX, PRZ, 0.08, m.felt, 0.78);
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 14, 96), std(0x2a1a12, { roughness: 0.45 }));
+  rail.rotation.x = Math.PI / 2; rail.scale.set(PRX + 0.03, PRZ + 0.03, 1); rail.position.set(PX, 0.82, PZ); rail.castShadow = true; poker.add(rail);
+  for (const dx of [-0.75, 0.75]) add(poker, cyl(0.24, 0.38, 0.74, 24), std(0x2a1a12, { roughness: 0.45 }), [PX + dx, 0.37, PZ]);
   const chipColors = [0xd4342c, 0x1d3557, 0xf4efe3, 0x2f6a46, 0x111111];
-  [[-0.12, 0.2], [0.02, 0.24], [0.14, 0.18]].forEach(([dx, dz], s) => {                                     // the pot
+  [[-0.14, 0.2], [0.02, 0.25], [0.16, 0.19]].forEach(([dx, dz], s) => {                                     // the pot
     for (let k = 0; k < 5 + s * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(s * 2 + (k % 2)) % 5], { roughness: 0.4 }), [PX + dx, 0.83 + k * 0.017, PZ + dz], { cast: false });
   });
   const cardMat = std(0xfbf9f2, { roughness: 0.5 }), cardBack = std(0x8c1e24, { roughness: 0.5 });
-  for (let k = 0; k < 5; k++) add(poker, box(0.085, 0.004, 0.12), cardMat, [PX - 0.22 + k * 0.11, 0.824, PZ - 0.02], { cast: false });   // the board
-  add(poker, cyl(0.04, 0.04, 0.012, 20), std(0xfbf9f2, { roughness: 0.3 }), [PX + 0.42, 0.828, PZ + 0.02], { cast: false });              // dealer button
-  for (let a = 0; a < 6; a++) {
-    const t = (a / 6) * Math.PI * 2 + Math.PI / 6;
-    for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + Math.cos(t) * 0.78 + Math.sin(t) * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + Math.sin(t) * 0.5 - Math.cos(t) * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
-    for (let k = 0; k < 4 + (a % 3) * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(a + (k > 3 ? 1 : 0)) % 5], { roughness: 0.4 }), [PX + Math.cos(t) * 0.62 + Math.cos(t + 1.5) * 0.12, 0.83 + k * 0.017, PZ + Math.sin(t) * 0.4 + Math.sin(t + 1.5) * 0.09], { cast: false });
-  }
-  for (let a = 0; a < 6; a++) {
-    const t = (a / 6) * Math.PI * 2 + Math.PI / 6, cx = PX + Math.cos(t) * 1.45, cz = PZ + Math.sin(t) * 1.05;
-    const c = new THREE.Group(); c.position.set(cx, 0, cz); c.rotation.y = Math.PI / 2 - t; poker.add(c);
+  for (let k = 0; k < 5; k++) add(poker, box(0.085, 0.004, 0.12), cardMat, [PX - 0.22 + k * 0.11, 0.824, PZ - 0.04], { cast: false });   // the board
+  add(poker, cyl(0.04, 0.04, 0.012, 20), std(0xfbf9f2, { roughness: 0.3 }), [PX + 0.5, 0.828, PZ + 0.02], { cast: false });              // dealer button
+  for (let a = 0; a < SEATS; a++) {
+    const t = (a / SEATS) * Math.PI * 2 + Math.PI / SEATS, cos = Math.cos(t), sin = Math.sin(t);
+    for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + cos * (PRX - 0.3) + sin * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + sin * (PRZ - 0.24) - cos * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
+    for (let k = 0; k < 4 + (a % 3) * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(a + (k > 3 ? 1 : 0)) % 5], { roughness: 0.4 }), [PX + cos * (PRX - 0.5) + Math.cos(t + 1.5) * 0.11, 0.83 + k * 0.017, PZ + sin * (PRZ - 0.42) + Math.sin(t + 1.5) * 0.08], { cast: false });
+    const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.4), 0, PZ + sin * (PRZ + 0.4)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
     // a barrel-back club chair: woven cane wrapped round the back between two rails, a loose linen cushion, turned legs
     add(c, rbox(0.46, 0.05, 0.46, 0.02), chairWood, [0, 0.45, 0]); add(c, rbox(0.42, 0.09, 0.4, 0.04), linen, [0, 0.51, -0.02]);
     add(c, new THREE.CylinderGeometry(0.27, 0.27, 0.36, 24, 1, true, -0.95, 1.9), caneOpen, [0, 0.82, -0.04]);
@@ -461,7 +438,8 @@ export async function buildRoom(q) {
     for (const sx of [-1, 1]) { add(c, cyl(0.02, 0.016, 1.01, 10), chairWood, [sx * 0.22, 0.505, 0.117]); add(c, cyl(0.02, 0.015, 0.45, 10), chairWood, [sx * 0.19, 0.225, -0.18]); }
   }
 
-  // ----- palms in woven baskets, and from Dec 7 the Bowl Pool's bulletin board on wheels by the doors
+  // ----- plants in baskets and pots, a surfboard against the wall, and from Dec 7 the Bowl Pool's bulletin board on wheels, wheeled in
+  // beside the open doors
   const plant = (x, z, s = 1) => {
     add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 24), rattan, [x, 0.25 * s, z]);
     add(room, cyl(0.27 * s, 0.27 * s, 0.02, 20), std(0x3a2a1c, { roughness: 1 }), [x, 0.49 * s, z], { cast: false });
@@ -479,9 +457,9 @@ export async function buildRoom(q) {
       add(g, broadLeaf, leafDeep, [0, 0, 0]);
     }
   };
-  plant(X1 - 0.6, ZB + 0.8, 1.4);
-  monstera(2.2, -6.9, 0.9); monstera(-0.05, ZB + 0.8, 1.0);
-  add(room, rbox(0.55, 2.4, 0.08, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.35, 1.22, ZB + 1.2], { rot: [0, -0.4, -0.12] });
+  plant(2.0, ZB + 0.75, 1.3);
+  monstera(2.15, JOG - 0.45, 0.95);
+  add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [WALLX - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
     add(out, cyl(0.07, 0.05, 0.18, 10), std(0x2a2a2a), [x, 1.85, z]);
@@ -490,7 +468,7 @@ export async function buildRoom(q) {
   }
   if (bowl) {
     const b2 = group("bowl");
-    const BBX = 1.5, BBZ = ZB + 0.9;
+    const BBX = -0.15, BBZ = ZB + 0.9;
     add(b2, box(1.4, 1.0, 0.05), std(0xb98a5a, { roughness: 1 }), [BBX, 1.45, BBZ]);
     add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 1.98, BBZ]); add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 0.92, BBZ]);
     for (const dx of [-0.72, 0.72]) { add(b2, box(0.05, 1.9, 0.05), timberDark, [BBX + dx, 0.95, BBZ]); add(b2, box(0.05, 0.05, 0.55), timberDark, [BBX + dx, 0.12, BBZ]); for (const dz of [-0.24, 0.24]) add(b2, cyl(0.05, 0.05, 0.04, 16), std(0x222222), [BBX + dx, 0.05, BBZ + dz], { rot: [0, 0, Math.PI / 2] }); }
@@ -515,9 +493,9 @@ export async function buildRoom(q) {
   scene.fog = new THREE.Fog(night ? 0x0b1424 : 0xe8f1f2, 6, night ? 170 : 120);           // a little air between you and the far wall, more over the sea
 
   // ----- camera: standing on the landing just inside the front door, looking down the room to the glass wall and the sea
-  const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 82), W / H, 0.1, 200);
+  const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 76), W / H, 0.1, 200);
   camera.position.set(...(q.get("cam") ?? "0.3,3.0,-0.3").split(",").map(Number));
-  camera.lookAt(...(q.get("look") ?? "0.1,1.45,-9").split(",").map(Number));
+  camera.lookAt(...(q.get("look") ?? "0.1,1.62,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
   if (q.get("zoom")) { const [k, cx, cy] = q.get("zoom").split(",").map(Number); camera.setViewOffset(W, H, (cx - 0.5 / k) * W, (cy - 0.5 / k) * H, W / k, H / k); }

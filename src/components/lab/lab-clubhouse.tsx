@@ -12,25 +12,26 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 /**
  * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
  *  - The room: a grand beach bungalow drawn in 3D and shown as one picture (by day, and at night with the pool lit), seen from just
- *    inside, looking down the room under a thatched beach-hut ceiling with two big palm-leaf fans. The floor is clear to walk. Tap
- *    anything to go there: the wall that faces you where picks are made (the Big Board, one screen of spreads, the betting windows
- *    behind their brass grilles; no sign says "sportsbook"), the bar down the left wall (the champions' banners over it, the plaques
- *    along its front, the record book and the laptop on top: the pool chat, a mail sign when there's a new message), the grand
- *    stone chimney on the right (a TV over its mantel, the constitution framed on it, and through the doorway in its near end the
- *    Trophy Room: the same turning table as today), the lounge by the fire with the race on its table, the Survivor poker table in
- *    front, and from Dec 7 the Bowl Pool's bulletin board, wheeled in by the glass doors.
+ *    inside, looking down the room under a thatched beach-hut ceiling with two big palm-leaf fans. There is room to walk: in past
+ *    the poker table, along the bar, round the lounge and out through the open doors. Tap anything to go there: the wall that faces
+ *    you where picks are made (the Big Board, under it one wide board of the week's spreads, the counter; no sign says
+ *    "sportsbook"), the bar down the left wall (the plaques along its front, the record book and the laptop on top: the pool chat, a
+ *    mail sign when there's a new message), the Trophy Room through its own door on the right (a room to the side: the trophies on
+ *    their table, the banners behind; it opens today's turning table and banners), the constitution framed over that door, the
+ *    stone fireplace and the lounge beyond it (a TV over the mantel), the oval Survivor poker table in the middle with a seat for
+ *    every player, and from Dec 7 the Bowl Pool's bulletin board, wheeled in beside the doors.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
  *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the
- *    Window. The betting windows glow while a pick is still owed.
+ *    Window. The picks wall glows while a pick is still owed.
  *  - One tap opens a room; one "Back to Clubhouse" button at the top of every room goes back. No swiping.
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
 
-type Room = "board" | "window" | "trophies" | "survivor" | "bowl" | "chat" | "record" | "constitution" | "race";
+type Room = "board" | "window" | "trophies" | "plaques" | "survivor" | "bowl" | "chat" | "record" | "constitution";
 const ROOM_TITLE: Record<Room, string> = {
   board: "The Big Board", window: "The Window", trophies: "Trophy Room", survivor: "Survivor", bowl: "Bowl Pool", chat: "Pool chat",
-  record: "Record book", constitution: "Constitution", race: "The race",
+  record: "Record book", constitution: "Constitution", plaques: "Plaques",
 };
 
 function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: ReadonlyArray<readonly [T, string]>; value: T; onChange: (value: T) => void }) {
@@ -41,7 +42,7 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
   );
 }
 
-/* ---------------------------------------------------------------- Trophy Room ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------- Trophy Room and plaques ---------------------------------------------------------------- */
 
 type Pool = "pickem" | "survivor" | "bowl";
 const POOL_LABEL: Record<Pool, string> = { pickem: "Pick’em", survivor: "Survivor", bowl: "Bowl Pool" };
@@ -78,29 +79,31 @@ function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
 /** The Lab's champions in the shape the real Trophy Room takes them, so the real table can stand here. */
 const SAMPLE_SEASONS = CHAMPIONS.map((year) => ({ seasonYear: Number(year.season), pickem: [{ name: year.pickem }], survivor: [{ name: year.survivor }], bowl: [{ name: year.bowl }] }));
 
+/** The Trophy Room: exactly today's page without its stats: the trophies on their turning table and the banners of the one at the front. */
 function TrophyRoom() {
-  const [scene, setScene] = useState<"table" | "crowning">("table");
+  return <div className="lab-room-stack lab-wall-table"><TrophyTurntable seasons={SAMPLE_SEASONS} /></div>;
+}
+
+/** The plaques from the front of the bar, one for every season, and the pennant a new champion is given. */
+function PlaquesRoom() {
+  const [scene, setScene] = useState<"plaques" | "crowning">("plaques");
   const [crownings, setCrownings] = useState(0);
   return (
     <div className="lab-room-stack">
       <div className="lab-room-controls">
-        <Chips label="Scene" onChange={(next) => { setScene(next); if (next === "crowning") setCrownings((count) => count + 1); }} options={[["table", "The table"], ["crowning", "A champion is crowned"]] as const} value={scene} />
+        <Chips label="Scene" onChange={(next) => { setScene(next); if (next === "crowning") setCrownings((count) => count + 1); }} options={[["plaques", "The plaques"], ["crowning", "A champion is crowned"]] as const} value={scene} />
       </div>
       <div className="lab-case lab-wall">
-        <section aria-label="Trophies" className="lab-wall-part">
-          <h4>Trophies <small>the same table as today: its arrows turn it</small></h4>
-          {scene === "crowning" ? (
-            <div className="lab-crowning" key={crownings}>
-              <span aria-hidden="true" className="lab-crowning-rod" />
-              <div className="lab-pennant" role="img" aria-label="2026 Pick'em champion: Earl">
-                <span>2026 CHAMPION</span>
-                <strong>EARL</strong>
-                <small>PICK’EM</small>
-              </div>
+        {scene === "crowning" ? (
+          <div className="lab-crowning" key={crownings}>
+            <span aria-hidden="true" className="lab-crowning-rod" />
+            <div className="lab-pennant" role="img" aria-label="2026 Pick'em champion: Earl">
+              <span>2026 CHAMPION</span>
+              <strong>EARL</strong>
+              <small>PICK’EM</small>
             </div>
-          ) : null}
-          <div className="lab-wall-table"><TrophyTurntable seasons={SAMPLE_SEASONS} /></div>
-        </section>
+          </div>
+        ) : null}
         <section aria-label="Plaques" className="lab-wall-part">
           <h4>Plaques <small>one for every season</small></h4>
           <div className="lab-case-shelf">
@@ -121,17 +124,16 @@ const PICTURES = ROOM_PICTURES as Record<string, Picture>;
 
 /** Each thing in the picture that can be tapped: where it goes, its name, and whether its label shows without "Show labels". */
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label?: "above" | "below"; always?: boolean }> = [
+  // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
+  { spot: "survivor", room: "survivor", name: "Survivor", label: "below", always: true },
   { spot: "sportsbook", room: "window", name: "The Window", label: "below", always: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", label: "below" },
-  { spot: "banners", room: "trophies", name: "Banners", label: "above" },
-  { spot: "plaques", room: "trophies", name: "Plaques" },
+  { spot: "plaques", room: "plaques", name: "Plaques" },
   { spot: "board", room: "board", name: "The Big Board", label: "above", always: true },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "above", always: true },
-  { spot: "record", room: "record", name: "Record book", label: "below" },
+  { spot: "record", room: "record", name: "Record book", tag: "Records", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", label: "above" },
-  { spot: "race", room: "race", name: "The race", label: "above", always: true },
-  { spot: "survivor", room: "survivor", name: "Survivor", label: "above", always: true },
 ];
 
 type Season = "regular" | "bowls";
@@ -161,7 +163,6 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
     sportsbook: allIn ? "All picks in" : "A pick is owed",
     survivor: `${seats.filter((seat) => !seat.out).length} of ${seats.length} alive`,
     bowl: "Open now",
-    race: "Week 10 of 18",
   };
   const spots = SPOTS.filter(({ spot }) => picture.spots[spot]);
   return (
@@ -183,7 +184,7 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
         <button aria-pressed={labels} className="lab-room-labels" onClick={() => setLabels(!labels)} type="button">{labels ? "Hide labels" : "Show labels"}</button>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
-        {(["window", "board", "survivor", "trophies", "race", "record", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
+        {(["window", "board", "survivor", "trophies", "plaques", "record", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
           <button key={room} onClick={() => onEnter(room)} type="button">{ROOM_TITLE[room]}{room === "chat" && mail ? " · new" : ""}</button>
         ))}
       </div>
@@ -221,12 +222,12 @@ export function LabClubhouse() {
       {room === "board" ? <BigBoardRoom /> : null}
       {room === "window" ? <WindowRoom /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
+      {room === "plaques" ? <PlaquesRoom /> : null}
       {room === "survivor" ? <LabSurvivorTable /> : null}
       {room === "chat" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "record" ? <StandIn>The record book opens here: the pool’s stats, season by season.</StandIn> : null}
       {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
-      {room === "race" ? <StandIn>The race runs here: tap to send the field back to the gate and watch the season to date.</StandIn> : null}
       {room === "window" ? null : <Ticket allIn={allIn} onOpen={() => setRoom("window")} />}
     </section>
   );

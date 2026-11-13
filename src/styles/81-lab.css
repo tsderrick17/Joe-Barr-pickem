@@ -127,11 +127,10 @@
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
-.lab-room-spot.is-record .lab-room-tag,
-.lab-room-spot.is-banners .lab-room-tag { left: 4px; transform: none; }
+.lab-room-spot.is-record .lab-room-tag { left: 4px; transform: none; }
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
-.lab-room-spot.is-chat .lab-room-tag { left: -14px; transform: none; }
+.lab-room-spot.is-chat .lab-room-tag { left: -34px; transform: none; }
 .lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
 .lab-room-labels { background: rgba(16, 32, 24, .82); border: 1px solid rgba(201, 164, 95, .7); border-radius: 999px; bottom: 10px; color: var(--cw-cream); cursor: pointer; font-size: .75rem; font-weight: 800; min-height: 2.25rem; padding: 0 12px; position: absolute; right: 10px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
