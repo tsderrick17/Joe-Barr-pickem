@@ -6,8 +6,8 @@
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
 //  - Left wall: the bar running down the room (fluted walnut, marble, brass), leather stools, a mirrored back bar of bottles and
 //    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table).
-//  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), the constitution framed on its near face, a painted
-//    Trophy Room sign on a brass post by it, and the lounge in front, set clear of the aisle.
+//  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), a painted Trophy Room sign on its near face with the
+//    constitution framed under it, and the lounge in front, set clear of the aisle.
 //  - Middle, forward: a long oval Survivor poker table with a chair for every player. The floor in front of it is the way in.
 //    From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
@@ -378,9 +378,9 @@ export async function buildRoom(q) {
   add(fire, box(0.005, 0.22, 0.3), std(0x9fc4dd), [X1 - CD - 0.04, 2.54, FZ - 1.3], { cast: false, rot: [0, 0, 0.12] });
   const charter = group("constitution");
   const CX = X1 - CD / 2, CZ = FZ + 1.8;
-  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.7, CZ + 0.03]);
-  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 2.7, CZ + 0.065], { cast: false });
-  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 3.24, CZ + 0.07]);
+  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.45, CZ + 0.03]);
+  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 2.45, CZ + 0.065], { cast: false });
+  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 2.99, CZ + 0.07]);
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
   add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
@@ -409,7 +409,7 @@ export async function buildRoom(q) {
   add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [0.62, 0.484, FZ + 0.25], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2 + 0.15] });
   const tableBall = add(room, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [0.68, 0.52, FZ - 0.3]); tableBall.scale.set(1.5, 0.92, 0.92);
 
-  // ----- the way to the Trophy Room: a painted wooden sign on a brass post by the chimney, an arrow pointing on past the fire. It
+  // ----- the way to the Trophy Room: a painted wooden sign on the chimney above the constitution, an arrow pointing on past the fire. It
   // opens the Trophy Room as it is today (less the stats).
   const trophies = group("trophies");
   const signFace = (() => {
@@ -419,15 +419,11 @@ export async function buildRoom(q) {
     g.beginPath(); g.moveTo(520, 72); g.lineTo(596, 110); g.lineTo(520, 148); g.lineTo(520, 126); g.lineTo(478, 126); g.lineTo(478, 94); g.lineTo(520, 94); g.closePath(); g.fill();
     return texture(c);
   })();
-  const SGX = 1.75, SGZ = -7.2;
-  add(trophies, rbox(1.1, 0.4, 0.05, 0.02), m.walnut, [SGX, 1.95, SGZ]);
-  add(trophies, new THREE.PlaneGeometry(1.02, 0.35), new THREE.MeshStandardMaterial({ map: signFace, roughness: 0.6 }), [SGX, 1.95, SGZ + 0.026], { cast: false });
-  add(trophies, cyl(0.025, 0.025, 1.75, 12), brass, [SGX - 0.62, 0.9, SGZ]);
-  add(trophies, cyl(0.16, 0.18, 0.04, 24), brass, [SGX - 0.62, 0.02, SGZ]);
-  add(trophies, new THREE.SphereGeometry(0.04, 12, 10), brass, [SGX - 0.62, 1.8, SGZ]);
-  for (const dx of [-0.42, 0.42]) add(trophies, cyl(0.006, 0.006, 0.12, 6), brass, [SGX + dx, 2.2, SGZ], { cast: false });
-  add(trophies, box(0.95, 0.02, 0.02), brass, [SGX, 2.26, SGZ], { cast: false });
-  add(trophies, box(0.02, 0.02, 0.02), brass, [SGX - 0.53, 2.26, SGZ], { cast: false });
+  // fixed to the chimney's near face, above the constitution
+  const SGX = X1 - CD / 2, SGY = 3.55, SGZ = FZ + 1.8 + 0.03;
+  add(trophies, rbox(1.1, 0.4, 0.05, 0.02), m.walnut, [SGX, SGY, SGZ]);
+  add(trophies, new THREE.PlaneGeometry(1.02, 0.35), new THREE.MeshStandardMaterial({ map: signFace, roughness: 0.6 }), [SGX, SGY, SGZ + 0.026], { cast: false });
+  for (const dx of [-0.48, 0.48]) add(trophies, cyl(0.018, 0.018, 0.02, 12), brass, [SGX + dx, SGY, SGZ + 0.03], { rot: [Math.PI / 2, 0, 0], cast: false });
 
   // ----- Survivor: a long oval poker table, forward in the room and well clear of the fire, with a seat for every player (ten) and
   // the dealer's place at the far side. Built as a real one is: a padded leather armrest round a walnut racetrack, felt with a gilt

@@ -16,8 +16,8 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    the poker table, along the bar, round the lounge and out through the open doors. Tap anything to go there: the wall that faces
  *    you where picks are made (the Big Board, under it one wide board of the week's spreads, the counter; no sign says
  *    "sportsbook"), the bar down the left wall (the plaques along its front, the laptop on top: the pool chat, a
- *    mail sign when there's a new message), the stone chimney on the right (the fire lit at night, the constitution framed on it)
- *    with a Trophy Room sign by it (it opens today's turning table and banners), the lounge by the fire (the record book open on
+ *    mail sign when there's a new message), the stone chimney on the right (the fire lit at night, a Trophy Room sign on it above the
+ *    framed constitution) (it opens today's turning table and banners), the lounge by the fire (the record book open on
  *    its table), the oval Survivor poker table forward in the middle with a chair for every player, and from Dec 7 the Bowl Pool's
  *    bulletin board, wheeled in at the front left.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
@@ -133,7 +133,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below", always: true },
   { spot: "record", room: "record", name: "Record book", tag: "Records", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
-  { spot: "constitution", room: "constitution", name: "Constitution", label: "above" },
+  { spot: "constitution", room: "constitution", name: "Constitution", label: "below" },
 ];
 
 type Season = "regular" | "bowls";
