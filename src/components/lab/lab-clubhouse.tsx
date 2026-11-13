@@ -16,7 +16,7 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    to go there: the sportsbook down the left wall (where picks are made) with the Big Board above it, both turned towards you,
  *    the real trophies in the middle, each on its own pedestal under a chandelier, the bar at the back with the banners hanging from the rafters and the plaques on
  *    its front, the record book and the laptop (the pool chat, a mail sign when there's a new message) on the bar, the constitution
- *    framed on the grand stone chimney, the race on the coffee table, the Survivor poker table in front, and from Dec 7 the Bowl
+ *    framed on the grand stone chimney (a TV over its mantel, a game on), the race on the coffee table, the Survivor poker table in front, and from Dec 7 the Bowl
  *    Pool's bulletin board, wheeled in by the doors.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
@@ -151,7 +151,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "board", room: "board", name: "The Big Board", label: "below", always: true },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "above", always: true },
   { spot: "record", room: "record", name: "Record book", label: "below" },
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "above" },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", label: "below" },
   { spot: "race", room: "race", name: "The race", label: "above" },
   { spot: "survivor", room: "survivor", name: "Survivor", label: "above", always: true },

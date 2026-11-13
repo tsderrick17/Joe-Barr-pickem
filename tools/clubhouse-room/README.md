@@ -18,6 +18,7 @@ The room uses the real trophy models, so it borrows the trophy renderer's module
 
 ## Files
 
-- `room.js`: the room (walls, the glass doors and the pool patio, the Big Board, the sportsbook, the bar, the fireplace lounge with
-  the race table, the trophies, the poker table, the Bowl Pool board) and the camera, which crops the picture to the room.
-- `render.mjs`: renders the four pictures and writes the tap spots. `scene.html`, `serve.mjs`: the page and static server it drives.
+- `room.js`: the room (the thatched ceiling and fans, the glass wall and the pool patio, the Big Board and sportsbook, the bar, the
+  stone chimney with the TV, the lounge with the race table, the trophies, the poker table, the Bowl Pool board) and the camera.
+- `render.mjs`: renders the four pictures and writes the tap spots. `shot.mjs`: design work, renders chosen views large to a folder
+  (for example `node shot.mjs out '[["day","scale=3"],["night","scale=3&night=1"]]'`). `scene.html`, `serve.mjs`: the page and static server it drives.
