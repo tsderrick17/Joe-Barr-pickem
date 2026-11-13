@@ -5,7 +5,7 @@ The Workshop Lab's clubhouse try-out shows the whole pool as one bright room, dr
 `public/lab/clubhouse/room-{day,night}[-bowl].webp`; where each thing sits in them (the page lays a tap spot over each) is
 `src/lib/lab-clubhouse-room.json`. Both are made here. Nothing in this folder is part of the app build, and the app never runs it.
 
-The room uses the real trophy models, so it borrows the trophy renderer's modules and its three.js install
+The room borrows the trophy renderer's modules (its materials and helpers) and its three.js install
 (`tools/trophy-render`, see its README).
 
 ## Re-rendering
@@ -19,7 +19,7 @@ The room uses the real trophy models, so it borrows the trophy renderer's module
 ## Files
 
 - `room.js`: the room (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
-  the bar and its mirrored back bar, the Trophy Room and its door, the stone fireplace (lit only at night), the lounge, the oval
+  the bar and its mirrored back bar, the stone fireplace (lit only at night) and the Trophy Room sign, the lounge, the oval
   poker table, the Bowl Pool board), its light (the
   sun, the room's own reflections, contact shadow, glow) and the camera.
 - `surfaces.js`: what the room is made of: the drawn surfaces (planks, shiplap, fieldstone, thatch, cane, sky, flame) and the one
