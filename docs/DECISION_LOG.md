@@ -45,6 +45,13 @@ marble, brass, a mirrored back bar with lit shelves of real bottles and rows of 
 out of the back of the room into the open floor by the end of the bar, larger, with the bowl games pinned up; and the fire is lit in
 the night picture and cold by day. Night is the player's own day/night switch, not the clock.
 
+A fourth round (PR after #777): the side room for the trophies, set into a stepped wall, was not the owner's favourite; a painted
+Trophy Room sign with an arrow, by the chimney, now opens today's Trophy Room page (less the stats), and the chimney stands whole
+on the right wall again. The Bowl Pool board is at the front left, where the owner first asked for it. The poker table moved forward,
+away from the fire, and was made more convincing (padded leather armrest, walnut racetrack, gilt betting line, two pedestals, the
+dealer's tray); its chairs were made lighter. The camera stepped back a little to make room at the front. Every wall's boards are
+now counted from the floor, so they meet at the corners.
+
 ## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season
 
 The owner's vision for next season: a switch beside night mode between the Classic view (kept exactly as it is) and a New view in

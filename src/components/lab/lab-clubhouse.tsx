@@ -16,10 +16,10 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    the poker table, along the bar, round the lounge and out through the open doors. Tap anything to go there: the wall that faces
  *    you where picks are made (the Big Board, under it one wide board of the week's spreads, the counter; no sign says
  *    "sportsbook"), the bar down the left wall (the plaques along its front, the laptop on top: the pool chat, a
- *    mail sign when there's a new message), the Trophy Room through its own door on the right (a room to the side: the trophies on
- *    their table, the banners behind; it opens today's turning table and banners), the constitution framed over that door, the
- *    stone fireplace (lit at night) and the lounge beyond it (the record book open on its table), the oval Survivor poker table in the middle with a deep club chair
- *    for every player, and from Dec 7 the Bowl Pool's bulletin board, wheeled into the open floor by the end of the bar.
+ *    mail sign when there's a new message), the stone chimney on the right (the fire lit at night, the constitution framed on it)
+ *    with a Trophy Room sign by it (it opens today's turning table and banners), the lounge by the fire (the record book open on
+ *    its table), the oval Survivor poker table forward in the middle with a chair for every player, and from Dec 7 the Bowl Pool's
+ *    bulletin board, wheeled in at the front left.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
  *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the
@@ -127,10 +127,10 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below", always: true },
   { spot: "sportsbook", room: "window", name: "The Window", label: "below", always: true },
-  { spot: "trophies", room: "trophies", name: "Trophy Room", label: "below" },
+  { spot: "trophies", room: "trophies", name: "Trophy Room", label: "above" },
   { spot: "plaques", room: "plaques", name: "Plaques" },
   { spot: "board", room: "board", name: "The Big Board", label: "above", always: true },
-  { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "above", always: true },
+  { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below", always: true },
   { spot: "record", room: "record", name: "Record book", tag: "Records", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", label: "above" },

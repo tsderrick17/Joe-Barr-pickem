@@ -6,15 +6,12 @@
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
 //  - Left wall: the bar running down the room (fluted walnut, marble, brass), leather stools, a mirrored back bar of bottles and
 //    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table).
-//  - Right: the Trophy Room, a room of its own to the side. Its wall steps into the clubhouse so its door faces you (the trophies
-//    on their table and the banners inside, the constitution framed over the door). Beyond it, on the wall the two rooms share,
-//    a grand floor-to-thatch stone fireplace (lit at night), and the lounge in front, set clear of the aisle.
-//  - Middle: a long oval Survivor poker table with a deep club chair for every player. The floor in front of it is the way in.
-//    From Dec 7 the Bowl Pool's board stands in the open floor by the end of the bar.
+//  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), the constitution framed on its near face, a painted
+//    Trophy Room sign on a brass post by it, and the lounge in front, set clear of the aisle.
+//  - Middle, forward: a long oval Survivor poker table with a chair for every player. The floor in front of it is the way in.
+//    From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { pennantCup } from "/trophies.js";
-import { hexBase, ivorySpire, crystalSpade, bowlBase, emeraldBase } from "/trophies2.js";
 import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -140,7 +137,7 @@ export async function buildRoom(q) {
   add(room, tile(box(RW, 0.1, RD), 1.44, 5.76), new THREE.MeshStandardMaterial({ ...oakFloor(), bumpScale: 1.6, roughness: 0.3, envMapIntensity: 1.0 }), [0, -0.05, -RD / 2], { cast: false });
   const wallMat = new THREE.MeshStandardMaterial({ ...shiplap(), bumpScale: 1.6, roughness: 0.85 });
   for (const side of [-1, 1]) {
-    add(room, tile(box(0.2, WH, RD), 1.04, 2.08), wallMat, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]);
+    add(room, tile(box(0.2, WH, RD), 1.04, 2.08, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]), wallMat, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]);
     add(room, box(0.06, 0.18, RD), white, [side * (RW / 2 - 0.02), 0.09, -RD / 2]);                 // skirting
     add(room, box(0.12, 0.14, RD), timber, [side * (RW / 2 - 0.04), WH - 0.07, -RD / 2]);             // wall plate
   }
@@ -351,20 +348,12 @@ export async function buildRoom(q) {
     return new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 });
   };
 
-  // ----- the right side of the room. The Trophy Room is a room of its own off this side: its wall steps into the clubhouse and its
-  // door faces you. Beyond the door, on the wall the two rooms share, the grand fieldstone fireplace rises from the floor to the thatch.
-  const JOG = -7.4, WALLX = 2.52, DOOR = { x0: 2.68, x1: 3.5, top: 2.5 }, CX = (DOOR.x0 + DOOR.x1) / 2;
-  const shiplapMat = () => new THREE.MeshStandardMaterial({ ...shiplap([1 / 1.04, 1 / 2.08]), bumpScale: 1.6, roughness: 0.85 });
-  const jog = new THREE.Shape(); jog.moveTo(WALLX, 0); jog.lineTo(X1, 0); jog.lineTo(X1, WH + 0.1); jog.lineTo(WALLX, roofAt(WALLX) + 0.1); jog.closePath();
-  const way = new THREE.Path(); way.moveTo(DOOR.x0, 0); way.lineTo(DOOR.x0, DOOR.top); way.lineTo(DOOR.x1, DOOR.top); way.lineTo(DOOR.x1, 0); way.closePath(); jog.holes.push(way);
-  add(room, new THREE.ExtrudeGeometry(jog, { depth: 0.16, bevelEnabled: false }), shiplapMat(), [0, 0, JOG - 0.16]);
-  add(room, tile(box(0.16, roofAt(WALLX) + 0.1, JOG - 0.16 - ZB), 1.04, 2.08), wallMat, [WALLX + 0.08, (roofAt(WALLX) + 0.1) / 2, (JOG - 0.16 + ZB) / 2]);
-  add(room, box(0.05, 0.18, JOG - ZB), white, [WALLX - 0.02, 0.09, (JOG + ZB) / 2]);
+  // ----- the right wall: a grand fieldstone chimney from the floor to the thatch, the constitution framed on its near face, and the
+  // lounge in front of it.
   const fire = group("fireplace");
-  const FZ = -10.0, CD = 2.2, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
   const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
-  const breastTop = roofAt(X1 - CD) + 0.1;
-  stoneBlock(WALLX - (X1 - CD), breastTop, 3.6, [(WALLX + X1 - CD) / 2, breastTop / 2, FZ]);
+  stoneBlock(CD, RIDGE, 3.6, [X1 - CD / 2, RIDGE / 2, FZ]);
   stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
   // the fireplace proper: a stone surround standing proud of the chimney, the firebox set back between its jambs
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
@@ -388,9 +377,10 @@ export async function buildRoom(q) {
   add(fire, rbox(0.03, 0.3, 0.38, 0.008), timberDark, [X1 - CD - 0.02, 2.54, FZ - 1.3], { rot: [0, 0, 0.12] });
   add(fire, box(0.005, 0.22, 0.3), std(0x9fc4dd), [X1 - CD - 0.04, 2.54, FZ - 1.3], { cast: false, rot: [0, 0, 0.12] });
   const charter = group("constitution");
-  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 3.5, JOG + 0.03]);
-  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 3.5, JOG + 0.065], { cast: false });
-  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 4.04, JOG + 0.07]);
+  const CX = X1 - CD / 2, CZ = FZ + 1.8;
+  add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.7, CZ + 0.03]);
+  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 2.7, CZ + 0.065], { cast: false });
+  add(charter, box(0.5, 0.04, 0.12), brass, [CX, 3.24, CZ + 0.07]);
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
   add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
@@ -419,66 +409,65 @@ export async function buildRoom(q) {
   add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [0.62, 0.484, FZ + 0.25], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2 + 0.15] });
   const tableBall = add(room, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [0.68, 0.52, FZ - 0.3]); tableBall.scale.set(1.5, 0.92, 0.92);
 
-  // ----- the Trophy Room, through its door: as on today's page, the three real trophies on their round mahogany table under a lamp
-  // and the champions' banners hanging behind. Dark green walls so the gold carries to the door.
+  // ----- the way to the Trophy Room: a painted wooden sign on a brass post by the chimney, an arrow pointing on past the fire. It
+  // opens the Trophy Room as it is today (less the stats).
   const trophies = group("trophies");
-  for (const x of [DOOR.x0 - 0.035, DOOR.x1 + 0.035]) add(trophies, box(0.09, DOOR.top, 0.26), timberDark, [x, DOOR.top / 2, JOG - 0.06]);
-  add(trophies, rbox(DOOR.x1 - DOOR.x0 + 0.3, 0.14, 0.28, 0.015), timberDark, [CX, DOOR.top + 0.07, JOG - 0.06]);
-  const INNER = JOG - 0.16, BACK = -9.9, hunter = std(0x16291f, { roughness: 0.7 });
-  add(room, box(X1 - WALLX - 0.16, 3.5, 0.05), hunter, [(WALLX + 0.16 + X1) / 2, 1.75, BACK], { cast: false });
-  for (const x of [WALLX + 0.175, X1 - 0.015]) add(room, box(0.03, 3.5, INNER - BACK), hunter, [x, 1.75, (INNER + BACK) / 2], { cast: false });
-  add(room, box(X1 - WALLX - 0.16, 0.05, INNER - BACK), hunter, [(WALLX + 0.16 + X1) / 2, 3.5, (INNER + BACK) / 2], { cast: false });
-  add(room, new THREE.ExtrudeGeometry((() => { const inner = new THREE.Shape(); inner.moveTo(WALLX + 0.16, 0); inner.lineTo(X1, 0); inner.lineTo(X1, 3.5); inner.lineTo(WALLX + 0.16, 3.5); inner.closePath(); inner.holes.push(way); return inner; })(), { depth: 0.02, bevelEnabled: false }), hunter, [0, 0, INNER - 0.02], { cast: false });
-  const TCX = 3.3, TCZ = -8.5;
-  add(trophies, cyl(0.52, 0.52, 0.06, 48), m.walnut, [TCX, 0.77, TCZ]); add(trophies, new THREE.TorusGeometry(0.52, 0.012, 8, 48), brass, [TCX, 0.77, TCZ], { rot: [Math.PI / 2, 0, 0], cast: false });
-  add(trophies, cyl(0.09, 0.2, 0.74, 20), m.walnut, [TCX, 0.37, TCZ]); add(trophies, cyl(0.3, 0.32, 0.05, 32), m.walnut, [TCX, 0.025, TCZ]);
-  for (const [build, base, opts, dx, dz] of [[ivorySpire, hexBase, { fin: "coil", material: "white" }, -0.04, 0.28], [crystalSpade, emeraldBase, { material: "white" }, -0.27, -0.14], [pennantCup, bowlBase, { material: "white" }, 0.27, -0.14]]) {
-    const piece = new THREE.Group(), foot = base(m), top = build(m, opts); top.position.y = foot.userData.height; piece.add(foot, top);
-    piece.scale.setScalar(0.62 / new THREE.Box3().setFromObject(piece).getSize(new THREE.Vector3()).y);
-    piece.position.set(TCX + dx, 0.8 - new THREE.Box3().setFromObject(piece).min.y, TCZ + dz);
-    piece.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    trophies.add(piece);
-  }
-  [["#8c1e24", 2026, 2.9], ["#1f4a36", 2025, 3.36], ["#1d3557", 2024, 3.82]].forEach(([color, year, x]) => add(trophies, new THREE.PlaneGeometry(0.4, 0.94), pennant(color, year), [x, 1.93, BACK + 0.12], { cast: false }));
-  add(trophies, cyl(0.012, 0.012, 1.4, 8), brass, [3.36, 2.41, BACK + 0.12], { rot: [0, 0, Math.PI / 2], cast: false });
-  const trophyLamp = new THREE.SpotLight(0xffe2b4, night ? 34 : 28, 6, 0.75, 0.7, 1.2);
-  trophyLamp.position.set(TCX, 3.3, TCZ + 0.5); trophyLamp.target.position.set(TCX, 1.0, TCZ - 0.25); scene.add(trophyLamp, trophyLamp.target);
-  const bannerLamp = new THREE.PointLight(0xffe2b4, night ? 3 : 2.4, 3, 1.4); bannerLamp.position.set(3.5, 2.7, BACK + 0.7); scene.add(bannerLamp);
+  const signFace = (() => {
+    const c = canvas(640, 220), g = c.getContext("2d");
+    g.fillStyle = "#1f3b2f"; g.fillRect(0, 0, 640, 220); g.strokeStyle = "#c9a45f"; g.lineWidth = 8; g.strokeRect(14, 14, 612, 192);
+    g.fillStyle = "#e6cf98"; g.textAlign = "left"; g.textBaseline = "middle"; let size = 76; do { g.font = `700 ${size}px Georgia, serif`; size -= 2; } while (g.measureText("Trophy Room").width > 400); g.fillText("Trophy Room", 44, 114);
+    g.beginPath(); g.moveTo(520, 72); g.lineTo(596, 110); g.lineTo(520, 148); g.lineTo(520, 126); g.lineTo(478, 126); g.lineTo(478, 94); g.lineTo(520, 94); g.closePath(); g.fill();
+    return texture(c);
+  })();
+  const SGX = 1.75, SGZ = -7.2;
+  add(trophies, rbox(1.1, 0.4, 0.05, 0.02), m.walnut, [SGX, 1.95, SGZ]);
+  add(trophies, new THREE.PlaneGeometry(1.02, 0.35), new THREE.MeshStandardMaterial({ map: signFace, roughness: 0.6 }), [SGX, 1.95, SGZ + 0.026], { cast: false });
+  add(trophies, cyl(0.025, 0.025, 1.75, 12), brass, [SGX - 0.62, 0.9, SGZ]);
+  add(trophies, cyl(0.16, 0.18, 0.04, 24), brass, [SGX - 0.62, 0.02, SGZ]);
+  add(trophies, new THREE.SphereGeometry(0.04, 12, 10), brass, [SGX - 0.62, 1.8, SGZ]);
+  for (const dx of [-0.42, 0.42]) add(trophies, cyl(0.006, 0.006, 0.12, 6), brass, [SGX + dx, 2.2, SGZ], { cast: false });
+  add(trophies, box(0.95, 0.02, 0.02), brass, [SGX, 2.26, SGZ], { cast: false });
+  add(trophies, box(0.02, 0.02, 0.02), brass, [SGX - 0.53, 2.26, SGZ], { cast: false });
 
-  // ----- Survivor: a long oval poker table in the middle of the room with a seat for every player (ten), a hand dealt to each, the
-  // board and the pot in the middle. It sits close to the lounge, which draws the room in; the floor in front of it is the way in.
+  // ----- Survivor: a long oval poker table, forward in the room and well clear of the fire, with a seat for every player (ten) and
+  // the dealer's place at the far side. Built as a real one is: a padded leather armrest round a walnut racetrack, felt with a gilt
+  // betting line, a walnut apron, and two heavy pedestals; a hand dealt to each seat, the board and the pot in the middle, the
+  // dealer's chip tray.
   const poker = group("survivor");
-  const PX = 0.7, PZ = -5.5, PRX = 1.5, PRZ = 0.86, SEATS = 10;
-  const oval = (rx, rz, h, mat, y) => { const mesh = add(poker, cyl(1, 1, h, 64), mat, [PX, y, PZ]); mesh.scale.set(rx, 1, rz); return mesh; };
-  oval(PRX, PRZ, 0.08, m.felt, 0.78);
-  const rail = new THREE.Mesh(new THREE.TorusGeometry(1, 0.07, 14, 96), std(0x2a1a12, { roughness: 0.45 }));
-  rail.rotation.x = Math.PI / 2; rail.scale.set(PRX + 0.03, PRZ + 0.03, 1); rail.position.set(PX, 0.82, PZ); rail.castShadow = true; poker.add(rail);
-  for (const dx of [-0.75, 0.75]) add(poker, cyl(0.24, 0.38, 0.74, 24), std(0x2a1a12, { roughness: 0.45 }), [PX + dx, 0.37, PZ]);
-  const chipColors = [0xd4342c, 0x1d3557, 0xf4efe3, 0x2f6a46, 0x111111];
-  [[-0.14, 0.2], [0.02, 0.25], [0.16, 0.19]].forEach(([dx, dz], s) => {                                     // the pot
-    for (let k = 0; k < 5 + s * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(s * 2 + (k % 2)) % 5], { roughness: 0.4 }), [PX + dx, 0.83 + k * 0.017, PZ + dz], { cast: false });
-  });
-  const cardMat = std(0xfbf9f2, { roughness: 0.5 }), cardBack = std(0x8c1e24, { roughness: 0.5 });
-  for (let k = 0; k < 5; k++) add(poker, box(0.085, 0.004, 0.12), cardMat, [PX - 0.22 + k * 0.11, 0.824, PZ - 0.04], { cast: false });   // the board
-  add(poker, cyl(0.04, 0.04, 0.012, 20), std(0xfbf9f2, { roughness: 0.3 }), [PX + 0.5, 0.828, PZ + 0.02], { cast: false });              // dealer button
-  for (let a = 0; a < SEATS; a++) {
-    const t = (a / SEATS) * Math.PI * 2 + Math.PI / SEATS, cos = Math.cos(t), sin = Math.sin(t);
-    for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + cos * (PRX - 0.3) + sin * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + sin * (PRZ - 0.24) - cos * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
-    for (let k = 0; k < 4 + (a % 3) * 2; k++) add(poker, cyl(0.04, 0.04, 0.016, 18), std(chipColors[(a + (k > 3 ? 1 : 0)) % 5], { roughness: 0.4 }), [PX + cos * (PRX - 0.5) + Math.cos(t + 1.5) * 0.11, 0.83 + k * 0.017, PZ + sin * (PRZ - 0.42) + Math.sin(t + 1.5) * 0.08], { cast: false });
-    const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.4), 0, PZ + sin * (PRZ + 0.4)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
-    // a deep club chair: a thick linen seat cushion, a padded back that wraps round into low arms, a cane shell behind it, short legs
-    add(c, rbox(0.56, 0.16, 0.54, 0.05), chairWood, [0, 0.27, 0]);
-    add(c, rbox(0.5, 0.14, 0.48, 0.07), linen, [0, 0.42, -0.02]);
-    add(c, new THREE.CylinderGeometry(0.3, 0.3, 0.5, 28, 1, true, -1.35, 2.7), caneOpen, [0, 0.6, 0.02]);
-    add(c, new THREE.TorusGeometry(0.3, 0.022, 8, 28, 2.7), chairWood, [0, 0.85, 0.02], { rot: [Math.PI / 2, 0, Math.PI / 2 - 1.35] });
-    for (let k = -2; k <= 2; k++) {                                                                                                    // the padded back, in tufted panels
-      const a = k * 0.32, pad = add(c, rbox(0.17, 0.36, 0.09, 0.04), linen, [Math.sin(a) * 0.235, 0.66, 0.02 + Math.cos(a) * 0.235]);
-      pad.rotation.set(-0.1 * Math.cos(a), a, 0);
-    }
-    for (const side of [-1, 1]) add(c, rbox(0.08, 0.15, 0.36, 0.035), linen, [side * 0.27, 0.56, -0.06]);                              // the arms
-    for (const [lx, lz] of [[-0.22, -0.2], [0.22, -0.2], [-0.22, 0.2], [0.22, 0.2]]) add(c, cyl(0.022, 0.016, 0.2, 10), chairWood, [lx, 0.1, lz]);
+  const PX = 0.95, PZ = -4.85, PRX = 1.45, PRZ = 0.84, SEATS = 10;
+  const oval = (geometry, mat, y, sx, sz, opts) => { const mesh = add(poker, geometry, mat, [PX, y, PZ], opts); mesh.scale.set(sx, 1, sz); return mesh; };
+  const leather = new THREE.MeshPhysicalMaterial({ color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
+  oval(cyl(1, 1, 0.12, 96), m.walnut, 0.72, PRX + 0.06, PRZ + 0.06);                                                                   // apron
+  oval(cyl(1, 1, 0.06, 96), m.felt, 0.79, PRX - 0.2, PRZ - 0.2);                                                                       // the felt
+  oval(new THREE.RingGeometry(0.86, 1.0, 120, 1), m.walnut, 0.822, PRX - 0.08, PRZ - 0.08, { rot: [-Math.PI / 2, 0, 0], cast: false });  // the racetrack
+  oval(new THREE.RingGeometry(0.585, 0.6, 120, 1), new THREE.MeshStandardMaterial({ color: 0xc9a45f, metalness: 0.6, roughness: 0.4 }), 0.8215, PRX - 0.2, PRZ - 0.2, { rot: [-Math.PI / 2, 0, 0], cast: false });   // the betting line
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(1, 0.085, 18, 120), leather);
+  rail.rotation.x = Math.PI / 2; rail.scale.set(PRX + 0.02, PRZ + 0.02, 1); rail.position.set(PX, 0.84, PZ); rail.castShadow = true; poker.add(rail);
+  for (const dx of [-0.72, 0.72]) {
+    add(poker, cyl(0.15, 0.12, 0.66, 24), leather, [PX + dx, 0.39, PZ]);
+    add(poker, rbox(0.7, 0.06, 0.5, 0.025), leather, [PX + dx, 0.03, PZ]);
   }
-
+  const chipColors = [0xd4342c, 0x1d3557, 0xf4efe3, 0x2f6a46, 0x111111];
+  const chip = (color, at) => add(poker, cyl(0.04, 0.04, 0.016, 20), std(color, { roughness: 0.4 }), at, { cast: false });
+  [[-0.14, 0.18], [0.02, 0.23], [0.16, 0.17]].forEach(([dx, dz], st) => { for (let k = 0; k < 5 + st * 2; k++) chip(chipColors[(st * 2 + (k % 2)) % 5], [PX + dx, 0.83 + k * 0.017, PZ + dz]); });   // the pot
+  const cardMat = std(0xfbf9f2, { roughness: 0.5 }), cardBack = std(0x8c1e24, { roughness: 0.5 });
+  for (let k = 0; k < 5; k++) add(poker, box(0.085, 0.004, 0.12), cardMat, [PX - 0.22 + k * 0.11, 0.824, PZ - 0.06], { cast: false });   // the board
+  add(poker, rbox(0.62, 0.05, 0.16, 0.01), std(0x0c0c0c, { roughness: 0.4 }), [PX, 0.835, PZ - PRZ + 0.3]);                            // the dealer's chip tray
+  for (let k = 0; k < 7; k++) for (let r = 0; r < 2; r++) add(poker, cyl(0.036, 0.036, 0.11, 16), std(chipColors[k % 5], { roughness: 0.4 }), [PX - 0.27 + k * 0.09, 0.85, PZ - PRZ + 0.26 + r * 0.075], { rot: [0, 0, Math.PI / 2], cast: false });
+  add(poker, cyl(0.04, 0.04, 0.012, 20), std(0xfbf9f2, { roughness: 0.3 }), [PX + 0.48, 0.828, PZ - 0.2], { cast: false });              // dealer button
+  for (let a = 0; a < SEATS; a++) {
+    const t = Math.PI / 2 + ((a + 1) / (SEATS + 1)) * Math.PI * 2, cos = Math.cos(t), sin = Math.sin(t);                              // the dealer sits at the far side (t = -pi/2)
+    for (const off of [-0.05, 0.05]) add(poker, box(0.085, 0.004, 0.12), cardBack, [PX + cos * (PRX - 0.42) + sin * off, 0.824 + (off > 0 ? 0.004 : 0), PZ + sin * (PRZ - 0.32) - cos * off], { cast: false, rot: [0, -t + Math.PI / 2 + off * 3, 0] });
+    for (let k = 0; k < 4 + (a % 3) * 2; k++) chip(chipColors[(a + (k > 3 ? 1 : 0)) % 5], [PX + cos * (PRX - 0.62) + Math.cos(t + 1.5) * 0.1, 0.83 + k * 0.017, PZ + sin * (PRZ - 0.5) + Math.sin(t + 1.5) * 0.07]);
+    const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.36), 0, PZ + sin * (PRZ + 0.36)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
+    // a light, comfortable chair: a padded linen seat, a low curved cane back with a padded band inside it, slim walnut legs
+    add(c, rbox(0.46, 0.05, 0.44, 0.02), chairWood, [0, 0.44, 0]);
+    add(c, rbox(0.42, 0.09, 0.4, 0.04), linen, [0, 0.51, -0.01]);
+    add(c, new THREE.CylinderGeometry(0.24, 0.24, 0.26, 24, 1, true, -1.0, 2.0), caneOpen, [0, 0.74, -0.03]);
+    add(c, new THREE.CylinderGeometry(0.215, 0.215, 0.2, 24, 1, true, -0.95, 1.9), new THREE.MeshStandardMaterial({ map: linen.map, roughness: 0.95, side: THREE.DoubleSide }), [0, 0.73, -0.03]);
+    add(c, new THREE.TorusGeometry(0.24, 0.016, 8, 24, 2.0), chairWood, [0, 0.87, -0.03], { rot: [Math.PI / 2, 0, Math.PI / 2 - 1.0] });
+    for (const [lx, lz] of [[-0.19, -0.18], [0.19, -0.18], [-0.19, 0.18], [0.19, 0.18]]) add(c, cyl(0.017, 0.012, 0.42, 10), chairWood, [lx, 0.21, lz]);
+  }
 
   // ----- plants in baskets and pots, a surfboard against the wall, and from Dec 7 the Bowl Pool's bulletin board on wheels, wheeled in
   // beside the open doors
@@ -500,8 +489,8 @@ export async function buildRoom(q) {
     }
   };
   plant(2.0, ZB + 0.75, 1.3);
-  monstera(2.15, JOG - 0.45, 0.95);
-  add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [WALLX - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
+  monstera(2.15, -7.95, 0.9);
+  add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
     add(out, cyl(0.07, 0.05, 0.18, 10), std(0x2a2a2a), [x, 1.85, z]);
@@ -509,10 +498,10 @@ export async function buildRoom(q) {
     if (night) { const l = new THREE.PointLight(0xff9a40, 2.5, 4, 1.6); l.position.set(x, 2.1, z); out.add(l); }
   }
   if (bowl) {
-    // From Dec 7 the Bowl Pool's board is wheeled in and stands in the open floor by the end of the bar, turned a little into the
-    // room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
+    // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
+    // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-1.45, 0, -6.9); stand.rotation.y = 0.25; b2.add(stand);
+    const stand = new THREE.Group(); stand.position.set(-0.95, 0, -3.75); stand.rotation.y = 0.3; b2.add(stand);
     const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
     add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42, 0]);
     for (const y of [0.87, 1.97]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
@@ -545,8 +534,8 @@ export async function buildRoom(q) {
 
   // ----- camera: standing on the landing just inside the front door, looking down the room to the glass wall and the sea
   const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 76), W / H, 0.1, 200);
-  camera.position.set(...(q.get("cam") ?? "0.3,3.0,-0.3").split(",").map(Number));
-  camera.lookAt(...(q.get("look") ?? "0.1,1.62,-9").split(",").map(Number));
+  camera.position.set(...(q.get("cam") ?? "0.15,3.0,0.8").split(",").map(Number));
+  camera.lookAt(...(q.get("look") ?? "0.0,1.55,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
   if (q.get("zoom")) { const [k, cx, cy] = q.get("zoom").split(",").map(Number); camera.setViewOffset(W, H, (cx - 0.5 / k) * W, (cy - 0.5 / k) * H, W / k, H / k); }
