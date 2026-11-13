@@ -1,16 +1,19 @@
-// The clubhouse room: one bright lounge seen from above the cut-away front wall, framed as one tall phone picture. The sliding glass
-// doors at the back open onto a pool patio; the Big Board hangs over the doors; the sportsbook runs down the left wall; the bar and
-// the fireplace lounge are on the right; the real trophies stand in the middle on their mahogany table; the Survivor poker table is
-// at the front. Units are metres: x runs left to right, z from the front edge (0) to the back wall (-13).
+// The clubhouse: a grand beach bungalow, seen from just inside the front, standing on the landing a few steps up. A white-washed
+// vaulted ceiling on natural timber trusses, fans turning; white shiplap walls; pale oak floors; the whole back wall glass, doors
+// opening onto the pool patio, palms and the sea beyond. The real trophies stand in the middle on a stone plinth under a chandelier.
+// The left wall is the sportsbook with the Big Board above it; the bar runs along the back left with the champions' banners hanging
+// from the rafters over it; on the right a grand floor-to-ceiling stone fireplace, the constitution framed on the chimney, the lounge
+// in front of it with the race on the coffee table; the Survivor poker table in the foreground. Units are metres: x left to right,
+// z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { pennantCup } from "/trophies.js";
 import { hexBase, ivorySpire, crystalSpade, bowlBase, emeraldBase } from "/trophies2.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-const RW = 7, RD = 13, RH = 4.4, DOOR_W = 4.0, DOOR_H = 3.0;
-const X0 = -RW / 2, X1 = RW / 2;
+const RW = 8.4, RD = 15, WH = 4.2, RIDGE = 7.2;
+const X0 = -RW / 2, X1 = RW / 2, ZB = -RD;
 
-// ---------- small helpers
+// ---------- helpers
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
 function texture(c, repeat) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); } return t; }
 const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.75, ...extra });
@@ -22,44 +25,52 @@ function add(parent, geometry, material, [x, y, z], { cast = true, receive = tru
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
 const rbox = (w, h, d, r = 0.04) => new RoundedBoxGeometry(w, h, d, 3, r);
 const cyl = (rt, rb, h, seg = 32) => new THREE.CylinderGeometry(rt, rb, h, seg);
+const rand = (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
 
-// ---------- textures drawn on canvases
-function plankFloor() {
-  const c = canvas(1024, 1024), g = c.getContext("2d");
-  const rows = 8, h = 1024 / rows;
+// ---------- textures
+function oakFloor() {
+  const c = canvas(1024, 1024), g = c.getContext("2d"), rows = 6, h = 1024 / rows;
   for (let r = 0; r < rows; r++) {
-    let x = -((r * 337) % 600);
+    let x = -((r * 397) % 700);
     while (x < 1024) {
-      const len = 380 + ((r * 7919 + x) % 260);
-      const tone = 150 + ((r * 31 + Math.floor(x)) % 34);
-      g.fillStyle = `rgb(${tone + 10}, ${tone - 34}, ${tone - 82})`;
-      g.fillRect(x, r * h, len, h);
-      for (let k = 0; k < 14; k++) { g.strokeStyle = `rgba(90, 55, 25, ${0.05 + (k % 3) * 0.02})`; g.beginPath(); const y = r * h + 6 + k * (h / 15); g.moveTo(x, y); g.bezierCurveTo(x + len * 0.3, y + 3, x + len * 0.6, y - 3, x + len, y + 1); g.stroke(); }
-      g.fillStyle = "rgba(60, 36, 18, 0.55)"; g.fillRect(x, r * h, 2, h);
-      x += len;
+      const len = 520 + Math.floor(rand() * 380), t = 178 + Math.floor(rand() * 24);
+      g.fillStyle = `rgb(${t + 14}, ${t - 14}, ${t - 52})`; g.fillRect(x, r * h, len, h);
+      for (let k = 0; k < 10; k++) { g.strokeStyle = `rgba(150, 110, 70, ${0.05 + rand() * 0.06})`; g.lineWidth = 1 + rand() * 2; g.beginPath(); const y = r * h + 8 + k * (h / 11); g.moveTo(x, y); g.bezierCurveTo(x + len * 0.3, y + 4 * rand(), x + len * 0.7, y - 4 * rand(), x + len, y); g.stroke(); }
+      g.fillStyle = "rgba(120, 90, 60, .35)"; g.fillRect(x, r * h, 2, h); x += len;
     }
-    g.fillStyle = "rgba(60, 36, 18, 0.6)"; g.fillRect(0, r * h, 1024, 2);
+    g.fillStyle = "rgba(120, 90, 60, .4)"; g.fillRect(0, r * h, 1024, 2);
   }
-  return texture(c, [3, 6]);
+  return texture(c, [2, 5]);
 }
-
-function pavers() {
-  const c = canvas(512, 512), g = c.getContext("2d");
-  g.fillStyle = "#d9cdb4"; g.fillRect(0, 0, 512, 512);
-  for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
-    const t = 205 + ((x * 13 + y * 29) % 20);
-    g.fillStyle = `rgb(${t + 14}, ${t + 2}, ${t - 22})`; g.fillRect(x * 128 + 3, y * 128 + 3, 122, 122);
+function shiplap(lines = 16, base = "#f7f4ec") {
+  const c = canvas(256, 1024), g = c.getContext("2d");
+  g.fillStyle = base; g.fillRect(0, 0, 256, 1024);
+  for (let i = 0; i < lines; i++) { const y = (i * 1024) / lines; g.fillStyle = "rgba(120, 110, 95, .22)"; g.fillRect(0, y, 256, 3); g.fillStyle = "rgba(255,255,255,.7)"; g.fillRect(0, y + 3, 256, 2); }
+  return c;
+}
+function fieldstone() {
+  const c = canvas(1024, 1024), g = c.getContext("2d");
+  g.fillStyle = "#b9b1a3"; g.fillRect(0, 0, 1024, 1024);
+  for (let row = 0; row < 14; row++) {
+    let x = -40 * rand();
+    while (x < 1024) {
+      const w = 90 + rand() * 120, h = 58 + rand() * 26, y = row * 74 + rand() * 6;
+      const t = 150 + Math.floor(rand() * 70), warm = Math.floor(rand() * 18);
+      const gr = g.createLinearGradient(x, y, x, y + h); gr.addColorStop(0, `rgb(${t + warm + 18}, ${t + 12}, ${t - 2})`); gr.addColorStop(1, `rgb(${t + warm - 22}, ${t - 28}, ${t - 40})`);
+      g.fillStyle = gr; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2 - 4, h / 2 - 4, (rand() - 0.5) * 0.15, 0, Math.PI * 2); g.fill();
+      x += w + 4;
+    }
   }
-  return texture(c, [6, 4]);
+  return texture(c, [0.9, 1.7]);
 }
-
-/** A sportsbook odds board: amber rows of teams and lines on black. */
+function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
+function jute() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#c9b48a"; g.fillRect(0, 0, 256, 256); for (let y = 0; y < 256; y += 6) for (let x = 0; x < 256; x += 6) { g.fillStyle = `rgba(110, 85, 50, ${0.15 + rand() * 0.2})`; g.fillRect(x + ((y / 6) % 2) * 3, y, 4, 3); } g.strokeStyle = "#8a6a3e"; g.lineWidth = 10; g.strokeRect(10, 10, 236, 236); return texture(c, [1, 1]); }
 function oddsBoard(seed) {
   const c = canvas(512, 384), g = c.getContext("2d");
   g.fillStyle = "#070706"; g.fillRect(0, 0, 512, 384);
   const teams = [["PIT", "CLE"], ["IND", "WAS"], ["LAR", "PHI"], ["SF", "DEN"], ["KC", "BUF"], ["DAL", "NYG"], ["GB", "CHI"], ["MIA", "NE"]];
   g.font = "700 30px 'Courier New', monospace"; g.textBaseline = "middle";
-  g.fillStyle = "#f0b429"; g.fillText(seed === 0 ? "THU · SUN" : seed === 1 ? "SUN 1:00" : "SUN · MON", 24, 30);
+  g.fillStyle = "#f0b429"; g.fillText(["THURSDAY", "SUNDAY 1:00", "SUNDAY 4:25"][seed % 3], 24, 30);
   g.fillStyle = "rgba(240,180,41,.35)"; g.fillRect(20, 52, 472, 2);
   for (let i = 0; i < 4; i++) {
     const [a, b] = teams[(i + seed * 3) % teams.length], y = 92 + i * 76, line = [2.5, 3.5, 3, 1.5, 6.5, 4][(i + seed) % 6];
@@ -68,362 +79,312 @@ function oddsBoard(seed) {
   }
   return texture(c);
 }
-
-/** The Big Board: the tote board's green housing, amber wins and names. */
 function bigBoardFace() {
-  const c = canvas(1024, 400), g = c.getContext("2d");
-  g.fillStyle = "#080a09"; g.fillRect(0, 0, 1024, 400);
-  g.font = "700 40px Georgia, serif"; g.fillStyle = "#f0ece2"; g.textBaseline = "middle";
-  g.fillText("P I C K ’ E M", 36, 44); g.font = "700 22px Arial"; g.fillStyle = "rgba(240,236,226,.7)"; g.fillText("WEEK 10 · OFFICIAL", 760, 44);
-  const rows = [["15", "EARL"], ["14", "WALT"], ["13", "DOTTIE"], ["12", "JUNE"], ["11", "ROSIE"]];
-  rows.forEach(([w, n], i) => {
-    const y = 104 + i * 62;
-    g.fillStyle = "#121a15"; g.fillRect(28, y - 26, 968, 52);
-    g.font = "900 34px 'Courier New', monospace"; g.fillStyle = "#ffb02e"; g.shadowColor = "#ff9a20"; g.shadowBlur = 12; g.fillText(w, 46, y); g.shadowBlur = 0;
-    g.font = "800 30px Arial"; g.fillStyle = "#f0ece2"; g.fillText(n, 130, y);
-    for (let k = 0; k < 2; k++) { g.font = "700 26px 'Courier New', monospace"; g.fillStyle = "#bef0c8"; g.fillText(["PIT -2.5", "IND -3.5", "LAR +3", "SF -3"][(i + k) % 4], 470 + k * 250, y); }
+  const c = canvas(1024, 520), g = c.getContext("2d");
+  g.fillStyle = "#080a09"; g.fillRect(0, 0, 1024, 520);
+  g.font = "700 46px Georgia, serif"; g.fillStyle = "#f0ece2"; g.textBaseline = "middle";
+  g.fillText("P I C K ’ E M", 36, 48); g.font = "700 24px Arial"; g.fillStyle = "rgba(240,236,226,.7)"; g.fillText("WEEK 10 · OFFICIAL", 740, 48);
+  [["15", "EARL"], ["14", "WALT"], ["13", "DOTTIE"], ["12", "JUNE"], ["11", "ROSIE"], ["10", "LOU"]].forEach(([w, n], i) => {
+    const y = 116 + i * 66;
+    g.fillStyle = "#121a15"; g.fillRect(28, y - 28, 968, 56);
+    g.font = "900 36px 'Courier New', monospace"; g.fillStyle = "#ffb02e"; g.shadowColor = "#ff9a20"; g.shadowBlur = 12; g.fillText(w, 46, y); g.shadowBlur = 0;
+    g.font = "800 32px Arial"; g.fillStyle = "#f0ece2"; g.fillText(n, 130, y);
+    for (let k = 0; k < 2; k++) { g.font = "700 28px 'Courier New', monospace"; g.fillStyle = "#bef0c8"; g.fillText(["PIT -2.5", "IND -3.5", "LAR +3", "SF -3"][(i + k) % 4], 470 + k * 250, y); }
   });
   return texture(c);
 }
-
 function sign(text, { w = 1024, h = 160, bg = "#1f4a36", ink = "#e6cf98", font = "700 96px Georgia, serif" } = {}) {
   const c = canvas(w, h), g = c.getContext("2d");
-  g.fillStyle = bg; g.fillRect(0, 0, w, h);
-  g.strokeStyle = ink; g.lineWidth = 6; g.strokeRect(12, 12, w - 24, h - 24);
+  g.fillStyle = bg; g.fillRect(0, 0, w, h); g.strokeStyle = ink; g.lineWidth = 6; g.strokeRect(12, 12, w - 24, h - 24);
   g.font = font; g.fillStyle = ink; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, w / 2, h / 2 + 4);
   return texture(c);
 }
-
-/** The pool's constitution, framed: a parchment page with a title and ruled lines of text. */
 function parchment() {
   const c = canvas(512, 640), g = c.getContext("2d");
   const gr = g.createRadialGradient(256, 300, 40, 256, 320, 420); gr.addColorStop(0, "#f7efd8"); gr.addColorStop(1, "#e3d1a6");
   g.fillStyle = gr; g.fillRect(0, 0, 512, 640);
-  g.fillStyle = "#3b2a18"; g.textAlign = "center"; g.font = "700 46px Georgia, serif"; g.fillText("Constitution", 256, 90);
-  g.font = "italic 24px Georgia, serif"; g.fillText("Lead Pipe Locks", 256, 128);
-  g.fillStyle = "rgba(59,42,24,.55)";
-  for (let i = 0; i < 15; i++) { const w = 330 - ((i * 53) % 90); g.fillRect(256 - w / 2, 180 + i * 26, w, 5); }
+  g.fillStyle = "#3b2a18"; g.textAlign = "center"; g.font = "700 50px Georgia, serif"; g.fillText("Constitution", 256, 92);
+  g.font = "italic 26px Georgia, serif"; g.fillText("Lead Pipe Locks", 256, 132);
+  g.fillStyle = "rgba(59,42,24,.55)"; for (let i = 0; i < 15; i++) { const w = 330 - ((i * 53) % 90); g.fillRect(256 - w / 2, 184 + i * 26, w, 5); }
   g.fillStyle = "#8c1e24"; g.beginPath(); g.arc(400, 580, 26, 0, Math.PI * 2); g.fill();
   return texture(c);
 }
-
-function mailScreen() {
-  const c = canvas(256, 160), g = c.getContext("2d");
-  const gr = g.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, "#2d4f6e"); gr.addColorStop(1, "#1a3047");
-  g.fillStyle = gr; g.fillRect(0, 0, 256, 160);
-  g.fillStyle = "rgba(255,255,255,.18)"; for (let i = 0; i < 5; i++) g.fillRect(24, 24 + i * 24, 120 + (i % 2) * 60, 10);
-  return texture(c);
+function screenTex() { const c = canvas(256, 160), g = c.getContext("2d"); const gr = g.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, "#2d4f6e"); gr.addColorStop(1, "#1a3047"); g.fillStyle = gr; g.fillRect(0, 0, 256, 160); g.fillStyle = "rgba(255,255,255,.2)"; for (let i = 0; i < 5; i++) g.fillRect(24, 24 + i * 24, 120 + (i % 2) * 60, 10); return texture(c); }
+function bookPages() { const c = canvas(512, 320), g = c.getContext("2d"); g.fillStyle = "#f3ead3"; g.fillRect(0, 0, 512, 320); g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(254, 0, 4, 320); g.fillStyle = "rgba(40,30,20,.5)"; for (let s = 0; s < 2; s++) for (let i = 0; i < 12; i++) g.fillRect(24 + s * 256, 30 + i * 23, 200 - ((i * 37) % 60), 4); return texture(c); }
+function sky(night) {
+  const c = canvas(64, 512), g = c.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 512);
+  if (night) { gr.addColorStop(0, "#040814"); gr.addColorStop(0.7, "#14244a"); gr.addColorStop(1, "#2a3a64"); } else { gr.addColorStop(0, "#5aa9e6"); gr.addColorStop(0.7, "#bfe2f6"); gr.addColorStop(1, "#eef8fd"); }
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 512); return texture(c);
 }
+function pavers() { const c = canvas(512, 512), g = c.getContext("2d"); g.fillStyle = "#e8dcc4"; g.fillRect(0, 0, 512, 512); for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { const t = 222 + Math.floor(rand() * 18); g.fillStyle = `rgb(${t + 10}, ${t}, ${t - 22})`; g.fillRect(x * 128 + 3, y * 128 + 3, 122, 122); } return texture(c, [8, 5]); }
 
-function bookPages() {
-  const c = canvas(512, 320), g = c.getContext("2d");
-  g.fillStyle = "#f3ead3"; g.fillRect(0, 0, 512, 320);
-  g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(254, 0, 4, 320);
-  g.fillStyle = "rgba(40,30,20,.5)";
-  for (let side = 0; side < 2; side++) for (let i = 0; i < 12; i++) g.fillRect(24 + side * 256, 30 + i * 23, 200 - ((i * 37) % 60), 4);
-  return texture(c);
-}
-
-function rugPattern() {
-  const c = canvas(512, 512), g = c.getContext("2d");
-  g.fillStyle = "#7a2f2a"; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = "#d9b36a"; g.lineWidth = 10; g.strokeRect(24, 24, 464, 464);
-  g.strokeStyle = "#1f3b2f"; g.lineWidth = 18; g.strokeRect(50, 50, 412, 412);
-  g.fillStyle = "rgba(217,179,106,.35)"; for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) { g.beginPath(); g.arc(96 + i * 64, 96 + j * 64, 9, 0, Math.PI * 2); g.fill(); }
-  return texture(c);
-}
-
-function stripes(a, b, n = 8) {
-  const c = canvas(256, 64), g = c.getContext("2d");
-  for (let i = 0; i < n; i++) { g.fillStyle = i % 2 ? b : a; g.fillRect((i * 256) / n, 0, 256 / n, 64); }
-  return texture(c);
-}
-
-function skyTexture(night) {
-  const c = canvas(64, 256), g = c.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 256);
-  if (night) { gr.addColorStop(0, "#050914"); gr.addColorStop(1, "#1c2b4a"); } else { gr.addColorStop(0, "#6fb6e8"); gr.addColorStop(1, "#d8eef9"); }
-  g.fillStyle = gr; g.fillRect(0, 0, 64, 256); return texture(c);
-}
-
-// ---------- the room
 export async function buildRoom(q) {
   const night = q.get("night") === "1";
   const bowl = q.get("bowl") === "1";
-  const W = Number(q.get("w") ?? 390), H = Number(q.get("h") ?? 844), scale = Number(q.get("scale") ?? 2);
+  const W = Number(q.get("w") ?? 390), H = Number(q.get("h") ?? 760), scale = Number(q.get("scale") ?? 2);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = night ? 0.95 : 0.92;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMappingExposure = night ? 1.0 : 0.9;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(scale); renderer.setSize(W, H, false);
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(night ? 0x0b1220 : 0xeae4d6);
+  scene.background = new THREE.Color(night ? 0x0b1220 : 0xdfeef7);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = night ? 0.35 : 0.8;
+  scene.environmentIntensity = night ? 0.3 : 0.75;
 
   const m = materials();
-  const wallPaint = std(night ? 0xd9ccb0 : 0xe9dfc8, { roughness: 0.9 });
-  const green = std(0x234d3a, { roughness: 0.6 });
-  const whiteTrim = std(0xfbf8f0, { roughness: 0.5 });
-  const walnut = m.walnut;
-  const darkWood = std(0x3a2416, { roughness: 0.45 });
+  const white = std(0xf7f4ec, { roughness: 0.85 });
+  const timber = std(0xb98d5e, { roughness: 0.7 });
+  const timberDark = std(0x8a6440, { roughness: 0.65 });
   const brass = m.brass;
-  const leather = std(0x6b2b1f, { roughness: 0.55 });
-  const fabric = std(0x2f4f6a, { roughness: 0.95 });
-  const fabricCream = std(0xe9e0cc, { roughness: 0.95 });
+  const linen = new THREE.MeshStandardMaterial({ map: linenTex(), roughness: 0.95 });
+  const navy = new THREE.MeshStandardMaterial({ map: linenTex("#2f4f6e"), roughness: 0.95 });
+  const rattan = std(0xc49a62, { roughness: 0.8 });
+  const green = std(0x234d3a, { roughness: 0.6 });
   const glow = (color, intensity) => new THREE.MeshStandardMaterial({ color: 0x000000, emissive: color, emissiveIntensity: intensity, roughness: 0.6 });
   const spots = {};
-  const group = (name) => { const g = new THREE.Group(); g.name = name; scene.add(g); if (name) spots[name] = g; return g; };
-
-  // ----- shell: floor, walls with Saratoga-green wainscot and white trim
+  const group = (name) => { const g = new THREE.Group(); scene.add(g); if (name) spots[name] = g; return g; };
   const room = group(null);
-  const floorTex = plankFloor();
-  add(room, box(RW, 0.1, RD), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, envMapIntensity: 0.5 }), [0, -0.05, -RD / 2], { cast: false });
+
+  // ----- floor, shiplap walls, the vaulted ceiling on timber trusses
+  add(room, box(RW, 0.1, RD), new THREE.MeshStandardMaterial({ map: oakFloor(), roughness: 0.45, envMapIntensity: 0.6 }), [0, -0.05, -RD / 2], { cast: false });
+  const wallTex = (u, v) => { const t = texture(shiplap()); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(u, v); return t; };
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex(4, 1), roughness: 0.85 });
   for (const side of [-1, 1]) {
-    const x = side * (RW / 2 + 0.1);
-    add(room, box(0.2, RH, RD), wallPaint, [x, RH / 2, -RD / 2]);
-    add(room, box(0.06, 1.0, RD), green, [x - side * 0.12, 0.5, -RD / 2]);
-    add(room, box(0.08, 0.06, RD), whiteTrim, [x - side * 0.14, 1.02, -RD / 2]);
-    add(room, box(0.08, 0.14, RD), whiteTrim, [x - side * 0.14, 0.07, -RD / 2]);
-    add(room, box(0.08, 0.1, RD), whiteTrim, [x - side * 0.14, RH - 0.05, -RD / 2]);
+    add(room, box(0.2, WH, RD), wallMat, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]);
+    add(room, box(0.06, 0.18, RD), white, [side * (RW / 2 - 0.02), 0.09, -RD / 2]);                 // skirting
+    add(room, box(0.12, 0.14, RD), timber, [side * (RW / 2 - 0.04), WH - 0.07, -RD / 2]);             // wall plate
   }
-  const sideW = (RW - DOOR_W) / 2;
-  for (const side of [-1, 1]) {
-    add(room, box(sideW, RH, 0.2), wallPaint, [side * (DOOR_W / 2 + sideW / 2), RH / 2, -RD]);
-    add(room, box(sideW, 1.0, 0.06), green, [side * (DOOR_W / 2 + sideW / 2), 0.5, -RD + 0.12]);
-    add(room, box(sideW, 0.06, 0.08), whiteTrim, [side * (DOOR_W / 2 + sideW / 2), 1.02, -RD + 0.14]);
+  const slope = Math.atan2(RIDGE - WH, RW / 2), len = Math.hypot(RW / 2, RIDGE - WH);
+  const ceilTex = new THREE.MeshStandardMaterial({ map: (() => { const t = texture(shiplap(22, "#fbf9f3")); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 2); t.rotation = Math.PI / 2; return t; })(), roughness: 0.9, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) add(room, box(len, 0.08, RD), ceilTex, [side * RW / 4, (WH + RIDGE) / 2 + 0.05, -RD / 2], { rot: [0, 0, side * -slope] });
+  add(room, box(0.26, 0.32, RD), timber, [0, RIDGE - 0.12, -RD / 2]);                                  // ridge beam
+  for (const z of [-6.4, -9.6, -12.8]) {                                                   // trusses
+    add(room, box(RW, 0.26, 0.24), timber, [0, WH, z]);
+    add(room, box(0.2, RIDGE - WH, 0.22), timber, [0, (WH + RIDGE) / 2, z]);
+    for (const side of [-1, 1]) {
+      add(room, box(len, 0.24, 0.22), timber, [side * RW / 4, (WH + RIDGE) / 2 - 0.12, z], { rot: [0, 0, side * -slope] });
+      add(room, box(Math.hypot(1.6, 1.2), 0.16, 0.18), timber, [side * 0.9, WH + 0.75, z], { rot: [0, 0, side * Math.atan2(1.2, 1.6)] });
+    }
   }
-  add(room, box(DOOR_W, RH - DOOR_H, 0.2), wallPaint, [0, DOOR_H + (RH - DOOR_H) / 2, -RD]);
-  add(room, box(RW, 0.1, 0.08), whiteTrim, [0, RH - 0.05, -RD + 0.14]);
+  // ----- the back wall: all glass. Doors below, a glazed gable above, slim black frames.
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.95, roughness: 0.03, thickness: 0.02, ior: 1.3, transparent: true, opacity: 0.25 });
+  const frameMat = std(0x2a2a27, { roughness: 0.4, metalness: 0.4 });
+  const gable = new THREE.Shape(); gable.moveTo(X0, 0); gable.lineTo(X1, 0); gable.lineTo(X1, WH); gable.lineTo(0, RIDGE); gable.lineTo(X0, WH); gable.closePath();
+  add(room, new THREE.ShapeGeometry(gable), glass, [0, 0, ZB], { cast: false });
+  for (let i = 0; i <= 9; i++) { const x = X0 + (i * RW) / 9, h = WH + (RIDGE - WH) * (1 - Math.abs(x) / (RW / 2)); add(room, box(0.06, h, 0.1), frameMat, [x, h / 2, ZB]); }
+  add(room, box(RW, 0.08, 0.12), frameMat, [0, 2.9, ZB]); add(room, box(RW, 0.06, 0.12), frameMat, [0, 0.03, ZB]);
+  for (const side of [-1, 1]) add(room, box(len, 0.08, 0.12), frameMat, [side * RW / 4, (WH + RIDGE) / 2, ZB], { rot: [0, 0, side * -slope] });
 
-  // ----- the sliding glass doors and the pool patio beyond
-  const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.92, roughness: 0.04, thickness: 0.02, ior: 1.3, transparent: true, opacity: 0.35 });
-  const frameMat = std(0x2b2b28, { roughness: 0.4, metalness: 0.4 });
-  for (let i = 0; i < 4; i++) {
-    const x = -DOOR_W / 2 + DOOR_W / 8 + (i * DOOR_W) / 4;
-    add(room, box(DOOR_W / 4 - 0.05, DOOR_H - 0.06, 0.02), glass, [x, DOOR_H / 2, -RD + (i % 2 ? 0.04 : -0.04)], { cast: false });
+  // ----- outside: the pool patio, loungers, palms, the sea and the sky
+  const out = group(null);
+  add(out, box(40, 0.1, 22), new THREE.MeshStandardMaterial({ map: pavers(), roughness: 0.85 }), [0, -0.06, ZB - 11], { cast: false });
+  add(out, box(10.6, 0.12, 4.6), std(0xf4efe4), [0.6, 0.0, ZB - 6.2], { cast: false });
+  const water = new THREE.MeshPhysicalMaterial({ color: night ? 0x18a6cf : 0x2fc0e0, roughness: 0.06, clearcoat: 1, emissive: night ? 0x0a7aa0 : 0x0a4a5a, emissiveIntensity: night ? 1.5 : 0.35 });
+  add(out, box(10, 0.06, 4.0), water, [0.6, 0.04, ZB - 6.2], { cast: false });
+  for (const x of [-3.4, -2.2, 2.6, 3.8]) {
+    add(out, rbox(0.75, 0.12, 1.9, 0.04), white, [x, 0.3, ZB - 2.4]);
+    add(out, rbox(0.75, 0.1, 0.7, 0.04), white, [x, 0.55, ZB - 1.65], { rot: [0.6, 0, 0] });
+    add(out, rbox(0.66, 0.06, 1.8, 0.03), std(0x3f8fb0), [x, 0.38, ZB - 2.4]);
   }
-  for (let i = 0; i <= 4; i++) add(room, box(0.05, DOOR_H, 0.1), frameMat, [-DOOR_W / 2 + (i * DOOR_W) / 4, DOOR_H / 2, -RD]);
-  add(room, box(DOOR_W, 0.06, 0.14), frameMat, [0, DOOR_H, -RD]);
-  add(room, box(DOOR_W, 0.03, 0.18), frameMat, [0, 0.015, -RD]);
+  const palm = (x, z, h) => {
+    const trunk = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0, z), new THREE.Vector3(x + 0.3, h * 0.5, z), new THREE.Vector3(x + 0.1, h, z)]);
+    add(out, new THREE.TubeGeometry(trunk, 20, 0.16, 10), std(0x9a8064, { roughness: 1 }), [0, 0, 0]);
+    for (let f = 0; f < 9; f++) {
+      const a = (f / 9) * Math.PI * 2, frond = add(out, new THREE.ConeGeometry(0.34, 2.6, 4, 1), std(0x3f8a48, { roughness: 0.9 }), [x + 0.1 + Math.cos(a) * 1.1, h - 0.25, z + Math.sin(a) * 1.1]);
+      frond.scale.set(1, 1, 0.2); frond.rotation.set(Math.sin(a) * 1.25, -a, -Math.cos(a) * 1.25 + Math.PI);
+    }
+  };
+  palm(-6.2, ZB - 3.6, 6.2); palm(6.6, ZB - 4.5, 7.2); palm(-3.4, ZB - 10, 5.5); palm(5.0, ZB - 11, 6.4);
+  add(out, box(60, 0.05, 40), std(night ? 0x0e2a46 : 0x2a8fbf, { roughness: 0.2 }), [0, -0.3, ZB - 40], { cast: false });   // the sea
+  add(out, box(60, 0.4, 2), std(0xe9dcb8), [0, -0.2, ZB - 19.8], { cast: false });                                         // the beach
+  const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night) }));
+  skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
 
-  const patio = group(null);
-  add(patio, box(26, 0.1, 16), new THREE.MeshStandardMaterial({ map: pavers(), roughness: 0.85 }), [0, -0.06, -RD - 8.1], { cast: false });
-  add(patio, box(6.6, 0.12, 3.6), std(0xf2ece0), [0.4, 0.0, -RD - 4.6], { cast: false });   // coping
-  const water = new THREE.MeshPhysicalMaterial({ color: night ? 0x1aa8cf : 0x2fb4dc, roughness: 0.08, metalness: 0, clearcoat: 1, emissive: night ? 0x0a7aa0 : 0x062a35, emissiveIntensity: night ? 1.4 : 0.35 });
-  add(patio, box(6.0, 0.06, 3.0), water, [0.4, 0.04, -RD - 4.6], { cast: false });
-  for (const x of [-3.1, -2.1]) {                                                            // two loungers
-    add(patio, rbox(0.7, 0.12, 1.9, 0.04), whiteTrim, [x, 0.32, -RD - 1.9]);
-    add(patio, rbox(0.7, 0.1, 0.7, 0.04), whiteTrim, [x, 0.55, -RD - 1.15], { rot: [0.6, 0, 0] });
-    add(patio, rbox(0.62, 0.06, 1.8, 0.03), std(0x2f6a4c), [x, 0.4, -RD - 1.9]);
-  }
-  add(patio, cyl(0.03, 0.03, 2.3), std(0xdddddd, { metalness: 0.6 }), [3.2, 1.15, -RD - 2.2]);
-  add(patio, new THREE.ConeGeometry(1.3, 0.55, 16, 1, true), new THREE.MeshStandardMaterial({ map: stripes("#1f5a40", "#f6f2e6", 16), side: THREE.DoubleSide, roughness: 0.8 }), [3.2, 2.25, -RD - 2.2]);
-  add(patio, box(26, 1.1, 0.6), std(0x3f6f3c, { roughness: 1 }), [0, 0.55, -RD - 9.0]);         // hedge
-  const sky = new THREE.Mesh(new THREE.PlaneGeometry(40, 16), new THREE.MeshBasicMaterial({ map: skyTexture(night), fog: false }));
-  sky.position.set(0, 7.5, -RD - 10); scene.add(sky);
-
-  // ----- the Big Board, over the doors
-  const board = group("board");
-  add(board, rbox(2.9, 1.18, 0.12, 0.03), std(0x12281e, { roughness: 0.5 }), [0, 3.72, -RD + 0.16]);
-  add(board, box(2.7, 1.0, 0.02), new THREE.MeshStandardMaterial({ map: bigBoardFace(), emissive: 0xffffff, emissiveMap: bigBoardFace(), emissiveIntensity: night ? 0.9 : 0.45 }), [0, 3.72, -RD + 0.23], { cast: false });
-  add(board, box(2.9, 0.03, 0.03), brass, [0, 4.32, -RD + 0.2]);
-
-  // ----- the sportsbook down the left wall: a header sign, three odds boards and the ticket counter
+  // ----- the left wall: the sportsbook (odds boards, a SPORTSBOOK sign, a ticket counter) with the Big Board above it
   const book = group("sportsbook");
-  add(book, new THREE.PlaneGeometry(4.6, 0.42), new THREE.MeshStandardMaterial({ map: sign("SPORTSBOOK", { w: 1536, h: 140, font: "700 92px Georgia, serif" }), roughness: 0.5 }), [X0 + 0.04, 3.9, -6.0], { cast: false, rot: [0, Math.PI / 2, 0] });
-  [0, 1, 2].forEach((k) => {
-    const z = -4.45 - k * 1.55;
-    add(book, rbox(0.1, 1.15, 1.45, 0.02), std(0x111110, { roughness: 0.5 }), [X0 + 0.07, 2.75, z]);
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.32, 1.0), new THREE.MeshStandardMaterial({ map: oddsBoard(k), emissive: 0xffffff, emissiveMap: oddsBoard(k), emissiveIntensity: night ? 1.0 : 0.6 }));
-    face.rotation.y = Math.PI / 2; face.position.set(X0 + 0.125, 2.75, z); book.add(face);
+  const SZ = -9.6;
+  add(book, new THREE.PlaneGeometry(4.4, 0.36), new THREE.MeshStandardMaterial({ map: sign("SPORTSBOOK", { w: 1536, h: 130, font: "700 88px Georgia, serif" }), roughness: 0.5 }), [X0 + 0.03, 2.62, SZ], { cast: false, rot: [0, Math.PI / 2, 0] });
+  [-1, 0, 1].forEach((k) => {
+    const z = SZ + k * 1.5;
+    add(book, rbox(0.1, 0.95, 1.38, 0.02), std(0x111110, { roughness: 0.5 }), [X0 + 0.07, 1.95, z]);
+    add(book, new THREE.PlaneGeometry(1.26, 0.84), new THREE.MeshStandardMaterial({ map: oddsBoard(k + 1), emissive: 0xffffff, emissiveMap: oddsBoard(k + 1), emissiveIntensity: night ? 1.0 : 0.65 }), [X0 + 0.125, 1.95, z], { cast: false, rot: [0, Math.PI / 2, 0] });
   });
-  add(book, rbox(0.85, 1.05, 4.7, 0.03), walnut, [X0 + 0.5, 0.525, -6.0]);
-  add(book, box(0.95, 0.05, 4.8), brass, [X0 + 0.52, 1.07, -6.0]);
-  for (let i = 0; i < 9; i++) add(book, cyl(0.012, 0.012, 0.55, 8), brass, [X0 + 0.92, 1.36, -3.85 - i * 0.53]);
-  add(book, box(0.04, 0.04, 4.6), brass, [X0 + 0.92, 1.64, -6.0]);
-  add(book, new THREE.PlaneGeometry(0.5, 0.24), new THREE.MeshStandardMaterial({ map: sign("TICKETS", { w: 512, h: 240, font: "700 92px Georgia, serif" }), side: THREE.DoubleSide }), [X0 + 0.95, 1.8, -6.0], { cast: false, rot: [0, Math.PI / 2, 0] });
-  if (night) { const l = new THREE.PointLight(0xffa634, 3.2, 4, 1.6); l.position.set(X0 + 1.2, 2.7, -6); book.add(l); }
+  add(book, rbox(0.8, 1.05, 4.6, 0.03), m.walnut, [X0 + 0.5, 0.525, SZ]);
+  add(book, box(0.9, 0.05, 4.7), brass, [X0 + 0.52, 1.07, SZ]);
+  for (let i = 0; i < 9; i++) add(book, cyl(0.012, 0.012, 0.42, 8), brass, [X0 + 0.88, 1.3, SZ - 2.1 + i * 0.52]);
+  const board = group("board");
+  add(board, rbox(0.14, 1.5, 3.0, 0.03), std(0x12281e, { roughness: 0.5 }), [X0 + 0.08, 3.45, SZ]);
+  add(board, new THREE.PlaneGeometry(2.8, 1.36), new THREE.MeshStandardMaterial({ map: bigBoardFace(), emissive: 0xffffff, emissiveMap: bigBoardFace(), emissiveIntensity: night ? 0.95 : 0.55 }), [X0 + 0.16, 3.45, SZ], { cast: false, rot: [0, Math.PI / 2, 0] });
+  add(board, box(0.06, 0.04, 3.0), brass, [X0 + 0.16, 4.18, SZ]);
 
-  // ----- the bar along the back of the right wall: counter, back bar with bottles, stools, banners above, plaques on its front
+  // ----- the bar along the back wall, left of the doors: counter, back bar, stools; banners hang from the rafters above it
   const bar = group("bar");
-  const BZ = -10.3, BL = 4.2;
-  add(bar, rbox(0.75, 1.08, BL, 0.03), walnut, [X1 - 1.15, 0.54, BZ]);
-  add(bar, rbox(0.9, 0.06, BL + 0.1, 0.02), darkWood, [X1 - 1.15, 1.1, BZ]);
-  add(bar, cyl(0.025, 0.025, BL, 12), brass, [X1 - 1.6, 0.22, BZ], { rot: [Math.PI / 2, 0, 0] });
-  add(bar, box(0.45, 2.1, BL), darkWood, [X1 - 0.24, 1.05, BZ]);
-  for (let s = 0; s < 2; s++) add(bar, box(0.3, 0.03, BL - 0.2), darkWood, [X1 - 0.2, 1.55 + s * 0.4, BZ]);
-  const bottleColors = [0x2f6a4c, 0x7a3a12, 0xd8d0b8, 0x3a1d0c, 0x9a7a2a, 0x24435e];
-  for (let s = 0; s < 2; s++) for (let i = 0; i < 12; i++) add(bar, cyl(0.035, 0.04, 0.26 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [X1 - 0.24, 1.7 + s * 0.4, BZ - BL / 2 + 0.25 + i * 0.33], { cast: false });
-  for (let i = 0; i < 4; i++) {
-    const z = BZ - 1.5 + i * 1.0;
-    add(bar, cyl(0.2, 0.2, 0.07, 24), leather, [X1 - 1.85, 0.76, z]);
-    add(bar, cyl(0.03, 0.05, 0.72, 10), brass, [X1 - 1.85, 0.37, z]);
-    add(bar, new THREE.TorusGeometry(0.14, 0.012, 6, 24), brass, [X1 - 1.85, 0.3, z], { rot: [Math.PI / 2, 0, 0] });
-  }
+  const BX = -2.7, BZ = ZB + 1.4, BL = 3.4;
+  add(bar, rbox(BL, 1.1, 0.75, 0.03), m.walnut, [BX, 0.55, BZ]);
+  add(bar, rbox(BL + 0.12, 0.07, 0.95, 0.02), std(0xe8e2d4, { roughness: 0.25 }), [BX, 1.13, BZ]);           // pale stone top
+  add(bar, cyl(0.025, 0.025, BL, 12), brass, [BX, 0.22, BZ + 0.45], { rot: [0, 0, Math.PI / 2] });
   const plaques = group("plaques");
+  for (let i = 0; i < 4; i++) { add(plaques, box(0.42, 0.3, 0.03), timberDark, [BX - 1.2 + i * 0.8, 0.62, BZ + 0.39]); add(plaques, box(0.34, 0.22, 0.02), brass, [BX - 1.2 + i * 0.8, 0.62, BZ + 0.41]); }
   for (let i = 0; i < 4; i++) {
-    const z = BZ - 1.05 + i * 0.7;
-    add(plaques, box(0.03, 0.3, 0.4), darkWood, [X1 - 1.54, 0.62, z]);
-    add(plaques, box(0.02, 0.22, 0.32), brass, [X1 - 1.56, 0.62, z]);
+    const x = BX - 1.2 + i * 0.8;
+    add(bar, cyl(0.21, 0.21, 0.07, 24), rattan, [x, 0.78, BZ + 0.8]);
+    add(bar, cyl(0.03, 0.05, 0.75, 10), brass, [x, 0.38, BZ + 0.8]);
+    add(bar, new THREE.TorusGeometry(0.15, 0.012, 6, 24), brass, [x, 0.3, BZ + 0.8], { rot: [Math.PI / 2, 0, 0] });
   }
-  const banners = group("banners");
-  const bannerColors = ["#8c1e24", "#1f4a36", "#1d3557", "#8c1e24", "#1f4a36"];
-  bannerColors.forEach((color, i) => {
-    const c = canvas(128, 256), g = c.getContext("2d");
-    g.fillStyle = color; g.beginPath(); g.moveTo(0, 0); g.lineTo(128, 0); g.lineTo(128, 200); g.lineTo(64, 256); g.lineTo(0, 200); g.closePath(); g.fill();
-    g.strokeStyle = "#e6cf98"; g.lineWidth = 6; g.stroke();
-    g.fillStyle = "#e6cf98"; g.font = "700 30px Georgia"; g.textAlign = "center"; g.fillText(String(2022 + i), 64, 130);
-    const t = texture(c);
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.0), new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 }));
-    p.rotation.y = -Math.PI / 2; p.position.set(X1 - 0.03, 3.45, BZ - 1.9 + i * 0.95); p.castShadow = true; banners.add(p);
-    add(banners, cyl(0.01, 0.01, 0.58, 6), brass, [X1 - 0.05, 3.96, BZ - 1.9 + i * 0.95], { rot: [Math.PI / 2, 0, 0] });
-  });
-  // the record book and the laptop on the near end of the bar
+  for (let s = 0; s < 3; s++) add(bar, box(BL, 0.04, 0.3), timber, [BX, 1.5 + s * 0.42, ZB + 0.22]);
+  const bottleColors = [0x2f6a4c, 0x7a3a12, 0xd8d0b8, 0x3a1d0c, 0x9a7a2a, 0x24435e];
+  for (let s = 0; s < 3; s++) for (let i = 0; i < 11; i++) add(bar, cyl(0.035, 0.04, 0.27 - (i % 3) * 0.03, 10), new THREE.MeshPhysicalMaterial({ color: bottleColors[(i + s) % 6], roughness: 0.1, transmission: 0.3, thickness: 0.1 }), [BX - BL / 2 + 0.2 + i * 0.3, 1.66 + s * 0.42, ZB + 0.22], { cast: false });
   const record = group("record");
-  add(record, rbox(0.42, 0.04, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [X1 - 1.15, 1.15, BZ - 1.85]);
-  const pages = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.52), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }));
-  pages.rotation.set(-Math.PI / 2, 0, Math.PI / 2); pages.position.set(X1 - 1.15, 1.175, BZ - 1.85); record.add(pages);
-  const laptop = group("chat");
-  add(laptop, rbox(0.34, 0.02, 0.24, 0.008), std(0x9ea3a8, { metalness: 0.7, roughness: 0.3 }), [X1 - 1.1, 1.14, BZ + 1.85]);
-  const lid = new THREE.Group(); lid.position.set(X1 - 0.98, 1.15, BZ + 1.85); lid.rotation.z = 0.28; laptop.add(lid);
-  add(lid, rbox(0.02, 0.24, 0.34, 0.008), std(0x9ea3a8, { metalness: 0.7, roughness: 0.3 }), [0, 0.12, 0]);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.2), new THREE.MeshStandardMaterial({ map: mailScreen(), emissive: 0xffffff, emissiveMap: mailScreen(), emissiveIntensity: 0.8 }));
-  screen.rotation.y = -Math.PI / 2; screen.position.set(-0.012, 0.12, 0); lid.add(screen);
+  add(record, rbox(0.56, 0.05, 0.42, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [BX - 1.2, 1.19, BZ]);
+  add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [BX - 1.2, 1.22, BZ], { cast: false, rot: [-Math.PI / 2, 0, 0] });
+  const chat = group("chat");
+  add(chat, rbox(0.38, 0.02, 0.27, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BX + 1.25, 1.18, BZ + 0.05]);
+  const lid = new THREE.Group(); lid.position.set(BX + 1.25, 1.19, BZ - 0.08); lid.rotation.x = -0.3; chat.add(lid);
+  add(lid, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
+  add(lid, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
+  // banners, hung from the rafters over the bar like a stadium's
+  const banners = group("banners");
+  ["#8c1e24", "#1f4a36", "#1d3557", "#8c1e24", "#1f4a36"].forEach((color, i) => {
+    const c = canvas(128, 300), g = c.getContext("2d");
+    g.fillStyle = color; g.beginPath(); g.moveTo(0, 0); g.lineTo(128, 0); g.lineTo(128, 240); g.lineTo(64, 300); g.lineTo(0, 240); g.closePath(); g.fill();
+    g.strokeStyle = "#e6cf98"; g.lineWidth = 6; g.stroke(); g.fillStyle = "#e6cf98"; g.font = "700 28px Georgia"; g.textAlign = "center";
+    g.fillText("CHAMP", 64, 110); g.font = "700 34px Georgia"; g.fillText(String(2022 + i), 64, 160);
+    const x = BX - 1.7 + i * 0.85;
+    add(banners, new THREE.PlaneGeometry(0.62, 1.45), new THREE.MeshStandardMaterial({ map: texture(c), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.9 }), [x, WH - 0.95, ZB + 1.6], { cast: false });
+    add(banners, cyl(0.012, 0.012, 0.72, 6), brass, [x, WH - 0.2, ZB + 1.6], { rot: [0, 0, Math.PI / 2] });
+  });
+  for (const x of [BX - 1.0, BX + 1.0]) {                                                                  // lantern pendants over the bar
+    add(bar, cyl(0.01, 0.01, 1.1, 6), frameMat, [x, WH - 0.1, BZ]);
+    add(bar, rbox(0.3, 0.42, 0.3, 0.04), rattan, [x, WH - 0.85, BZ]);
+    add(bar, cyl(0.07, 0.07, 0.14, 12), glow(0xffd28a, night ? 3 : 1.2), [x, WH - 0.9, BZ], { cast: false });
+  }
 
-  // ----- the fireplace lounge on the right wall: stone surround, fire, mantel, the constitution framed above
-  const FZ = -5.4;
+  // ----- the right wall: a grand fieldstone fireplace, floor to ceiling, the constitution on the chimney; the lounge in front
   const fire = group("fireplace");
-  add(fire, rbox(0.5, 1.45, 2.1, 0.02), std(0xd8d0bf, { roughness: 0.9 }), [X1 - 0.25, 0.725, FZ]);
-  add(fire, box(0.1, 0.72, 1.1), std(0x141010, { roughness: 1 }), [X1 - 0.49, 0.48, FZ], { cast: false });
-  add(fire, box(0.06, 0.34, 0.8), glow(0xff6a1a, night ? 2.4 : 1.3), [X1 - 0.5, 0.3, FZ], { cast: false });
-  for (let i = 0; i < 3; i++) add(fire, cyl(0.05, 0.05, 0.7, 8), std(0x3a2414), [X1 - 0.55, 0.2 + i * 0.04, FZ - 0.1 + i * 0.1], { rot: [Math.PI / 2, 0, 0.3 * i] });
-  add(fire, rbox(0.62, 0.08, 2.4, 0.02), darkWood, [X1 - 0.31, 1.49, FZ]);
-  const flame = new THREE.PointLight(0xff8a3a, night ? 6 : 2.5, 5, 1.6); flame.position.set(X1 - 0.9, 0.5, FZ); fire.add(flame);
+  const FZ = -9.6, CD = 1.7, stone = new THREE.MeshStandardMaterial({ map: fieldstone(), roughness: 0.95 });
+  add(fire, box(CD, RIDGE, 3.8), stone, [X1 - CD / 2, RIDGE / 2, FZ]);
+  add(fire, box(0.6, 0.5, 4.8), stone, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
+  add(fire, box(0.2, 1.4, 1.9), std(0x15110e, { roughness: 1 }), [X1 - CD - 0.02, 1.2, FZ], { cast: false });
+  add(fire, box(0.08, 0.55, 1.4), glow(0xff6a1a, night ? 2.6 : 1.4), [X1 - CD - 0.08, 0.8, FZ], { cast: false });
+  for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
+  add(fire, rbox(0.42, 0.26, 4.0, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
+  const flame = new THREE.PointLight(0xff8a3a, night ? 9 : 3.5, 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
   const charter = group("constitution");
-  add(charter, box(0.05, 1.05, 0.85), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - 0.04, 2.4, FZ]);
-  const page = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.9), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }));
-  page.rotation.y = -Math.PI / 2; page.position.set(X1 - 0.07, 2.4, FZ); charter.add(page);
-  if (night) { const l = new THREE.SpotLight(0xffd9a0, 6, 3, 0.5, 0.6); l.position.set(X1 - 0.6, 3.4, FZ); l.target.position.set(X1, 2.4, FZ); charter.add(l, l.target); }
-
-  // the rug, sofa, armchair and the coffee table with the race on it
-  add(room, box(3.0, 0.01, 3.0), new THREE.MeshStandardMaterial({ map: rugPattern(), roughness: 1 }), [1.55, 0.006, FZ], { cast: false });
-  const lounge = group(null);
-  add(lounge, rbox(0.9, 0.42, 2.2, 0.08), fabric, [0.25, 0.25, FZ]);                   // sofa seat, facing the fire
-  add(lounge, rbox(0.25, 0.85, 2.2, 0.08), fabric, [-0.12, 0.47, FZ]);                 // back
-  for (const z of [FZ - 1.12, FZ + 1.12]) add(lounge, rbox(0.9, 0.62, 0.22, 0.06), fabric, [0.25, 0.33, z]);
-  for (const z of [FZ - 0.5, FZ + 0.5]) add(lounge, rbox(0.62, 0.12, 0.95, 0.06), fabricCream, [0.32, 0.52, z]);
-  add(lounge, rbox(0.85, 0.42, 0.85, 0.08), leather, [1.75, 0.25, FZ + 1.75]);         // armchair facing the fire, near the front
-  add(lounge, rbox(0.85, 0.75, 0.2, 0.06), leather, [1.75, 0.5, FZ + 2.12]);
+  add(charter, box(0.06, 1.5, 1.2), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [X1 - CD - 0.02, 3.35, FZ]);
+  add(charter, new THREE.PlaneGeometry(1.02, 1.3), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [X1 - CD - 0.06, 3.35, FZ], { cast: false, rot: [0, -Math.PI / 2, 0] });
+  // the lounge: a jute rug, two linen sofas facing each other across the coffee table, a rattan armchair facing the fire
+  add(room, box(4.2, 0.012, 4.0), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.6, 0.006, FZ], { cast: false });
+  const sofa = (x, z, facing) => {
+    const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = facing; scene.add(s);
+    add(s, rbox(2.3, 0.42, 0.95, 0.08), linen, [0, 0.26, 0]);
+    add(s, rbox(2.3, 0.75, 0.24, 0.08), linen, [0, 0.55, -0.42]);
+    for (const dx of [-1.15, 1.15]) add(s, rbox(0.22, 0.6, 0.95, 0.08), linen, [dx, 0.4, 0]);
+    for (const dx of [-0.75, 0.75]) add(s, rbox(0.5, 0.42, 0.14, 0.06), navy, [dx, 0.68, -0.26], { rot: [-0.25, 0, 0] });
+  };
+  sofa(0.75, FZ - 1.7, 0); sofa(0.75, FZ + 1.7, Math.PI);
+  const chair = new THREE.Group(); chair.position.set(-1.05, 0, FZ); chair.rotation.y = Math.PI / 2; scene.add(chair);
+  add(chair, rbox(0.85, 0.4, 0.8, 0.1), rattan, [0, 0.22, 0]); add(chair, rbox(0.85, 0.7, 0.14, 0.07), rattan, [0, 0.55, -0.36]); add(chair, rbox(0.7, 0.12, 0.65, 0.05), linen, [0, 0.46, 0.04]);
   const race = group("race");
-  add(race, rbox(0.75, 0.38, 1.6, 0.03), walnut, [1.65, 0.19, FZ]);
-  add(race, box(0.62, 0.02, 1.46), std(0x2f6a46, { roughness: 1 }), [1.65, 0.39, FZ]);
-  add(race, box(0.36, 0.022, 1.42), std(0xbf9a6c, { roughness: 1 }), [1.65, 0.392, FZ]);
-  for (const dx of [-0.19, 0.19]) add(race, box(0.012, 0.03, 1.42), whiteTrim, [1.65 + dx, 0.41, FZ]);
-  for (let k = 0; k < 9; k++) add(race, box(0.01, 0.06, 0.01), whiteTrim, [1.65 - 0.2, 0.43, FZ + 0.66 - k * 0.15]);
-  add(race, box(0.012, 0.09, 0.012), std(0xd4342c), [1.65 - 0.2, 0.44, FZ - 0.68]);
-  const silks = [0xd4342c, 0x1d3557, 0xf0b429, 0x2f6a46, 0xffffff, 0x7a3a8c];
-  silks.forEach((c, i) => {
-    const x = 1.65 - 0.14 + (i % 4) * 0.08, z = FZ + 0.25 - i * 0.11;
-    add(race, rbox(0.03, 0.04, 0.08, 0.012), std(0x5a3216), [x, 0.43, z]);
-    add(race, rbox(0.022, 0.028, 0.03, 0.008), std(c), [x, 0.465, z + 0.01]);
+  add(race, rbox(1.7, 0.4, 0.85, 0.03), m.walnut, [0.75, 0.2, FZ]);
+  add(race, box(1.56, 0.02, 0.7), std(0x2f6a46, { roughness: 1 }), [0.75, 0.41, FZ]);
+  add(race, box(1.52, 0.022, 0.36), std(0xbf9a6c, { roughness: 1 }), [0.75, 0.412, FZ]);
+  for (const dz of [-0.19, 0.19]) add(race, box(1.52, 0.03, 0.012), white, [0.75, 0.43, FZ + dz]);
+  for (let k = 0; k < 9; k++) add(race, box(0.01, 0.07, 0.01), white, [0.75 - 0.68 + k * 0.17, 0.46, FZ + 0.2]);
+  add(race, box(0.012, 0.1, 0.012), std(0xd4342c), [0.75 + 0.7, 0.47, FZ + 0.2]);
+  [0xd4342c, 0x1d3557, 0xf0b429, 0x2f6a46, 0xffffff, 0x7a3a8c].forEach((c, i) => {
+    const x = 0.75 + 0.35 - i * 0.12, z = FZ - 0.13 + (i % 4) * 0.08;
+    add(race, rbox(0.09, 0.045, 0.035, 0.012), std(0x5a3216), [x, 0.46, z]); add(race, rbox(0.03, 0.03, 0.026, 0.008), std(c), [x + 0.01, 0.495, z]);
   });
 
-  // ----- the trophies: the real three on their mahogany table, on a round plinth in the middle of the room, under a spotlight
+  // ----- the trophies: the real three on a round stone plinth in the middle of the room, under a brass chandelier
   const trophies = group("trophies");
-  const TZ = -8.35, TX = -0.35;
-  add(trophies, cyl(1.2, 1.28, 0.42, 64), std(0x1f3b2f, { roughness: 0.5 }), [TX, 0.21, TZ]);
-  add(trophies, cyl(1.23, 1.23, 0.03, 64), brass, [TX, 0.435, TZ]);
-  // each trophy on its own base, all at one scale, the tallest (Pick'em) at the back, the Bowl Pool and Survivor in front of it
-  const pieces = [[ivorySpire, hexBase, { fin: "coil", material: "white" }, [0, -0.38]], [pennantCup, bowlBase, { material: "white" }, [-0.55, 0.28]], [crystalSpade, emeraldBase, { material: "white" }, [0.55, 0.28]]].map(([build, base, opts, at]) => {
-    const piece = new THREE.Group(); const b = base(m); piece.add(b);
-    const t = build(m, opts); t.position.y = b.userData.height; piece.add(t);
-    return { piece, at };
+  const TX = -0.35, TZ = -6.3;
+  add(trophies, cyl(1.05, 1.15, 0.35, 64), std(0xece6d8, { roughness: 0.4 }), [TX, 0.175, TZ]);
+  add(trophies, cyl(0.85, 0.9, 0.75, 64), std(0x1f3b2f, { roughness: 0.45 }), [TX, 0.72, TZ]);
+  add(trophies, cyl(0.88, 0.88, 0.035, 64), brass, [TX, 1.1, TZ]);
+  const pieces = [[ivorySpire, hexBase, { fin: "coil", material: "white" }, [0, -0.28]], [pennantCup, bowlBase, { material: "white" }, [-0.48, 0.22]], [crystalSpade, emeraldBase, { material: "white" }, [0.48, 0.22]]].map(([build, base, opts, at]) => {
+    const piece = new THREE.Group(); const b = base(m); piece.add(b); const t = build(m, opts); t.position.y = b.userData.height; piece.add(t); return { piece, at };
   });
   const tallest = Math.max(...pieces.map(({ piece }) => new THREE.Box3().setFromObject(piece).getSize(new THREE.Vector3()).y));
-  const ts = 1.15 / tallest;
+  const ts = 1.75 / tallest;
   for (const { piece, at: [dx, dz] } of pieces) {
     piece.scale.setScalar(ts);
     const pb = new THREE.Box3().setFromObject(piece);
-    piece.position.set(TX + dx, 0.45 - pb.min.y, TZ + dz);
+    piece.position.set(TX + dx, 1.12 - pb.min.y, TZ + dz);
     piece.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     trophies.add(piece);
   }
-  const trophySpot = new THREE.SpotLight(0xfff2da, night ? 40 : 22, 7, 0.42, 0.65, 1.4);
-  trophySpot.position.set(TX, 4.6, TZ + 0.6); trophySpot.target.position.set(TX, 0.9, TZ); trophySpot.castShadow = true; trophySpot.shadow.mapSize.set(2048, 2048);
+  add(room, cyl(0.012, 0.012, 2.0, 6), brass, [TX, WH + 0.2, TZ]);
+  add(room, new THREE.TorusGeometry(0.75, 0.03, 10, 48), brass, [TX, WH - 0.85, TZ], { rot: [Math.PI / 2, 0, 0], cast: false });
+  for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; add(room, new THREE.SphereGeometry(0.05, 12, 8), glow(0xffe0a8, night ? 4 : 2), [TX + Math.cos(a) * 0.75, WH - 0.78, TZ + Math.sin(a) * 0.75], { cast: false }); }
+  const trophySpot = new THREE.SpotLight(0xfff4de, night ? 70 : 45, 9, 0.38, 0.6, 1.3);
+  trophySpot.position.set(TX, WH + 1.6, TZ + 2.2); trophySpot.target.position.set(TX, 1.8, TZ); trophySpot.castShadow = true; trophySpot.shadow.mapSize.set(2048, 2048);
   scene.add(trophySpot, trophySpot.target);
 
-  // ----- Survivor: the poker table at the front left, chips on the felt, six chairs
+  add(room, box(6.2, 0.012, 6.4), new THREE.MeshStandardMaterial({ map: (() => { const c = canvas(512, 512), g = c.getContext('2d'); g.fillStyle = '#d6c6a2'; g.fillRect(0, 0, 512, 512); for (let k = 0; k < 9; k++) { g.fillStyle = k % 2 ? 'rgba(47,79,110,.18)' : 'rgba(255,255,255,.12)'; g.fillRect(60 + k * 44, 60, 22, 392); } g.strokeStyle = '#2f4f6e'; g.lineWidth = 14; g.strokeRect(18, 18, 476, 476); g.strokeStyle = '#c9a45f'; g.lineWidth = 5; g.strokeRect(44, 44, 424, 424); for (let i = 0; i < 512; i += 4) { g.fillStyle = `rgba(120,100,70,${0.03 + rand() * 0.04})`; g.fillRect(0, i, 512, 2); } return texture(c); })(), roughness: 1 }), [-0.6, 0.007, -5.0], { cast: false });
+  // ----- Survivor: the poker table in the foreground, left of centre
   const poker = group("survivor");
-  const PX = -1.55, PZ = -2.6;
+  const PX = 1.5, PZ = -3.5;
   const oval = (rx, rz, h, mat, y) => { const mesh = add(poker, cyl(1, 1, h, 64), mat, [PX, y, PZ]); mesh.scale.set(rx, 1, rz); return mesh; };
-  oval(1.12, 0.78, 0.08, m.felt, 0.78);
+  oval(1.1, 0.75, 0.08, m.felt, 0.78);
   const rail = new THREE.Mesh(new THREE.TorusGeometry(1, 0.075, 14, 80), std(0x2a1a12, { roughness: 0.45 }));
-  rail.rotation.x = Math.PI / 2; rail.scale.set(1.15, 0.8, 1); rail.position.set(PX, 0.82, PZ); rail.castShadow = true; poker.add(rail);
-  add(poker, cyl(0.28, 0.45, 0.74, 24), darkWood, [PX, 0.37, PZ]);
+  rail.rotation.x = Math.PI / 2; rail.scale.set(1.13, 0.78, 1); rail.position.set(PX, 0.82, PZ); rail.castShadow = true; poker.add(rail);
+  add(poker, cyl(0.28, 0.45, 0.74, 24), timberDark, [PX, 0.37, PZ]);
   const chipColors = [0xd4342c, 0x1d3557, 0xf4efe3, 0x2f6a46, 0x111111];
   [[-0.5, 0.15], [-0.15, -0.35], [0.3, 0.3], [0.55, -0.2], [0.05, 0.42]].forEach(([dx, dz], s) => {
     for (let k = 0; k < 3 + (s % 3); k++) add(poker, cyl(0.045, 0.045, 0.018, 20), std(chipColors[(s + k) % 5], { roughness: 0.4 }), [PX + dx, 0.83 + k * 0.019, PZ + dz], { cast: false });
   });
   for (let a = 0; a < 6; a++) {
-    const t = (a / 6) * Math.PI * 2 + Math.PI / 6, cx = PX + Math.cos(t) * 1.5, cz = PZ + Math.sin(t) * 1.08;
-    const chair = new THREE.Group(); chair.position.set(cx, 0, cz); chair.rotation.y = -t - Math.PI / 2; poker.add(chair);
-    add(chair, rbox(0.42, 0.08, 0.42, 0.03), leather, [0, 0.46, 0]);
-    add(chair, rbox(0.42, 0.42, 0.06, 0.03), darkWood, [0, 0.72, 0.2]);
-    for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) add(chair, cyl(0.02, 0.02, 0.44, 8), darkWood, [lx, 0.22, lz]);
+    const t = (a / 6) * Math.PI * 2 + Math.PI / 6, cx = PX + Math.cos(t) * 1.45, cz = PZ + Math.sin(t) * 1.05;
+    const c = new THREE.Group(); c.position.set(cx, 0, cz); c.rotation.y = -t - Math.PI / 2; poker.add(c);
+    add(c, rbox(0.44, 0.08, 0.44, 0.03), linen, [0, 0.46, 0]); add(c, rbox(0.44, 0.48, 0.06, 0.03), rattan, [0, 0.74, 0.2]);
+    for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) add(c, cyl(0.02, 0.02, 0.44, 8), timberDark, [lx, 0.22, lz]);
   }
 
-  // ----- plants, and the Bowl Pool bulletin board on wheels (wheeled in from Dec 7)
+  // ----- palms in woven baskets, and from Dec 7 the Bowl Pool's bulletin board on wheels by the doors
   const plant = (x, z, s = 1) => {
-    add(room, cyl(0.22 * s, 0.17 * s, 0.4 * s, 20), std(0xe9e3d6), [x, 0.2 * s, z]);
-    for (let i = 0; i < 6; i++) add(room, new THREE.IcosahedronGeometry(0.22 * s, 1), std(0x3d7a45, { roughness: 0.9 }), [x + Math.cos(i) * 0.14 * s, 0.6 * s + (i % 3) * 0.16 * s, z + Math.sin(i * 1.7) * 0.14 * s]);
+    add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 20), rattan, [x, 0.25 * s, z]);
+    for (let f = 0; f < 8; f++) { const a = (f / 8) * Math.PI * 2, fr = add(room, new THREE.ConeGeometry(0.16 * s, 1.3 * s, 4, 1), std(0x3f8a48, { roughness: 0.9 }), [x + Math.cos(a) * 0.4 * s, 1.0 * s, z + Math.sin(a) * 0.4 * s]); fr.scale.set(1, 1, 0.25); fr.rotation.set(Math.sin(a) * 0.9, -a, -Math.cos(a) * 0.9); }
   };
-  plant(X0 + 0.45, -12.4, 1.2); plant(X1 - 0.5, -2.2, 1.1);
+  plant(X1 - 0.6, ZB + 0.8, 1.4); plant(X1 - 0.6, -5.6, 1.2); plant(X0 + 0.55, -6.5, 1.2);
   if (bowl) {
-    const board2 = group("bowl");
-    const BX = -1.55, BZ2 = -11.6;
-    add(board2, box(1.3, 0.95, 0.05), std(0xb98a5a, { roughness: 1 }), [BX, 1.35, BZ2]);
-    add(board2, box(1.4, 0.06, 0.08), darkWood, [BX, 1.85, BZ2]); add(board2, box(1.4, 0.06, 0.08), darkWood, [BX, 0.85, BZ2]);
-    for (const dx of [-0.66, 0.66]) { add(board2, box(0.05, 1.5, 0.05), darkWood, [BX + dx, 0.85, BZ2]); add(board2, box(0.05, 0.05, 0.5), darkWood, [BX + dx, 0.12, BZ2]); for (const dz of [-0.22, 0.22]) add(board2, cyl(0.05, 0.05, 0.04, 16), std(0x222222), [BX + dx, 0.05, BZ2 + dz], { rot: [0, 0, Math.PI / 2] }); }
-    [[-0.35, 0.15, 0xf6f1e3], [0.2, 0.2, 0xf6f1e3], [0.35, -0.2, 0x1b2a4a], [-0.25, -0.22, 0xf6f1e3]].forEach(([dx, dy, c]) => add(board2, box(0.36, 0.3, 0.01), std(c), [BX + dx, 1.35 + dy, BZ2 + 0.035], { cast: false }));
-    const pennantC = canvas(256, 128), pg = pennantC.getContext("2d");
-    pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(256, 64); pg.lineTo(0, 128); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 34px Georgia"; pg.fillText("BOWLS", 24, 76);
-    const pennant = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshStandardMaterial({ map: texture(pennantC), transparent: true, alphaTest: 0.5 }));
-    pennant.position.set(BX, 1.95, BZ2 + 0.04); board2.add(pennant);
+    const b2 = group("bowl");
+    const BBX = 1.5, BBZ = ZB + 1.3;
+    add(b2, box(1.4, 1.0, 0.05), std(0xb98a5a, { roughness: 1 }), [BBX, 1.45, BBZ]);
+    add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 1.98, BBZ]); add(b2, box(1.5, 0.06, 0.08), timberDark, [BBX, 0.92, BBZ]);
+    for (const dx of [-0.72, 0.72]) { add(b2, box(0.05, 1.9, 0.05), timberDark, [BBX + dx, 0.95, BBZ]); add(b2, box(0.05, 0.05, 0.55), timberDark, [BBX + dx, 0.12, BBZ]); for (const dz of [-0.24, 0.24]) add(b2, cyl(0.05, 0.05, 0.04, 16), std(0x222222), [BBX + dx, 0.05, BBZ + dz], { rot: [0, 0, Math.PI / 2] }); }
+    [[-0.38, 0.16, 0xf6f1e3], [0.2, 0.2, 0xf6f1e3], [0.36, -0.2, 0x1b2a4a], [-0.26, -0.22, 0xf6f1e3]].forEach(([dx, dy, c]) => add(b2, box(0.38, 0.32, 0.01), std(c), [BBX + dx, 1.45 + dy, BBZ + 0.035], { cast: false }));
+    const pc = canvas(256, 128), pg = pc.getContext("2d"); pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(256, 64); pg.lineTo(0, 128); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 34px Georgia"; pg.fillText("BOWLS", 24, 76);
+    add(b2, new THREE.PlaneGeometry(0.55, 0.27), new THREE.MeshStandardMaterial({ map: texture(pc), transparent: true, alphaTest: 0.5 }), [BBX, 2.12, BBZ + 0.04], { cast: false });
   }
 
-  // ----- light: daylight through the doors, sky fill, and at night warm lamps, the fire and the lit pool
-  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfdfbf4, night ? 0x2a1e16 : 0xb59a7a, night ? 0.25 : 0.75));
-  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d4, night ? 0.25 : 2.6);
-  sun.position.set(-4, 10, -24); sun.target.position.set(0, 0, -5);
+  // ----- light: a bright sea-light day pouring through the glass wall, or a warm evening with the pool and lanterns lit
+  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xffffff, night ? 0x2a1e16 : 0xc9b08a, night ? 0.3 : 0.85));
+  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d4, night ? 0.2 : 3.0);
+  sun.position.set(6, 14, ZB - 14); sun.target.position.set(-1, 0, -7);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.radius = 4;
-  Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 14, bottom: -14, near: 1, far: 50 });
+  Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 16, bottom: -16, near: 1, far: 70 });
   scene.add(sun, sun.target);
-  const fill = new THREE.DirectionalLight(0xffffff, night ? 0.08 : 0.55); fill.position.set(3, 9, 8); scene.add(fill);
+  const bounce = new THREE.DirectionalLight(0xfff6e8, night ? 0.05 : 0.35); bounce.position.set(-2, 6, 4); scene.add(bounce);
+  for (const [x, y, z, i] of [[0, 5.2, -3.5, 1], [0, 5.2, -9.5, 1], [-3, 3.6, -12.5, 1]]) { const l = new THREE.PointLight(0xffe6c4, (night ? 6 : 2.5) * i, 10, 1.4); l.position.set(x, y, z); scene.add(l); }
   if (night) {
-    for (const [x, z] of [[-2.2, -2.5], [1.5, -4.2], [2.0, -9.8], [-2.2, -6.5], [0.5, -11.5]]) { const lamp = new THREE.PointLight(0xffc27a, 4.5, 6, 1.6); lamp.position.set(x, 3.2, z); scene.add(lamp); }
-    const poolGlow = new THREE.PointLight(0x3ad0ff, 10, 9, 1.4); poolGlow.position.set(0.4, 0.6, -RD - 4.6); scene.add(poolGlow);
+    const poolGlow = new THREE.PointLight(0x3ad0ff, 14, 12, 1.4); poolGlow.position.set(0.6, 0.6, ZB - 6.2); scene.add(poolGlow);
+    for (let i = 0; i < 12; i++) add(out, new THREE.SphereGeometry(0.05, 8, 6), glow(0xffd28a, 3), [-5 + i * 0.9, 3.1 - Math.sin((i / 11) * Math.PI) * 0.5, ZB - 3.2], { cast: false });
   }
 
-  // ----- camera: the whole room in one tall picture, cropped to the room so no empty sky is left over
-  const camera = new THREE.PerspectiveCamera(72, W / H, 0.1, 120);
-  camera.position.set(0.3, 7.4, 2.6); camera.lookAt(-0.2, 0.3, -7.2);
+  // ----- camera: standing on the landing just inside the front door, looking down the room to the glass wall and the sea
+  const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 86), W / H, 0.1, 200);
+  camera.position.set(...(q.get("cam") ?? "0.3,3.0,-0.3").split(",").map(Number));
+  camera.lookAt(...(q.get("look") ?? "-0.4,1.45,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
-  const toPx = (v) => { const p = v.clone().project(camera); return [((p.x + 1) / 2) * W, ((1 - p.y) / 2) * H]; };
-  const top = Math.max(0, Math.floor(Math.min(...[[X0, RH, -RD], [X1, RH, -RD], [0, RH, -RD]].map(([x, y, z]) => toPx(new THREE.Vector3(x, y, z))[1])) - 14));
-  const bottom = Math.min(H, Math.ceil(Math.max(...[[X0, 0, -1.4], [X1, 0, -1.4], [0, 0, -1.4]].map(([x, y, z]) => toPx(new THREE.Vector3(x, y, z))[1])) + 4));
-  const cropH = bottom - top;
-  camera.setViewOffset(W, H, 0, top, W, cropH);
-  camera.aspect = W / cropH; camera.updateProjectionMatrix();
-  renderer.setPixelRatio(scale);
-  renderer.setSize(W, cropH, false);
 
-  // where each thing in the room sits in the picture (fractions of the picture), so the page can lay tap spots over it
-  const out = {};
+  const outSpots = {};
   for (const [name, g] of Object.entries(spots)) {
     const b = new THREE.Box3().setFromObject(g); if (b.isEmpty()) continue;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -432,10 +393,10 @@ export async function buildRoom(q) {
       x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
     }
     const r = (v) => Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
-    out[name] = { x: r(x0), y: r(y0), w: r(x1 - x0), h: r(y1 - y0) };
+    const x0c = r(x0), y0c = r(y0);
+    outSpots[name] = { x: x0c, y: y0c, w: r(r(x1) - x0c), h: r(r(y1) - y0c) };
   }
-  window.__spots = { width: W, height: cropH, spots: out };
-
+  window.__spots = { width: W, height: H, spots: outSpots };
   renderer.render(scene, camera);
   window.__webp = renderer.domElement.toDataURL("image/webp", 0.82);
   window.__png = renderer.domElement.toDataURL("image/png");

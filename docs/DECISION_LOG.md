@@ -28,7 +28,7 @@ laptop (the pool chat, with a mail sign for a new message) on the bar, the const
 the coffee table (which stands in for the Season snapshot and playoff charts), the Survivor poker table, and from Dec 7 the Bowl
 Pool's bulletin board wheeled in. A tap opens the New views built in the Lab, not today's pages; both views run on the same data and
 the same pick path. The Window must always be easy to find, so the player's ticket is pinned to the bottom of every screen and the
-sportsbook glows while a pick is owed. The room is drawn in 3D and shipped as still pictures with tap spots (light for phones, no
+sportsbook glows while a pick is owed. The owner wants a room people want to be in, magnificent, bright and airy like a beach bungalow, seen from inside under a ceiling (not an open-topped box), with the trophies prominent and a grand stone fireplace. The room is drawn in 3D and shipped as still pictures with tap spots (light for phones, no
 3D in the browser), using the real trophy models. Labels only where their news is worth a glance, with "Show labels" and a plain list
 of rooms for anyone who prefers words. Lab only; players see none of it.
 

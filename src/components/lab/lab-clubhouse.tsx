@@ -11,11 +11,13 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 
 /**
  * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
- *  - The room: one bright lounge drawn in 3D and shown as one picture (by day, and at night with the pool lit), sliding glass doors
- *    onto a pool patio at the back. Tap anything in it to go there: the Big Board over the doors, the sportsbook down the left wall
- *    (where picks are made), the real trophies in the middle, the banners and plaques at the bar, the record book and the laptop
- *    (the pool chat, a mail sign when there's a new message) on the bar, the constitution framed over the fireplace, the race on the
- *    coffee table, the Survivor poker table, and from Dec 7 the Bowl Pool's bulletin board, wheeled in by the doors.
+ *  - The room: a grand beach bungalow drawn in 3D and shown as one picture (by day, and at night with the pool lit), seen from just
+ *    inside: a vaulted white ceiling on timber trusses, the whole back wall glass onto the pool patio and the sea. Tap anything in it
+ *    to go there: the sportsbook down the left wall (where picks are made) with the Big Board above it, the real trophies in the
+ *    middle on a stone plinth under a chandelier, the bar at the back with the banners hanging from the rafters and the plaques on
+ *    its front, the record book and the laptop (the pool chat, a mail sign when there's a new message) on the bar, the constitution
+ *    framed on the grand stone chimney, the race on the coffee table, the Survivor poker table in front, and from Dec 7 the Bowl
+ *    Pool's bulletin board, wheeled in by the doors.
  *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
  *    rooms sits under the picture for anyone who would rather tap a word.
  *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the
@@ -141,7 +143,7 @@ const PICTURES = ROOM_PICTURES as Record<string, Picture>;
 
 /** Each thing in the picture that can be tapped: where it goes, its name, and whether its label shows without "Show labels". */
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label?: "above" | "below"; always?: boolean }> = [
-  { spot: "sportsbook", room: "window", name: "Sportsbook", label: "above", always: true },
+  { spot: "sportsbook", room: "window", name: "Sportsbook", label: "below", always: true },
   { spot: "bar", room: "trophies", name: "The bar: banners and plaques", tag: "The bar", label: "below" },
   { spot: "banners", room: "trophies", name: "Banners" },
   { spot: "trophies", room: "trophies", name: "Trophies", label: "above" },
