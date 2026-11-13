@@ -49,7 +49,7 @@ A fourth round (PR after #777): the side room for the trophies, set into a stepp
 Trophy Room sign with an arrow, by the chimney, now opens today's Trophy Room page (less the stats), and the chimney stands whole
 on the right wall again. The Bowl Pool board is at the front left, where the owner first asked for it. The poker table moved forward,
 away from the fire, and was made more convincing (padded leather armrest, walnut racetrack, gilt betting line, two pedestals, the
-dealer's tray); its chairs were made lighter. The camera stepped back a little to make room at the front. Every wall's boards are
+dealer's tray); its chairs were made lighter. The camera stepped back to make room at the front, and the Bowl board stands about a metre clear of the poker table. Every wall's boards are
 now counted from the floor, so they meet at the corners.
 
 ## 2026-11-12 - The clubhouse becomes one 3D room (Lab), a "New" view for next season

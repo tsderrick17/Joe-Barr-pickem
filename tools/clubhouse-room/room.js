@@ -501,7 +501,7 @@ export async function buildRoom(q) {
     // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
     // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-0.95, 0, -3.75); stand.rotation.y = 0.3; b2.add(stand);
+    const stand = new THREE.Group(); stand.position.set(-1.05, 0, -2.75); stand.rotation.y = 0.3; b2.add(stand);
     const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
     add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42, 0]);
     for (const y of [0.87, 1.97]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
@@ -534,7 +534,7 @@ export async function buildRoom(q) {
 
   // ----- camera: standing on the landing just inside the front door, looking down the room to the glass wall and the sea
   const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 76), W / H, 0.1, 200);
-  camera.position.set(...(q.get("cam") ?? "0.15,3.0,0.8").split(",").map(Number));
+  camera.position.set(...(q.get("cam") ?? "0.15,3.0,1.6").split(",").map(Number));
   camera.lookAt(...(q.get("look") ?? "0.0,1.55,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
