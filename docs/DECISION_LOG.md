@@ -29,7 +29,9 @@ five, and you) and this week's lines with your own picks lit. Nobody else's unst
 phone makes every object small, the headline of each (the leader and your place, picks owed, how many are still in Survivor and
 whether you are) is also in its label, in type big enough to read; a tap still opens the full design. Name plates for the ten
 Survivor seats were tried and dropped: at eye level the far side of the table is a thin strip and they piled up. The poker table
-lost its dealt hands (they could not show who is out) and gained cup holders, drinks and a blazer over a chair.
+lost its dealt hands (they could not show who is out) and gained cup holders, drinks and a blazer over a chair. At the owner's
+word ("more windows, sunlight and airiness") the side walls are now full of windows (four tall ones on the right, three on the left
+at the front and a clerestory strip high over the bar) and the sun comes in through them, laying the window shapes across the floor.
 
 ## 2026-11-13 - The clubhouse room made convincing, and laid out to be walked through (Lab)
 

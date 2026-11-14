@@ -4,6 +4,8 @@
 //  - Ceiling: natural beach-hut thatch laid in courses, no beams, two big palm-leaf fans down the middle.
 //  - Back wall, left: where picks are made, face on: the Big Board, one wide board of spreads under it, the counter. No sign.
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
+//  - Side walls: full of windows (four tall on the right, three tall at the front left and a clerestory strip over the bar); the
+//    sun comes in through them across the floor.
 //  - Left wall: the bar running down the room (fluted walnut, marble, brass), leather stools, a mirrored back bar of bottles and
 //    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table).
 //  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), a painted Trophy Room sign on its near face with the
@@ -95,7 +97,7 @@ export async function buildRoom(q) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.0));
+  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.08));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(scale); renderer.setSize(W, H, false);
   document.body.appendChild(renderer.domElement);
@@ -136,8 +138,36 @@ export async function buildRoom(q) {
   // ----- floor, shiplap walls and the thatch overhead
   add(room, tile(box(RW, 0.1, RD), 1.44, 5.76), new THREE.MeshStandardMaterial({ ...oakFloor(), bumpScale: 1.6, roughness: 0.3, envMapIntensity: 1.0 }), [0, -0.05, -RD / 2], { cast: false });
   const wallMat = new THREE.MeshStandardMaterial({ ...shiplap(), bumpScale: 1.6, roughness: 0.85 });
+  // The side walls are full of windows, so the room is bright and the breeze comes through: on the right, four tall windows from the
+  // door to the chimney; on the left, three tall windows at the front and a long strip of clerestory windows high over the bar. Each
+  // wall is cut from one piece (its boards counted from the floor, so they meet the back wall's at the corner).
+  const WINDOWS = {
+    [-1]: [[0.6, 2.0, 0.55, 3.55], [2.2, 3.6, 0.55, 3.55], [3.8, 5.2, 0.55, 3.55], [5.9, 8.5, 3.42, 4.0], [8.6, 11.2, 3.42, 4.0]],
+    [1]: [[0.6, 2.1, 0.55, 3.55], [2.3, 3.8, 0.55, 3.55], [4.0, 5.5, 0.55, 3.55], [5.7, 7.2, 0.55, 3.55]],
+  };
+  const paneGlass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.95, roughness: 0.03, thickness: 0.02, ior: 1.3, transparent: true, opacity: 0.18 });
+  const sash = std(0xf7f4ec, { roughness: 0.55 });
+  const sideWall = (side) => {
+    const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(RD, 0); shape.lineTo(RD, WH); shape.lineTo(0, WH); shape.closePath();
+    for (const [a0, a1, y0, y1] of WINDOWS[side]) { const hole = new THREE.Path(); hole.moveTo(a0, y0); hole.lineTo(a0, y1); hole.lineTo(a1, y1); hole.lineTo(a1, y0); hole.closePath(); shape.holes.push(hole); }
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.2, bevelEnabled: false }), uv = geometry.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 1.04, uv.getY(i) / 2.08);
+    add(room, geometry, wallMat, [side > 0 ? RW / 2 : -RW / 2 - 0.2, 0, 0], { rot: [0, Math.PI / 2, 0] });
+    const x = side * (RW / 2 + 0.06);
+    for (const [a0, a1, y0, y1] of WINDOWS[side]) {
+      const zc = -(a0 + a1) / 2, w = a1 - a0, h = y1 - y0, yc = (y0 + y1) / 2;
+      add(room, new THREE.PlaneGeometry(w, h), paneGlass, [x, yc, zc], { cast: false, rot: [0, Math.PI / 2, 0] });
+      for (const z of [-a0, -a1]) add(room, box(0.1, h + 0.08, 0.06), sash, [x - side * 0.04, yc, z]);
+      for (const y of [y0, y1]) add(room, box(0.1, 0.06, w + 0.08), sash, [x - side * 0.04, y, zc]);
+      if (h > 1) {
+        add(room, box(0.06, 0.04, w), sash, [x - side * 0.04, y0 + h * 0.72, zc], { cast: true });                                 // transom bar
+        add(room, box(0.06, h, 0.035), sash, [x - side * 0.04, yc, zc], { cast: true });                                           // centre mullion
+        add(room, box(0.22, 0.04, w + 0.12), sash, [x - side * 0.1, y0 - 0.03, zc]);                                               // sill
+      } else for (let k = 1; k < 4; k++) add(room, box(0.06, h, 0.035), sash, [x - side * 0.04, yc, -a0 - (k * w) / 4], { cast: true });
+    }
+  };
   for (const side of [-1, 1]) {
-    add(room, tile(box(0.2, WH, RD), 1.04, 2.08, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]), wallMat, [side * (RW / 2 + 0.1), WH / 2, -RD / 2]);
+    sideWall(side);
     add(room, box(0.06, 0.18, RD), white, [side * (RW / 2 - 0.02), 0.09, -RD / 2]);                 // skirting
     add(room, box(0.12, 0.14, RD), timber, [side * (RW / 2 - 0.04), WH - 0.07, -RD / 2]);             // wall plate
   }
@@ -226,6 +256,8 @@ export async function buildRoom(q) {
     spray(out, palmLeaf, leafGreen, [x + 0.1, h - 0.1, z], 13, 2.3, [-0.1, 0.9]);
   };
   palm(-6.2, ZB - 3.6, 6.2); palm(6.6, ZB - 4.5, 7.2); palm(-3.4, ZB - 10, 5.5); palm(5.0, ZB - 11, 6.4);
+  palm(-7.4, -2.6, 6.4); palm(-8.6, -7.2, 7.4); palm(7.6, -2.2, 6.8); palm(8.8, -6.4, 7.6);                                     // past the side windows
+  add(out, box(60, 0.1, 40), std(0xeadfc4, { roughness: 1 }), [0, -0.09, -10], { cast: false });                                       // sand all round
   add(out, box(60, 0.05, 40), std(night ? 0x0e2a46 : 0x2a8fbf, { roughness: 0.2 }), [0, -0.3, ZB - 40], { cast: false });   // the sea
   add(out, box(60, 0.4, 2), std(0xe9dcb8), [0, -0.2, ZB - 19.8], { cast: false });                                         // the beach
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night), fog: false }));
@@ -535,9 +567,9 @@ export async function buildRoom(q) {
 
   // ----- light: late-afternoon sun raking in through the glass and across the floor, or a warm evening with the pool and the
   // lanterns lit. The fill is kept low so the sun's shadows stay deep; the room's own glow is added below from a picture of itself.
-  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfff2dc, night ? 0x2a1e16 : 0xc9a06c, night ? 0.16 : 0.42));
+  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfff6e6, night ? 0x2a1e16 : 0xd2ad78, night ? 0.16 : 0.62));
   const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xffe2b4, night ? 0.25 : 4.4);
-  sun.position.set(6, 14, ZB - 14); sun.target.position.set(-1, 0, -7);
+  sun.position.set(night ? 6 : 17, night ? 14 : 10, night ? ZB - 14 : -3.5); sun.target.position.set(-1, 0, -5.5);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
   Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 16, bottom: -16, near: 1, far: 70 });
   scene.add(sun, sun.target);
