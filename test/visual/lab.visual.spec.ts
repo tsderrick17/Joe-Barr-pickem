@@ -338,7 +338,13 @@ test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool
   // Only the things whose news is worth a glance carry a label; "Show labels" names everything.
   await expect(room.locator(".lab-room-tag")).toHaveCount(3);
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
-  await expect(room.getByRole("button", { name: "Survivor" })).toContainText("of 10 alive");
+  await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
+  // The boards in the room show today's news themselves: the standings with the leader and you, and this week's lines with your picks lit.
+  const board = page.locator(".lab-room-screen.is-board");
+  await expect(board.locator("li")).toHaveCount(5);
+  await expect(board.locator("li").first()).toContainText("Earl");
+  await expect(board.locator(".is-you")).toContainText("Walt (you)");
+  await expect(page.locator(".lab-room-screen.is-spreads .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
   await room.getByRole("button", { name: "Show labels" }).click();
   await expect(room.locator(".lab-room-tag")).toHaveCount(7);
   await room.getByRole("button", { name: "Hide labels" }).click();

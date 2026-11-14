@@ -3,7 +3,7 @@
 The Workshop Lab's clubhouse try-out shows the whole pool as one bright room, drawn in 3D and shown as a picture: by day, at night
 (the pool lit outside), and each again from Dec 7 with the Bowl Pool's bulletin board wheeled in. The pictures are
 `public/lab/clubhouse/room-{day,night}[-bowl].webp`; where each thing sits in them (the page lays a tap spot over each) is
-`src/lib/lab-clubhouse-room.json`. Both are made here. Nothing in this folder is part of the app build, and the app never runs it.
+`src/lib/lab-clubhouse-room.json`. Both are made here, with the four corners of each live screen (the Big Board and the spreads board), which the page draws today's news onto. Nothing in this folder is part of the app build, and the app never runs it.
 
 The room borrows the trophy renderer's modules (its materials and helpers) and its three.js install
 (`tools/trophy-render`, see its README).

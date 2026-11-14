@@ -19,6 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-14 - The clubhouse room shows today's news itself (Lab)
+
+The owner: the room has to work in practice, "a place you can belong in", for poker players who are boomers: show the news on the
+main screen and dive in on a tap; the approved designs (the tote Big Board, the Window, the Survivor table) were not in the room.
+So the view is now at standing eye level (it had looked down from the ceiling), and the two screens on the back wall are live:
+the picture leaves them dark and the page draws on them, in exact perspective, the Big Board's standings in the tote look (the top
+five, and you) and this week's lines with your own picks lit. Nobody else's unstarted pick is ever drawn. Because a whole room on a
+phone makes every object small, the headline of each (the leader and your place, picks owed, how many are still in Survivor and
+whether you are) is also in its label, in type big enough to read; a tap still opens the full design. Name plates for the ten
+Survivor seats were tried and dropped: at eye level the far side of the table is a thin strip and they piled up. The poker table
+lost its dealt hands (they could not show who is out) and gained cup holders, drinks and a blazer over a chair.
+
 ## 2026-11-13 - The clubhouse room made convincing, and laid out to be walked through (Lab)
 
 The owner asked for a pass on depth, texture, shadow and mood ("a grand, beautiful, magnificent space"), for fan blades that convince

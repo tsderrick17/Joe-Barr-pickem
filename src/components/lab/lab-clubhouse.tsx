@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom, WindowRoom } from "@/components/lab/lab-tote";
-import { LAB_VIEWER, labLeaderboard } from "@/lib/lab-clubhouse.js";
-import { labSurvivorAt } from "@/lib/lab-samples.js";
+import { LAB_VIEWER, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
+import { LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 
 /**
@@ -119,8 +119,9 @@ function PlaquesRoom() {
 /* ---------------------------------------------------------------- The room ---------------------------------------------------------------- */
 
 type Spot = { x: number; y: number; w: number; h: number };
-type Picture = { width: number; height: number; spots: Record<string, Spot> };
-const PICTURES = ROOM_PICTURES as Record<string, Picture>;
+type Point = number[];
+type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]> };
+const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, its name, and whether its label shows without "Show labels". */
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label?: "above" | "below"; always?: boolean }> = [
@@ -137,6 +138,58 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
 ];
 
 type Season = "regular" | "bowls";
+
+/**
+ * The CSS transform that lays a w by h box exactly over a four-cornered patch of the picture (top left, top right, bottom right, bottom
+ * left, in pixels): the boards in the picture are seen in perspective, so what is drawn on them has to be too.
+ */
+function onto(w: number, h: number, [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]: Point[]) {
+  const dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2, sx = x0 - x1 + x2 - x3, sy = y0 - y1 + y2 - y3, det = dx1 * dy2 - dx2 * dy1;
+  const g = (sx * dy2 - dx2 * sy) / det, k = (dx1 * sy - sx * dy1) / det;
+  const a = x1 - x0 + g * x1, b = x3 - x0 + k * x3, d = y1 - y0 + g * y1, e = y3 - y0 + k * y3;
+  return `matrix3d(${[a / w, d / w, 0, g / w, b / h, e / h, 0, k / h, 0, 0, 1, 0, x0, y0, 0, 1].join(",")})`;
+}
+
+/** A face drawn on one of the room's screens, sized in its own pixels and laid over the screen's corners in the picture. */
+function Screen({ corners, box, w, h, className, children }: { corners: Point[] | undefined; box: { width: number; height: number } | null; w: number; h: number; className: string; children: ReactNode }) {
+  if (!corners || !box) return null;
+  const transform = onto(w, h, corners.map(([x, y]) => [x * box.width, y * box.height] as Point));
+  return <div className={`lab-room-screen ${className}`} style={{ height: h, transform, width: w }}>{children}</div>;
+}
+
+/**
+ * Today's news in the room itself, the way it would be in a real clubhouse: the Big Board shows the standings (the top five, and you
+ * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
+ * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
+ */
+function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
+  const rows = labLeaderboard({ round: "regular", moment: "gameday" });
+  const top = rows.slice(0, 5);
+  const you = rows.find((row) => row.name === LAB_VIEWER);
+  const shown = you && !top.includes(you) ? [...top.slice(0, 4), you] : top;
+  const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
+  return (
+    <div aria-hidden="true" className="lab-room-live">
+      <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
+        <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS</span></header>
+        <ol>
+          {shown.map((row) => (
+            <li className={row.name === LAB_VIEWER ? "is-you" : ""} key={row.name}>
+              <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name === LAB_VIEWER ? `${row.name} (you)` : row.name}</span><b>{row.wins}</b>
+            </li>
+          ))}
+        </ol>
+      </Screen>
+      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={93} w={360}>
+        {LAB_SLATE.map((game) => {
+          const pick = mine.find((team) => team === game.away || team === game.home);
+          const team = pick ?? game.favourite;
+          return <p className={pick ? "is-picked" : ""} key={game.id}><b>{team}</b><span>{labLineFor(game, team)}</span>{pick ? <small>YOURS</small> : null}</p>;
+        })}
+      </Screen>
+    </div>
+  );
+}
 
 /** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Window. */
 function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
@@ -159,17 +212,29 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
   const you = rows.find((row) => row.name === LAB_VIEWER);
   const seats = labSurvivorAt(9);
   const news: Partial<Record<string, string>> = {
-    board: `Leader: ${rows[0].name} · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`,
+    board: `${rows[0].name} leads · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`,
     sportsbook: allIn ? "All picks in" : "A pick is owed",
-    survivor: `${seats.filter((seat) => !seat.out).length} of ${seats.length} alive`,
+    survivor: `${seats.filter((seat) => !seat.out).length} of ${seats.length} still in · ${seats.find((seat) => seat.name === LAB_VIEWER)?.out ? "You’re out" : "You’re in"}`,
     bowl: "Open now",
   };
   const spots = SPOTS.filter(({ spot }) => picture.spots[spot]);
+  const room = useRef<HTMLElement>(null);
+  const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
+  useLayoutEffect(() => {
+    const node = room.current;
+    if (!node) return;
+    const measure = () => setFrame({ width: node.clientWidth, height: node.clientHeight });
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(node);
+    return () => watch.disconnect();
+  }, []);
   return (
     <>
-      <nav aria-label="Clubhouse rooms" className="lab-room" style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
+      <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
+        <RoomNews frame={frame} picture={picture} />
         {spots.map(({ spot, room, name, tag, label, always }) => {
           const at = picture.spots[spot];
           const style = { left: `${(at.x + at.w / 2) * 100}%`, top: `${(at.y + at.h / 2) * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
