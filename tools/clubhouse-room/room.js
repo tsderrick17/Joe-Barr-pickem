@@ -1,7 +1,7 @@
 // The clubhouse: a grand beach bungalow and the ultimate man cave, seen at eye level from just inside the front, looking down the room. Nothing
 // in it is turned to the camera by a trick: what has to be read hangs on the wall that faces you, and the side walls carry the
 // things that look right in perspective.
-//  - Ceiling: natural beach-hut thatch laid in courses, no beams, two big palm-leaf fans down the middle.
+//  - Ceiling: natural beach-hut thatch laid in courses, three dark timber trusses and a ridge beam up high, two big palm-leaf fans.
 //  - Back wall, left: where picks are made, face on: the Big Board, one wide board of spreads under it, the counter. No sign.
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
 //  - Side walls: full of windows (four tall on the right, three tall at the front left and a clerestory strip over the bar); the
@@ -189,6 +189,30 @@ export async function buildRoom(q) {
     course.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(along, rise, new THREE.Vector3().crossVectors(along, rise)));
     room.add(course);
   }
+  // Up high, three timber trusses span the room under the thatch, with a ridge beam along the top: dark-stained, eased edges, black
+  // iron straps at the joints. Each is a tie beam across the room at the top of the walls, rafters following the roof, a king post up
+  // the middle and two braces. They stand clear of the fans and above the boards.
+  const beamWood = new THREE.MeshStandardMaterial({ map: (() => { const c = canvas(256, 64), g = c.getContext("2d"); g.fillStyle = "#4a2f1c"; g.fillRect(0, 0, 256, 64); for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(${rand() < 0.5 ? "30,18,10" : "110,74,44"},${0.15 + rand() * 0.2})`; g.lineWidth = 1 + rand() * 2; const y = rand() * 64; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(80, y + (rand() - 0.5) * 6, 170, y + (rand() - 0.5) * 6, 256, y); g.stroke(); } return texture(c); })(), roughness: 0.62 });
+  const strap = std(0x1a1714, { roughness: 0.5, metalness: 0.5 });
+  const beam = (from, to, w, h) => {
+    const a = new THREE.Vector3(...from), b = new THREE.Vector3(...to), mid = a.clone().add(b).multiplyScalar(0.5), len = a.distanceTo(b);
+    const mesh = add(room, rbox(len, h, w, 0.025), beamWood, [mid.x, mid.y, mid.z]);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), b.clone().sub(a).normalize());
+    return mesh;
+  };
+  const TIE = WH + 0.18, under = 0.16;                                                                                                  // rafters sit just under the thatch
+  for (const z of [-2.6, -7.3, -11.6]) {
+    const right = z < -8 && z > -11.8 ? X1 - 1.8 : X1;                                                                                 // the tie beam meets the chimney where it stands
+    beam([X0, TIE, z], [right, TIE, z], 0.2, 0.26);
+    const peak = RIDGE - under - 0.12;
+    for (const side of [-1, 1]) beam([side * (RW / 2), WH + 0.05, z], [0, peak, z], 0.18, 0.22);
+    beam([0, TIE + 0.13, z], [0, peak, z], 0.18, 0.2);                                                                                  // king post
+    for (const side of [-1, 1]) beam([0, TIE + 0.5, z], [side * 1.55, TIE + 0.13 + (RIDGE - WH) * (1 - 1.55 / (RW / 2)) - 0.25, z], 0.14, 0.16);
+    for (const x of [X0 + 0.3, X1 - 0.3, 0]) if (x <= right - 0.2) add(room, box(0.3, 0.36, 0.22), strap, [x, TIE, z], { cast: false });
+    add(room, box(0.24, 0.24, 0.2), strap, [0, peak - 0.05, z], { cast: false });
+  }
+  beam([0, RIDGE - under - 0.12, -0.1], [0, RIDGE - under - 0.12, ZB + 0.1], 0.22, 0.28);                                          // ridge beam
+
   // Cabana fans: two big ones down the middle of the room. Each blade is a modelled palm leaf (pleated, scalloped at the edge,
   // keeled along its rib) carried on a cast brass iron; a turned timber housing banded in brass, a frosted light under it.
   const { leaf, rib } = palmBlade();

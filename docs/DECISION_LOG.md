@@ -31,7 +31,9 @@ whether you are) is also in its label, in type big enough to read; a tap still o
 Survivor seats were tried and dropped: at eye level the far side of the table is a thin strip and they piled up. The poker table
 lost its dealt hands (they could not show who is out) and gained cup holders, drinks and a blazer over a chair. At the owner's
 word ("more windows, sunlight and airiness") the side walls are now full of windows (four tall ones on the right, three on the left
-at the front and a clerestory strip high over the bar) and the sun comes in through them, laying the window shapes across the floor.
+at the front and a clerestory strip high over the bar) and the sun comes in through them, laying the window shapes across the floor. And, at the owner's word ("some convincing beams up high"), three dark-stained timber
+trusses (tie beam, rafters, king post and braces, iron straps) and a ridge beam now span the room under the thatch. This
+supersedes the earlier "no beams" verdict, which was about beams in place of thatch; the thatch stays.
 
 ## 2026-11-13 - The clubhouse room made convincing, and laid out to be walked through (Lab)
 
