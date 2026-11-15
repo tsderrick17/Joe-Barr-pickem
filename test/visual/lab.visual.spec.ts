@@ -155,7 +155,7 @@ for (const [shot, choices, ticket] of TOTE_SHOTS) {
   }
 }
 
-test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and lines up every W and L", async ({ page }) => {
+test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and starts a shown pick where a hidden one's dots start", async ({ page }) => {
   await openLab(page, "tote");
   const pad = page.locator(".lab-tote");
   await expect(pad.locator("thead th")).toHaveText(["W", "PLAYER", "PICK 1", "PICK 2", "SURVSurvivor"]);
@@ -166,12 +166,26 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
-  // Every W and L in a pick column sits on the same centre line.
+  // Game day has both in a column: every shown pick starts on one left edge, the same edge a hidden pick's three dots start on,
+  // and the dots sit centred in their cell. A result is in the type (no letter): said aloud as win or loss.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
   for (const column of [3, 4]) {
-    const centres = await pad.locator(`tbody td:nth-child(${column}) .lab-tote-mark`).evaluateAll((marks) => marks.map((mark) => Math.round(mark.getBoundingClientRect().left + mark.getBoundingClientRect().width / 2)));
-    expect(centres.length).toBe(10);
-    expect(new Set(centres).size).toBe(1);
+    const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left)));
+    const shown = await lefts(".lab-tote-slip"), hidden = await lefts(".lab-tote-cover i:first-child");
+    expect(shown.length).toBeGreaterThan(0);
+    expect(new Set([...shown, ...hidden]).size).toBe(1);
   }
+  const off = await pad.locator(".lab-tote-cover").first().evaluate((cover) => {
+    const cell = cover.closest("td")!.getBoundingClientRect(), first = cover.firstElementChild!.getBoundingClientRect(), last = cover.lastElementChild!.getBoundingClientRect();
+    return Math.abs((first.left + last.right) / 2 - (cell.left + cell.right) / 2);
+  });
+  expect(off).toBeLessThanOrEqual(1.5);
+  await expect(pad.locator(".lab-tote-slip.is-w").first()).toContainText("win");
+  // Survivor is the team's logo, centred in its column whatever the result.
+  const logos = await pad.locator(".lab-tote-logo").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(), cell = node.closest("td")!.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (cell.left + cell.right) / 2); }));
+  expect(logos.length).toBeGreaterThan(1);
+  for (const gap of logos) expect(gap).toBeLessThanOrEqual(1.5);
+  await expect(pad.getByRole("img", { name: /, Survivor (win|loss)$/ }).first()).toBeVisible();
 });
 
 test("the Big Board turns to the season standings with one tap on the board", async ({ page }) => {
@@ -409,7 +423,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // Everything that can be tapped wears a name plate with an arrow, and no two plates overlap; the ones with news carry a line of it.
-  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›", "Rules›"]);
+  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›✉", "Rules›"]);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(0);
@@ -419,11 +433,11 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
   // The boards in the room show today's news themselves: the leader always on the top line, then the rest of the standings a page at
-  // a time (nine players: three even pages of three), and the lines running across the spreads board like a ticker, your own picks lit.
+  // a time (nine players: a page of five, then four), and the lines running across the spreads board like a ticker, your own picks lit.
   const board = page.locator(".lab-room-screen.is-board");
   await expect(board.locator(".lab-room-leader")).toHaveText("LEADEREarl15");
-  await expect(board.locator("li")).toHaveCount(3);
-  await expect(board.locator("header")).toContainText("1/3");
+  await expect(board.locator("li")).toHaveCount(5);
+  await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   await expect(page.locator(".lab-ticker .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/, /PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
@@ -544,6 +558,22 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
 });
 
+test("the room's labels are the buttons: tapping a label opens its room, and the chat's walks you up to the laptop first", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  // The label itself takes the tap (it used to let it through to whatever was behind it).
+  await room.locator(".lab-room-spot.is-trophies .lab-room-tag").click();
+  await expect(page.getByRole("heading", { name: "Trophy Room", level: 3 })).toBeVisible();
+  await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+  // The new-message sign rides on the Chat label.
+  await expect(room.locator(".lab-room-spot.is-chat .lab-room-tag").getByRole("img", { name: "New message" })).toBeVisible();
+  // With motion allowed, the chat label zooms the picture in on the laptop, then the chat opens.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await room.locator(".lab-room-spot.is-chat .lab-room-tag").click();
+  await expect(room.locator(".lab-room-view.is-zooming")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pool chat", level: 3 })).toBeVisible();
+});
+
 test("the room's Big Board keeps the leader on top and turns a page of standings every 15 seconds, and the spreads run across like a ticker that holds still for reduced motion", async ({ page }) => {
   await page.clock.install();
   await openLab(page, "clubhouse");
@@ -551,14 +581,11 @@ test("the room's Big Board keeps the leader on top and turns a page of standings
   await expect(board.locator("li").first()).toContainText("Dottie");
   // Not yet: the first page stays up for the full 15 seconds.
   await page.clock.runFor(14_000);
-  await expect(board.locator("header")).toContainText("1/3");
-  // Then the next page, and the next, then back to the first; the leader stays on the top line throughout.
+  await expect(board.locator("header")).toContainText("1/2");
+  // Then the next page, then back to the first; the leader stays on the top line throughout.
   await page.clock.runFor(1_000);
-  await expect(board.locator("header")).toContainText("2/3");
-  await expect(board.locator(".lab-room-leader")).toContainText("Earl");
-  await page.clock.runFor(15_000);
-  await expect(board.locator("header")).toContainText("3/3");
-  await expect(board.locator("li")).toHaveCount(3);
+  await expect(board.locator("header")).toContainText("2/2");
+  await expect(board.locator("li")).toHaveCount(4);
   await expect(board.locator("li").last()).toContainText("Gus");
   await expect(board.locator(".lab-room-leader")).toContainText("Earl");
   await page.clock.runFor(15_000);

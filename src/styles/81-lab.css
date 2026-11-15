@@ -95,9 +95,9 @@
 .lab-room-screen { background: rgb(7 10 9); color: var(--cw-cream); font-family: "Courier New", monospace; font-weight: 700; left: 0; overflow: hidden; position: absolute; top: 0; transform-origin: 0 0; }
 .lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 4px 12px 2px; }
 .lab-room-screen.is-board header b { font-family: var(--font-serif); font-size: 22px; letter-spacing: .14em; }
-.lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; }
+.lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; white-space: nowrap; }
 .lab-room-screen.is-board ol { display: grid; gap: 2px; list-style: none; margin: 0; padding: 0; }
-.lab-roll { height: 102px; margin: 3px 8px 0; overflow: hidden; }
+.lab-roll { height: 130px; margin: 3px 8px 0; overflow: hidden; }
 .lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 24px; padding: 0 10px; }
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
@@ -108,22 +108,23 @@
 .lab-room-screen.is-spreads span { color: rgb(255 176 46); font-size: 22px; line-height: 1.1; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-spreads small { color: rgb(190 240 200); font-size: 11px; letter-spacing: .1em; }
 .lab-room-screen.is-spreads p.is-picked { background: rgb(22 58 38); box-shadow: inset 0 0 0 2px rgb(120 220 150), 0 0 10px rgba(120, 220, 150, .5); }
-.lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; transform: translate(-50%, -50%); }
+.lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
 .lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 40% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
 @keyframes room-owed { from { opacity: .55; } to { opacity: 1; } }
-.lab-room-tag { background: rgba(16, 32, 24, .9); border: 1px solid rgba(201, 164, 95, .8); border-radius: 6px; color: var(--cw-cream); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 3px 7px; pointer-events: none; position: absolute; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.lab-room-tag { background: linear-gradient(rgb(255 250 236), rgb(240 226 190)); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 3px 0 rgb(120 88 30), 0 6px 10px rgba(0, 0, 0, .45); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 .lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
-.lab-room-tag i { color: var(--cw-gold-lt); font-size: 1.05em; font-style: normal; line-height: 1; }
-.lab-room-tag:not(.has-news) { border-radius: 999px; padding: 3px 9px; }
+.lab-room-tag i { background: rgb(22 44 32); border-radius: 50%; color: rgb(255 230 160); display: inline-grid; font-size: .95em; font-style: normal; height: 1.25em; line-height: 1; place-items: center; width: 1.25em; }
+.lab-room-spot:active .lab-room-tag { box-shadow: 0 1px 0 rgb(120 88 30), 0 2px 4px rgba(0, 0, 0, .4); margin-top: 2px; }
+.lab-room-tag:not(.has-news) { border-radius: 999px; padding: 5px 10px; }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
 .lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
-.lab-room-spot.is-sportsbook .lab-room-tag { transform: translateX(-28%); }
-.lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
+.lab-room-spot.is-sportsbook .lab-room-tag { transform: translateX(-12%); }
+.lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -10px; top: -12px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
 .lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
 /* Your ticket, pinned to the bottom of every clubhouse screen: a lamp for each pick and the next deadline; it opens the Window. */
@@ -356,11 +357,12 @@
 .lab-tote .lab-tote-wins { color: rgb(255 176 46); font-family: "Courier New", monospace; font-weight: 900; text-align: center; text-shadow: 0 0 4px rgba(255, 160, 40, .9), 0 0 10px rgba(255, 140, 30, .5); }
 .lab-tote-name { font-weight: 800; letter-spacing: .06em; overflow: hidden; white-space: nowrap; }
 /* Team, line, lamp: the lamp slot has one width in every row, so the W and L line up down the column. */
-.lab-tote-slip { align-items: center; color: rgb(190 240 200); display: grid; font-family: "Courier New", monospace; gap: 3px; grid-template-columns: 1.5rem 1.8rem 1.3rem; justify-content: center; white-space: nowrap; }
+/* A shown pick starts where the three dots of a hidden one start (the dots sit centred), so a column reads down one left edge. Its
+   result is in the type itself, not a letter: a win glows green, a loss turns red and is struck through. */
+.lab-tote-slip { align-items: baseline; color: rgb(240 236 226); display: flex; font-family: "Courier New", monospace; gap: 3px; margin-left: calc(50% - .825rem - 4px); white-space: nowrap; }
+.lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+.lab-tote-slip.is-l { color: rgb(252 120 110); text-decoration: line-through; text-decoration-thickness: 1px; }
 .lab-tote-slip small { font-size: .7rem; opacity: .8; }
-.lab-tote-mark { border-radius: 2px; display: block; font-family: Georgia, serif; font-size: .95rem; font-weight: 700; height: 1.3rem; line-height: 1.3rem; text-align: center; width: 1.3rem; }
-.lab-tote-mark.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
-.lab-tote-mark.is-l { color: rgb(252 120 110); text-shadow: 0 0 6px rgba(252, 120, 110, .7); }
 /* Survivor: the real chip, centred in its column, its W or L lamp beside it. */
 .lab-tote .lab-tote-surv { text-align: center; }
 /* The chip's W or L sits on a small black lamp at its lower right, inside the column. */
@@ -478,9 +480,17 @@
 .lab-ticket-switch { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
-.lab-tote-slip.is-survivor { grid-template-columns: 24px 1.3rem; }
-.lab-tote-logo { display: grid; place-items: center; }
+/* Survivor: the team's logo, always centred. A win is a lit green ring; a loss is a red ring with a bar through a greyed logo. */
+.lab-tote-logo { border-radius: 50%; display: inline-grid; height: 30px; place-items: center; position: relative; vertical-align: middle; width: 30px; }
+.lab-tote-logo.is-w { box-shadow: 0 0 0 2px rgb(110 231 150), 0 0 8px rgba(110, 231, 150, .8); }
+.lab-tote-logo.is-l { box-shadow: 0 0 0 2px rgb(252 120 110); }
+.lab-tote-logo.is-l img { filter: grayscale(1); opacity: .5; }
+.lab-tote-logo.is-l::after { background: rgb(252 120 110); content: ""; height: 2px; left: -1px; position: absolute; right: -1px; top: calc(50% - 1px); transform: rotate(-45deg); }
 .lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: auto 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .12em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-roll ol { align-content: space-evenly; height: 100%; }
+/* The room's picture and everything on it move as one, so a tap on the chat can walk you up to the laptop. */
+.lab-room-view { inset: 0; position: absolute; transition: transform .6s cubic-bezier(.5, 0, .75, .45); }
+.lab-room-view.is-zooming { transform: scale(9); }
+.lab-room-view.is-zooming .lab-room-tag { opacity: 0; transition: opacity .15s; }

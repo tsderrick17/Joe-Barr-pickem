@@ -76,10 +76,10 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
                 <td className="lab-tote-pick" key={slat?.gameId ?? `empty-${index}`}>
                   {slat === null ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>)
                     : slat.hidden ? <HiddenPick /> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
-                      <span className="lab-tote-slip">
+                      <span className={`lab-tote-slip ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`}>
                         <b>{slat.team}</b>
                         <small>{slat.line}</small>
-                        <span aria-label={slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"} className={`lab-tote-mark ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`} role="img">{slat.result ?? ""}</span>
+                        <span className="sr-only">{slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"}</span>
                       </span>
                     ))}
                 </td>
@@ -90,10 +90,7 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
                   : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
                   : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
-                    <span className="lab-tote-slip is-survivor">
-                      <span aria-label={teamName(survivor.team)} className="lab-tote-logo" role="img"><Logo team={survivor.team} /></span>
-                      <span aria-label={survivor.result === "W" ? "Survivor win" : survivor.result === "L" ? "Survivor loss" : "not final"} className={`lab-tote-mark ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img">{survivor.result ?? ""}</span>
-                    </span>
+                    <span aria-label={`${teamName(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} className={`lab-tote-logo ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img"><Logo team={survivor.team} /></span>
                   ))}
               </td>
             </tr>

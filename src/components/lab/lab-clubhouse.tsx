@@ -188,8 +188,8 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
-/** The Big Board in the room: the leader always on the top line, then up to four players a page, a new page every 15 seconds. */
-const BOARD_PAGE = 4;
+/** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 15 seconds. */
+const BOARD_PAGE = 5;
 const BOARD_PAGE_MS = 15_000;
 
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
@@ -210,8 +210,8 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
   const lines = [...LAB_SLATE, ...LAB_SLATE];
   return (
     <div aria-hidden="true" className="lab-room-live">
-      <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
-        <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS · {page + 1}/{pages}</span></header>
+      <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
+        <header><b>PICK’EM</b><span>WEEK 10 · {page + 1}/{pages}</span></header>
         <p className="lab-room-leader">{leaders.length === 1 ? <><i>LEADER</i><span>{leaders[0].name}</span></> : <><i>{leaders.length} LEADERS</i><span /></>}<b>{leaders[0].wins}</b></p>
         <div className="lab-roll">
           <ol data-page={page + 1}>
@@ -223,7 +223,7 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
           </ol>
         </div>
       </Screen>
-      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={93} w={360}>
+      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={103} w={360}>
         <div className="lab-ticker">
           {lines.map((game, index) => {
             const pick = mine.find((team) => team === game.away || team === game.home);
@@ -273,22 +273,35 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
     watch.observe(node);
     return () => watch.disconnect();
   }, []);
+  // The chat is on the laptop on the bar: tapping it walks you up to the screen (the picture zooms in on the laptop) and then the
+  // chat opens. With reduced motion on it just opens.
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
+  const go = (spot: string, next: Room, ticket?: boolean) => {
+    const at = picture.spots[spot];
+    if (spot !== "chat" || !at || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onEnter(next, ticket); return; }
+    setZoom({ x: at.x + at.w / 2, y: at.y + at.h / 2 });
+  };
   return (
     <>
       <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
+        <div className={`lab-room-view${zoom ? " is-zooming" : ""}`} onTransitionEnd={(event) => { if (zoom && event.target === event.currentTarget) onEnter("chat"); }} style={zoom ? { transformOrigin: `${zoom.x * 100}% ${zoom.y * 100}%` } : undefined}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
         <RoomNews frame={frame} picture={picture} />
         {spots.map(({ spot, room, name, tag, label, ticket }) => {
           const at = picture.spots[spot];
-          const style = { left: `${(at.x + at.w / 2) * 100}%`, top: `${(at.y + at.h / 2) * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
+          // Placed by its corner, with no transform: a transform would trap each label under the spots drawn after it.
+          const style = { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
           return (
-            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => onEnter(room, ticket)} style={style} type="button">
-              {spot === "chat" && mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
-              <span aria-hidden="true" className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}><b>{tag ?? name}<i>›</i></b>{news[spot] ? <small>{news[spot]}</small> : null}</span>
+            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => go(spot, room, ticket)} style={style} type="button">
+              <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}>
+                <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
+                {spot === "chat" && mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
+              </span>
             </button>
           );
         })}
+        </div>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
         {(["board", "survivor", "trophies", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
