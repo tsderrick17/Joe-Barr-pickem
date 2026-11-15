@@ -91,7 +91,7 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
                   : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
                     <span className="lab-tote-slip is-survivor">
-                      <b>{survivor.team}</b>
+                      <span aria-label={teamName(survivor.team)} className="lab-tote-logo" role="img"><Logo team={survivor.team} /></span>
                       <span aria-label={survivor.result === "W" ? "Survivor win" : survivor.result === "L" ? "Survivor loss" : "not final"} className={`lab-tote-mark ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img">{survivor.result ?? ""}</span>
                     </span>
                   ))}
