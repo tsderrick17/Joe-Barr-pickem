@@ -139,7 +139,6 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
   const [picks, setPicks] = useState(ticket.picks);
   const [chip, setChip] = useState(ticket.survivor);
   const survivor = { ...labSurvivorBoard({ moment, viewer }), used: labSurvivorAt(9).find((seat) => seat.name === viewer)?.weeks.length ?? 0 };
-  const alive = labSurvivorAt(9).filter((seat) => !seat.out).length;
   const pickingSurvivor = !champion && !survivor.out;
   const [mode, setMode] = useState<"pickem" | "survivor">("pickem");
 
