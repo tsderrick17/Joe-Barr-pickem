@@ -148,7 +148,8 @@ function PlaquesShelf() {
 
 type Spot = { x: number; y: number; w: number; h: number };
 type Point = number[];
-type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]> };
+type Motion = { frames: number; patches: Array<{ name: string; x: number; y: number; w: number; h: number }> };
+type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]>; motion?: Motion };
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
@@ -240,6 +241,28 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
   );
 }
 
+/**
+ * The room breathes a little: the fans turn slowly and the indoor plants sway. Each moving thing is a small patch laid exactly over
+ * its place in the picture, playing a short loop of frames drawn from the same 3D room (one strip per patch, so nothing is computed
+ * on the phone). The still picture is frame 0, so with reduced motion on (or before a strip has loaded) the room simply holds still.
+ */
+function RoomMotion({ name }: { name: string }) {
+  return (
+    <div aria-hidden="true" className="lab-room-live">
+      {(["day", "night"] as const).flatMap((time) => {
+        const motion = PICTURES[`${time}${name}`]?.motion;
+        return (motion?.patches ?? []).map((patch) => (
+          <span
+            className={`lab-room-motion is-${time} is-${patch.name.replace(/\d+$/, "")}`}
+            key={`${time}-${patch.name}`}
+            style={{ backgroundImage: `url(/lab/clubhouse/room-${time}${name}-${patch.name}.webp)`, height: `${patch.h * 100}%`, left: `${patch.x * 100}%`, top: `${patch.y * 100}%`, width: `${patch.w * 100}%`, ["--frames" as string]: motion!.frames }}
+          />
+        ));
+      })}
+    </div>
+  );
+}
+
 /** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
 function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
   const lamps: LampState[] = allIn ? ["in", "in", "in"] : ["in", "in", "off"];
@@ -293,6 +316,7 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
       <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
+        <RoomMotion name={key} />
         <RoomNews frame={frame} picture={picture} />
         {spots.map(({ spot, room, name, tag, label, at: tall, wideAt, ticket }) => {
           const free = wide ? wideAt ?? tall : tall;

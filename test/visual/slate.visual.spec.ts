@@ -128,6 +128,17 @@ for (const width of [360, 390, 700, 1280]) {
   }
 }
 
+// The classic / clubhouse button is the Commissioner's only: a player never sees it.
+test("a player has no clubhouse button beside the day/night button", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day", "visual-player");
+  await serve(page, "upcoming-picked");
+  await page.goto("/board");
+  await expect(page.locator(".slate-game-row").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /Use (light|dark) mode/ }).first()).toBeAttached();
+  await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
+});
+
 // Home teams are capitalised and away teams are not, in every game state: a game that has started or finished keeps its casing.
 for (const scenario of ["upcoming-picked", "live-survivor", "complete-survivor"]) {
   test(`Slate keeps home capitals and away lowercase on the compact names (${scenario})`, async ({ page }) => {

@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The room breathes; brighter, softer light; a trophy shelf; the Commissioner's light switch (Lab)
+
+Owner: shadows too harsh and late in the day; the Trophy Room sign implied a hallway; plants more real, swaying; fans spinning; all
+lightweight. The room is lit as a bright mid-afternoon: more fill from the sky, a softer and higher sun, edges darkened less. The
+painted Trophy Room sign is now a walnut shelf on the chimney with one gilt cup (it still opens the Trophy Room). The potted palm grows
+as a kentia does (older fronds arching low, younger ones upright, two greens, its own stems). The fans turn slowly and the indoor
+plants sway: drawn in advance as a loop of 16 small frames per moving thing (one strip each, about 230 KB a picture in all), laid
+exactly over its place in the picture and stepped through by the browser alone, with no 3D and no script on the phone; with reduced
+motion on they are hidden and the room holds still. The lamps are small glass lenses (a highlight, a dark bezel).
+Commissioner only, for now: an unlabeled light switch beside the day/night button swaps between the classic site (switch down) and
+the clubhouse in the Lab (switch up, glowing). Players never see it (a Slate test checks). Plan for more Lab states and the switch on
+real data: LAB_STATES_PLAN.md (outside the repo). Lab only.
+
 ## 2026-11-15 - Lamps at the top of the ticket; a desktop clubhouse (Lab)
 
 Owner: play into the lamps, but not a lamp in every box. The top right of your ticket has one lamp per pick, 1:1 with Pick 1, Pick 2

@@ -456,11 +456,11 @@
 .lab-tote-links button i { color: var(--cw-gold-lt); font-style: normal; }
 /* The lamp, one per pick, the same everywhere: dark (no pick), a gold ring (picked, not sent), lit yellow (in), green (won), red
    (lost). Survivor's is a poker chip: the same lamp inside the dashed rim Survivor wears across the pool. */
-.lab-lamp { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .35); display: inline-block; flex: none; height: .85rem; width: .85rem; }
-.lab-lamp.is-picked { box-shadow: inset 0 0 0 3px rgb(255 190 60); }
-.lab-lamp.is-in { background: rgb(255 200 40); box-shadow: 0 0 7px rgba(255, 190, 40, .9); }
-.lab-lamp.is-won { background: rgb(70 220 120); box-shadow: 0 0 7px rgba(70, 220, 120, .9); }
-.lab-lamp.is-lost { background: rgb(240 80 70); box-shadow: 0 0 7px rgba(240, 80, 70, .85); }
+.lab-lamp { background: rgb(34 30 22) radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 42%); border: 1px solid rgb(8 10 9); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .35); display: inline-block; flex: none; height: .85rem; width: .85rem; }
+.lab-lamp.is-picked { box-shadow: inset 0 0 0 2.5px rgb(255 200 60), 0 0 4px rgba(255, 190, 40, .45); }
+.lab-lamp.is-in { background-color: rgb(255 200 40); box-shadow: 0 0 7px rgba(255, 190, 40, .9); }
+.lab-lamp.is-won { background-color: rgb(70 220 120); box-shadow: 0 0 7px rgba(70, 220, 120, .9); }
+.lab-lamp.is-lost { background-color: rgb(240 80 70); box-shadow: 0 0 7px rgba(240, 80, 70, .85); }
 .lab-lamp.is-survivor { outline: 2px dashed rgba(240, 236, 226, .85); outline-offset: 2px; }
 .lab-lamps { align-items: start; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; list-style: none; margin: 0; max-width: 60%; padding: 0; }
 .lab-bigboard .lab-lamps li { border: 0; display: grid; gap: 4px; grid-template-columns: auto; justify-items: center; padding: 0; }
@@ -474,3 +474,12 @@
 /* On a desktop the lobby has room for the ticket under the picture, so it never sits on the room itself. */
 .lab-clubhouse:has(.lab-room.is-wide) .lab-room-ticket { margin-top: 14px; position: static; }
 .lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; top: auto; }
+/* What moves in the room: a strip of frames per patch, stepped through in a loop. The fans turn one blade's worth every loop (so it
+   joins up) and the plants sway and come back. Held still, and not even loaded, when reduced motion is asked for. */
+.lab-room-motion { animation: lab-room-frames 3.2s steps(var(--frames), jump-none) infinite; background-position: 0 0; background-repeat: no-repeat; background-size: calc(var(--frames) * 100%) 100%; display: var(--room-day-display); position: absolute; }
+.lab-room-motion.is-night { display: var(--room-night-display); }
+.lab-room-motion.is-plant { animation-duration: 6.4s; }
+@keyframes lab-room-frames { to { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .lab-room-motion { display: none; } }
+/* The lamp is a small glass lens in a dark bezel: a soft highlight at its top left whatever its colour, so lit and unlit read as the
+   same object, and the lit ones glow. */

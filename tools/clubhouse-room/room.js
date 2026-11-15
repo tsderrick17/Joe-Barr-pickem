@@ -97,7 +97,7 @@ export async function buildRoom(q) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.08));
+  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.16));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(scale); renderer.setSize(W, H, false);
   document.body.appendChild(renderer.domElement);
@@ -124,14 +124,17 @@ export async function buildRoom(q) {
   const group = (name) => { const g = new THREE.Group(); scene.add(g); if (name) spots[name] = g; return g; };
   const room = group(null);
   const veil = [];      // things with no surface of their own (flames), left out when the contact shadows are worked out
+  // What moves in the room, gently: each fan's blade arms (they turn) and each indoor plant's leaves (they sway). The page plays a
+  // short loop of small pictures over these places; see the end of this file.
+  const movers = [];
   // every leaf in and around the room is grown from the one modelled frond
-  const leafGreen = new THREE.MeshStandardMaterial({ color: 0x3f8a48, roughness: 0.55, side: THREE.DoubleSide }), leafDeep = new THREE.MeshStandardMaterial({ color: 0x2a6a36, roughness: 0.38, side: THREE.DoubleSide });
+  const leafGreen = new THREE.MeshStandardMaterial({ color: 0x3f8a48, roughness: 0.55, side: THREE.DoubleSide }), leafDeep = new THREE.MeshStandardMaterial({ color: 0x2a6a36, roughness: 0.38, side: THREE.DoubleSide }), leafFresh = new THREE.MeshStandardMaterial({ color: 0x5aa052, roughness: 0.5, side: THREE.DoubleSide });
   const palmLeaf = frond({ L: 1.3, HW: 0.21, pleats: 30, droop: 0.55, keel: 0.5, depth: 0.01, scallop: 0.1, shape: 0.6, NU: 240, NV: 64 });
   const pottedLeaf = frond({ L: 1.3, HW: 0.17, pleats: 16, droop: 0.6, keel: 0.35, depth: 0.004, scallop: 0.04, shape: 0.6, NU: 200, NV: 48 });   // softer pleats: read as leaflets, not blocks
   const broadLeaf = frond({ L: 0.46, HW: 0.21, pleats: 7, droop: 0.07, keel: 0.22, depth: 0.004, scallop: 0.2, shape: 0.5, NU: 90, NV: 40 });
-  const spray = (parent, geometry, material, [x, y, z], count, size, lift) => {
+  const spray = (parent, geometry, material, [x, y, z], count, size, lift, into) => {
     for (let f = 0; f < count; f++) {
-      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.set(0, (f / count) * Math.PI * 2 + rand() * 0.5, lift[0] + rand() * (lift[1] - lift[0])); g.scale.setScalar(size * (0.78 + rand() * 0.34)); parent.add(g);
+      const g = new THREE.Group(); into?.push(g); g.position.set(x, y, z); g.rotation.set(0, (f / count) * Math.PI * 2 + rand() * 0.5, lift[0] + rand() * (lift[1] - lift[0])); g.scale.setScalar(size * (0.78 + rand() * 0.34)); parent.add(g);
       add(g, geometry, material, [0, 0, 0]);
     }
   };
@@ -222,6 +225,7 @@ export async function buildRoom(q) {
   const housing = new THREE.LatheGeometry([[0, 0.2], [0.06, 0.2], [0.075, 0.15], [0.13, 0.12], [0.21, 0.07], [0.235, 0], [0.22, -0.07], [0.16, -0.11], [0, -0.11]].map(([r, y]) => new THREE.Vector2(r, y)), 40);
   // Each hangs on a downrod from the ridge beam, half-way between two trusses, so the blades turn clear of every timber.
   for (const [fx, fz, spin] of [[0, -4.95, 0.3], [0, -9.45, 0.9]]) {
+    const arms = [];
     const top = RIDGE - under - 0.12 - 0.14, hub = 5.05, drop = top - hub;
     add(room, cyl(0.022, 0.022, drop, 10), brass, [fx, top - drop / 2, fz]);
     add(room, cyl(0.05, 0.13, 0.12, 24), brass, [fx, top - 0.06, fz]);                                                                 // canopy under the ridge beam
@@ -230,13 +234,14 @@ export async function buildRoom(q) {
     const shade = add(room, new THREE.SphereGeometry(0.17, 24, 16), glow(0xffe9c4, night ? 3.2 : 1.6), [fx, hub - 0.15, fz], { cast: false }); shade.scale.set(1, 0.62, 1);
     add(room, cyl(0.02, 0.012, 0.04, 12), brass, [fx, hub - 0.27, fz], { cast: false });
     for (let b = 0; b < 5; b++) {
-      const arm = new THREE.Group(); arm.position.set(fx, hub - 0.02, fz); arm.rotation.set(0, (b / 5) * Math.PI * 2 + spin, -0.1); room.add(arm);
+      const arm = new THREE.Group(); arm.position.set(fx, hub - 0.02, fz); arm.rotation.set(0, (b / 5) * Math.PI * 2 + spin, -0.1); room.add(arm); arms.push(arm);
       add(arm, rbox(0.34, 0.03, 0.06, 0.012), brass, [0.33, -0.02, 0]);
       add(arm, rbox(0.22, 0.016, 0.14, 0.007), brass, [0.57, -0.035, 0]);
       for (const [sx, sz] of [[0.5, -0.04], [0.5, 0.04], [0.64, 0]]) add(arm, new THREE.SphereGeometry(0.011, 8, 6), brass, [sx, -0.046, sz], { cast: false });
       const blade = new THREE.Group(); blade.position.set(0.44, 0, 0); blade.rotation.x = 0.2; arm.add(blade);
       add(blade, leaf, bladeMat, [0, 0, 0]); add(blade, rib, ribMat, [0, 0, 0], { cast: false });
     }
+    movers.push({ name: `fan${movers.length}`, kind: "spin", parts: arms });
     const l = new THREE.PointLight(0xffd9a0, night ? 5 : 1.4, 7, 1.5); l.position.set(fx, hub - 0.45, fz); scene.add(l);
   }
 
@@ -468,21 +473,17 @@ export async function buildRoom(q) {
   add(record, rbox(0.42, 0.05, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [0.62, 0.455, FZ + 0.25], { rot: [0, 0.15, 0] });
   add(record, new THREE.PlaneGeometry(0.52, 0.38), new THREE.MeshStandardMaterial({ map: bookPages(), roughness: 0.9 }), [0.62, 0.484, FZ + 0.25], { cast: false, rot: [-Math.PI / 2, 0, Math.PI / 2 + 0.15] });
 
-  // ----- the way to the Trophy Room: a painted wooden sign on the chimney above the constitution, an arrow pointing on past the fire. It
-  // opens the Trophy Room as it is today (less the stats).
+  // ----- the Trophy Room: a walnut shelf on the chimney above the constitution with one gilt cup standing on it. (It was a painted
+  // sign with an arrow, which promised a hallway the room does not have.) It opens the Trophy Room as it is today.
   const trophies = group("trophies");
-  const signFace = (() => {
-    const c = canvas(640, 220), g = c.getContext("2d");
-    g.fillStyle = "#1f3b2f"; g.fillRect(0, 0, 640, 220); g.strokeStyle = "#c9a45f"; g.lineWidth = 8; g.strokeRect(14, 14, 612, 192);
-    g.fillStyle = "#e6cf98"; g.textAlign = "left"; g.textBaseline = "middle"; let size = 76; do { g.font = `700 ${size}px Georgia, serif`; size -= 2; } while (g.measureText("Trophy Room").width > 400); g.fillText("Trophy Room", 44, 114);
-    g.beginPath(); g.moveTo(520, 72); g.lineTo(596, 110); g.lineTo(520, 148); g.lineTo(520, 126); g.lineTo(478, 126); g.lineTo(478, 94); g.lineTo(520, 94); g.closePath(); g.fill();
-    return texture(c);
-  })();
-  // fixed to the chimney's near face, above the constitution
-  const SGX = X1 - CD / 2, SGY = 3.55, SGZ = FZ + 1.8 + 0.03;
-  add(trophies, rbox(1.1, 0.4, 0.05, 0.02), m.walnut, [SGX, SGY, SGZ]);
-  add(trophies, new THREE.PlaneGeometry(1.02, 0.35), new THREE.MeshStandardMaterial({ map: signFace, roughness: 0.6 }), [SGX, SGY, SGZ + 0.026], { cast: false });
-  for (const dx of [-0.48, 0.48]) add(trophies, cyl(0.018, 0.018, 0.02, 12), brass, [SGX + dx, SGY, SGZ + 0.03], { rot: [Math.PI / 2, 0, 0], cast: false });
+  const SGX = X1 - CD / 2, SGY = 3.2, SGZ = FZ + 1.8 + 0.03;
+  add(trophies, rbox(0.95, 0.05, 0.3, 0.015), m.walnut, [SGX, SGY, SGZ + 0.15]);
+  for (const dx of [-0.34, 0.34]) add(trophies, rbox(0.05, 0.2, 0.22, 0.015), m.walnut, [SGX + dx, SGY - 0.12, SGZ + 0.11]);
+  const gilt = new THREE.MeshStandardMaterial({ color: 0xe8bc58, metalness: 0.85, roughness: 0.28, envMapIntensity: 1.6, emissive: 0x4a3208, emissiveIntensity: 0.6 });
+  const cup = new THREE.Group(); cup.position.set(SGX, SGY + 0.025, SGZ + 0.16); cup.scale.setScalar(1.7); trophies.add(cup);
+  add(cup, rbox(0.2, 0.07, 0.2, 0.01), m.walnut, [0, 0.035, 0]);
+  add(cup, new THREE.LatheGeometry([[0, 0], [0.075, 0], [0.07, 0.02], [0.03, 0.04], [0.018, 0.1], [0.03, 0.16], [0.1, 0.24], [0.125, 0.34], [0.13, 0.44], [0.122, 0.44], [0.115, 0.34], [0.09, 0.25], [0, 0.2]].map(([r, y]) => new THREE.Vector2(r, y)), 40), gilt, [0, 0.07, 0]);
+  for (const side of [-1, 1]) add(cup, new THREE.TorusGeometry(0.06, 0.011, 10, 24, Math.PI * 1.2), gilt, [side * 0.135, 0.41, 0], { rot: [0, 0, side > 0 ? -Math.PI * 0.6 : Math.PI * 0.4] });
 
   // ----- Survivor: a long oval poker table, forward in the room and well clear of the fire, with a seat for every player (ten) and
   // the dealer's place at the far side. Built as a real one is: a padded leather armrest round a walnut racetrack, felt with a gilt
@@ -566,19 +567,27 @@ export async function buildRoom(q) {
   const plant = (x, z, s = 1) => {
     add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 24), rattan, [x, 0.25 * s, z]);
     add(room, cyl(0.27 * s, 0.27 * s, 0.02, 20), std(0x3a2a1c, { roughness: 1 }), [x, 0.49 * s, z], { cast: false });
-    spray(room, pottedLeaf, leafGreen, [x, 0.5 * s, z], 7, s * 0.95, [0.45, 0.8]); spray(room, pottedLeaf, leafGreen, [x, 0.5 * s, z], 5, s * 1.1, [0.85, 1.15]);   // arching, as a kentia palm grows
+    // A kentia palm as one grows: a ring of older fronds arching wide and low, younger ones standing taller inside them, two greens
+    // (new growth is lighter), each on its own thin stem rising from the soil.
+    const leaves = [];
+    spray(room, pottedLeaf, leafDeep, [x, 0.5 * s, z], 8, s * 0.98, [0.4, 0.72], leaves); spray(room, pottedLeaf, leafGreen, [x, 0.5 * s, z], 6, s * 1.08, [0.8, 1.1], leaves);
+    spray(room, pottedLeaf, leafFresh, [x, 0.52 * s, z], 3, s * 0.8, [1.2, 1.4], leaves);
+    for (let k = 0; k < 9; k++) { const a = (k / 9) * Math.PI * 2 + rand(), lean = 0.12 + rand() * 0.2; const stem = add(room, cyl(0.007 * s, 0.012 * s, 0.5 * s, 6), leafDeep, [x + Math.cos(a) * lean * 0.25 * s, 0.72 * s, z - Math.sin(a) * lean * 0.25 * s]); stem.rotation.set(Math.sin(a) * lean, 0, Math.cos(a) * lean); }
+    movers.push({ name: `plant${movers.length}`, kind: "sway", parts: leaves });
   };
   const monstera = (x, z, s = 1) => {
     add(room, cyl(0.28 * s, 0.22 * s, 0.46 * s, 24), std(0xf1ece2, { roughness: 0.5 }), [x, 0.23 * s, z]);
     add(room, cyl(0.25 * s, 0.25 * s, 0.02, 20), std(0x3a2a1c, { roughness: 1 }), [x, 0.45 * s, z], { cast: false });
+    const leaves = [];
     for (let f = 0; f < 11; f++) {
       const a = (f / 11) * Math.PI * 2 + rand(), reach = (0.16 + rand() * 0.3) * s, high = (0.7 + rand() * 0.75) * s;
       const tip = new THREE.Vector3(x + Math.cos(a) * reach, high, z - Math.sin(a) * reach), foot = new THREE.Vector3(x, 0.45 * s, z);
       const stem = add(room, cyl(0.008 * s, 0.012 * s, tip.distanceTo(foot), 6), leafDeep, [(tip.x + foot.x) / 2, (tip.y + foot.y) / 2, (tip.z + foot.z) / 2]);
       stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tip.clone().sub(foot).normalize());
       const g = new THREE.Group(); g.position.copy(tip); g.rotation.set(rand() * 0.5 - 0.25, a, -0.15 - rand() * 0.45); g.scale.setScalar(s * (0.85 + rand() * 0.4)); room.add(g);
-      add(g, broadLeaf, leafDeep, [0, 0, 0]);
+      add(g, broadLeaf, f % 4 === 0 ? leafGreen : leafDeep, [0, 0, 0]); leaves.push(g);
     }
+    movers.push({ name: `plant${movers.length}`, kind: "sway", parts: leaves });
   };
   plant(2.0, ZB + 0.75, 1.3);
   monstera(2.15, -7.95, 0.9);
@@ -609,12 +618,13 @@ export async function buildRoom(q) {
     add(stand, cyl(0.01, 0.01, 0.3, 8), brass, [-0.72, 2.12, 0]);
   }
 
-  // ----- light: late-afternoon sun raking in through the glass and across the floor, or a warm evening with the pool and the
-  // lanterns lit. The fill is kept low so the sun's shadows stay deep; the room's own glow is added below from a picture of itself.
-  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfff6e6, night ? 0x2a1e16 : 0xd2ad78, night ? 0.16 : 0.62));
-  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xffe2b4, night ? 0.25 : 4.4);
-  sun.position.set(night ? 6 : 17, night ? 14 : 10, night ? ZB - 14 : -3.5); sun.target.position.set(-1, 0, -5.5);
-  sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+  // ----- light: a bright mid-afternoon, the sun high enough that its patches on the floor are short and its shadows soft-edged and
+  // light (plenty of fill from the sky and the pale walls), or a warm evening with the pool and the lanterns lit. The room's own
+  // glow is added below from a picture of itself.
+  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfffaf0, night ? 0x2a1e16 : 0xe0c49a, night ? 0.16 : 1.05));
+  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d8, night ? 0.25 : 3.3);
+  sun.position.set(night ? 6 : 15, night ? 14 : 14, night ? ZB - 14 : -4.5); sun.target.position.set(-1, 0, -5.5);
+  sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; sun.shadow.radius = night ? 1 : 5;
   Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 16, bottom: -16, near: 1, far: 70 });
   scene.add(sun, sun.target);
   for (const [x, y, z] of [[0, 4.6, -3.2], [-2.6, 3.4, -12.2]]) { const l = new THREE.PointLight(night ? 0xffc98a : 0xffe6c4, night ? 3.0 : 1.3, 10, 1.4); l.position.set(x, night ? Math.min(y, 3.3) : y, z); scene.add(l); }
@@ -674,9 +684,53 @@ export async function buildRoom(q) {
   composer.render();
   const picture = canvas(PW, PH), pg = picture.getContext("2d");
   pg.drawImage(renderer.domElement, 0, 0);
-  const edge = pg.createRadialGradient(PW / 2, PH * 0.46, PH * 0.3, PW / 2, PH * 0.5, PH * 0.78); edge.addColorStop(0, "rgba(24, 12, 2, 0)"); edge.addColorStop(1, `rgba(24, 12, 2, ${night ? 0.42 : 0.3})`);
+  const edge = pg.createRadialGradient(PW / 2, PH * 0.46, PH * 0.3, PW / 2, PH * 0.5, PH * 0.78); edge.addColorStop(0, "rgba(24, 12, 2, 0)"); edge.addColorStop(1, `rgba(24, 12, 2, ${night ? 0.42 : 0.16})`);
   pg.fillStyle = edge; pg.fillRect(0, 0, PW, PH);
   window.__webp = picture.toDataURL("image/webp", 0.82);
   window.__png = picture.toDataURL("image/png");
+  // ----- motion: frames=N also takes a short loop of N pictures in which the fans turn one blade's worth (so the loop joins up) and
+  // the indoor plants' leaves sway and come back. Only the patch of the picture around each moving thing is kept, as one strip of N
+  // frames; the page plays the strips over the still picture. Frame 0 is the still picture itself.
+  const N = Number(q.get("frames") ?? 0);
+  if (N > 1) {
+    // The loop is drawn at the picture's own size (half the still's sharpness): a quarter of the work and the bytes, and plenty for
+    // things that are moving.
+    renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+    const loop = new EffectComposer(renderer, new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4 }));
+    loop.addPass(new RenderPass(scene, camera));
+    if (q.get("ao") !== "0") {
+      const contact = new GTAOPass(scene, camera, W, H);
+      contact.updateGtaoMaterial({ radius: 0.5, distanceExponent: 1.3, thickness: 1.0, scale: 1.25, samples: 16 });
+      contact.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 12 });
+      const hide = contact.overrideVisibility.bind(contact);
+      contact.overrideVisibility = () => { hide(); for (const o of veil) o.visible = false; };
+      loop.addPass(contact);
+    }
+    loop.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), night ? 0.32 : 0.16, 0.6, night ? 0.9 : 1.1));
+    loop.addPass(new OutputPass());
+    const small = canvas(W, H), sg = small.getContext("2d");
+    const base = movers.map((mover) => mover.parts.map((part) => part.rotation.clone()));
+    const sway = movers.map((mover) => mover.parts.map(() => ({ phase: rand() * Math.PI * 2, turns: 1 + Math.floor(rand() * 2), reach: 0.012 + rand() * 0.02 })));
+    const patches = movers.map((mover) => {
+      const box = new THREE.Box3(); for (const part of mover.parts) box.expandByObject(part);
+      let x0 = 1, y0 = 1, x1 = 0, y1 = 0;
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) { const [px, py] = at(new THREE.Vector3(x, y, z)); x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); }
+      const px0 = Math.max(0, Math.floor(x0 * W) - 3), py0 = Math.max(0, Math.floor(y0 * H) - 3), px1 = Math.min(W, Math.ceil(x1 * W) + 3), py1 = Math.min(H, Math.ceil(y1 * H) + 3);
+      const strip = canvas((px1 - px0) * N, py1 - py0);
+      return { name: mover.name, px0, py0, w: px1 - px0, h: py1 - py0, strip, g: strip.getContext("2d") };
+    }).filter((patch) => patch.w > 4 && patch.h > 4);
+    for (let f = 0; f < N; f++) {
+      movers.forEach((mover, m) => mover.parts.forEach((part, k) => {
+        part.rotation.copy(base[m][k]);
+        if (mover.kind === "spin") part.rotation.y += (f / N) * ((Math.PI * 2) / 5);
+        else { const { phase, turns, reach } = sway[m][k]; const wave = Math.sin((f / N) * Math.PI * 2 * turns + phase) - Math.sin(phase); part.rotation.z += wave * reach; part.rotation.x += wave * reach * 0.5; }
+      }));
+      loop.render();
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.drawImage(renderer.domElement, 0, 0, W, H);
+      sg.setTransform(1 / scale, 0, 0, 1 / scale, 0, 0); sg.fillStyle = edge; sg.fillRect(0, 0, PW, PH);
+      for (const patch of patches) patch.g.drawImage(small, patch.px0, patch.py0, patch.w, patch.h, f * patch.w, 0, patch.w, patch.h);
+    }
+    window.__motion = { frames: N, patches: patches.map((patch) => ({ name: patch.name, x: patch.px0 / W, y: patch.py0 / H, w: patch.w / W, h: patch.h / H, strip: patch.strip.toDataURL("image/webp", 0.7) })) };
+  }
   window.__done = true;
 }
