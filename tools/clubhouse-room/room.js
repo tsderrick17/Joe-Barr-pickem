@@ -504,12 +504,30 @@ export async function buildRoom(q) {
     add(poker, rbox(0.7, 0.06, 0.5, 0.025), leather, [PX + dx, 0.03, PZ]);
   }
   const chipColors = [0xd4342c, 0x1d3557, 0xf4efe3, 0x2f6a46, 0x111111];
-  const chip = (color, at) => add(poker, cyl(0.04, 0.04, 0.016, 20), std(color, { roughness: 0.4 }), at, { cast: false });
-  [[-0.14, 0.18], [0.02, 0.23], [0.16, 0.17]].forEach(([dx, dz], st) => { for (let k = 0; k < 5 + st * 2; k++) chip(chipColors[(st * 2 + (k % 2)) % 5], [PX + dx, 0.83 + k * 0.017, PZ + dz]); });   // the pot
+  // Real casino chips: 4.8 cm across and 4 mm thick (a touch over life size so they read from the door), stacked in one colour, each
+  // chip with white inserts round its edge that never line up with the next chip's, and a few splashed loose into the pot.
+  const CR = 0.024, CT = 0.004, css = (c) => `#${c.toString(16).padStart(6, "0")}`;
+  const chipMats = (color, n) => {
+    const side = canvas(192, n * 8), g = side.getContext("2d");
+    for (let k = 0; k < n; k++) {
+      g.fillStyle = css(color); g.fillRect(0, k * 8, 192, 8);
+      g.fillStyle = color === 0xf4efe3 ? "#1d3557" : "#f4efe3"; const off = rand() * 32; for (let i = 0; i < 6; i++) g.fillRect((off + i * 32) % 192, k * 8 + 1, 13, 6);
+      g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, k * 8, 192, 1);
+    }
+    const top = canvas(96, 96), t = top.getContext("2d"); t.fillStyle = css(color); t.fillRect(0, 0, 96, 96);
+    t.strokeStyle = color === 0xf4efe3 ? "#1d3557" : "#f4efe3"; t.lineWidth = 9; t.setLineDash([12.5, 12.5]); t.beginPath(); t.arc(48, 48, 43, 0, Math.PI * 2); t.stroke();
+    t.setLineDash([]); t.lineWidth = 2; t.beginPath(); t.arc(48, 48, 27, 0, Math.PI * 2); t.stroke();
+    const cap = new THREE.MeshStandardMaterial({ map: texture(top), roughness: 0.45 });
+    return [new THREE.MeshStandardMaterial({ map: texture(side), roughness: 0.45 }), cap, cap];
+  };
+  const chips = (color, n, x, z, y = 0.83, rot) => add(poker, cyl(CR, CR, n * CT, 28), chipMats(color, n), [x, y + (n * CT) / 2, z], { rot, cast: true });
+  [[0xd4342c, 20, -0.16, 0.2], [0xd4342c, 14, -0.108, 0.2], [0x1d3557, 20, -0.03, 0.24], [0x2f6a46, 16, 0.022, 0.24], [0x111111, 20, 0.12, 0.19], [0xf4efe3, 11, 0.172, 0.19], [0x2f6a46, 8, 0.146, 0.235]]
+    .forEach(([color, n, dx, dz]) => chips(color, n, PX + dx, PZ + dz));
+  for (let k = 0; k < 9; k++) chips(chipColors[k % 5], 1 + (k % 3 === 0 ? 1 : 0), PX - 0.1 + rand() * 0.3, PZ + 0.04 + rand() * 0.1, 0.83, [0, rand() * 6, 0]);   // the pot
   const cardMat = std(0xfbf9f2, { roughness: 0.5 }), cardBack = std(0x8c1e24, { roughness: 0.5 });
   for (let k = 0; k < 5; k++) add(poker, box(0.085, 0.004, 0.12), cardMat, [PX - 0.22 + k * 0.11, 0.824, PZ - 0.06], { cast: false });   // the board
   add(poker, rbox(0.62, 0.05, 0.16, 0.01), std(0x0c0c0c, { roughness: 0.4 }), [PX, 0.835, PZ - PRZ + 0.3]);                            // the dealer's chip tray
-  for (let k = 0; k < 7; k++) for (let r = 0; r < 2; r++) add(poker, cyl(0.036, 0.036, 0.11, 16), std(chipColors[k % 5], { roughness: 0.4 }), [PX - 0.27 + k * 0.09, 0.85, PZ - PRZ + 0.26 + r * 0.075], { rot: [0, 0, Math.PI / 2], cast: false });
+  for (let k = 0; k < 5; k++) for (let r = 0; r < 2; r++) add(poker, cyl(CR, CR, 0.1, 24), chipMats(chipColors[(k + r * 2) % 5], 25), [PX - 0.24 + k * 0.12, 0.862, PZ - PRZ + 0.265 + r * 0.06], { rot: [0, 0, Math.PI / 2], cast: false });   // racks of chips on their edge
   add(poker, cyl(0.04, 0.04, 0.012, 20), std(0xfbf9f2, { roughness: 0.3 }), [PX + 0.48, 0.828, PZ - 0.2], { cast: false });              // dealer button
   const crystalGlass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, transmission: 1, thickness: 0.02, ior: 1.5, clearcoat: 1, envMapIntensity: 1.4, side: THREE.DoubleSide });
   const whiskey = new THREE.MeshPhysicalMaterial({ color: 0x9a5414, roughness: 0.1, transmission: 0.5, thickness: 0.05, emissive: 0x3a1a04, emissiveIntensity: 0.3 });
