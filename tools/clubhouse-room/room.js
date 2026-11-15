@@ -215,14 +215,15 @@ export async function buildRoom(q) {
 
   // Cabana fans: two big ones down the middle of the room. Each blade is a modelled palm leaf (pleated, scalloped at the edge,
   // keeled along its rib) carried on a cast brass iron; a turned timber housing banded in brass, a frosted light under it.
-  const { leaf, rib } = palmBlade();
+  const { leaf, rib } = palmBlade(1.05, 0.08);                                                                                         // a real big-room fan: about 2.9 m tip to tip
   const bladeMat = new THREE.MeshStandardMaterial({ ...bladeWood(), bumpScale: 0.5, roughness: 0.46, side: THREE.DoubleSide, envMapIntensity: 0.85 });
   const ribMat = std(0x4a2a12, { roughness: 0.5 });
   const housing = new THREE.LatheGeometry([[0, 0.2], [0.06, 0.2], [0.075, 0.15], [0.13, 0.12], [0.21, 0.07], [0.235, 0], [0.22, -0.07], [0.16, -0.11], [0, -0.11]].map(([r, y]) => new THREE.Vector2(r, y)), 40);
-  for (const [fx, fz, spin] of [[-0.1, -6.0, 0.3], [0.1, -10.2, 0.9]]) {
-    const top = WH + (RIDGE - WH) * (1 - Math.abs(fx) / (RW / 2)), hub = 5.05, drop = top - hub;
+  // Each hangs on a downrod from the ridge beam, half-way between two trusses, so the blades turn clear of every timber.
+  for (const [fx, fz, spin] of [[0, -4.95, 0.3], [0, -9.45, 0.9]]) {
+    const top = RIDGE - under - 0.12 - 0.14, hub = 5.05, drop = top - hub;
     add(room, cyl(0.022, 0.022, drop, 10), brass, [fx, top - drop / 2, fz]);
-    add(room, cyl(0.05, 0.13, 0.12, 24), brass, [fx, top - 0.16, fz]);
+    add(room, cyl(0.05, 0.13, 0.12, 24), brass, [fx, top - 0.06, fz]);                                                                 // canopy under the ridge beam
     add(room, housing, m.walnut, [fx, hub + 0.02, fz]);
     for (const [r, y] of [[0.238, 0.02], [0.2, -0.07], [0.1, 0.16]]) add(room, new THREE.TorusGeometry(r, 0.012, 8, 40), brass, [fx, hub + y, fz], { rot: [Math.PI / 2, 0, 0], cast: false });
     const shade = add(room, new THREE.SphereGeometry(0.17, 24, 16), glow(0xffe9c4, night ? 3.2 : 1.6), [fx, hub - 0.15, fz], { cast: false }); shade.scale.set(1, 0.62, 1);
