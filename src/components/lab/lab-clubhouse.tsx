@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom } from "@/components/lab/lab-tote";
+import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
 import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
@@ -151,11 +151,13 @@ type Picture = { width: number; height: number; spots: Record<string, Spot>; scr
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
-const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below"; ticket?: boolean }> = [
+const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; ticket?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
-  // The spreads under the Big Board are where picks are made: they open the Big Board with your ticket ready.
-  { spot: "sportsbook", room: "board", name: "Make your picks", tag: "Your picks", label: "below", ticket: true },
+  // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
+  // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
+  { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
+  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
@@ -188,15 +190,15 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
-/** The Big Board in the room: the leader always on the top line, then up to four players a page, a new page every 15 seconds. */
-const BOARD_PAGE = 4;
-const BOARD_PAGE_MS = 15_000;
+/** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 8 seconds. */
+const BOARD_PAGE = 5;
+const BOARD_PAGE_MS = 8_000;
 
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
   // The top line always shows the leader and their wins (or, when level, how many lead and on what), so every page has a sense of
-  // scale. Below it the rest of the standings turn a page every 15 seconds, the pages kept even (nine players are three pages of
+  // scale. Below it the rest of the standings turn a page every 8 seconds, the pages kept even (nine players are three pages of
   // three); a single leader is not repeated below, level leaders are. The lines run across the spreads board like a ticker (shown
   // twice in a row so the loop has no seam).
   const { leaders, pages: board } = labBoardPages(rows, BOARD_PAGE);
@@ -210,8 +212,8 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
   const lines = [...LAB_SLATE, ...LAB_SLATE];
   return (
     <div aria-hidden="true" className="lab-room-live">
-      <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
-        <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS · {page + 1}/{pages}</span></header>
+      <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
+        <header><b>PICK’EM</b><span>WEEK 10 · {page + 1}/{pages}</span></header>
         <p className="lab-room-leader">{leaders.length === 1 ? <><i>LEADER</i><span>{leaders[0].name}</span></> : <><i>{leaders.length} LEADERS</i><span /></>}<b>{leaders[0].wins}</b></p>
         <div className="lab-roll">
           <ol data-page={page + 1}>
@@ -223,12 +225,13 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
           </ol>
         </div>
       </Screen>
-      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={93} w={360}>
+      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={103} w={360}>
         <div className="lab-ticker">
           {lines.map((game, index) => {
-            const pick = mine.find((team) => team === game.away || team === game.home);
-            const team = pick ?? game.favourite;
-            return <p className={pick ? "is-picked" : ""} key={`${game.id}-${index}`}><b>{team}</b><span>{labLineFor(game, team)}</span>{pick ? <small>YOURS</small> : null}</p>;
+            // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
+            // with its logo and line; your pick is lit in gold inside the card.
+            const side = (team: string) => <span className={mine.includes(team) ? "is-picked" : ""}><Logo eager team={team} /><b>{team}</b><em>{labLineFor(game, team)}</em></span>;
+            return <p key={`${game.id}-${index}`}><small>{game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
           })}
         </div>
       </Screen>
@@ -257,11 +260,11 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
   const seats = labSurvivorAt(9);
   const news: Partial<Record<string, string>> = {
     board: `${rows[0].name} leads · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`,
-    sportsbook: allIn ? "All in" : "1 owed",
+    picks: allIn ? "All in" : "1 owed",
     survivor: `${seats.filter((seat) => !seat.out).length} of ${seats.length} still in · ${seats.find((seat) => seat.name === LAB_VIEWER)?.out ? "You’re out" : "You’re in"}`,
     bowl: "Open now",
   };
-  const spots = SPOTS.filter(({ spot }) => picture.spots[spot]);
+  const spots = SPOTS.filter(({ spot, at }) => at || picture.spots[spot]);
   const room = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
   useLayoutEffect(() => {
@@ -273,22 +276,40 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
     watch.observe(node);
     return () => watch.disconnect();
   }, []);
+  // The chat is on the laptop on the bar: tapping it walks you up to the screen (the picture zooms in on the laptop) and then the
+  // chat opens. With reduced motion on it just opens.
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
+  const go = (spot: string, next: Room, ticket?: boolean) => {
+    const at = picture.spots[spot];
+    if (spot !== "chat" || !at || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onEnter(next, ticket); return; }
+    setZoom({ x: at.x + at.w / 2, y: at.y + at.h / 2 });
+  };
   return (
     <>
       <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
+        <div className={`lab-room-view${zoom ? " is-zooming" : ""}`} onTransitionEnd={(event) => { if (zoom && event.target === event.currentTarget) onEnter("chat"); }} style={zoom ? { transformOrigin: `${zoom.x * 100}% ${zoom.y * 100}%` } : undefined}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
         <RoomNews frame={frame} picture={picture} />
-        {spots.map(({ spot, room, name, tag, label, ticket }) => {
-          const at = picture.spots[spot];
-          const style = { left: `${(at.x + at.w / 2) * 100}%`, top: `${(at.y + at.h / 2) * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
-          return (
-            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => onEnter(room, ticket)} style={style} type="button">
+        {spots.map(({ spot, room, name, tag, label, at: free, ticket }) => {
+          const plate = label === "none" ? null : (
+            <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}>
+              <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
               {spot === "chat" && mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
-              <span aria-hidden="true" className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}><b>{tag ?? name}<i>›</i></b>{news[spot] ? <small>{news[spot]}</small> : null}</span>
+            </span>
+          );
+          // A button that stands by itself in the picture, not over a thing in it.
+          if (free) return <button aria-label={name} className={`lab-room-bubble is-${spot}`} key={spot} onClick={() => go(spot, room, ticket)} style={{ left: `${free.x * 100}%`, top: `${free.y * 100}%` }} type="button">{plate}</button>;
+          const at = picture.spots[spot];
+          // Placed by its corner, with no transform: a transform would trap each label under the spots drawn after it.
+          const style = { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
+          return (
+            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => go(spot, room, ticket)} style={style} type="button">
+              {plate}
             </button>
           );
         })}
+        </div>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
         {(["board", "survivor", "trophies", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (

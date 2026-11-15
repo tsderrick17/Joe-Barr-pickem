@@ -308,12 +308,12 @@ export async function buildRoom(q) {
     add(parent, new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: 0x050807, emissive: 0x0b1410, emissiveIntensity: 1, roughness: 0.4 }), [x, y, SWALL + 0.105], { cast: false });
     screens[name] = [[x - w / 2, y + h / 2], [x + w / 2, y + h / 2], [x + w / 2, y - h / 2], [x - w / 2, y - h / 2]].map(([cx, cy]) => new THREE.Vector3(cx, cy, SWALL + 0.106));
   };
-  screen(book, "spreads", 3.5, 0.9, SX, 1.92);
+  screen(book, "spreads", 3.5, 1.0, SX, 1.93);
   add(book, rbox(2.9, 1.05, 0.7, 0.03), m.walnut, [SX - 0.15, 0.525, ZB + 0.75]);
   add(book, box(3.0, 0.05, 0.8), brass, [SX - 0.15, 1.075, ZB + 0.75]);
   for (const dx of [-1.2, -0.15, 0.9]) add(book, box(0.2, 0.03, 0.12), white, [SX + dx, 1.115, ZB + 0.8], { cast: false });       // ticket pads
   const board = group("board");
-  screen(board, "board", 3.5, 1.75, SX, 3.3, 0x12281e);
+  screen(board, "board", 2.8, 2.0, SX + 0.35, 3.6, 0x12281e);   // narrower and taller (the leader and five more), its right edge over the spreads board's
 
   // ----- the left wall: the bar, running down the room. Counter and stools, the back bar and a neon sign on the wall, lanterns
   // over it, the plaques along its front; the champions' banners hang over it one behind another, each facing the door.
