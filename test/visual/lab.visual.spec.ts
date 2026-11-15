@@ -54,32 +54,58 @@ for (const [shot, week, moment] of TABLE_SHOTS) {
   }
 }
 
-test("Lab Survivor table: a seat's weeks fanned out", async ({ page }) => {
+test("Lab Survivor table: tap a player for all 32 teams, the used ones dimmed with their week", async ({ page }) => {
   await openLab(page, "survivor");
-  await page.getByRole("button", { name: /^Marge/ }).click();
-  const sheet = page.getByRole("dialog", { name: "Marge's weeks" });
-  await expect(sheet.locator(".lab-fan li")).toHaveCount(7);   // six wins, then the loss in week 7
-  await expect(sheet.locator(".lab-fan li.is-lost")).toHaveCount(1);
+  // Dottie is still in after week 7: seven used, twenty-five left.
+  const seat = page.getByRole("button", { name: "Dottie: teams used and left" });
+  await expect(seat).toContainText("Seahawks");
+  await expect(seat).toContainText("WON");
+  await expect(seat.locator(".lab-seat-used .lab-stack-chip")).toHaveCount(6);   // weeks 1 to 6; this week's team is on the top line
+  await expect(seat).toContainText("25 left");
+  await seat.click();
+  const sheet = page.getByRole("dialog", { name: "Dottie: 7 used, 25 left" });
+  await expect(sheet.getByRole("img", { name: /: used in week \d+$/ })).toHaveCount(7);
+  await expect(sheet.getByRole("img", { name: /: left$/ })).toHaveCount(25);
+  await expect(sheet.getByRole("img", { name: "Lions: used in week 1" })).toContainText("WK 1");
+  // The divisions line up, East to West, in both conferences.
+  const rows = await sheet.locator(".lab-conference").evaluateAll((blocks) => blocks.map((block) => [...block.querySelectorAll(".lab-division-name")].map((name) => name.textContent)));
+  expect(rows).toEqual([["EAST", "NORTH", "SOUTH", "WEST"], ["EAST", "NORTH", "SOUTH", "WEST"]]);
   await holdStill(page);
   await expect(sheet).toHaveScreenshot("lab-survivor-seat-sheet-day-phone-390.png", { maxDiffPixels: 12 });
+  await sheet.getByRole("button", { name: "Close" }).click();
+  // Marge lost this week with the Texans: her row says so, and has no "left".
+  const out = page.getByRole("button", { name: "Marge: teams used and left" });
+  await expect(out).toContainText("Texans");
+  await expect(out).toContainText("LOST");
+  await expect(out).not.toContainText("left");
+  await out.click();
+  await expect(page.getByRole("dialog", { name: "Marge: 7 used" }).getByRole("img", { name: "Texans: used in week 7, lost" })).toBeVisible();
 });
 
-test("Lab Survivor table: every fact the list shows is on the table, and the table and the list agree", async ({ page }) => {
+test("Lab Survivor table: one row a player with this week's team, and the table and the list agree", async ({ page }) => {
   await openLab(page, "survivor");
   await stepTo(page, 3);
-  // Week 3, graded: the Bengals (Hank) and Dolphins (Bev) lost and are swept; Gus went out in week 2.
-  await expect(page.getByRole("img", { name: "Bengals: Hank, lost" })).toBeVisible();
-  await expect(page.locator(".lab-box.is-swept")).toHaveCount(2);
+  const row = (name: string) => page.getByRole("button", { name: `${name}: teams used and left` });
+  await expect(page.locator(".lab-seat")).toHaveCount(10);
+  // Week 3, graded: each player's team and whether it won; the Bengals (Hank) and Dolphins (Bev) lost; Gus went out in week 2.
+  await expect(row("Walt")).toContainText("ChiefsWON");
+  await expect(row("Hank")).toContainText("BengalsLOST");
+  await expect(row("Bev")).toContainText("DolphinsLOST");
+  await expect(row("Gus")).toContainText("Out · week 2");
   await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);
-  await expect(page.getByText("OUT · WK 2 · DAL")).toBeVisible();
   await expect(page.locator(".lab-felt-count")).toHaveText("7 of 10 alive");
-  // Before kickoff: other players' chips are face down on their seats, never on a team; the viewer's own is on the felt; June has not picked.
+  // Before kickoff: you see your own team; another player's reads "Pick in" and never names the team; June has not picked.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
-  await expect(page.locator(".lab-box.has-chips")).toHaveCount(1);
-  await expect(page.getByRole("img", { name: /Chiefs: Walt/ })).toBeVisible();
-  await expect(page.getByText("NO PICK YET")).toBeVisible();
-  await expect(page.locator(".lab-stack-chip.is-face-down")).toHaveCount(7);   // nine still in, less Walt (the viewer) and June (no pick yet)
+  await expect(row("Walt")).toContainText("Chiefs");
+  await expect(row("Rosie")).toContainText("Pick in");
+  await expect(row("Rosie")).not.toContainText("Lions");
+  await expect(row("June")).toContainText("No pick yet");
+  await expect(page.getByText("Pick in", { exact: true })).toHaveCount(7);   // nine still in, less Walt (the viewer) and June (no pick yet)
+  await expect(page.getByText(/WON|LOST/)).toHaveCount(0);   // nothing has won or lost yet
   await expect(page.locator(".lab-seat.is-out")).toHaveCount(1);   // only Gus: this week's losses have not happened yet
+  // A pick that is in but hidden is not counted as used: Rosie has used two teams and has thirty left.
+  await expect(row("Rosie").locator(".lab-seat-used .lab-stack-chip")).toHaveCount(2);
+  await expect(row("Rosie")).toContainText("30 left");
   // The list from the same data: the same players out.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await page.getByRole("group", { name: "View" }).getByRole("button", { name: "List" }).click();
@@ -95,38 +121,33 @@ test("Lab Survivor table: the season ends with a champion, and the playoffs clea
   await expect(page.getByRole("img", { name: "Champion" })).toBeVisible();
   await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" }).click();
   await expect(page.getByText("Survivor runs through the regular season. Earl won it in Week 12.")).toBeVisible();
-  await expect(page.locator(".lab-box")).toHaveCount(0);
+  await expect(page.locator(".lab-seat")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" })).toBeDisabled();
 });
 
-test("Lab Survivor table: the divisions line up, East to West, AFC beside NFC on a computer", async ({ page }) => {
-  await openLab(page, "survivor", { size: SIZES["desktop-1280"] });
-  const rows = await page.locator(".lab-conference").evaluateAll((blocks) => blocks.map((block) => [...block.querySelectorAll(".lab-division")].map((row) => ({ name: row.querySelector(".lab-division-name")!.textContent, top: Math.round(row.getBoundingClientRect().top) }))));
-  expect(rows[0].map((row) => row.name)).toEqual(["EAST", "NORTH", "SOUTH", "WEST"]);
-  expect(rows[1].map((row) => row.name)).toEqual(["EAST", "NORTH", "SOUTH", "WEST"]);
-  expect(rows[0].map((row) => row.top)).toEqual(rows[1].map((row) => row.top));
-});
-
-// The tote board: the Big Board (everyone's picks, today's Pad columns plus Survivor's chips, and the season standings on its other
-// face) and the Window (every pick a player makes, in one place). Each state gets a picture, phone and desktop by day, phone at night.
-const TOTE_SHOTS: Array<[string, Array<[string, string]>]> = [
-  ["board-before-kickoff", []],
-  ["board-game-day", [["Moment", "Game day"]]],
-  ["board-graded", [["Moment", "Graded"]]],
-  ["board-season", [["Show", "Season standings"]]],
-  ["window-picking", [["Board", "The Window"]]],
-  ["window-game-day", [["Board", "The Window"], ["Moment", "Game day"]]],
-  ["window-out-of-survivor", [["Board", "The Window"], ["Moment", "Out of Survivor"]]],
-  ["window-survivor-decided", [["Board", "The Window"], ["Moment", "Survivor decided"]]],
+// The tote board: the Big Board (everyone's picks, today's Pad columns plus Survivor's chips, the season standings on its other face)
+// and your ticket, opened from your own row. Each state gets a picture, phone and desktop by day, phone at night.
+const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
+  ["board-before-kickoff", [], false],
+  ["board-game-day", [["Moment", "Game day"]], false],
+  ["board-graded", [["Moment", "Graded"]], false],
+  ["board-season", [["Show", "Season standings"]], false],
+  ["board-out-of-survivor", [["Moment", "Out of Survivor"]], false],
+  ["board-survivor-decided", [["Moment", "Survivor decided"]], false],
+  ["ticket-picking", [], true],
+  ["ticket-game-day", [["Moment", "Game day"]], true],
+  ["ticket-out-of-survivor", [["Moment", "Out of Survivor"]], true],
+  ["ticket-survivor-decided", [["Moment", "Survivor decided"]], true],
 ];
-for (const [shot, choices] of TOTE_SHOTS) {
+for (const [shot, choices, ticket] of TOTE_SHOTS) {
   for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
     test(`Lab tote board, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "tote", { theme, size: SIZES[label] });
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      if (ticket) await page.locator(".lab-tote-ticket").click();
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
-      await expect(page.locator(".lab-tote-room")).toHaveScreenshot(`lab-tote-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+      await expect(ticket ? page.getByRole("dialog", { name: "Your ticket" }) : page.locator(".lab-tote-room")).toHaveScreenshot(`lab-tote-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
     });
   }
 }
@@ -161,13 +182,20 @@ test("the Big Board turns to the season standings with one tap on the board", as
   await expect(board.locator("thead th")).toHaveCount(5);
 });
 
-test("the Window takes every pick in one place: two against the spread, the Survivor chip, one ticket, one Submit", async ({ page }) => {
+test("your row on the Big Board is your ticket: two against the spread and a Survivor team as plain rows, one Submit, and the row shows it", async ({ page }) => {
   await openLab(page, "tote");
-  await page.getByRole("group", { name: "Board" }).getByRole("button", { name: "The Window" }).click();
-  const window = page.locator(".lab-window");
-  const pickem = window.getByRole("region", { name: "Pick’em" });
-  const survivor = window.getByRole("region", { name: "Survivor" });
-  const ticket = window.getByRole("region", { name: "Your ticket" });
+  const board = page.locator(".lab-tote");
+  const mine = board.locator("tr.is-you");
+  // Your row says it is yours, and each of its cells opens the ticket; nobody else's row can be tapped.
+  await expect(mine.getByRole("button")).toHaveCount(3);
+  await expect(board.locator("tbody tr:not(.is-you)").getByRole("button")).toHaveCount(0);
+  await mine.getByRole("button", { name: /^Pick 1: PIT -2\.5/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Your ticket" });
+  const pickem = sheet.getByRole("region", { name: "Pick’em" });
+  const survivor = sheet.getByRole("region", { name: "Survivor" });
+  const ticket = sheet.getByRole("region", { name: "Your ticket" });
+  // Nothing has changed yet, so there is nothing to send.
+  await expect(ticket.getByRole("button", { name: "Submitted ✓" })).toBeDisabled();
   // A pick is framed by a single gilt line.
   await expect(pickem.locator(".lab-board-cell.is-picked")).toHaveCount(2);
   expect(await pickem.locator(".lab-board-cell.is-picked .lab-board-trace").first().evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
@@ -175,30 +203,65 @@ test("the Window takes every pick in one place: two against the spread, the Surv
   await expect(pickem.locator(".lab-board-cell.is-picked")).toHaveCount(1);
   await pickem.getByRole("button", { name: "Colts -3.5" }).click();
   await expect(pickem.getByRole("button", { name: "Colts -3.5" })).toHaveAttribute("aria-pressed", "true");
-  // Survivor: used teams cannot be picked again; one chip at a time.
+  // Survivor is the same plain rows, one per game: used teams say the week and cannot be picked again; one team at a time.
+  await expect(survivor.getByRole("listitem")).toHaveCount(4);
+  await expect(survivor.getByRole("button")).toHaveCount(8);
   await expect(survivor.getByRole("button", { name: "Eagles" })).toBeDisabled();
-  await expect(survivor.getByText("USED WK 4")).toBeVisible();
+  await expect(survivor.getByRole("button", { name: "Eagles" })).toContainText("USED WK 4");
   await survivor.getByRole("button", { name: "Colts" }).click();
   await expect(survivor.getByRole("button", { name: "Colts" })).toHaveAttribute("aria-pressed", "true");
   await expect(survivor.getByRole("button", { pressed: true })).toHaveCount(1);
-  await expect(ticket.getByRole("definition")).toHaveText(["IND -3.5", "LAR +3", "IND"]);
-  // One Submit for all three; changing a pick afterwards asks for the change to be sent.
-  await ticket.getByRole("button", { name: "Submit picks" }).click();
-  await expect(ticket.getByRole("button", { name: "Submitted ✓" })).toBeDisabled();
-  await survivor.getByRole("button", { name: "Broncos" }).click();
-  await expect(ticket.getByRole("button", { name: "Submit changes" })).toBeEnabled();
+  await expect(ticket.getByRole("definition")).toHaveText(["IND -3.5", "LAR +3", "Colts"]);
+  // One Submit for all three: the ticket closes and your row on the board shows what was sent.
+  await ticket.getByRole("button", { name: "Submit changes" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(mine.getByRole("button")).toHaveText([/IND\s*-3\.5/, /LAR\s*\+3/, /.*/]);
+  await expect(mine.getByRole("button", { name: /^Survivor: Colts/ })).toBeVisible();
+  await expect(board.locator(".lab-tote-ticket")).toContainText("SUBMITTED ✓");
   // Game day: a game that has kicked off cannot be changed.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
+  await board.locator(".lab-tote-ticket").click();
   await expect(pickem.getByRole("button", { name: "Browns +2.5" })).toBeDisabled();
-  // Out of Survivor: Survivor stays at the Window while the pool goes on, read only.
+  await sheet.getByRole("button", { name: "Close" }).click();
+  // Graded: the week is over, so the row is no longer a way in.
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
+  await expect(mine.getByRole("button")).toHaveCount(0);
+  await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);
+  // Out of Survivor: Survivor stays on the ticket while the pool goes on, read only.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Out of Survivor" }).click();
+  await expect(board.locator("tr.is-you th")).toContainText("HANK");
+  await board.locator(".lab-tote-ticket").click();
   await expect(survivor).toContainText("lost in week 3");
   await expect(survivor.getByRole("button")).toHaveCount(0);
   await expect(ticket.getByRole("term")).toHaveText(["Pick 1", "Pick 2"]);
-  // Survivor decided: the pool is over, so it leaves the Window.
+  await sheet.getByRole("button", { name: "Close" }).click();
+  // Survivor decided: the pool is over, so it leaves the ticket.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Survivor decided" }).click();
+  await board.locator(".lab-tote-ticket").click();
   await expect(survivor).toHaveCount(0);
   await expect(ticket).toContainText("won it");
+});
+
+test("a pick still owed reads PICK on your row, and sending it fills the row in", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  await page.locator(".lab-room-ticket").click();
+  // The pinned ticket opens the Big Board with the ticket ready.
+  await expect(page.getByRole("heading", { name: "The Big Board", level: 3 })).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("region", { name: "Your ticket" }).getByRole("definition")).toHaveText(["PIT -2.5", "LAR +3", "—"]);
+  await sheet.getByRole("button", { name: "Close" }).click();
+  const board = page.locator(".lab-tote");
+  await expect(board.getByRole("button", { name: "Survivor: not picked. Open your ticket" })).toHaveText("PICK");
+  await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK OWED");
+  await board.getByRole("button", { name: "Survivor: not picked. Open your ticket" }).click();
+  await sheet.getByRole("region", { name: "Survivor" }).getByRole("button", { name: "Broncos" }).click();
+  await sheet.getByRole("button", { name: "Submit changes" }).click();
+  await expect(board.getByRole("button", { name: /^Survivor: Broncos/ })).toBeVisible();
+  // Back in the room, the ticket's third lamp is lit and the picks wall no longer glows.
+  await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+  await expect(page.locator(".lab-room-ticket i.is-lit")).toHaveCount(3);
+  await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
 });
 
 // Pick'em Pad skins: five materials for one pad. Each skin gets a picture on game day, phone by day and at night; the scratch-off before kickoff too.
@@ -262,26 +325,23 @@ test("Lamp-lit is remembered, and by day it only shows a note", async ({ page })
 
 // The clubhouse: one 3D room (a picture by day and at night) with a tap spot over each thing in it, and a room behind each spot. The
 // room's states and each room get a picture: phone and desktop by day, phone at night.
-const ROOM_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
-  ["room", [], false],
-  ["room-labels", [], true],
-  ["room-from-dec-7", [["Time of year", "From Dec 7"]], false],
-  ["room-all-in", [["Picks", "All in"], ["Chat", "Nothing new"]], false],
+const ROOM_SHOTS: Array<[string, Array<[string, string]>]> = [
+  ["room", []],
+  ["room-from-dec-7", [["Time of year", "From Dec 7"]]],
+  ["room-all-in", [["Picks", "All in"], ["Chat", "Nothing new"]]],
 ];
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["The Big Board", "big-board", []],
-  ["The Window", "window", []],
   ["Trophy Room", "trophy-room", []],
   ["Plaques", "plaques", []],
   ["Plaques", "plaques-crowning", [["Scene", "A champion is crowned"]]],
 ];
 const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
-for (const [shot, choices, labels] of ROOM_SHOTS) {
+for (const [shot, choices] of ROOM_SHOTS) {
   for (const [theme, label] of CLUB_SIZES) {
     test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
-      if (labels) await page.getByRole("button", { name: "Show labels" }).click();
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
       await expect(page.locator(".lab-clubhouse")).toHaveScreenshot(`lab-clubhouse-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
@@ -308,16 +368,13 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
-    ["The Window", "The Window", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
+    ["Make your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
     ["Plaques", "Plaques", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
     ["Record book", "Record book", ".lab-stand-in"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
   ];
-  // Everything is a comfortable size for a thumb, however small it looks in the picture. ("Show labels" is the one control that isn't a spot.)
-  await expect(room.getByRole("button")).toHaveCount(spots.length + 1);
-  for (const button of await room.getByRole("button").all()) {
-    const box = (await button.boundingBox())!;
-    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(36);
-  }
+  // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate.
+  await expect(room.getByRole("button")).toHaveCount(spots.length);
+  await expect(room.locator(".lab-room-tag")).toHaveCount(spots.length);
   for (const spot of await room.locator(".lab-room-spot").all()) {
     const box = (await spot.boundingBox())!;
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
@@ -327,27 +384,34 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
     await expect(page.getByRole("heading", { name: heading, level: 3, exact: true })).toBeVisible();
     await expect(page.locator(inside)).toBeVisible();
     await expect(room).toHaveCount(0);
+    // The picks wall opens the Big Board with the ticket ready; the Big Board itself opens it shut.
+    const sheet = page.getByRole("dialog", { name: "Your ticket" });
+    if (spot === "Make your picks") await sheet.getByRole("button", { name: "Close" }).click();
+    await expect(sheet).toBeHidden();
     await page.getByRole("button", { name: "Back to Clubhouse" }).click();
     await expect(room).toBeVisible();
   }
 });
 
-test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool board from Dec 7, and the plain list of rooms", async ({ page }) => {
+test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Pool board from Dec 7, and the plain list of rooms", async ({ page }) => {
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
-  // Only the things whose news is worth a glance carry a label; "Show labels" names everything.
-  await expect(room.locator(".lab-room-tag")).toHaveCount(3);
+  // Everything that can be tapped wears a name plate with an arrow, and no two plates overlap; the ones with news carry a line of it.
+  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", "Plaques›", /^The Big Board›Earl leads · You: T2$/, "Records›", "Chat›", "Rules›"]);
+  const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+  for (const [index, plate] of plates.entries()) {
+    expect(plate.left).toBeGreaterThanOrEqual(0);
+    expect(plate.right).toBeLessThanOrEqual(390);
+    for (const other of plates.slice(index + 1)) expect(plate.right <= other.left || other.right <= plate.left || plate.bottom <= other.top || other.bottom <= plate.top, "name plates do not overlap").toBe(true);
+  }
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
-  // The boards in the room show today's news themselves: the standings with the leader and you, and this week's lines with your picks lit.
+  // The boards in the room show today's news themselves: the standings with the leader, and this week's lines with your picks lit.
   const board = page.locator(".lab-room-screen.is-board");
   await expect(board.locator("li")).toHaveCount(5);
   await expect(board.locator("li").first()).toContainText("Earl");
-  await expect(board.locator(".is-you")).toContainText("Walt (you)");
+  await expect(board.locator("li").nth(2)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   await expect(page.locator(".lab-room-screen.is-spreads .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
-  await room.getByRole("button", { name: "Show labels" }).click();
-  await expect(room.locator(".lab-room-tag")).toHaveCount(7);
-  await room.getByRole("button", { name: "Hide labels" }).click();
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
@@ -358,12 +422,12 @@ test("the clubhouse room: a few labels until asked, the mail sign, the Bowl Pool
   await expect(room.getByRole("button", { name: "Bowl Pool" })).toBeVisible();
   // The same rooms as a plain list, for anyone who would rather tap a word.
   const list = page.getByRole("group", { name: "Rooms" });
-  await expect(list.getByRole("button")).toHaveText(["The Window", "The Big Board", "Survivor", "Trophy Room", "Plaques", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
+  await expect(list.getByRole("button")).toHaveText(["The Big Board", "Survivor", "Trophy Room", "Plaques", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
   await list.getByRole("button", { name: "Constitution" }).click();
   await expect(page.getByRole("heading", { name: "Constitution", level: 3 })).toBeVisible();
 });
 
-test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, and opens the Window", async ({ page }) => {
+test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, and opens the Big Board with the ticket ready", async ({ page }) => {
   await openLab(page, "clubhouse");
   const ticket = page.locator(".lab-room-ticket");
   await expect(ticket).toBeVisible();
@@ -376,8 +440,8 @@ test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, a
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
   await expect(ticket).toBeInViewport();
   await ticket.click();
-  await expect(page.getByRole("heading", { name: "The Window", level: 3 })).toBeVisible();
-  await expect(ticket).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "The Big Board", level: 3 })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
 });
 
 test("the Trophy Room is today's page without the stats: the table turns by its arrows and the front trophy's champions hang below", async ({ page }) => {

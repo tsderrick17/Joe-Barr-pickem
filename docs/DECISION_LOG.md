@@ -19,6 +19,31 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - Picks are made on the Big Board; Survivor table in plain words; a name plate on every tap spot (Lab)
+
+The owner, on the clubhouse try-out: it has to be clearer where to tap on the picture; the Survivor choices "feel really clunky";
+the poker table "makes little to no sense" and must show who has taken what team, what they took before and what they have left;
+and "we can use the big board like a ticket". Asked which he meant, he chose: **pick on the Big Board** (no separate Window
+screen), and the clunky part was **the chip grid in the Window**. So:
+
+- **Your row on the Big Board is your ticket.** It is a strip of ticket paper on the dark board; its cells are buttons and an
+  owed pick reads PICK. Tapping it opens the ticket in a sheet over the board; one Submit; the row then shows what was sent. The
+  Window room is gone: the room's picks wall and the pinned ticket both open the Big Board with the ticket ready. Still one pick
+  path, the same rules: nothing can be changed after its kickoff, nobody else's unstarted pick is shown.
+- **Survivor is picked from plain rows**, one per game, the same rows as the picks against the spread above them, not from a
+  grid of round chips. A used team says "USED WK n".
+- **The Survivor table answers three questions in words.** This week: one line per team taken, with the players' full names and
+  WON or LOST (the 32-box felt of initials is gone). Used: every team a player has used, in week order, the week number under
+  each. Left: a count on the card, and a sheet with all 32 teams by division, the used ones dimmed. A pick that is still face down
+  is never counted as used, so "left" cannot give it away.
+- **Every tap spot in the room wears a name plate with an arrow, always.** "Show labels" is gone; nothing has to be discovered.
+
+Same day, after seeing it, the owner: "the board doesn't need to mark whose account it is", the hidden Survivor chips "look
+terrible", and "you're doing too much with Survivor now". So the Big Board marks no row (your cells and the bar under the board
+still open the ticket); a hidden Survivor pick is the same plain green IN as a hidden pick against the spread, not a striped chip
+back; and the Survivor table is one row a player: this week's team on the top line, the teams used before and how many are left on
+the bottom line, with the 32-team sheet one tap away. The lines-per-team felt, the USED/LEFT captions and the week-by-week list in
+the sheet are gone. Lesson kept: for this pool, simpler wins.
 ## 2026-11-14 - The horse race: the season as a thoroughbred race (Lab try-out)
 
 The race that came out of the room is now its own Lab try-out ("Horse race"). Ten thoroughbreds, a jockey in each player's silks, in
