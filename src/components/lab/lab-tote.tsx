@@ -38,6 +38,20 @@ function HiddenPick() {
   );
 }
 
+/**
+ * The lamp: one for every pick, 1:1 with Pick 1, Pick 2 and Survivor, at the top of your ticket and on the ticket pinned in the
+ * clubhouse. The Big Board shows the same colours in the team names themselves.
+ *  - dark: no pick. A gold ring with a dark centre: picked on your ticket, not sent yet. Lit yellow: sent, the game not decided.
+ *    Green: it won. Red: it lost.
+ *  - Survivor's lamp is a poker chip (the dashed rim Survivor wears everywhere in the pool), so it is never taken for a Pick'em pick.
+ */
+export type LampState = "off" | "picked" | "in" | "won" | "lost";
+const LAMP_SAYS: Record<LampState, string> = { off: "no pick", picked: "picked, not sent", in: "in", won: "won", lost: "lost" };
+export function Lamp({ state, survivor = false, label }: { state: LampState; survivor?: boolean; label?: string }) {
+  return <span aria-label={label ?? LAMP_SAYS[state]} className={`lab-lamp is-${state}${survivor ? " is-survivor" : ""}`} role="img" />;
+}
+const lampFor = (result: string | null | undefined): LampState => (result === "W" ? "won" : result === "L" ? "lost" : "in");
+
 /* ---------------------------------------------------------------- The Big Board ---------------------------------------------------------------- */
 
 /** What the viewer has sent in: up to two picks against the spread and, while still in Survivor, one team. */
@@ -101,27 +115,6 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
   );
 }
 
-/** The standings, folded into the board: place (level players share it), player, wins, and games back of the leader. */
-function SeasonFace({ moment, viewer }: { moment: string; viewer: string }) {
-  const rows = labLeaderboard({ round: "regular", moment });
-  return (
-    <table>
-      <colgroup><col className="lab-tote-col-pos" /><col /><col className="lab-tote-col-total" /><col className="lab-tote-col-total" /></colgroup>
-      <thead><tr><th scope="col">POS</th><th scope="col">PLAYER</th><th className="is-centre" scope="col">WINS</th><th className="is-centre" scope="col">BACK</th></tr></thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr className={row.name === viewer ? "is-you" : ""} key={row.name}>
-            <td className="lab-tote-pos">{row.tied ? "T" : ""}{row.place}</td>
-            <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
-            <td className="lab-tote-wins">{row.wins}</td>
-            <td className="lab-tote-back">{row.back === 0 ? "—" : row.back}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 /* ---------------------------------------------------------------- Your ticket ---------------------------------------------------------------- */
 
 export function Logo({ team, eager = false }: { team: string; eager?: boolean }) {
@@ -152,23 +145,38 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
 
   const ordered = inOrder(picks).map((team) => `${team} ${labLineFor(gameOf(team), team)}`);
   const lines = [{ label: "Pick 1", value: ordered[0] ?? null }, { label: "Pick 2", value: ordered[1] ?? null }, ...(pickingSurvivor ? [{ label: "Survivor", value: chip ? teamName(chip) : null }] : [])];
-  const made = lines.filter((line) => line.value).length;
+  // A lamp for every pick, in the ticket's own order: dark until picked, a ring while it is only on the ticket, lit once sent, then
+  // green or red when its game is decided. (In the playoffs there is simply a lamp for every game, and no Survivor chip.)
+  const lampOf = (team: string | undefined, sentTeams: Array<string | null>, graded: (team: string) => string | null): LampState =>
+    !team ? "off" : !sentTeams.includes(team) ? "picked" : lampFor(graded(team));
+  const atsNow = (team: string) => { const game = gameOf(team); return labKickedOff(LAB_SLATE, game.id, moment) ? labAtsResult(game, team) : null; };
+  const winNow = (team: string) => { const game = gameOf(team); return labKickedOff(LAB_SLATE, game.id, moment) ? straightUp(game, team) : null; };
+  const mine = inOrder(picks);
+  const lamps: Array<{ label: string; state: LampState; survivor?: boolean }> = [
+    { label: "Pick 1", state: lampOf(mine[0], ticket.picks, atsNow) },
+    { label: "Pick 2", state: lampOf(mine[1], ticket.picks, atsNow) },
+    ...(pickingSurvivor ? [{ label: "Survivor", state: lampOf(chip ?? undefined, [ticket.survivor], winNow), survivor: true }] : []),
+  ];
   const changed = inOrder(picks).join() !== inOrder(ticket.picks).join() || (pickingSurvivor && chip !== ticket.survivor);
 
   return (
     <div className="lab-bigboard is-tote trace-gilt lab-window">
-      <header><h3>WEEK 10</h3><span>{made} OF {lines.length} PICKED</span></header>
+      <header>
+        <h3>WEEK 10</h3>
+        <ul aria-label="Your picks" className="lab-lamps">
+          {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
+        </ul>
+      </header>
 
       {pickingSurvivor ? (
         <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick 2<small>against the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>{32 - survivor.used} teams left</small></button>
+          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick 2 vs. the spread</small></button>
+          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 · {32 - survivor.used} teams left</small></button>
         </div>
       ) : null}
       {survivor.out && !champion ? <p className="lab-window-out">You’re out of Survivor (lost in week {survivor.outWeek}). The pool goes on: follow it at the Survivor table.</p> : null}
 
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
-        <h4>{mode === "survivor" ? <>SURVIVOR <small>pick 1 team to win its game</small></> : <>PICK’EM <small>pick 2 against the spread</small></>}</h4>
         <ol>
           {LAB_SLATE.map((game) => {
             const locked = labKickedOff(LAB_SLATE, game.id, moment);
@@ -235,11 +243,10 @@ function sampleTicket(viewer: string, survivorIn: boolean): Ticket {
  * the Survivor pick still owed; `startOpen` opens the ticket at once (the room's picks wall and pinned ticket lead here);
  * `onTicket` hears whether every pick is in.
  */
-export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }: { survivorIn?: boolean; startOpen?: boolean; onTicket?: (allIn: boolean) => void }) {
+export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket, onSurvivor }: { survivorIn?: boolean; startOpen?: boolean; onTicket?: (allIn: boolean) => void; onSurvivor?: () => void }) {
   const [scene, setSceneOnly] = useState<Scene>("before");
   const [ticket, setTicket] = useState<Ticket>(() => sampleTicket(LAB_VIEWER, survivorIn));
   const [open, setOpen] = useState(startOpen);
-  const [face, setFace] = useState<"week" | "season">("week");
   const [sent, setSent] = useState(false);
   // "Out of Survivor" is seen as Hank, who lost in week 3; everything else as Walt.
   const viewer = scene === "out" ? "Hank" : LAB_VIEWER;
@@ -265,10 +272,15 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }:
     <div className="lab-room-stack">
       <Chips label="Moment" onChange={setScene} options={SCENES} value={scene} />
       <div className="lab-tote">
-        <header><h3>{face === "week" ? "PICK’EM" : "STANDINGS"}</h3><span>{face === "week" ? "WEEK 10 · OFFICIAL" : "THROUGH WEEK 10"}</span></header>
-        <Chips label="Show" onChange={setFace} options={[["week", "This week’s picks"], ["season", "Season standings"]] as const} value={face} />
-        {face === "week" ? <WeekFace mine={{ name: viewer, ticket, open: canPick ? () => setOpen(true) : null, champion }} moment={moment} /> : <SeasonFace moment={moment} viewer={viewer} />}
-        {face === "week" && canPick ? (
+        <header><h3>PICK’EM</h3><span>WEEK 10 · OFFICIAL</span></header>
+        {onSurvivor ? (
+          <div className="lab-tote-links">
+            <span aria-current="page">This week’s picks</span>
+            <button onClick={onSurvivor} type="button">Survivor table <i aria-hidden="true">›</i></button>
+          </div>
+        ) : null}
+        <WeekFace mine={{ name: viewer, ticket, open: canPick ? () => setOpen(true) : null, champion }} moment={moment} />
+        {canPick ? (
           <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => setOpen(true)} type="button">
             <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} OWED` : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
             <span>{owed ? "Tap to make your picks" : "Tap to change your picks"} ›</span>

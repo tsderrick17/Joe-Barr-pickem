@@ -19,14 +19,58 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The room breathes; brighter, softer light; a trophy shelf; the Commissioner's light switch (Lab)
+
+Owner: shadows too harsh and late in the day; the Trophy Room sign implied a hallway; plants more real, swaying; fans spinning; all
+lightweight. The room is lit as a bright mid-afternoon: more fill from the sky, a softer and higher sun, edges darkened less. The
+painted Trophy Room sign is now a walnut shelf on the chimney with one gilt cup (it still opens the Trophy Room). The potted palm grows
+as a kentia does (older fronds arching low, younger ones upright, two greens, its own stems). The fans turn slowly and the indoor
+plants sway: drawn in advance as a loop of 16 small frames per moving thing (one strip each, about 230 KB a picture in all), laid
+exactly over its place in the picture and stepped through by the browser alone, with no 3D and no script on the phone; with reduced
+motion on they are hidden and the room holds still. The lamps are small glass lenses (a highlight, a dark bezel).
+Commissioner only, for now: an unlabeled light switch beside the day/night button swaps between the classic site (switch down) and
+the clubhouse in the Lab (switch up, glowing). Players never see it (a Slate test checks). Plan for more Lab states and the switch on
+real data: LAB_STATES_PLAN.md (outside the repo). Lab only.
+
+## 2026-11-15 - Lamps at the top of the ticket; a desktop clubhouse (Lab)
+
+Owner: play into the lamps, but not a lamp in every box. The top right of your ticket has one lamp per pick, 1:1 with Pick 1, Pick 2
+and Survivor (and the ticket pinned in the clubhouse has the same three): dark = no pick; a gold ring with a dark centre = picked on
+your ticket but not sent; lit yellow = in, its game undecided; green = won; red = lost. Survivor's lamp is a poker chip (the lamp
+inside the dashed rim Survivor wears across the pool). In the playoffs there is one lamp per game, stacked in rows, and no chip.
+The Big Board keeps its cells as they were (team and line in type, three dots for a hidden pick, Survivor's logo with its ring) and
+wears the lamps' colours: a shown pick is yellow while undecided, green for a win, red and struck through for a loss.
+The clubhouse has a desktop version (900px and wider): a wide picture of the same room from the same spot through a longer lens, the
+whole room in one view, with its own label positions; the ticket sits under the picture there. The tall picture stays the phone's.
+The new-message sign sits on the left corner of the Chat button. Lab only.
+
+## 2026-11-15 - Lab: the real constitution and the real Survivor table; a Survivor quick link (Lab)
+
+Owner: post the actual constitution; the pool's current Survivor view is clearly better than the Lab's poker-table try-outs, so those
+are gone. The Lab's Constitution room shows the very text the Commissioner Handbook holds (one list, exported, so they cannot differ),
+set as a printed rule book with a row of the ten articles at the top that jumps to each. The Lab's Survivor room (and the shelf's
+"Survivor" try-out) shows the pool's own Survivor table fed from the sample players, with a week stepper; improvements to Survivor are
+tried on that. On the Big Board page a quick link under the title ("Survivor table") stands where the standings tab was. The ticket's
+switch reads "Pick'em / pick 2 against the spread" and "Survivor / pick 1 to win · N of 32 unused". Lab only.
+
+## 2026-11-15 - The Big Board is one face; the pinned ticket is built like the board (Lab)
+
+Owner: ditch the Season standings tab, and the pinned "Your ticket" bar clashed. The Big Board page is now just this week's picks (the
+room's board shows the standings with the leader on top, and the Standings page has the full table). The ticket pinned to the bottom of
+every clubhouse screen is built like the Big Board itself: its green housing and gold keyline, amber lamp lettering, the same lamps;
+it rides just above the Commissioner wheel when the wheel is there, never behind it.
+No chat zoom (owner: terrible): tapping Chat opens the chat at once. The way back is always in reach: Back to Clubhouse stays pinned
+just under the site's menu at the top of every room as you scroll, and waits again at the room's foot; going in or back starts at the top
+of the page. The spreads ticker runs faster (a full loop in 36 seconds, was 64). Lab only.
+
 ## 2026-11-15 - Room labels are the buttons; taller Big Board; results without letters (Lab)
 
 Owner: people had no clue where to tap. Each label on the room picture is now drawn as a button (raised cream plate, arrow) and takes the
 tap itself; before, a tap on a label fell through to whatever was behind it. The new-message sign rides on the Chat label, and tapping
 Chat zooms the picture in on the laptop before the chat opens (it just opens with reduced motion). The room's Big Board is narrower and
 taller (the leader and five more a page; nine others are a page of five, then four) and the spreads board under it a little taller.
-On the Big Board page a shown pick starts on the left edge where a hidden pick's three centred dots start, so its result can no longer be
-a letter beside it on a phone: a win glows green, a loss is red and struck through. Survivor is the team's logo, always centred: a win
+On the Big Board page every pick in a column starts on one left edge near the cell's left side, a hidden pick's three dots standing in
+for a team name (owner: dots line up with dots, names with names; nothing centred), so a result can no longer be a letter beside it: a win glows green, a loss is red and struck through. Survivor is the team's logo, always centred: a win
 is a lit green ring, a loss a red ring with a bar through a greyed logo.The spreads ticker now reads like the ticket: each matchup one card, its kickoff over the away team and the home team below it, each
 with logo, team and line, your own picks framed in gold. The ticker itself opens the Big Board with your ticket ready (no label on
 it), and the "Your picks" button stands by itself in the empty gap between the poker table's chairs. Lab only, sample players.

@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
+import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
+import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
@@ -147,17 +148,18 @@ function PlaquesShelf() {
 
 type Spot = { x: number; y: number; w: number; h: number };
 type Point = number[];
-type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]> };
+type Motion = { frames: number; patches: Array<{ name: string; x: number; y: number; w: number; h: number }> };
+type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]>; motion?: Motion };
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
-const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; ticket?: boolean }> = [
+const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; ticket?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
   // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
-  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, ticket: true },
+  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, wideAt: { x: 0.655, y: 0.88 }, ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
@@ -239,22 +241,54 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
   );
 }
 
+/**
+ * The room breathes a little: the fans turn slowly and the indoor plants sway. Each moving thing is a small patch laid exactly over
+ * its place in the picture, playing a short loop of frames drawn from the same 3D room (one strip per patch, so nothing is computed
+ * on the phone). The still picture is frame 0, so with reduced motion on (or before a strip has loaded) the room simply holds still.
+ */
+function RoomMotion({ name }: { name: string }) {
+  return (
+    <div aria-hidden="true" className="lab-room-live">
+      {(["day", "night"] as const).flatMap((time) => {
+        const motion = PICTURES[`${time}${name}`]?.motion;
+        return (motion?.patches ?? []).map((patch) => (
+          <span
+            className={`lab-room-motion is-${time} is-${patch.name.replace(/\d+$/, "")}`}
+            key={`${time}-${patch.name}`}
+            style={{ backgroundImage: `url(/lab/clubhouse/room-${time}${name}-${patch.name}.webp)`, height: `${patch.h * 100}%`, left: `${patch.x * 100}%`, top: `${patch.y * 100}%`, width: `${patch.w * 100}%`, ["--frames" as string]: motion!.frames }}
+          />
+        ));
+      })}
+    </div>
+  );
+}
+
 /** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
 function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
-  const lamps = allIn ? [true, true, true] : [true, true, false];
+  const lamps: LampState[] = allIn ? ["in", "in", "in"] : ["in", "in", "off"];
   return (
     <button className="lab-room-ticket" onClick={onOpen} type="button">
       <b>YOUR TICKET · WEEK 10</b>
       <span>{allIn ? "All 3 in · change any until its kickoff" : "2 of 3 in · picks close Thu 8:15 PM"}</span>
-      <span aria-hidden="true" className="lab-room-lamps">{lamps.map((lit, index) => <i className={lit ? "is-lit" : ""} key={index} />)}<em>›</em></span>
+      <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={index === 2} />)}<em>›</em></span>
     </button>
   );
 }
 
 /** The room: the picture by day and at night, a tap spot over each thing in it, a few labels, and the plain list of rooms below. */
 function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boolean; mail: boolean; onEnter: (room: Room, ticket?: boolean) => void }) {
-  const key = season === "bowls" ? "-bowl" : "";
-  const picture = PICTURES[`day${key}`];
+  // A phone gets the tall picture; a desktop (900px and wider) gets the wide one: the same room through a longer lens, everything in
+  // one view, with its own positions for every label. Decided after the page is on screen, so the first paint is always the tall one.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 900px)");
+    const sync = () => setWide(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  const key = `${season === "bowls" ? "-bowl" : ""}${wide ? "-wide" : ""}`;
+  const picture = PICTURES[`day${key}`] ?? PICTURES[`day${season === "bowls" ? "-bowl" : ""}`];
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const you = rows.find((row) => row.name === LAB_VIEWER);
   const seats = labSurvivorAt(9);
@@ -276,22 +310,16 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
     watch.observe(node);
     return () => watch.disconnect();
   }, []);
-  // The chat is on the laptop on the bar: tapping it walks you up to the screen (the picture zooms in on the laptop) and then the
-  // chat opens. With reduced motion on it just opens.
-  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
-  const go = (spot: string, next: Room, ticket?: boolean) => {
-    const at = picture.spots[spot];
-    if (spot !== "chat" || !at || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onEnter(next, ticket); return; }
-    setZoom({ x: at.x + at.w / 2, y: at.y + at.h / 2 });
-  };
+  const go = (_spot: string, next: Room, ticket?: boolean) => onEnter(next, ticket);
   return (
     <>
-      <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
-        <div className={`lab-room-view${zoom ? " is-zooming" : ""}`} onTransitionEnd={(event) => { if (zoom && event.target === event.currentTarget) onEnter("chat"); }} style={zoom ? { transformOrigin: `${zoom.x * 100}% ${zoom.y * 100}%` } : undefined}>
+      <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
+        <RoomMotion name={key} />
         <RoomNews frame={frame} picture={picture} />
-        {spots.map(({ spot, room, name, tag, label, at: free, ticket }) => {
+        {spots.map(({ spot, room, name, tag, label, at: tall, wideAt, ticket }) => {
+          const free = wide ? wideAt ?? tall : tall;
           const plate = label === "none" ? null : (
             <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}>
               <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
@@ -309,7 +337,6 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
             </button>
           );
         })}
-        </div>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
         {(["board", "survivor", "trophies", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
@@ -317,6 +344,45 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
         ))}
       </div>
     </>
+  );
+}
+
+/**
+ * The pool's constitution, posted in full: the very text the Commissioner Handbook holds, so the two can never differ. Quick to use:
+ * a row of the ten articles at the top jumps straight to one, each article is a short numbered list, and the three parts are headed
+ * like the sections of a printed rule book.
+ */
+function Constitution() {
+  const articles = POOL_CONSTITUTION.flatMap(({ articles: list }) => list);
+  const idFor = (title: string) => `rule-${title.split(" · ")[0].split(" ")[1].toLowerCase()}`;
+  return (
+    <article aria-label="Pool constitution" className="lab-rules">
+      <header>
+        <p>THE JOE BARR MEMORIAL PICK’EM</p>
+        <h4>Pool Constitution</h4>
+        <small>Everything you need to know to play. Every time is Eastern.</small>
+      </header>
+      <nav aria-label="Articles" className="lab-rules-index">
+        {articles.map(({ title }) => {
+          const [number, name] = title.split(" · ");
+          return <a href={`#${idFor(title)}`} key={title}><b>{number.replace("Article ", "")}</b>{name}</a>;
+        })}
+      </nav>
+      {POOL_CONSTITUTION.map(({ part, articles: list }) => (
+        <section aria-label={part} className="lab-rules-part" key={part}>
+          <h5>{part}</h5>
+          {list.map(({ title, clauses }) => {
+            const [number, name] = title.split(" · ");
+            return (
+              <section aria-labelledby={`${idFor(title)}-title`} className="lab-rules-article" id={idFor(title)} key={title}>
+                <h6 id={`${idFor(title)}-title`}><span>{number}</span>{name}</h6>
+                <ol>{clauses.map((clause) => <li key={clause}>{clause}</li>)}</ol>
+              </section>
+            );
+          })}
+        </section>
+      ))}
+    </article>
   );
 }
 
@@ -330,7 +396,9 @@ export function LabClubhouse() {
   // Coming in by the picks wall or the pinned ticket opens the Big Board with the ticket ready; each arrival is a fresh one.
   const [ticketOpen, setTicketOpen] = useState(false);
   const [visit, setVisit] = useState(0);
-  const enter = (next: Room, ticket = false) => { setRoom(next); setTicketOpen(ticket); setVisit((count) => count + 1); };
+  // Every room opens at its top, and going back lands you at the room picture, not wherever the page had scrolled to.
+  const enter = (next: Room, ticket = false) => { setRoom(next); setTicketOpen(ticket); setVisit((count) => count + 1); window.scrollTo({ top: 0 }); };
+  const leave = () => { setRoom(null); window.scrollTo({ top: 0 }); };
   const [season, setSeason] = useState<Season>("regular");
   const [allIn, setAllIn] = useState(false);
   const [mail, setMail] = useState(true);
@@ -347,16 +415,17 @@ export function LabClubhouse() {
         </>
       ) : (
         <header className="lab-room-bar">
-          <button className="lab-room-back" onClick={() => setRoom(null)} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
+          <button className="lab-room-back" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
           <h3>{ROOM_TITLE[room]}</h3>
         </header>
       )}
-      {room === "board" ? <BigBoardRoom key={visit} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
+      {room === "board" ? <BigBoardRoom key={visit} onSurvivor={() => enter("survivor")} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
       {room === "survivor" ? <LabSurvivorTable /> : null}
       {room === "chat" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
-      {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
+      {room === "constitution" ? <Constitution /> : null}
+      {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
       <Ticket allIn={allIn} onOpen={() => enter("board", true)} />
     </section>
   );

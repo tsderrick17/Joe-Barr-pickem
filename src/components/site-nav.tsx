@@ -124,6 +124,22 @@ export default function SiteNav() {
     };
   }, [pathname]);
 
+  // Commissioner only, for now: a little light switch beside the day/night button swaps between the site as it is (classic, switch
+  // down) and the clubhouse being built in the Lab (switch up; still on sample players). It carries no label. Players never see it.
+  const inClubhouse = pathname.startsWith("/admin/workshop/lab");
+  // A plain link, so the page loads afresh: the Lab reads which try-out to open from the address as it loads.
+  const viewSwitch = (size: string) => isCommissioner ? (
+    <a
+      aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
+      className={`view-switch ${size}`}
+      data-on={inClubhouse}
+      href={inClubhouse ? "/" : "/admin/workshop/lab?try=clubhouse"}
+      title={inClubhouse ? "Classic view" : "Clubhouse view"}
+    >
+      <span aria-hidden="true" className="view-switch-lever" />
+    </a>
+  ) : null;
+
   if (pathname === "/login") {
     return null;
   }
@@ -209,6 +225,7 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
             <HapticTap />
           </button>
+          {viewSwitch("is-large")}
 
           {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /></div> : null}
         </div>
@@ -234,6 +251,7 @@ export default function SiteNav() {
             <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
             <HapticTap />
           </button>
+          {viewSwitch("is-small")}
           {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /> : null}
           </div>
         </div>
