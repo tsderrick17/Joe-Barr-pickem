@@ -430,8 +430,3 @@
 .lab-seat-used { display: flex; flex-wrap: wrap; row-gap: 3px; }
 .lab-seat-left { color: var(--club-muted); flex: none; font-size: .8rem; font-weight: 700; }
 .lab-seat.is-out .lab-seat-used { filter: grayscale(.7); opacity: .7; }
-.lab-left { background: var(--cw-green); border-radius: 10px; color: var(--cw-cream); padding: 10px; }
-.lab-left .lab-box.is-left { background: rgba(244, 239, 227, .14); border-color: var(--cw-gold-lt); }
-.lab-left .lab-box.is-used { background: rgba(0, 0, 0, .3); border-color: rgba(244, 239, 227, .18); }
-.lab-left .lab-box.is-used .lab-felt-logo { filter: grayscale(1); opacity: .3; }
-.lab-left .lab-box small { bottom: 1px; color: rgba(244, 239, 227, .85); font-size: .56rem; font-weight: 800; left: 0; position: absolute; right: 0; text-align: center; }
