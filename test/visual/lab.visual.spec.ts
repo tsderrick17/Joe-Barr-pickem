@@ -395,24 +395,28 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
-    ["Make your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
+    ["Make your picks", "The Big Board", ".lab-window"], ["Your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
     ["Survivor", "Survivor", ".lab-survivor-room"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
   ];
-  // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate.
+  // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate, except
+  // the spreads board: it looks like the ticket it opens, and the "Your picks" button stands by itself in the gap between the chairs.
   await expect(room.getByRole("button")).toHaveCount(spots.length);
-  await expect(room.locator(".lab-room-tag")).toHaveCount(spots.length);
+  await expect(room.locator(".lab-room-tag")).toHaveCount(spots.length - 1);
+  expect((await room.locator(".lab-room-bubble").boundingBox())!.height).toBeGreaterThanOrEqual(44);
   for (const spot of await room.locator(".lab-room-spot").all()) {
     const box = (await spot.boundingBox())!;
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
   }
   for (const [spot, heading, inside] of spots) {
-    await room.getByRole("button", { name: spot, exact: true }).click();
+    // A spot is tapped where people will tap it: on its name plate when it has one.
+    const button = room.getByRole("button", { name: spot, exact: true });
+    await ((await button.locator(".lab-room-tag").count()) ? button.locator(".lab-room-tag") : button).click();
     await expect(page.getByRole("heading", { name: heading, level: 3, exact: true })).toBeVisible();
     await expect(page.locator(inside)).toBeVisible();
     await expect(room).toHaveCount(0);
     // The picks wall opens the Big Board with the ticket ready; the Big Board itself opens it shut.
     const sheet = page.getByRole("dialog", { name: "Your ticket" });
-    if (spot === "Make your picks") await sheet.getByRole("button", { name: "Close" }).click();
+    if (spot === "Make your picks" || spot === "Your picks") await sheet.getByRole("button", { name: "Close" }).click();
     await expect(sheet).toBeHidden();
     await page.getByRole("button", { name: "Back to Clubhouse" }).click();
     await expect(room).toBeVisible();
@@ -440,7 +444,9 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
-  await expect(page.locator(".lab-ticker .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/, /PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
+  // The ticker reads like the ticket: each game's kickoff over its two teams with their lines, your own picks framed.
+  await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5@CLE+2.5");
+  await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5", "LAR+3"]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();

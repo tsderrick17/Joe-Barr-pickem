@@ -124,8 +124,8 @@ function SeasonFace({ moment, viewer }: { moment: string; viewer: string }) {
 
 /* ---------------------------------------------------------------- Your ticket ---------------------------------------------------------------- */
 
-function Logo({ team }: { team: string }) {
-  return <Image alt="" className="lab-room-logo" height={24} src={`/team-logos/${team}.png`} style={{ transform: `scale(${teamLogoScale(team)})` }} width={24} />;
+export function Logo({ team, eager = false }: { team: string; eager?: boolean }) {
+  return <Image alt="" className="lab-room-logo" height={24} loading={eager ? "eager" : undefined} src={`/team-logos/${team}.png`} style={{ transform: `scale(${teamLogoScale(team)})` }} width={24} />;
 }
 
 /**

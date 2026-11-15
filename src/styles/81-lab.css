@@ -101,13 +101,18 @@
 .lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 24px; padding: 0 10px; }
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
-.lab-room-screen.is-spreads { padding: 6px; }
-.lab-ticker { animation: lab-ticker 24s linear infinite; display: flex; gap: 4px; height: 100%; width: max-content; }
-.lab-room-screen.is-spreads p { align-content: center; background: rgb(18 26 21); display: grid; justify-items: center; flex: none; margin: 0; width: 84px; position: relative; }
-.lab-room-screen.is-spreads b { font-size: 24px; line-height: 1; }
-.lab-room-screen.is-spreads span { color: rgb(255 176 46); font-size: 22px; line-height: 1.1; text-shadow: 0 0 8px rgb(255 154 32); }
-.lab-room-screen.is-spreads small { color: rgb(190 240 200); font-size: 11px; letter-spacing: .1em; }
-.lab-room-screen.is-spreads p.is-picked { background: rgb(22 58 38); box-shadow: inset 0 0 0 2px rgb(120 220 150), 0 0 10px rgba(120, 220, 150, .5); }
+.lab-room-screen.is-spreads { padding: 5px 6px; }
+.lab-ticker { animation: lab-ticker 64s linear infinite; display: flex; height: 100%; width: max-content; }
+/* A game on the ticker reads as it does on the ticket: the kickoff over the two teams, each a dark cell of logo, team and line. */
+/* One matchup, one frame: the kickoff on top, the away team @ the home team. */
+.lab-room-screen.is-spreads p { align-content: start; background: rgb(12 14 12); border: 1px solid rgba(240, 180, 41, .45); border-radius: 3px; column-gap: 4px; display: grid; flex: none; grid-template-columns: 140px 14px 140px; grid-template-rows: 17px 1fr; margin: 0 12px 0 0; padding: 0 5px 5px; }
+.lab-room-screen.is-spreads p > i { align-self: center; color: rgba(240, 180, 41, .8); font-size: 16px; font-style: normal; text-align: center; }
+.lab-room-screen.is-spreads small { color: rgba(240, 180, 41, .8); font-size: 12px; grid-column: 1 / -1; letter-spacing: .1em; }
+.lab-ticker-cell { align-items: center; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .08); border-radius: 2px; display: grid; gap: 6px; grid-template-columns: 24px 1fr auto; padding: 0 8px; }
+.lab-ticker-cell b { font-size: 20px; letter-spacing: .1em; }
+.lab-ticker-cell em { color: rgb(255 176 46); font-size: 20px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
+.lab-ticker-cell.is-picked { border: 2px solid var(--cw-gold); }
+.lab-ticker-cell.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
 .lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 40% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
@@ -123,7 +128,6 @@
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
 .lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
-.lab-room-spot.is-sportsbook .lab-room-tag { transform: translateX(-12%); }
 .lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -10px; top: -12px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
 .lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
@@ -494,3 +498,7 @@
 .lab-room-view { inset: 0; position: absolute; transition: transform .6s cubic-bezier(.5, 0, .75, .45); }
 .lab-room-view.is-zooming { transform: scale(9); }
 .lab-room-view.is-zooming .lab-room-tag { opacity: 0; transition: opacity .15s; }
+/* A button standing by itself in the picture (Your picks, in the gap between the chairs). */
+.lab-room-bubble { background: transparent; border: 0; cursor: pointer; min-height: 44px; padding: 0; position: absolute; transform: translate(-50%, -50%); z-index: 2; }
+.lab-room-bubble .lab-room-tag { display: block; left: auto; position: relative; transform: none; }
+.lab-room-bubble:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
