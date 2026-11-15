@@ -127,6 +127,7 @@ export async function buildRoom(q) {
   // every leaf in and around the room is grown from the one modelled frond
   const leafGreen = new THREE.MeshStandardMaterial({ color: 0x3f8a48, roughness: 0.55, side: THREE.DoubleSide }), leafDeep = new THREE.MeshStandardMaterial({ color: 0x2a6a36, roughness: 0.38, side: THREE.DoubleSide });
   const palmLeaf = frond({ L: 1.3, HW: 0.21, pleats: 30, droop: 0.55, keel: 0.5, depth: 0.01, scallop: 0.1, shape: 0.6, NU: 240, NV: 64 });
+  const pottedLeaf = frond({ L: 1.3, HW: 0.17, pleats: 16, droop: 0.6, keel: 0.35, depth: 0.004, scallop: 0.04, shape: 0.6, NU: 200, NV: 48 });   // softer pleats: read as leaflets, not blocks
   const broadLeaf = frond({ L: 0.46, HW: 0.21, pleats: 7, droop: 0.07, keel: 0.22, depth: 0.004, scallop: 0.2, shape: 0.5, NU: 90, NV: 40 });
   const spray = (parent, geometry, material, [x, y, z], count, size, lift) => {
     for (let f = 0; f < count; f++) {
@@ -547,7 +548,7 @@ export async function buildRoom(q) {
   const plant = (x, z, s = 1) => {
     add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 24), rattan, [x, 0.25 * s, z]);
     add(room, cyl(0.27 * s, 0.27 * s, 0.02, 20), std(0x3a2a1c, { roughness: 1 }), [x, 0.49 * s, z], { cast: false });
-    spray(room, palmLeaf, leafGreen, [x, 0.5 * s, z], 7, s * 0.95, [0.7, 1.0]); spray(room, palmLeaf, leafGreen, [x, 0.5 * s, z], 6, s * 1.1, [1.05, 1.4]);
+    spray(room, pottedLeaf, leafGreen, [x, 0.5 * s, z], 7, s * 0.95, [0.45, 0.8]); spray(room, pottedLeaf, leafGreen, [x, 0.5 * s, z], 5, s * 1.1, [0.85, 1.15]);   // arching, as a kentia palm grows
   };
   const monstera = (x, z, s = 1) => {
     add(room, cyl(0.28 * s, 0.22 * s, 0.46 * s, 24), std(0xf1ece2, { roughness: 0.5 }), [x, 0.23 * s, z]);

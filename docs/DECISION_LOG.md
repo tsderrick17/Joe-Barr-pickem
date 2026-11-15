@@ -35,7 +35,8 @@ at the front and a clerestory strip high over the bar) and the sun comes in thro
 trusses (tie beam, rafters, king post and braces, iron straps) and a ridge beam now span the room under the thatch. This
 supersedes the earlier "no beams" verdict, which was about beams in place of thatch; the thatch stays. The owner then caught the
 fans turning straight through the beams ("let's do a realism check"): the fans are now a real big-room size (about 2.9 m tip to
-tip), each hung on a downrod from the ridge beam halfway between two trusses, so every blade turns clear of the timber.
+tip), each hung on a downrod from the ridge beam halfway between two trusses, so every blade turns clear of the timber. In the same check the potted palm by the doors, whose tightly pleated upright
+leaves read as blocks up close, was given softer leaves that arch outward as a real kentia palm does.
 
 ## 2026-11-13 - The clubhouse room made convincing, and laid out to be walked through (Lab)
 
