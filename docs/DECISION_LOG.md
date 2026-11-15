@@ -25,8 +25,8 @@ Owner: people had no clue where to tap. Each label on the room picture is now dr
 tap itself; before, a tap on a label fell through to whatever was behind it. The new-message sign rides on the Chat label, and tapping
 Chat zooms the picture in on the laptop before the chat opens (it just opens with reduced motion). The room's Big Board is narrower and
 taller (the leader and five more a page; nine others are a page of five, then four) and the spreads board under it a little taller.
-On the Big Board page a shown pick starts on the left edge where a hidden pick's three centred dots start, so its result can no longer be
-a letter beside it on a phone: a win glows green, a loss is red and struck through. Survivor is the team's logo, always centred: a win
+On the Big Board page every pick in a column starts on one left edge near the cell's left side, a hidden pick's three dots standing in
+for a team name (owner: dots line up with dots, names with names; nothing centred), so a result can no longer be a letter beside it: a win glows green, a loss is red and struck through. Survivor is the team's logo, always centred: a win
 is a lit green ring, a loss a red ring with a bar through a greyed logo.The spreads ticker now reads like the ticket: each matchup one card, its kickoff over the away team and the home team below it, each
 with logo, team and line, your own picks framed in gold. The ticker itself opens the Big Board with your ticket ready (no label on
 it), and the "Your picks" button stands by itself in the empty gap between the poker table's chairs. Lab only, sample players.

@@ -166,20 +166,18 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
-  // Game day has both in a column: every shown pick starts on one left edge, the same edge a hidden pick's three dots start on,
-  // and the dots sit centred in their cell. A result is in the type (no letter): said aloud as win or loss.
+  // Game day has both in a column: every shown pick and every hidden pick's three dots start on one left edge, near the cell's left
+  // side (not centred). A result is in the type (no letter): said aloud as win or loss.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
   for (const column of [3, 4]) {
-    const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left)));
-    const shown = await lefts(".lab-tote-slip"), hidden = await lefts(".lab-tote-cover i:first-child");
+    const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left - node.closest("td")!.getBoundingClientRect().left)));
+    const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover i:first-child");
     expect(shown.length).toBeGreaterThan(0);
+    // Pick 2 still has hidden picks on game day; Pick 1's games have all kicked off.
+    if (column === 4) expect(hidden.length).toBeGreaterThan(0);
     expect(new Set([...shown, ...hidden]).size).toBe(1);
+    expect(shown[0]).toBeLessThanOrEqual(12);
   }
-  const off = await pad.locator(".lab-tote-cover").first().evaluate((cover) => {
-    const cell = cover.closest("td")!.getBoundingClientRect(), first = cover.firstElementChild!.getBoundingClientRect(), last = cover.lastElementChild!.getBoundingClientRect();
-    return Math.abs((first.left + last.right) / 2 - (cell.left + cell.right) / 2);
-  });
-  expect(off).toBeLessThanOrEqual(1.5);
   await expect(pad.locator(".lab-tote-slip.is-w").first()).toContainText("win");
   // Survivor is the team's logo, centred in its column whatever the result.
   const logos = await pad.locator(".lab-tote-logo").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(), cell = node.closest("td")!.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (cell.left + cell.right) / 2); }));
