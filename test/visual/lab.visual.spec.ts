@@ -131,7 +131,6 @@ const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
   ["board-before-kickoff", [], false],
   ["board-game-day", [["Moment", "Game day"]], false],
   ["board-graded", [["Moment", "Graded"]], false],
-  ["board-season", [["Show", "Season standings"]], false],
   ["board-out-of-survivor", [["Moment", "Out of Survivor"]], false],
   ["board-survivor-decided", [["Moment", "Survivor decided"]], false],
   ["ticket-picking", [], true],
@@ -186,14 +185,10 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.getByRole("img", { name: /, Survivor (win|loss)$/ }).first()).toBeVisible();
 });
 
-test("the Big Board turns to the season standings with one tap on the board", async ({ page }) => {
+test("the Big Board is one face: this week's picks, with no standings tab (the room's board and the Standings page have those)", async ({ page }) => {
   await openLab(page, "tote");
   const board = page.locator(".lab-tote");
-  await board.getByRole("group", { name: "Show" }).getByRole("button", { name: "Season standings" }).click();
-  await expect(board.locator("thead th")).toHaveText(["POS", "PLAYER", "WINS", "BACK"]);
-  await expect(board.locator("tbody tr")).toHaveCount(10);
-  await expect(board.locator("tbody tr").first().locator("td")).toHaveText(["1", /\d+/, "—"]);
-  await board.getByRole("group", { name: "Show" }).getByRole("button", { name: "This week’s picks" }).click();
+  await expect(board.getByRole("group", { name: "Show" })).toHaveCount(0);
   await expect(board.locator("thead th")).toHaveCount(5);
 });
 

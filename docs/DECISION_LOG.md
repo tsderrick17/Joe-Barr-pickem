@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The Big Board is one face; the pinned ticket is built like the board (Lab)
+
+Owner: ditch the Season standings tab, and the pinned "Your ticket" bar clashed. The Big Board page is now just this week's picks (the
+room's board shows the standings with the leader on top, and the Standings page has the full table). The ticket pinned to the bottom of
+every clubhouse screen is built like the Big Board itself: its green housing and gold keyline, amber lamp lettering, the same lamps;
+it rides just above the Commissioner wheel when the wheel is there, never behind it. Lab only.
+
 ## 2026-11-15 - Room labels are the buttons; taller Big Board; results without letters (Lab)
 
 Owner: people had no clue where to tap. Each label on the room picture is now drawn as a button (raised cream plate, arrow) and takes the

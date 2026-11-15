@@ -101,27 +101,6 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
   );
 }
 
-/** The standings, folded into the board: place (level players share it), player, wins, and games back of the leader. */
-function SeasonFace({ moment, viewer }: { moment: string; viewer: string }) {
-  const rows = labLeaderboard({ round: "regular", moment });
-  return (
-    <table>
-      <colgroup><col className="lab-tote-col-pos" /><col /><col className="lab-tote-col-total" /><col className="lab-tote-col-total" /></colgroup>
-      <thead><tr><th scope="col">POS</th><th scope="col">PLAYER</th><th className="is-centre" scope="col">WINS</th><th className="is-centre" scope="col">BACK</th></tr></thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr className={row.name === viewer ? "is-you" : ""} key={row.name}>
-            <td className="lab-tote-pos">{row.tied ? "T" : ""}{row.place}</td>
-            <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
-            <td className="lab-tote-wins">{row.wins}</td>
-            <td className="lab-tote-back">{row.back === 0 ? "—" : row.back}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 /* ---------------------------------------------------------------- Your ticket ---------------------------------------------------------------- */
 
 export function Logo({ team, eager = false }: { team: string; eager?: boolean }) {
@@ -239,7 +218,6 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }:
   const [scene, setSceneOnly] = useState<Scene>("before");
   const [ticket, setTicket] = useState<Ticket>(() => sampleTicket(LAB_VIEWER, survivorIn));
   const [open, setOpen] = useState(startOpen);
-  const [face, setFace] = useState<"week" | "season">("week");
   const [sent, setSent] = useState(false);
   // "Out of Survivor" is seen as Hank, who lost in week 3; everything else as Walt.
   const viewer = scene === "out" ? "Hank" : LAB_VIEWER;
@@ -265,10 +243,9 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }:
     <div className="lab-room-stack">
       <Chips label="Moment" onChange={setScene} options={SCENES} value={scene} />
       <div className="lab-tote">
-        <header><h3>{face === "week" ? "PICK’EM" : "STANDINGS"}</h3><span>{face === "week" ? "WEEK 10 · OFFICIAL" : "THROUGH WEEK 10"}</span></header>
-        <Chips label="Show" onChange={setFace} options={[["week", "This week’s picks"], ["season", "Season standings"]] as const} value={face} />
-        {face === "week" ? <WeekFace mine={{ name: viewer, ticket, open: canPick ? () => setOpen(true) : null, champion }} moment={moment} /> : <SeasonFace moment={moment} viewer={viewer} />}
-        {face === "week" && canPick ? (
+        <header><h3>PICK’EM</h3><span>WEEK 10 · OFFICIAL</span></header>
+        <WeekFace mine={{ name: viewer, ticket, open: canPick ? () => setOpen(true) : null, champion }} moment={moment} />
+        {canPick ? (
           <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => setOpen(true)} type="button">
             <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} OWED` : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
             <span>{owed ? "Tap to make your picks" : "Tap to change your picks"} ›</span>
