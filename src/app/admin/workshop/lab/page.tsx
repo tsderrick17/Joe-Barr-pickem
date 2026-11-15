@@ -4,6 +4,7 @@ import { useState } from "react";
 import { HapticFeelTest } from "@/components/haptic-feel-test";
 import { LabClubhouse } from "@/components/lab/lab-clubhouse";
 import { LabPadSkins } from "@/components/lab/lab-pad-skins";
+import { LabRace } from "@/components/lab/lab-race";
 import { LabToteBoard } from "@/components/lab/lab-tote-board";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { WorkshopTabs } from "@/components/workshop-tabs";
@@ -61,6 +62,7 @@ export default function WorkshopLabPage() {
           {choice === "skins" ? <LabPadSkins /> : null}
           {choice === "clubhouse" ? <LabClubhouse /> : null}
           {choice === "survivor" ? <LabSurvivorTable /> : null}
+          {choice === "race" ? <LabRace /> : null}
           {choice === "feel" ? <HapticFeelTest /> : null}
         </div>
       </> : <p className="workshop-lab-intro">{access === "checking" ? "Checking sign-in…" : "Commissioner only."}</p>}
