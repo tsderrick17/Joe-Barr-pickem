@@ -276,18 +276,10 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
     watch.observe(node);
     return () => watch.disconnect();
   }, []);
-  // The chat is on the laptop on the bar: tapping it walks you up to the screen (the picture zooms in on the laptop) and then the
-  // chat opens. With reduced motion on it just opens.
-  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
-  const go = (spot: string, next: Room, ticket?: boolean) => {
-    const at = picture.spots[spot];
-    if (spot !== "chat" || !at || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onEnter(next, ticket); return; }
-    setZoom({ x: at.x + at.w / 2, y: at.y + at.h / 2 });
-  };
+  const go = (_spot: string, next: Room, ticket?: boolean) => onEnter(next, ticket);
   return (
     <>
       <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
-        <div className={`lab-room-view${zoom ? " is-zooming" : ""}`} onTransitionEnd={(event) => { if (zoom && event.target === event.currentTarget) onEnter("chat"); }} style={zoom ? { transformOrigin: `${zoom.x * 100}% ${zoom.y * 100}%` } : undefined}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
         <RoomNews frame={frame} picture={picture} />
@@ -309,7 +301,6 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
             </button>
           );
         })}
-        </div>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
         {(["board", "survivor", "trophies", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
@@ -330,7 +321,9 @@ export function LabClubhouse() {
   // Coming in by the picks wall or the pinned ticket opens the Big Board with the ticket ready; each arrival is a fresh one.
   const [ticketOpen, setTicketOpen] = useState(false);
   const [visit, setVisit] = useState(0);
-  const enter = (next: Room, ticket = false) => { setRoom(next); setTicketOpen(ticket); setVisit((count) => count + 1); };
+  // Every room opens at its top, and going back lands you at the room picture, not wherever the page had scrolled to.
+  const enter = (next: Room, ticket = false) => { setRoom(next); setTicketOpen(ticket); setVisit((count) => count + 1); window.scrollTo({ top: 0 }); };
+  const leave = () => { setRoom(null); window.scrollTo({ top: 0 }); };
   const [season, setSeason] = useState<Season>("regular");
   const [allIn, setAllIn] = useState(false);
   const [mail, setMail] = useState(true);
@@ -347,7 +340,7 @@ export function LabClubhouse() {
         </>
       ) : (
         <header className="lab-room-bar">
-          <button className="lab-room-back" onClick={() => setRoom(null)} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
+          <button className="lab-room-back" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
           <h3>{ROOM_TITLE[room]}</h3>
         </header>
       )}
@@ -357,6 +350,7 @@ export function LabClubhouse() {
       {room === "chat" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
+      {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
       <Ticket allIn={allIn} onOpen={() => enter("board", true)} />
     </section>
   );

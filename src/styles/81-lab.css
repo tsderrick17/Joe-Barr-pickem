@@ -102,7 +102,7 @@
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-spreads { padding: 5px 6px; }
-.lab-ticker { animation: lab-ticker 64s linear infinite; display: flex; height: 100%; width: max-content; }
+.lab-ticker { animation: lab-ticker 36s linear infinite; display: flex; height: 100%; width: max-content; }
 /* A game on the ticker reads as it does on the ticket: the kickoff over the two teams, each a dark cell of logo, team and line. */
 /* One matchup, one card: the kickoff on top, the away team over the home team, each with its logo and line; your pick lit in gold. */
 .lab-room-screen.is-spreads p { background: rgb(22 22 19); border: 1px solid rgba(240, 180, 41, .45); border-radius: 3px; display: grid; flex: none; grid-template-rows: 15px 1fr 1fr; margin: 0 10px 0 0; padding: 2px 8px 3px; width: 168px; }
@@ -146,8 +146,11 @@
   .lab-room-spot.is-owed::before { animation: none; }
 }
 /* Inside a room: one way back, always in the same place, and the room's name. */
-.lab-room-bar { align-items: center; display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr; }
+/* The way back is always in reach: the bar with Back to Clubhouse stays pinned at the top of every room as you scroll, and the same
+   button waits again at the foot of the room. */
+.lab-room-bar { align-items: center; background: var(--club-page); display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr; padding: 8px 0; position: sticky; top: var(--site-nav-height, 0px); z-index: 4; }
 .lab-room-back { background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .95rem; font-weight: 800; justify-self: start; min-height: 2.75rem; padding: 0 16px; }
+.lab-room-back.is-foot { display: block; margin: 18px auto 0; min-width: 14rem; }
 .lab-room-bar h3 { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.3rem; margin: 0; }
 .lab-stand-in { background: var(--club-paper); border: 1px dashed var(--club-line); border-radius: 8px; color: var(--club-ink); margin: 0; padding: 28px 16px; text-align: center; }
 
@@ -488,10 +491,6 @@
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .12em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-roll ol { align-content: space-evenly; height: 100%; }
-/* The room's picture and everything on it move as one, so a tap on the chat can walk you up to the laptop. */
-.lab-room-view { inset: 0; position: absolute; transition: transform .6s cubic-bezier(.5, 0, .75, .45); }
-.lab-room-view.is-zooming { transform: scale(9); }
-.lab-room-view.is-zooming .lab-room-tag { opacity: 0; transition: opacity .15s; }
 /* A button standing by itself in the picture (Your picks, in the gap between the chairs). */
 .lab-room-bubble { background: transparent; border: 0; cursor: pointer; min-height: 44px; padding: 0; position: absolute; transform: translate(-50%, -50%); z-index: 2; }
 .lab-room-bubble .lab-room-tag { display: block; left: auto; position: relative; transform: none; }

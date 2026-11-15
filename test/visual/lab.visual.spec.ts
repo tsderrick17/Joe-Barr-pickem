@@ -280,7 +280,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await sheet.getByRole("button", { name: "Submit changes" }).click();
   await expect(board.getByRole("button", { name: /^Survivor: Broncos/ })).toBeVisible();
   // Back in the room, the ticket's third lamp is lit and the picks wall no longer glows.
-  await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+  await page.getByRole("button", { name: "Back to Clubhouse" }).first().click();
   await expect(page.locator(".lab-room-ticket i.is-lit")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
 });
@@ -382,7 +382,7 @@ for (const [spot, shot, choices] of CLUB_SHOTS) {
   }
 }
 
-test("the clubhouse room: everything in it opens its room in one tap, every spot is thumb-sized, and every room has one way back", async ({ page }) => {
+test("the clubhouse room: everything in it opens its room in one tap, every spot is thumb-sized, and every room has a way back at its top and its foot", async ({ page }) => {
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
@@ -411,7 +411,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
     const sheet = page.getByRole("dialog", { name: "Your ticket" });
     if (spot === "Make your picks" || spot === "Your picks") await sheet.getByRole("button", { name: "Close" }).click();
     await expect(sheet).toBeHidden();
-    await page.getByRole("button", { name: "Back to Clubhouse" }).click();
+    await page.getByRole("button", { name: "Back to Clubhouse" }).first().click();
     await expect(room).toBeVisible();
   }
 });
@@ -557,19 +557,28 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
 });
 
-test("the room's labels are the buttons: tapping a label opens its room, and the chat's walks you up to the laptop first", async ({ page }) => {
+test("the room's labels are the buttons, and the way back to the Clubhouse is always in reach from every room", async ({ page }) => {
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // The label itself takes the tap (it used to let it through to whatever was behind it).
   await room.locator(".lab-room-spot.is-trophies .lab-room-tag").click();
   await expect(page.getByRole("heading", { name: "Trophy Room", level: 3 })).toBeVisible();
-  await page.getByRole("button", { name: "Back to Clubhouse" }).click();
-  // The new-message sign rides on the Chat label.
+  // Scrolled to the very bottom of a long room, Back to Clubhouse is still on screen at the top, and waits again at the foot.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  const backs = page.getByRole("button", { name: "Back to Clubhouse" });
+  await expect(backs).toHaveCount(2);
+  const top = (await backs.first().boundingBox())!;
+  // Below the site's own menu, never under it.
+  const menu = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--site-nav-height")) || 0);
+  expect(top.y).toBeGreaterThanOrEqual(menu - 1);
+  expect(top.y + top.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  await backs.last().click();
+  // Back lands on the room picture, at the top.
+  await expect(room).toBeInViewport();
+  // The new-message sign rides on the Chat label, and the chat opens at once (no zoom).
   await expect(room.locator(".lab-room-spot.is-chat .lab-room-tag").getByRole("img", { name: "New message" })).toBeVisible();
-  // With motion allowed, the chat label zooms the picture in on the laptop, then the chat opens.
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await room.locator(".lab-room-spot.is-chat .lab-room-tag").click();
-  await expect(room.locator(".lab-room-view.is-zooming")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Pool chat", level: 3 })).toBeVisible();
 });
 

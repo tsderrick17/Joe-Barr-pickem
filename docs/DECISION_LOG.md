@@ -24,7 +24,10 @@ and add a row above.
 Owner: ditch the Season standings tab, and the pinned "Your ticket" bar clashed. The Big Board page is now just this week's picks (the
 room's board shows the standings with the leader on top, and the Standings page has the full table). The ticket pinned to the bottom of
 every clubhouse screen is built like the Big Board itself: its green housing and gold keyline, amber lamp lettering, the same lamps;
-it rides just above the Commissioner wheel when the wheel is there, never behind it. Lab only.
+it rides just above the Commissioner wheel when the wheel is there, never behind it.
+No chat zoom (owner: terrible): tapping Chat opens the chat at once. The way back is always in reach: Back to Clubhouse stays pinned
+just under the site's menu at the top of every room as you scroll, and waits again at the room's foot; going in or back starts at the top
+of the page. The spreads ticker runs faster (a full loop in 36 seconds, was 64). Lab only.
 
 ## 2026-11-15 - Room labels are the buttons; taller Big Board; results without letters (Lab)
 
