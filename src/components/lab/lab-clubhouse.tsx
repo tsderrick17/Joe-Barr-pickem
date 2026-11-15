@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom } from "@/components/lab/lab-tote";
@@ -188,19 +188,29 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
+/** The Big Board in the room: five players a page, a new page every 15 seconds. */
+const BOARD_PAGE = 5;
+const BOARD_PAGE_MS = 15_000;
+
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
-  // Both boards keep moving, as a real one does: the standings roll up the board a line at a time, the lines run across the spreads
-  // board like a ticker. Each list is shown twice in a row so the loop has no seam.
-  const standings = [...rows, ...rows];
+  // The standings show five players a page and turn to the next page every 15 seconds; the lines run across the spreads board like a
+  // ticker (shown twice in a row so the loop has no seam).
+  const pages = Math.ceil(rows.length / BOARD_PAGE);
+  const [page, setPage] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setPage((at) => (at + 1) % pages), BOARD_PAGE_MS);
+    return () => window.clearInterval(timer);
+  }, [pages]);
+  const standings = rows.slice(page * BOARD_PAGE, page * BOARD_PAGE + BOARD_PAGE);
   const lines = [...LAB_SLATE, ...LAB_SLATE];
   return (
     <div aria-hidden="true" className="lab-room-live">
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
-        <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS</span></header>
+        <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS · {page + 1}/{pages}</span></header>
         <div className="lab-roll">
-          <ol>
+          <ol data-page={page + 1}>
             {standings.map((row, index) => (
               <li key={`${row.name}-${index}`}>
                 <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span><b>{row.wins}</b>

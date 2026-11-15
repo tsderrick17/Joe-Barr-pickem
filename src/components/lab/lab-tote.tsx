@@ -33,7 +33,7 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
 function HiddenPick() {
   return (
     <span aria-label="Pick in, hidden until kickoff" className="lab-tote-cover" role="img">
-      <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" /><b aria-hidden="true">IN</b>
+      <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" />
     </span>
   );
 }

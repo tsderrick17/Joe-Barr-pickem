@@ -93,12 +93,12 @@
 /* What the room shows by itself: the live boards, laid over the screens in the picture in perspective. */
 .lab-room-live { inset: 0; pointer-events: none; position: absolute; }
 .lab-room-screen { background: rgb(7 10 9); color: var(--cw-cream); font-family: "Courier New", monospace; font-weight: 700; left: 0; overflow: hidden; position: absolute; top: 0; transform-origin: 0 0; }
-.lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 6px 12px 4px; }
+.lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 4px 12px 2px; }
 .lab-room-screen.is-board header b { font-family: var(--font-serif); font-size: 22px; letter-spacing: .14em; }
 .lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; }
-.lab-room-screen.is-board ol { animation: lab-roll 28s linear infinite; display: grid; gap: 2px; list-style: none; margin: 0; padding: 0 0 2px; }
-.lab-roll { height: 148px; margin: 4px 8px 0; overflow: hidden; }
-.lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 27px; padding: 0 10px; }
+.lab-room-screen.is-board ol { display: grid; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.lab-roll { height: 128px; margin: 3px 8px 0; overflow: hidden; }
+.lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 24px; padding: 0 10px; }
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-spreads { padding: 6px; }
@@ -366,9 +366,8 @@
 /* The chip's W or L sits on a small black lamp at its lower right, inside the column. */
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
-.lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: center; }
+.lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; }
 .lab-tote-cover i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
-.lab-tote-cover b { color: rgb(110 231 150); font-family: "Courier New", monospace; font-size: .7rem; letter-spacing: .1em; margin-left: 4px; text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
 /* Sealed: a small gold seal stamped over the panel. */
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
 /* The Slate in the same housing: the tote board's green and gold around the black board. */
@@ -461,10 +460,9 @@
 
 /* The room's boards keep moving: the standings roll up (the list is shown twice, so half its height is one full turn) and the lines run
    across like a ticker. Held still for people who ask for less motion. */
-@keyframes lab-roll { to { transform: translateY(-50%); } }
 @keyframes lab-ticker { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
-  .lab-room-screen.is-board ol, .lab-ticker { animation: none; }
+  .lab-ticker { animation: none; }
 }
 /* Records, in the Trophy Room under the plaques. */
 .lab-records { display: grid; gap: 6px; }

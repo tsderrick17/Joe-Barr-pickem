@@ -19,6 +19,12 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The room's standings turn pages; a hidden pick is three dots (Lab)
+
+Owner: two boards moving at once was too much. The room's Big Board now shows five players a page and turns the page every 15 seconds;
+only the spreads ticker moves. On the Big Board a hidden Pick'em pick is just the three dark lamps (the dots alone say a pick was made;
+blank means none), set at the left of the cell where a shown pick's team starts. Survivor keeps its green IN. Lab only, sample players.
+
 ## 2026-11-15 - One ticket, one list: Pick 2 and Survivor share one game list (Lab)
 
 Owner: making and seeing picks must be simpler. The Big Board stays the only place to see picks (one row a player, a green IN until

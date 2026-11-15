@@ -418,13 +418,13 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   }
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
-  // The boards in the room show today's news themselves, and keep moving: the standings roll up the board (all ten players, the list
-  // shown twice so the loop has no seam) and the lines run across the spreads board like a ticker, your own picks lit.
+  // The boards in the room show today's news themselves: the standings five players a page (page 1 first) and the lines running across
+  // the spreads board like a ticker, your own picks lit.
   const board = page.locator(".lab-room-screen.is-board");
-  await expect(board.locator("li")).toHaveCount(20);
+  await expect(board.locator("li")).toHaveCount(5);
+  await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Earl");
   await expect(board.locator("li").nth(2)).toHaveText("T2Walt13");   // the board does not mark whose row it is
-  await expect(board.locator("li").nth(9)).toContainText("Gus");
   await expect(page.locator(".lab-ticker .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/, /PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
@@ -543,18 +543,29 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
 });
 
-test("the room's boards keep moving: the standings roll up, the spreads run across like a ticker, and both hold still for reduced motion", async ({ page }) => {
+test("the room's Big Board turns a page of standings every 15 seconds, and the spreads run across like a ticker that holds still for reduced motion", async ({ page }) => {
+  await page.clock.install();
   await openLab(page, "clubhouse");
-  const offset = (selector: string) => page.locator(selector).evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m42 + new DOMMatrix(getComputedStyle(node).transform).m41);
-  // Reduced motion: both sit still.
-  const still = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
+  const board = page.locator(".lab-room-screen.is-board");
+  await expect(board.locator("li").first()).toContainText("Earl");
+  // Not yet: the first page stays up for the full 15 seconds.
+  await page.clock.runFor(14_000);
+  await expect(board.locator("header")).toContainText("1/2");
+  // Then the next five, then back to the top.
+  await page.clock.runFor(1_000);
+  await expect(board.locator("header")).toContainText("2/2");
+  await expect(board.locator("li")).toHaveCount(5);
+  await expect(board.locator("li").last()).toContainText("Gus");
+  await page.clock.runFor(15_000);
+  await expect(board.locator("li").first()).toContainText("Earl");
+  // The ticker: still for reduced motion, otherwise only ever one way.
+  await page.clock.resume();
+  const offset = () => page.locator(".lab-ticker").evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m41);
+  const still = await offset();
   await page.waitForTimeout(800);
-  expect([await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")]).toEqual(still);
-  // Otherwise they move, and only ever one way.
+  expect(await offset()).toEqual(still);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const first = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
+  const first = await offset();
   await page.waitForTimeout(1_200);
-  const later = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
-  expect(later[0]).toBeLessThan(first[0]);
-  expect(later[1]).toBeLessThan(first[1]);
+  expect(await offset()).toBeLessThan(first);
 });
