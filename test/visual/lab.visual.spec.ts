@@ -98,7 +98,7 @@ for (const [shot, choices, ticket] of TOTE_SHOTS) {
   }
 }
 
-test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and starts a shown pick where a hidden one's dots start", async ({ page }) => {
+test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and gives every pick one lamp, lamps and names each on their own line down the column", async ({ page }) => {
   await openLab(page, "tote");
   const pad = page.locator(".lab-tote");
   await expect(pad.locator("thead th")).toHaveText(["W", "PLAYER", "PICK 1", "PICK 2", "SURVSurvivor"]);
@@ -109,24 +109,24 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
-  // Game day has both in a column: every shown pick and every hidden pick's three dots start on one left edge, near the cell's left
-  // side (not centred). A result is in the type (no letter): said aloud as win or loss.
+  // Game day has both in a column: every pick is one lamp (a hidden pick is the lamp alone), all lamps on one left edge and all team
+  // names on another. A lamp is yellow while its game is undecided, green for a win, red for a loss.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
   for (const column of [3, 4]) {
     const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left - node.closest("td")!.getBoundingClientRect().left)));
-    const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover i:first-child");
-    expect(shown.length).toBeGreaterThan(0);
-    // Pick 2 still has hidden picks on game day; Pick 1's games have all kicked off.
-    if (column === 4) expect(hidden.length).toBeGreaterThan(0);
-    expect(new Set([...shown, ...hidden]).size).toBe(1);
-    expect(shown[0]).toBeLessThanOrEqual(12);
+    const lamps = await lefts(".lab-lamp"), names = await lefts(".lab-tote-slip b");
+    expect(lamps.length).toBe(10);
+    expect(new Set(lamps).size).toBe(1);
+    expect(lamps[0]).toBeLessThanOrEqual(12);
+    expect(names.length).toBeGreaterThan(0);
+    expect(new Set(names).size).toBe(1);
   }
-  await expect(pad.locator(".lab-tote-slip.is-w").first()).toContainText("win");
-  // Survivor is the team's logo, centred in its column whatever the result.
-  const logos = await pad.locator(".lab-tote-logo").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(), cell = node.closest("td")!.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (cell.left + cell.right) / 2); }));
-  expect(logos.length).toBeGreaterThan(1);
-  for (const gap of logos) expect(gap).toBeLessThanOrEqual(1.5);
-  await expect(pad.getByRole("img", { name: /, Survivor (win|loss)$/ }).first()).toBeVisible();
+  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-won").first()).toBeVisible();
+  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-lost").first()).toBeVisible();
+  await expect(pad.locator("td:nth-child(4) .lab-lamp.is-in").first()).toBeVisible();
+  // Survivor's lamp is a poker chip, so it is never taken for a Pick'em pick.
+  await expect(pad.locator("td:nth-child(5) .lab-lamp")).toHaveCount(await pad.locator("td:nth-child(5) .lab-lamp.is-survivor").count());
+  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-survivor")).toHaveCount(0);
 });
 
 test("the Big Board is one face (no standings tab); in the clubhouse a quick link under its title goes to the Survivor table", async ({ page }) => {
@@ -168,7 +168,7 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   const choose = sheet.getByRole("group", { name: "What to pick" });
   await expect(choose.getByRole("button", { name: /^Pick’em/ })).toHaveAttribute("aria-pressed", "true");
   await choose.getByRole("button", { name: /^Survivor/ }).click();
-  await expect(choose.getByRole("button", { name: /^Survivor/ })).toContainText("pick 1 to win · 23 of 32 unused");
+  await expect(choose.getByRole("button", { name: /^Survivor/ })).toContainText("pick 1 · 23 teams left");
   await expect(survivor.getByRole("listitem")).toHaveCount(4);
   await expect(survivor.getByRole("button")).toHaveCount(8);
   await expect(survivor.getByRole("button", { name: "Eagles" })).toBeDisabled();
@@ -181,6 +181,12 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   await choose.getByRole("button", { name: /^Survivor/ }).click();
   await expect(survivor.getByRole("button", { pressed: true })).toHaveCount(1);
   await expect(ticket.getByRole("definition")).toHaveText(["IND -3.5", "LAR +3", "Colts"]);
+  // The lamps at the top of the ticket, one per pick: a ring for a pick that is only on the ticket, lit for one already sent.
+  const lamps = sheet.getByRole("list", { name: "Your picks" }).getByRole("img");
+  await expect(lamps).toHaveCount(3);
+  await expect(lamps.nth(0)).toHaveAccessibleName("Pick 1: picked, not sent");
+  await expect(lamps.nth(1)).toHaveAccessibleName("Pick 2: in");
+  await expect(lamps.nth(2)).toHaveAccessibleName("Survivor: picked, not sent");
   // One Submit for all three: the ticket closes and your row on the board shows what was sent.
   await ticket.getByRole("button", { name: "Submit changes" }).click();
   await expect(sheet).toBeHidden();
@@ -231,7 +237,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await expect(board.getByRole("button", { name: /^Survivor: Broncos/ })).toBeVisible();
   // Back in the room, the ticket's third lamp is lit and the picks wall no longer glows.
   await page.getByRole("button", { name: "Back to Clubhouse" }).first().click();
-  await expect(page.locator(".lab-room-ticket i.is-lit")).toHaveCount(3);
+  await expect(page.locator(".lab-room-ticket .lab-lamp.is-in")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
 });
 
@@ -409,10 +415,10 @@ test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, a
   await openLab(page, "clubhouse");
   const ticket = page.locator(".lab-room-ticket");
   await expect(ticket).toBeVisible();
-  await expect(ticket.locator("i.is-lit")).toHaveCount(2);
+  await expect(ticket.locator(".lab-lamp.is-in")).toHaveCount(2);
   await expect(page.locator(".lab-room-spot.is-sportsbook.is-owed")).toHaveCount(1);
   await page.getByRole("group", { name: "Picks" }).getByRole("button", { name: "All in" }).click();
-  await expect(ticket.locator("i.is-lit")).toHaveCount(3);
+  await expect(ticket.locator(".lab-lamp.is-in")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
   // It stays on screen inside a room, at the bottom of the window even when the room is long.
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();

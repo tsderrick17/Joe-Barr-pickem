@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - One lamp per pick, the same everywhere (Lab)
+
+Owner: play into the lamps. Every pick is one lamp, 1:1 with Pick 1, Pick 2 and Survivor, wherever a pick is shown (each cell of the Big
+Board, the top of your ticket, the ticket pinned in the clubhouse): dark = no pick; a gold ring with a dark centre = picked on your
+ticket but not sent; lit yellow = in, its game undecided (a hidden pick is the yellow lamp alone); green = won; red = lost. On the
+Big Board the lamp leads the cell and the team and line follow, so lamps line up with lamps and names with names; results are no
+longer in the type. Survivor's lamp is a poker chip (the lamp inside the dashed rim Survivor wears across the pool), so it is never
+taken for a Pick'em pick. In the playoffs there is simply one lamp per game, stacked in rows, and no chip. The new-message sign sits
+on the left corner of the Chat button. Lab only.
+
 ## 2026-11-15 - Lab: the real constitution and the real Survivor table; a Survivor quick link (Lab)
 
 Owner: post the actual constitution; the pool's current Survivor view is clearly better than the Lab's poker-table try-outs, so those

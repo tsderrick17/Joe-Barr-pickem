@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
+import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
 import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
@@ -242,12 +242,12 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
 
 /** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
 function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
-  const lamps = allIn ? [true, true, true] : [true, true, false];
+  const lamps: LampState[] = allIn ? ["in", "in", "in"] : ["in", "in", "off"];
   return (
     <button className="lab-room-ticket" onClick={onOpen} type="button">
       <b>YOUR TICKET · WEEK 10</b>
       <span>{allIn ? "All 3 in · change any until its kickoff" : "2 of 3 in · picks close Thu 8:15 PM"}</span>
-      <span aria-hidden="true" className="lab-room-lamps">{lamps.map((lit, index) => <i className={lit ? "is-lit" : ""} key={index} />)}<em>›</em></span>
+      <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={index === 2} />)}<em>›</em></span>
     </button>
   );
 }

@@ -29,14 +29,18 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
   );
 }
 
-/** A pick that is in but not shown yet: it reads as made, never as empty, and never says which team. */
-function HiddenPick() {
-  return (
-    <span aria-label="Pick in, hidden until kickoff" className="lab-tote-cover" role="img">
-      <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" />
-    </span>
-  );
+/**
+ * The lamp: one for every pick, the same wherever a pick is shown (the Big Board, your ticket, the ticket pinned in the clubhouse).
+ *  - dark: no pick. A gold ring with a dark centre: picked on your ticket, not sent yet. Lit yellow: sent, the game not decided.
+ *    Green: it won. Red: it lost.
+ *  - Survivor's lamp is a poker chip (the dashed rim Survivor wears everywhere in the pool), so it is never taken for a Pick'em pick.
+ */
+export type LampState = "off" | "picked" | "in" | "won" | "lost";
+const LAMP_SAYS: Record<LampState, string> = { off: "no pick", picked: "picked, not sent", in: "in", won: "won", lost: "lost" };
+export function Lamp({ state, survivor = false, label }: { state: LampState; survivor?: boolean; label?: string }) {
+  return <span aria-label={label ?? LAMP_SAYS[state]} className={`lab-lamp is-${state}${survivor ? " is-survivor" : ""}`} role="img" />;
 }
+const lampFor = (result: string | null | undefined): LampState => (result === "W" ? "won" : result === "L" ? "lost" : "in");
 
 /* ---------------------------------------------------------------- The Big Board ---------------------------------------------------------------- */
 
@@ -75,11 +79,11 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
               {slats.map((slat, index) => (
                 <td className="lab-tote-pick" key={slat?.gameId ?? `empty-${index}`}>
                   {slat === null ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>)
-                    : slat.hidden ? <HiddenPick /> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
-                      <span className={`lab-tote-slip ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`}>
+                    : slat.hidden ? <span className="lab-tote-slip"><Lamp label="Pick in, hidden until kickoff" state="in" /></span> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
+                      <span className="lab-tote-slip">
+                        <Lamp label={slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"} state={lampFor(slat.result)} />
                         <b>{slat.team}</b>
                         <small>{slat.line}</small>
-                        <span className="sr-only">{slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"}</span>
                       </span>
                     ))}
                 </td>
@@ -87,10 +91,13 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
               <td className="lab-tote-surv">
                 {mine.champion ? (row.name === mine.champion ? <span className="lab-tote-won">WON</span> : <span className="lab-tote-out">OUT</span>)
                   : survivor === null ? <span className="lab-tote-out">OUT</span>
-                  : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
-                  : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
+                  : survivor.hidden || (!survivor.team && !you) ? <span className="lab-tote-slip is-survivor"><Lamp label="Survivor pick in, hidden until kickoff" state="in" survivor /></span>
+                  : !survivor.team ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
-                    <span aria-label={`${teamName(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} className={`lab-tote-logo ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img"><Logo team={survivor.team} /></span>
+                    <span className="lab-tote-slip is-survivor">
+                      <Lamp label={`${teamName(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} state={lampFor(survivor.result)} survivor />
+                      <Logo team={survivor.team} />
+                    </span>
                   ))}
               </td>
             </tr>
@@ -131,17 +138,33 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
 
   const ordered = inOrder(picks).map((team) => `${team} ${labLineFor(gameOf(team), team)}`);
   const lines = [{ label: "Pick 1", value: ordered[0] ?? null }, { label: "Pick 2", value: ordered[1] ?? null }, ...(pickingSurvivor ? [{ label: "Survivor", value: chip ? teamName(chip) : null }] : [])];
-  const made = lines.filter((line) => line.value).length;
+  // A lamp for every pick, in the ticket's own order: dark until picked, a ring while it is only on the ticket, lit once sent, then
+  // green or red when its game is decided. (In the playoffs there is simply a lamp for every game, and no Survivor chip.)
+  const lampOf = (team: string | undefined, sentTeams: Array<string | null>, graded: (team: string) => string | null): LampState =>
+    !team ? "off" : !sentTeams.includes(team) ? "picked" : lampFor(graded(team));
+  const atsNow = (team: string) => { const game = gameOf(team); return labKickedOff(LAB_SLATE, game.id, moment) ? labAtsResult(game, team) : null; };
+  const winNow = (team: string) => { const game = gameOf(team); return labKickedOff(LAB_SLATE, game.id, moment) ? straightUp(game, team) : null; };
+  const mine = inOrder(picks);
+  const lamps: Array<{ label: string; state: LampState; survivor?: boolean }> = [
+    { label: "Pick 1", state: lampOf(mine[0], ticket.picks, atsNow) },
+    { label: "Pick 2", state: lampOf(mine[1], ticket.picks, atsNow) },
+    ...(pickingSurvivor ? [{ label: "Survivor", state: lampOf(chip ?? undefined, [ticket.survivor], winNow), survivor: true }] : []),
+  ];
   const changed = inOrder(picks).join() !== inOrder(ticket.picks).join() || (pickingSurvivor && chip !== ticket.survivor);
 
   return (
     <div className="lab-bigboard is-tote trace-gilt lab-window">
-      <header><h3>WEEK 10</h3><span>{made} OF {lines.length} PICKED</span></header>
+      <header>
+        <h3>WEEK 10</h3>
+        <ul aria-label="Your picks" className="lab-lamps">
+          {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
+        </ul>
+      </header>
 
       {pickingSurvivor ? (
         <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick 2 against the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 to win · {32 - survivor.used} of 32 unused</small></button>
+          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick 2 vs. the spread</small></button>
+          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 · {32 - survivor.used} teams left</small></button>
         </div>
       ) : null}
       {survivor.out && !champion ? <p className="lab-window-out">You’re out of Survivor (lost in week {survivor.outWeek}). The pool goes on: follow it at the Survivor table.</p> : null}
