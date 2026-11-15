@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The room's boards move; plaques and records go into the Trophy Room (Lab)
+
+The owner: the Big Board "should have some movement on it": the standings auto-scroll and the spreads run across "like a sportsbook
+ticker", always slowly moving. The plaques and the record book come out of the room and go into the Trophy Room, which is then
+today's page as it is plus the plaques. So the standings on the Big Board now roll up through all ten players (the list shown
+twice, so there is no seam) and the week's lines run across the spreads board; both stand still for anyone who asks for reduced
+motion. The room has one fewer plaque spot and one fewer record spot; the Trophy Room carries the turning table, the banners, the
+plaques (with the crowning scene) and an all-time Records table of sample numbers.
+
 ## 2026-11-15 - Picks are made on the Big Board; Survivor table in plain words; a name plate on every tap spot (Lab)
 
 The owner, on the clubhouse try-out: it has to be clearer where to tap on the picture; the Survivor choices "feel really clunky";

@@ -333,8 +333,7 @@ const ROOM_SHOTS: Array<[string, Array<[string, string]>]> = [
 const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["The Big Board", "big-board", []],
   ["Trophy Room", "trophy-room", []],
-  ["Plaques", "plaques", []],
-  ["Plaques", "plaques-crowning", [["Scene", "A champion is crowned"]]],
+  ["Trophy Room", "trophy-room-crowning", [["Scene", "A champion is crowned"]]],
 ];
 const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
 for (const [shot, choices] of ROOM_SHOTS) {
@@ -369,8 +368,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
     ["Make your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
-    ["Plaques", "Plaques", ".lab-wall"], ["Survivor", "Survivor", ".lab-survivor-room"],
-    ["Record book", "Record book", ".lab-stand-in"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
+    ["Survivor", "Survivor", ".lab-survivor-room"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
   ];
   // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate.
   await expect(room.getByRole("button")).toHaveCount(spots.length);
@@ -397,7 +395,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // Everything that can be tapped wears a name plate with an arrow, and no two plates overlap; the ones with news carry a line of it.
-  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", "Plaques›", /^The Big Board›Earl leads · You: T2$/, "Records›", "Chat›", "Rules›"]);
+  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›", "Rules›"]);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(0);
@@ -406,12 +404,14 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   }
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
-  // The boards in the room show today's news themselves: the standings with the leader, and this week's lines with your picks lit.
+  // The boards in the room show today's news themselves, and keep moving: the standings roll up the board (all ten players, the list
+  // shown twice so the loop has no seam) and the lines run across the spreads board like a ticker, your own picks lit.
   const board = page.locator(".lab-room-screen.is-board");
-  await expect(board.locator("li")).toHaveCount(5);
+  await expect(board.locator("li")).toHaveCount(20);
   await expect(board.locator("li").first()).toContainText("Earl");
   await expect(board.locator("li").nth(2)).toHaveText("T2Walt13");   // the board does not mark whose row it is
-  await expect(page.locator(".lab-room-screen.is-spreads .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
+  await expect(board.locator("li").nth(9)).toContainText("Gus");
+  await expect(page.locator(".lab-ticker .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/, /PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
@@ -422,7 +422,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(room.getByRole("button", { name: "Bowl Pool" })).toBeVisible();
   // The same rooms as a plain list, for anyone who would rather tap a word.
   const list = page.getByRole("group", { name: "Rooms" });
-  await expect(list.getByRole("button")).toHaveText(["The Big Board", "Survivor", "Trophy Room", "Plaques", "Record book", "Constitution", "Pool chat", "Bowl Pool"]);
+  await expect(list.getByRole("button")).toHaveText(["The Big Board", "Survivor", "Trophy Room", "Constitution", "Pool chat", "Bowl Pool"]);
   await list.getByRole("button", { name: "Constitution" }).click();
   await expect(page.getByRole("heading", { name: "Constitution", level: 3 })).toBeVisible();
 });
@@ -444,7 +444,7 @@ test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, a
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
 });
 
-test("the Trophy Room is today's page without the stats: the table turns by its arrows and the front trophy's champions hang below", async ({ page }) => {
+test("the Trophy Room: the turning table and banners as today, the records, and the season plaques under them", async ({ page }) => {
   await openLab(page, "clubhouse");
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
   const table = page.locator(".trophy-display");
@@ -456,14 +456,16 @@ test("the Trophy Room is today's page without the stats: the table turns by its 
   await table.getByRole("button", { name: "Bring the next trophy forward" }).click();
   await expect(front).toHaveText("Bowl Pool is at the front");
   await expect(table.locator(".trophy-banner")).toHaveCount(4);
-  // Nothing else is on the page: no stats, no plaques.
-  await expect(page.getByRole("table")).toHaveCount(0);
-  await expect(page.locator(".lab-plaque")).toHaveCount(0);
+  // Under the banners: the plaques, then the records.
+  await expect(page.locator(".lab-plaque")).toHaveCount(4);
+  const records = page.getByRole("region", { name: "Records" });
+  await expect(records.locator("tbody tr")).toHaveCount(10);
+  await expect(records.locator("tbody tr").first()).toContainText("Earl");
 });
 
-test("the plaques on the bar: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
+test("the plaques in the Trophy Room: a plaque per season naming each pool's champion; a new champion's pennant swings in", async ({ page }) => {
   await openLab(page, "clubhouse");
-  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Plaques", exact: true }).click();
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
   await expect(page.locator(".lab-plaque")).toHaveCount(4);
   await expect(page.getByRole("article", { name: "2025 champions" }).getByRole("definition")).toHaveText(["Walt", "Dottie", "Rosie"]);
   await expect(page.locator(".lab-pennant")).toHaveCount(0);
@@ -525,4 +527,20 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await page.getByRole("group", { name: "Where we are" }).getByRole("button", { name: "Playoffs" }).click();
   await expect(field.getByRole("listitem", { name: /pulled up$/ })).toHaveCount(6);
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
+});
+
+test("the room's boards keep moving: the standings roll up, the spreads run across like a ticker, and both hold still for reduced motion", async ({ page }) => {
+  await openLab(page, "clubhouse");
+  const offset = (selector: string) => page.locator(selector).evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m42 + new DOMMatrix(getComputedStyle(node).transform).m41);
+  // Reduced motion: both sit still.
+  const still = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
+  await page.waitForTimeout(800);
+  expect([await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")]).toEqual(still);
+  // Otherwise they move, and only ever one way.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const first = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
+  await page.waitForTimeout(1_200);
+  const later = [await offset(".lab-room-screen.is-board ol"), await offset(".lab-ticker")];
+  expect(later[0]).toBeLessThan(first[0]);
+  expect(later[1]).toBeLessThan(first[1]);
 });

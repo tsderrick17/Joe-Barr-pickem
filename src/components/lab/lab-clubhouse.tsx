@@ -6,7 +6,7 @@ import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom } from "@/components/lab/lab-tote";
 import { LAB_VIEWER, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
-import { LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
+import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 
 /**
@@ -30,10 +30,9 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
 
-type Room = "board" | "trophies" | "plaques" | "survivor" | "bowl" | "chat" | "record" | "constitution";
+type Room = "board" | "trophies" | "survivor" | "bowl" | "chat" | "constitution";
 const ROOM_TITLE: Record<Room, string> = {
-  board: "The Big Board", trophies: "Trophy Room", survivor: "Survivor", bowl: "Bowl Pool", chat: "Pool chat",
-  record: "Record book", constitution: "Constitution", plaques: "Plaques",
+  board: "The Big Board", trophies: "Trophy Room", survivor: "Survivor", bowl: "Bowl Pool", chat: "Pool chat", constitution: "Constitution",
 };
 
 function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: ReadonlyArray<readonly [T, string]>; value: T; onChange: (value: T) => void }) {
@@ -81,13 +80,39 @@ function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
 /** The Lab's champions in the shape the real Trophy Room takes them, so the real table can stand here. */
 const SAMPLE_SEASONS = CHAMPIONS.map((year) => ({ seasonYear: Number(year.season), pickem: [{ name: year.pickem }], survivor: [{ name: year.survivor }], bowl: [{ name: year.bowl }] }));
 
-/** The Trophy Room: exactly today's page without its stats: the trophies on their turning table and the banners of the one at the front. */
+/**
+ * The Trophy Room: today's page as it is (the trophies on their turning table, the banners of the one at the front, the records),
+ * with the season plaques added under the banners. Plaques and records used to be spots in the room; they live here now.
+ */
 function TrophyRoom() {
-  return <div className="lab-room-stack lab-wall-table"><TrophyTurntable seasons={SAMPLE_SEASONS} /></div>;
+  return (
+    <div className="lab-room-stack lab-wall-table">
+      <TrophyTurntable seasons={SAMPLE_SEASONS} />
+      <PlaquesShelf />
+      <RecordsTable />
+    </div>
+  );
 }
 
-/** The plaques from the front of the bar, one for every season, and the pennant a new champion is given. */
-function PlaquesRoom() {
+/** The all-time Pick'em records, best hit rate first: place, player, wins, losses and the rate they make. */
+function RecordsTable() {
+  return (
+    <section aria-label="Records" className="lab-records">
+      <h4>Records <small>all-time Pick’em</small></h4>
+      <table>
+        <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col">W</th><th scope="col">L</th><th scope="col">Rate</th></tr></thead>
+        <tbody>
+          {LAB_RECORDS.map((row, index) => (
+            <tr key={row.name}><td>{index + 1}</td><th scope="row">{row.name}</th><td>{row.wins}</td><td>{row.losses}</td><td>{row.rate.toFixed(3).slice(1)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/** The plaques, one for every season, and the pennant a new champion is given. */
+function PlaquesShelf() {
   const [scene, setScene] = useState<"plaques" | "crowning">("plaques");
   const [crownings, setCrownings] = useState(0);
   return (
@@ -132,10 +157,8 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   // The spreads under the Big Board are where picks are made: they open the Big Board with your ticket ready.
   { spot: "sportsbook", room: "board", name: "Make your picks", tag: "Your picks", label: "below", ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
-  { spot: "plaques", room: "plaques", name: "Plaques", label: "below" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
-  { spot: "record", room: "record", name: "Record book", tag: "Records", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
 ];
@@ -167,28 +190,33 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  */
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
-  const top = rows.slice(0, 5);
-  const you = rows.find((row) => row.name === LAB_VIEWER);
-  const shown = you && !top.includes(you) ? [...top.slice(0, 4), you] : top;
   const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
+  // Both boards keep moving, as a real one does: the standings roll up the board a line at a time, the lines run across the spreads
+  // board like a ticker. Each list is shown twice in a row so the loop has no seam.
+  const standings = [...rows, ...rows];
+  const lines = [...LAB_SLATE, ...LAB_SLATE];
   return (
     <div aria-hidden="true" className="lab-room-live">
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
         <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS</span></header>
-        <ol>
-          {shown.map((row) => (
-            <li key={row.name}>
-              <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span><b>{row.wins}</b>
-            </li>
-          ))}
-        </ol>
+        <div className="lab-roll">
+          <ol>
+            {standings.map((row, index) => (
+              <li key={`${row.name}-${index}`}>
+                <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span><b>{row.wins}</b>
+              </li>
+            ))}
+          </ol>
+        </div>
       </Screen>
       <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={93} w={360}>
-        {LAB_SLATE.map((game) => {
-          const pick = mine.find((team) => team === game.away || team === game.home);
-          const team = pick ?? game.favourite;
-          return <p className={pick ? "is-picked" : ""} key={game.id}><b>{team}</b><span>{labLineFor(game, team)}</span>{pick ? <small>YOURS</small> : null}</p>;
-        })}
+        <div className="lab-ticker">
+          {lines.map((game, index) => {
+            const pick = mine.find((team) => team === game.away || team === game.home);
+            const team = pick ?? game.favourite;
+            return <p className={pick ? "is-picked" : ""} key={`${game.id}-${index}`}><b>{team}</b><span>{labLineFor(game, team)}</span>{pick ? <small>YOURS</small> : null}</p>;
+          })}
+        </div>
       </Screen>
     </div>
   );
@@ -249,7 +277,7 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
         })}
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
-        {(["board", "survivor", "trophies", "plaques", "record", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
+        {(["board", "survivor", "trophies", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
           <button key={room} onClick={() => onEnter(room)} type="button">{ROOM_TITLE[room]}{room === "chat" && mail ? " · new" : ""}</button>
         ))}
       </div>
@@ -290,11 +318,9 @@ export function LabClubhouse() {
       )}
       {room === "board" ? <BigBoardRoom key={visit} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
-      {room === "plaques" ? <PlaquesRoom /> : null}
       {room === "survivor" ? <LabSurvivorTable /> : null}
       {room === "chat" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
-      {room === "record" ? <StandIn>The record book opens here: the pool’s stats, season by season.</StandIn> : null}
       {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
       <Ticket allIn={allIn} onOpen={() => enter("board", true)} />
     </section>
