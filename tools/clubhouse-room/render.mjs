@@ -1,6 +1,6 @@
 // Renders the clubhouse room pictures with headless Chromium's software WebGL.
 // Usage: node render.mjs [out-folder]      (default: ../../public/lab/clubhouse)
-// Writes room-{day,night}[-bowl].webp and the tap spots (where each thing sits in the picture) to src/lib/lab-clubhouse-room.json.
+// Writes room-{day,night}[-bowl][-wide].webp and the tap spots (where each thing sits in the picture) to src/lib/lab-clubhouse-room.json.
 import { chromium } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -14,7 +14,11 @@ const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 page.on("console", (message) => { if (["error", "warning"].includes(message.type())) console.log("[page]", message.text().slice(0, 300)); });
 page.on("pageerror", (error) => console.log("[pageerror]", error.message.slice(0, 400)));
 const spots = {};
-for (const [name, query] of [["day", ""], ["night", "night=1"], ["day-bowl", "bowl=1"], ["night-bowl", "night=1&bowl=1"]]) {
+// The tall pictures are for a phone. The wide ones are the desktop's: the same room from the same spot through a longer lens, the whole
+// room in one view (both side walls, the bar, the boards, the fireplace and the table).
+const WIDE = "w=880&h=520&fov=48";
+const views = [["day", ""], ["night", "night=1"], ["day-bowl", "bowl=1"], ["night-bowl", "night=1&bowl=1"]];
+for (const [name, query] of [...views, ...views.map(([name, query]) => [`${name}-wide`, [query, WIDE].filter(Boolean).join("&")])]) {
   const started = Date.now();
   await page.goto(`http://localhost:5620/scene.html?${query}`);
   await page.waitForFunction(() => window.__done === true || window.__error, undefined, { timeout: 900_000, polling: 500 });

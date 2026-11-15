@@ -19,15 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
-## 2026-11-15 - One lamp per pick, the same everywhere (Lab)
+## 2026-11-15 - Lamps at the top of the ticket; a desktop clubhouse (Lab)
 
-Owner: play into the lamps. Every pick is one lamp, 1:1 with Pick 1, Pick 2 and Survivor, wherever a pick is shown (each cell of the Big
-Board, the top of your ticket, the ticket pinned in the clubhouse): dark = no pick; a gold ring with a dark centre = picked on your
-ticket but not sent; lit yellow = in, its game undecided (a hidden pick is the yellow lamp alone); green = won; red = lost. On the
-Big Board the lamp leads the cell and the team and line follow, so lamps line up with lamps and names with names; results are no
-longer in the type. Survivor's lamp is a poker chip (the lamp inside the dashed rim Survivor wears across the pool), so it is never
-taken for a Pick'em pick. In the playoffs there is simply one lamp per game, stacked in rows, and no chip. The new-message sign sits
-on the left corner of the Chat button. Lab only.
+Owner: play into the lamps, but not a lamp in every box. The top right of your ticket has one lamp per pick, 1:1 with Pick 1, Pick 2
+and Survivor (and the ticket pinned in the clubhouse has the same three): dark = no pick; a gold ring with a dark centre = picked on
+your ticket but not sent; lit yellow = in, its game undecided; green = won; red = lost. Survivor's lamp is a poker chip (the lamp
+inside the dashed rim Survivor wears across the pool). In the playoffs there is one lamp per game, stacked in rows, and no chip.
+The Big Board keeps its cells as they were (team and line in type, three dots for a hidden pick, Survivor's logo with its ring) and
+wears the lamps' colours: a shown pick is yellow while undecided, green for a win, red and struck through for a loss.
+The clubhouse has a desktop version (900px and wider): a wide picture of the same room from the same spot through a longer lens, the
+whole room in one view, with its own label positions; the ticket sits under the picture there. The tall picture stays the phone's.
+The new-message sign sits on the left corner of the Chat button. Lab only.
 
 ## 2026-11-15 - Lab: the real constitution and the real Survivor table; a Survivor quick link (Lab)
 

@@ -29,8 +29,18 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
   );
 }
 
+/** A pick that is in but not shown yet: it reads as made, never as empty, and never says which team. */
+function HiddenPick() {
+  return (
+    <span aria-label="Pick in, hidden until kickoff" className="lab-tote-cover" role="img">
+      <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" />
+    </span>
+  );
+}
+
 /**
- * The lamp: one for every pick, the same wherever a pick is shown (the Big Board, your ticket, the ticket pinned in the clubhouse).
+ * The lamp: one for every pick, 1:1 with Pick 1, Pick 2 and Survivor, at the top of your ticket and on the ticket pinned in the
+ * clubhouse. The Big Board shows the same colours in the team names themselves.
  *  - dark: no pick. A gold ring with a dark centre: picked on your ticket, not sent yet. Lit yellow: sent, the game not decided.
  *    Green: it won. Red: it lost.
  *  - Survivor's lamp is a poker chip (the dashed rim Survivor wears everywhere in the pool), so it is never taken for a Pick'em pick.
@@ -79,11 +89,11 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
               {slats.map((slat, index) => (
                 <td className="lab-tote-pick" key={slat?.gameId ?? `empty-${index}`}>
                   {slat === null ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>)
-                    : slat.hidden ? <span className="lab-tote-slip"><Lamp label="Pick in, hidden until kickoff" state="in" /></span> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
-                      <span className="lab-tote-slip">
-                        <Lamp label={slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"} state={lampFor(slat.result)} />
+                    : slat.hidden ? <HiddenPick /> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
+                      <span className={`lab-tote-slip ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`}>
                         <b>{slat.team}</b>
                         <small>{slat.line}</small>
+                        <span className="sr-only">{slat.result === "W" ? "win" : slat.result === "L" ? "loss" : "not final"}</span>
                       </span>
                     ))}
                 </td>
@@ -91,13 +101,10 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
               <td className="lab-tote-surv">
                 {mine.champion ? (row.name === mine.champion ? <span className="lab-tote-won">WON</span> : <span className="lab-tote-out">OUT</span>)
                   : survivor === null ? <span className="lab-tote-out">OUT</span>
-                  : survivor.hidden || (!survivor.team && !you) ? <span className="lab-tote-slip is-survivor"><Lamp label="Survivor pick in, hidden until kickoff" state="in" survivor /></span>
-                  : !survivor.team ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>)
+                  : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
+                  : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
-                    <span className="lab-tote-slip is-survivor">
-                      <Lamp label={`${teamName(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} state={lampFor(survivor.result)} survivor />
-                      <Logo team={survivor.team} />
-                    </span>
+                    <span aria-label={`${teamName(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} className={`lab-tote-logo ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img"><Logo team={survivor.team} /></span>
                   ))}
               </td>
             </tr>

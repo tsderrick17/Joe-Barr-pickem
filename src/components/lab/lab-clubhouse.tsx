@@ -152,13 +152,13 @@ type Picture = { width: number; height: number; spots: Record<string, Spot>; scr
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
-const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; ticket?: boolean }> = [
+const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; ticket?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
   // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
-  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, ticket: true },
+  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, wideAt: { x: 0.655, y: 0.88 }, ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
@@ -254,8 +254,18 @@ function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
 
 /** The room: the picture by day and at night, a tap spot over each thing in it, a few labels, and the plain list of rooms below. */
 function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boolean; mail: boolean; onEnter: (room: Room, ticket?: boolean) => void }) {
-  const key = season === "bowls" ? "-bowl" : "";
-  const picture = PICTURES[`day${key}`];
+  // A phone gets the tall picture; a desktop (900px and wider) gets the wide one: the same room through a longer lens, everything in
+  // one view, with its own positions for every label. Decided after the page is on screen, so the first paint is always the tall one.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 900px)");
+    const sync = () => setWide(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  const key = `${season === "bowls" ? "-bowl" : ""}${wide ? "-wide" : ""}`;
+  const picture = PICTURES[`day${key}`] ?? PICTURES[`day${season === "bowls" ? "-bowl" : ""}`];
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const you = rows.find((row) => row.name === LAB_VIEWER);
   const seats = labSurvivorAt(9);
@@ -280,11 +290,12 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
   const go = (_spot: string, next: Room, ticket?: boolean) => onEnter(next, ticket);
   return (
     <>
-      <nav aria-label="Clubhouse rooms" className="lab-room" ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
+      <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
         <RoomNews frame={frame} picture={picture} />
-        {spots.map(({ spot, room, name, tag, label, at: free, ticket }) => {
+        {spots.map(({ spot, room, name, tag, label, at: tall, wideAt, ticket }) => {
+          const free = wide ? wideAt ?? tall : tall;
           const plate = label === "none" ? null : (
             <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}>
               <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}

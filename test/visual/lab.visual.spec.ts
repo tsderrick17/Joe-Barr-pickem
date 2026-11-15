@@ -98,7 +98,7 @@ for (const [shot, choices, ticket] of TOTE_SHOTS) {
   }
 }
 
-test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and gives every pick one lamp, lamps and names each on their own line down the column", async ({ page }) => {
+test("the tote Pad keeps today's columns, hides other players' picks until kickoff, and starts a shown pick where a hidden one's dots start", async ({ page }) => {
   await openLab(page, "tote");
   const pad = page.locator(".lab-tote");
   await expect(pad.locator("thead th")).toHaveText(["W", "PLAYER", "PICK 1", "PICK 2", "SURVSurvivor"]);
@@ -109,24 +109,29 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
-  // Game day has both in a column: every pick is one lamp (a hidden pick is the lamp alone), all lamps on one left edge and all team
-  // names on another. A lamp is yellow while its game is undecided, green for a win, red for a loss.
+  // Game day has both in a column: every shown pick and every hidden pick's three dots start on one left edge, near the cell's left
+  // side (not centred). A result is in the type (no letter): said aloud as win or loss.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
   for (const column of [3, 4]) {
     const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left - node.closest("td")!.getBoundingClientRect().left)));
-    const lamps = await lefts(".lab-lamp"), names = await lefts(".lab-tote-slip b");
-    expect(lamps.length).toBe(10);
-    expect(new Set(lamps).size).toBe(1);
-    expect(lamps[0]).toBeLessThanOrEqual(12);
-    expect(names.length).toBeGreaterThan(0);
-    expect(new Set(names).size).toBe(1);
+    const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover i:first-child");
+    expect(shown.length).toBeGreaterThan(0);
+    // Pick 2 still has hidden picks on game day; Pick 1's games have all kicked off.
+    if (column === 4) expect(hidden.length).toBeGreaterThan(0);
+    expect(new Set([...shown, ...hidden]).size).toBe(1);
+    expect(shown[0]).toBeLessThanOrEqual(12);
   }
-  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-won").first()).toBeVisible();
-  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-lost").first()).toBeVisible();
-  await expect(pad.locator("td:nth-child(4) .lab-lamp.is-in").first()).toBeVisible();
-  // Survivor's lamp is a poker chip, so it is never taken for a Pick'em pick.
-  await expect(pad.locator("td:nth-child(5) .lab-lamp")).toHaveCount(await pad.locator("td:nth-child(5) .lab-lamp.is-survivor").count());
-  await expect(pad.locator("td:nth-child(3) .lab-lamp.is-survivor")).toHaveCount(0);
+  await expect(pad.locator(".lab-tote-slip.is-w").first()).toContainText("win");
+  // The names wear the colours of the ticket's lamps: yellow while undecided, green for a win, red for a loss.
+  const colour = (selector: string) => pad.locator(selector).first().evaluate((node) => getComputedStyle(node).color);
+  expect(await colour(".lab-tote-slip:not(.is-w):not(.is-l)")).toBe("rgb(255, 208, 80)");
+  expect(await colour(".lab-tote-slip.is-w")).toBe("rgb(110, 231, 150)");
+  expect(await colour(".lab-tote-slip.is-l")).toBe("rgb(252, 120, 110)");
+  // Survivor is the team's logo, centred in its column whatever the result.
+  const logos = await pad.locator(".lab-tote-logo").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(), cell = node.closest("td")!.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (cell.left + cell.right) / 2); }));
+  expect(logos.length).toBeGreaterThan(1);
+  for (const gap of logos) expect(gap).toBeLessThanOrEqual(1.5);
+  await expect(pad.getByRole("img", { name: /, Survivor (win|loss)$/ }).first()).toBeVisible();
 });
 
 test("the Big Board is one face (no standings tab); in the clubhouse a quick link under its title goes to the Survivor table", async ({ page }) => {
@@ -511,6 +516,30 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await page.getByRole("group", { name: "Where we are" }).getByRole("button", { name: "Playoffs" }).click();
   await expect(field.getByRole("listitem", { name: /pulled up$/ })).toHaveCount(6);
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
+});
+
+test("on a desktop the clubhouse is the wide picture: every label in view, none overlapping, the ticket under the room", async ({ page }) => {
+  await openLab(page, "clubhouse", { size: SIZES["desktop-1280"] });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toHaveClass(/is-wide/);
+  const frame = (await room.boundingBox())!;
+  expect(frame.width / frame.height).toBeGreaterThan(1.5);
+  const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+  expect(plates.length).toBe(6);
+  for (const [index, plate] of plates.entries()) {
+    expect(plate.left).toBeGreaterThanOrEqual(frame.x - 1);
+    expect(plate.right).toBeLessThanOrEqual(frame.x + frame.width + 1);
+    expect(plate.top).toBeGreaterThanOrEqual(frame.y - 1);
+    expect(plate.bottom).toBeLessThanOrEqual(frame.y + frame.height + 1);
+    for (const other of plates.slice(index + 1)) expect(plate.right <= other.left || other.right <= plate.left || plate.bottom <= other.top || other.bottom <= plate.top, "labels do not overlap").toBe(true);
+  }
+  // The ticket sits under the picture, not on it.
+  const ticket = (await page.locator(".lab-room-ticket").boundingBox())!;
+  expect(ticket.y).toBeGreaterThanOrEqual(frame.y + frame.height);
+  // The boards are drawn on the wide picture too, and a label still opens its room.
+  await expect(page.locator(".lab-room-screen.is-board .lab-room-leader")).toContainText("Earl");
+  await room.locator(".lab-room-bubble .lab-room-tag").click();
+  await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
 });
 
 test("the room's labels are the buttons, and the way back to the Clubhouse is always in reach from every room", async ({ page }) => {
