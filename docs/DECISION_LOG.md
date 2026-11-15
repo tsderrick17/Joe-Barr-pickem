@@ -44,6 +44,20 @@ still open the ticket); a hidden Survivor pick is the same plain green IN as a h
 back; and the Survivor table is one row a player: this week's team on the top line, the teams used before and how many are left on
 the bottom line, with the 32-team sheet one tap away. The lines-per-team felt, the USED/LEFT captions and the week-by-week list in
 the sheet are gone. Lesson kept: for this pool, simpler wins.
+## 2026-11-14 - The horse race: the season as a thoroughbred race (Lab try-out)
+
+The race that came out of the room is now its own Lab try-out ("Horse race"). Ten thoroughbreds, a jockey in each player's silks, in
+their own lanes on a straight Saratoga-style turf track: white rails, a furlong pole at every fifth, a red and white pole at the
+finish. A horse's place is its wins: the leader runs out front, the rest fall back by how far behind they are in wins. Chosen so the
+picture is honest and still exciting: early gaps are stretched (a single win is a length or two in week 1) and tighten as the season
+goes on; the leader covers most of the track over the 18 weeks and then creeps up a long final stretch one playoff game day at a
+time; a horse never runs backwards (one that fell behind holds its ground). **The finish is the moment the pool is decided, not a
+date:** the leader reaches the pole only when nobody else can even tie them (a tie keeps everyone racing). **A horse pulls up and
+stands** once it cannot tie the leader even by winning every pick left, the same test the playoffs use for who is still eligible.
+It is still until tapped; "Run the race" winds every horse back to the gate and runs the season to where it is now, week by week and
+then game day by game day, slower through the playoffs and slowest at the finish; with reduced motion on it just shows where they
+stand. Lab only, sample players only, nothing read from or written to the pool; Classic keeps the Season Snapshot and playoff chart.
+The rules live in `src/lib/lab-race.js` and are tested on their own in `test/lab-race.test.mjs`.
 
 ## 2026-11-14 - The clubhouse room shows today's news itself (Lab)
 

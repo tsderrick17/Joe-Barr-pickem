@@ -470,3 +470,59 @@ test("the plaques on the bar: a plaque per season naming each pool's champion; a
   await page.getByRole("group", { name: "Scene" }).getByRole("button", { name: "A champion is crowned" }).click();
   await expect(page.getByRole("img", { name: "2026 Pick'em champion: Earl" })).toBeVisible();
 });
+
+// The horse race: each state gets a picture (phone and desktop by day, phone at night), and the replay is checked as it runs.
+const RACE_SHOTS: Array<[string, string]> = [["week-9", "Week 9"], ["week-18", "Week 18"], ["playoffs", "Playoffs"], ["decided", "Decided"]];
+for (const [shot, moment] of RACE_SHOTS) {
+  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+    test(`Lab Horse race, ${shot}, ${theme} at ${label}`, async ({ page }) => {
+      await openLab(page, "race", { theme, size: SIZES[label] });
+      await page.getByRole("group", { name: "Where we are" }).getByRole("button", { name: moment }).click();
+      await holdStill(page);
+      await expect(page.locator(".lab-race-room")).toHaveScreenshot(`lab-race-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+    });
+  }
+}
+
+async function horseLefts(page: Page) {
+  return page.locator(".lab-race-track .lab-horse").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().right)));
+}
+
+test("Lab Horse race: still until run; running winds every horse back to the gate, then runs the season to where it is now", async ({ page }) => {
+  await openLab(page, "race");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const rest = await horseLefts(page);
+  await page.waitForTimeout(500);
+  expect(await horseLefts(page)).toEqual(rest);
+  const run = page.getByRole("button", { name: "Run the race" });
+  await run.click();
+  await expect(page.getByRole("button", { name: "Running…" })).toBeDisabled();
+  // Back at the gate first: every horse sits at the start, well behind where it was.
+  await expect(page.locator(".lab-race-headline")).toHaveText("Back at the gate");
+  await expect.poll(async () => Math.max(...(await horseLefts(page)).map((right, lane) => rest[lane] - right)), { timeout: 5_000 }).toBeGreaterThan(40);
+  // Then the weeks go by, one after another, and the race ends exactly where it started.
+  await expect(page.locator(".lab-race-headline")).toHaveText(/^Week \d+$/, { timeout: 5_000 });
+  await expect(run).toBeEnabled({ timeout: 15_000 });
+  await page.waitForTimeout(1_300);
+  expect(await horseLefts(page)).toEqual(rest);
+  await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 1 · You: T2");
+});
+
+test("Lab Horse race: the pool decided, the leader at the finish pole and the rest pulled up; nobody leaves the track on a small phone", async ({ page }) => {
+  await openLab(page, "race", { size: { width: 360, height: 740 } });
+  await page.getByRole("group", { name: "Where we are" }).getByRole("button", { name: "Decided" }).click();
+  await expect(page.locator(".lab-race-headline")).toHaveText("Earl wins the pool after Conference Sunday");
+  const field = page.getByRole("list", { name: "The field" });
+  await expect(field.getByRole("listitem", { name: "Earl, 29 wins" })).toBeVisible();
+  await expect(field.getByRole("listitem", { name: /, pulled up$/ })).toHaveCount(9);
+  const box = (await field.boundingBox())!;
+  const rights = await horseLefts(page);
+  const lefts = await page.locator(".lab-race-track .lab-horse").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left)));
+  const finish = box.x + box.width; // the red and white pole stands at 94% of the track beside the lane names
+  expect(rights[0]).toBeGreaterThan(rights[1]);
+  for (const right of rights) expect(right).toBeLessThanOrEqual(finish);
+  for (const left of lefts) expect(left).toBeGreaterThanOrEqual(box.x + 86 - 1);
+  await page.getByRole("group", { name: "Where we are" }).getByRole("button", { name: "Playoffs" }).click();
+  await expect(field.getByRole("listitem", { name: /pulled up$/ })).toHaveCount(6);
+  await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
+});

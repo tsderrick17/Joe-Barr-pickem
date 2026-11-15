@@ -401,6 +401,36 @@
 .lab-window-submit:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--cw-gold); color: var(--cw-gold-lt); cursor: default; }
 .lab-window-submit:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 
+/* ---- Horse race: the season as a thoroughbred race ----
+   Ten lanes down a straight turf track, white rails at the top and bottom, a furlong pole at every fifth of the way and a red and
+   white pole at the finish. A horse's left edge is its place (--x, 0 to 1 of the way to the finish pole); the glide between places
+   takes --step. Still until the race is run. */
+.lab-race-room { display: grid; gap: 14px; }
+.lab-race-headline { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.15rem; font-weight: 800; margin: 0; }
+.lab-race-controls { align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.lab-race-run { background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: 15px; font-weight: 800; min-height: 48px; padding: 0 24px; }
+.lab-race-run:disabled { opacity: .7; }
+.lab-race-track { border-bottom: 5px solid rgb(243 238 224); border-top: 5px solid rgb(243 238 224); box-shadow: 0 0 0 1px var(--club-line); display: grid; list-style: none; margin: 0; padding: 0; }
+.lab-lane { align-items: stretch; background: rgb(78 128 70); display: grid; grid-template-columns: 86px 1fr; min-height: 40px; }
+.lab-lane:nth-child(even) { background: rgb(88 140 78); }
+.lab-lane-name { align-content: center; background: var(--club-paper); border-right: 1px solid var(--club-line); color: var(--club-ink); display: grid; padding: 2px 8px; }
+.lab-lane-name b { font-size: 14px; line-height: 1.1; }
+.lab-lane-name i { color: var(--club-ink); opacity: .8; font-size: 11px; font-style: normal; font-weight: 800; line-height: 1.1; }
+.lab-lane.is-you .lab-lane-name { box-shadow: inset 4px 0 0 rgb(201 164 95); }
+.lab-lane-run { background: linear-gradient(rgb(243 238 224), rgb(243 238 224)) 20% 0 / 2px 100% no-repeat, linear-gradient(rgb(243 238 224), rgb(243 238 224)) 40% 0 / 2px 100% no-repeat, linear-gradient(rgb(243 238 224), rgb(243 238 224)) 60% 0 / 2px 100% no-repeat, linear-gradient(rgb(243 238 224), rgb(243 238 224)) 80% 0 / 2px 100% no-repeat, repeating-linear-gradient(rgb(200 40 40) 0 6px, rgb(243 238 224) 6px 12px) 94% 0 / 4px 100% no-repeat; position: relative; }
+.lab-horse { bottom: 1px; left: max(calc(var(--x) * 94%), 62px); position: absolute; transform: translateX(-100%); transition: left var(--step) cubic-bezier(.4, 0, .3, 1); width: 62px; }
+.lab-horse-art { display: block; height: auto; width: 100%; }
+.lab-lane.is-pulled .lab-horse { filter: grayscale(.7); opacity: .6; }
+.lab-lane.is-won .lab-horse { filter: drop-shadow(0 0 5px rgb(240 180 41)); }
+.lab-lane.is-won .lab-lane-name { background: rgb(240 180 41); }
+.lab-pose { display: none; }
+.lab-horse:not(.is-running) .lab-pose.is-stand { display: inline; }
+.lab-horse.is-running .lab-pose.is-a { animation: lab-gallop-a .32s steps(1) infinite; }
+.lab-horse.is-running .lab-pose.is-b { animation: lab-gallop-b .32s steps(1) infinite; }
+.lab-horse.is-running .lab-horse-art { animation: lab-bob .32s ease-in-out infinite; }
+@keyframes lab-gallop-a { 0% { display: inline; } 50% { display: none; } }
+@keyframes lab-gallop-b { 0% { display: none; } 50% { display: inline; } }
+@keyframes lab-bob { 50% { transform: translateY(-2px); } }
 /* Your row on the Big Board is your ticket: its cells are buttons, an owed pick reads PICK in amber, and a bar under the board says so. */
 .lab-tote-mine { background: transparent; border: 0; color: inherit; cursor: pointer; display: block; font: inherit; margin: -4px; min-height: 44px; padding: 4px; text-align: inherit; width: calc(100% + 8px); }
 .lab-tote-mine:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: -2px; }
