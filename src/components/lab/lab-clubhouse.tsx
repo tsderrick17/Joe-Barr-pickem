@@ -190,15 +190,15 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
-/** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 15 seconds. */
+/** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 8 seconds. */
 const BOARD_PAGE = 5;
-const BOARD_PAGE_MS = 15_000;
+const BOARD_PAGE_MS = 8_000;
 
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
   // The top line always shows the leader and their wins (or, when level, how many lead and on what), so every page has a sense of
-  // scale. Below it the rest of the standings turn a page every 15 seconds, the pages kept even (nine players are three pages of
+  // scale. Below it the rest of the standings turn a page every 8 seconds, the pages kept even (nine players are three pages of
   // three); a single leader is not repeated below, level leaders are. The lines run across the spreads board like a ticker (shown
   // twice in a row so the loop has no seam).
   const { leaders, pages: board } = labBoardPages(rows, BOARD_PAGE);
@@ -228,9 +228,10 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
       <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={103} w={360}>
         <div className="lab-ticker">
           {lines.map((game, index) => {
-            // Each game reads as it does on your ticket: the kickoff over the two teams, logo, team and line, your pick in a gilt frame.
-            const cell = (team: string) => <span className={`lab-ticker-cell${mine.includes(team) ? " is-picked" : ""}`}><Logo eager team={team} /><b>{team}</b><em>{labLineFor(game, team)}</em></span>;
-            return <p key={`${game.id}-${index}`}><small>{game.kickoff.toUpperCase()}</small>{cell(game.away)}<i aria-hidden="true">@</i>{cell(game.home)}</p>;
+            // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
+            // with its logo and line; your pick is lit in gold inside the card.
+            const side = (team: string) => <span className={mine.includes(team) ? "is-picked" : ""}><Logo eager team={team} /><b>{team}</b><em>{labLineFor(game, team)}</em></span>;
+            return <p key={`${game.id}-${index}`}><small>{game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
           })}
         </div>
       </Screen>

@@ -27,8 +27,8 @@ Chat zooms the picture in on the laptop before the chat opens (it just opens wit
 taller (the leader and five more a page; nine others are a page of five, then four) and the spreads board under it a little taller.
 On the Big Board page a shown pick starts on the left edge where a hidden pick's three centred dots start, so its result can no longer be
 a letter beside it on a phone: a win glows green, a loss is red and struck through. Survivor is the team's logo, always centred: a win
-is a lit green ring, a loss a red ring with a bar through a greyed logo.The spreads ticker now reads like the ticket: each matchup in one frame, its kickoff over the away team @ the home team, each a dark
-cell of logo, team and line, your own picks framed in gold. The ticker itself opens the Big Board with your ticket ready (no label on
+is a lit green ring, a loss a red ring with a bar through a greyed logo.The spreads ticker now reads like the ticket: each matchup one card, its kickoff over the away team and the home team below it, each
+with logo, team and line, your own picks framed in gold. The ticker itself opens the Big Board with your ticket ready (no label on
 it), and the "Your picks" button stands by itself in the empty gap between the poker table's chairs. Lab only, sample players.
 
 ## 2026-11-15 - The Slate keeps home capitals and away lowercase in every game state
