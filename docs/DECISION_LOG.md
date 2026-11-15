@@ -19,6 +19,16 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The room's standings turn pages; a hidden pick is three dots (Lab)
+
+Owner: two boards moving at once was too much. The room's Big Board now shows five players a page and turns the page every 15 seconds;
+only the spreads ticker moves. Its top line always shows the leader and their wins (or "N LEADERS" and the score when level), so every
+page has a sense of scale. On the Big Board a hidden Pick'em pick is just the three dark lamps (the dots alone say a pick was made;
+blank means none), centred, and a shown pick is centred the same way; a shown Survivor pick is the team's logo. Survivor keeps its green IN.
+The room picture is framed tighter (owner: too much floor and ceiling): the camera stands about half a metre further in with a
+slightly longer lens (63° instead of 68°), turned a little right so the Rules frame and Trophy Room sign stay in; the neon over the bar is
+about a fifth bigger and hangs further down the wall so it reads whole. Lab only, sample players.
+
 ## 2026-11-15 - One ticket, one list: Pick 2 and Survivor share one game list (Lab)
 
 Owner: making and seeing picks must be simpler. The Big Board stays the only place to see picks (one row a player, a green IN until

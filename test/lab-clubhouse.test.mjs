@@ -58,3 +58,18 @@ test("the Survivor board marks used teams and kicked-off games, and is read only
   assert.equal(hank.outWeek, 3);
   assert.ok(hank.teams.every((team) => !team.free));
 });
+
+test("the room's Big Board keeps the leader on top and splits the rest into even pages", async () => {
+  const { labBoardPages, labLeaderboard } = await import("../src/lib/lab-clubhouse.js");
+  const rows = labLeaderboard({ round: "regular", moment: "gameday" });
+  const one = labBoardPages(rows);
+  assert.deepEqual(one.leaders.map((row) => row.name), [rows[0].name]);
+  assert.deepEqual(one.pages.map((page) => page.length), [3, 3, 3]);
+  assert.ok(one.pages.flat().every((row) => row.name !== rows[0].name));
+  // Level leaders: the top line says how many, and they stay in the pages so their names are shown.
+  const level = rows.map((row, index) => ({ ...row, place: index < 3 ? 1 : row.place }));
+  const many = labBoardPages(level);
+  assert.equal(many.leaders.length, 3);
+  assert.deepEqual(many.pages.map((page) => page.length), [4, 3, 3]);
+  assert.deepEqual(labBoardPages(rows.slice(0, 1)).pages, [[]]);
+});
