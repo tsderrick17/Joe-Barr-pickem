@@ -96,12 +96,14 @@
 .lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 6px 12px 4px; }
 .lab-room-screen.is-board header b { font-family: var(--font-serif); font-size: 22px; letter-spacing: .14em; }
 .lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; }
-.lab-room-screen.is-board ol { display: grid; gap: 2px; list-style: none; margin: 4px 8px 0; padding: 0; }
+.lab-room-screen.is-board ol { animation: lab-roll 28s linear infinite; display: grid; gap: 2px; list-style: none; margin: 0; padding: 0 0 2px; }
+.lab-roll { height: 148px; margin: 4px 8px 0; overflow: hidden; }
 .lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 27px; padding: 0 10px; }
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
-.lab-room-screen.is-spreads { display: grid; gap: 4px; grid-template-columns: repeat(4, 1fr); padding: 6px; }
-.lab-room-screen.is-spreads p { align-content: center; background: rgb(18 26 21); display: grid; justify-items: center; margin: 0; position: relative; }
+.lab-room-screen.is-spreads { padding: 6px; }
+.lab-ticker { animation: lab-ticker 24s linear infinite; display: flex; gap: 4px; height: 100%; width: max-content; }
+.lab-room-screen.is-spreads p { align-content: center; background: rgb(18 26 21); display: grid; justify-items: center; flex: none; margin: 0; width: 84px; position: relative; }
 .lab-room-screen.is-spreads b { font-size: 24px; line-height: 1; }
 .lab-room-screen.is-spreads span { color: rgb(255 176 46); font-size: 22px; line-height: 1.1; text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-room-screen.is-spreads small { color: rgb(190 240 200); font-size: 11px; letter-spacing: .1em; }
@@ -117,12 +119,10 @@
 .lab-room-tag i { color: var(--cw-gold-lt); font-size: 1.05em; font-style: normal; line-height: 1; }
 .lab-room-tag:not(.has-news) { border-radius: 999px; padding: 3px 9px; }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
-.lab-room-spot.is-record .lab-room-tag { left: 4px; transform: none; }
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
 .lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
 .lab-room-spot.is-sportsbook .lab-room-tag { transform: translateX(-28%); }
-.lab-room-spot.is-plaques .lab-room-tag { margin-top: 6px; transform: translateX(-80%); }
 .lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
 .lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
@@ -460,3 +460,20 @@
 .lab-seat-used { display: flex; flex-wrap: wrap; row-gap: 3px; }
 .lab-seat-left { color: var(--club-muted); flex: none; font-size: .8rem; font-weight: 700; }
 .lab-seat.is-out .lab-seat-used { filter: grayscale(.7); opacity: .7; }
+
+/* The room's boards keep moving: the standings roll up (the list is shown twice, so half its height is one full turn) and the lines run
+   across like a ticker. Held still for people who ask for less motion. */
+@keyframes lab-roll { to { transform: translateY(-50%); } }
+@keyframes lab-ticker { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .lab-room-screen.is-board ol, .lab-ticker { animation: none; }
+}
+/* Records, in the Trophy Room under the plaques. */
+.lab-records { display: grid; gap: 6px; }
+.lab-records h4 { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.05rem; margin: 0; }
+.lab-records h4 small { color: var(--club-muted); font-family: inherit; font-size: .72rem; font-weight: 600; margin-left: 6px; }
+.lab-records table { border-collapse: collapse; width: 100%; }
+.lab-records th, .lab-records td { border-bottom: 1px solid var(--club-line); font-size: .9rem; padding: 7px 6px; text-align: right; }
+.lab-records th:nth-child(2) { text-align: left; }
+.lab-records td:first-child, .lab-records thead th:first-child { text-align: center; width: 2rem; }
+.lab-records thead th { color: var(--club-muted); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }

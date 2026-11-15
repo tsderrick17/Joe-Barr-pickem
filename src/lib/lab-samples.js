@@ -94,3 +94,14 @@ export const LAB_STANDINGS = [
   { name: "Earl", wins: 13 }, { name: "Walt", wins: 12 }, { name: "Dottie", wins: 12 }, { name: "Rosie", wins: 11 }, { name: "June", wins: 10 },
   { name: "Lou", wins: 9 }, { name: "Marge", wins: 9 }, { name: "Hank", wins: 8 }, { name: "Bev", wins: 7 }, { name: "Gus", wins: 6 },
 ];
+
+/**
+ * Sample all-time Pick'em records for the Lab's Trophy Room: wins, losses and the hit rate they make, over invented seasons.
+ * A player who has made no picks has none. Best rate first.
+ */
+export const LAB_RECORDS = [
+  { name: "Earl", wins: 412, losses: 322 }, { name: "Walt", wins: 398, losses: 336 }, { name: "Dottie", wins: 385, losses: 340 },
+  { name: "Rosie", wins: 371, losses: 349 }, { name: "June", wins: 356, losses: 362 }, { name: "Lou", wins: 344, losses: 371 },
+  { name: "Marge", wins: 301, losses: 332 }, { name: "Hank", wins: 288, losses: 341 }, { name: "Bev", wins: 143, losses: 175 },
+  { name: "Gus", wins: 97, losses: 128 },
+].map((row) => ({ ...row, rate: row.wins / (row.wins + row.losses) }));
