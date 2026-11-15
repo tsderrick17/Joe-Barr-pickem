@@ -19,6 +19,12 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The Slate keeps home capitals and away lowercase in every game state
+
+Owner: once a game started, both teams on the phone's compact names turned to capitals. The rule is the same in every state (upcoming,
+live, final): the home team in capitals, the away team not ("Favorites left; home team ALL CAPS"). A behavior test reads every row's
+compact names in an upcoming, a live and a completed Slate.
+
 ## 2026-11-15 - The room's standings turn pages; a hidden pick is three dots (Lab)
 
 Owner: two boards moving at once was too much. The room's Big Board now shows five players a page and turns the page every 15 seconds;
