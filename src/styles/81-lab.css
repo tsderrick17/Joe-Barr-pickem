@@ -43,25 +43,10 @@
 .lab-division-name { color: rgba(230, 207, 152, .8); font-size: .56rem; font-weight: 800; letter-spacing: .12em; }
 .lab-box { align-items: center; aspect-ratio: 1; border: 1px solid rgba(244, 239, 227, .35); border-radius: 4px; display: flex; justify-content: center; position: relative; }
 .lab-box .lab-felt-logo { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .75)) drop-shadow(0 0 3px rgba(255, 255, 255, .25)); height: 58%; object-fit: contain; width: 58%; }
-.lab-box.has-chips { background: rgba(244, 239, 227, .12); border-color: var(--cw-gold-lt); }
-/* A swept box: the team lost, the chips stay greyed where they fell and a rake line crosses the box. */
-.lab-box.is-swept { background: rgba(0, 0, 0, .25); border-color: rgba(244, 239, 227, .25); }
-.lab-box.is-swept .lab-felt-logo { filter: grayscale(1); opacity: .45; }
-.lab-box.is-swept::after { background: var(--cw-bad); content: ""; height: 2px; left: 8%; position: absolute; right: 8%; top: 50%; transform: rotate(-35deg); }
-.lab-box-chips { bottom: -6px; display: flex; position: absolute; right: -5px; }
-.lab-box-chips i { align-items: center; background: var(--cw-cream); border: 2px dashed var(--cw-gold); border-radius: 50%; box-shadow: 0 1px 2px rgba(0, 0, 0, .45); color: var(--cw-deep); display: inline-flex; font-size: .62rem; font-style: normal; font-weight: 900; height: 1.45rem; justify-content: center; letter-spacing: -.02em; width: 1.45rem; }
-.lab-box-chips i + i { margin-left: -7px; }
-.lab-box.is-swept .lab-box-chips i { background: var(--cw-idle); border-color: var(--cw-deep); }
-/* The key under the felt: one line saying what a chip, a face-down chip and a swept box mean. */
-.lab-felt-key { align-items: center; color: rgba(244, 239, 227, .8); display: flex; flex-wrap: wrap; font-size: .66rem; gap: 6px 8px; justify-content: center; margin: 2px 0 0; }
-.lab-key-chip { align-items: center; background: var(--cw-cream); border: 2px dashed var(--cw-gold); border-radius: 50%; color: var(--cw-deep); display: inline-flex; font-size: .5rem; font-style: normal; font-weight: 900; height: 1.15rem; justify-content: center; width: 1.15rem; }
-.lab-key-chip.is-face-down,
-.lab-stack-chip.is-face-down { background: repeating-conic-gradient(var(--cw-deep) 0 30deg, var(--cw-cream) 30deg 60deg); border: 2px solid var(--cw-gold); }
-.lab-key-swept { border: 1px solid rgba(244, 239, 227, .35); border-radius: 3px; display: inline-block; height: 1rem; position: relative; width: 1rem; }
-.lab-key-swept::after { background: var(--cw-bad); content: ""; height: 2px; left: 1px; position: absolute; right: 1px; top: 50%; transform: rotate(-35deg); }
+.lab-taken-chip.is-back { background: repeating-conic-gradient(var(--cw-deep) 0 30deg, var(--cw-cream) 30deg 60deg); border: 2px solid var(--cw-gold); }
 
 /* The seats around the rail, in standings order: a name plate, a stack of chips (one per week survived), and where they stand. */
-.lab-seats { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; list-style: none; margin: 0; padding: 0; }
+.lab-seats { display: grid; gap: 8px; grid-template-columns: 1fr; list-style: none; margin: 0; padding: 0; }
 .lab-seat { align-items: start; background: var(--club-paper); border: 1px solid var(--club-line); border-left: 4px solid var(--cw-gold); border-radius: 10px; color: var(--club-ink); cursor: pointer; display: grid; gap: 6px; min-height: 44px; padding: 8px 10px; text-align: left; width: 100%; }
 .lab-seat-name { align-items: center; display: flex; font-family: var(--font-serif); font-size: 1rem; font-weight: 700; gap: 6px; }
 .lab-seat-crown { font-size: .9rem; }
@@ -89,8 +74,7 @@
   .lab-felt { border-radius: 140px / 90px; padding: 24px 56px 26px; }
   .lab-felt-head { justify-content: center; }
   .lab-layout { gap: 28px; grid-template-columns: 1fr 1fr; margin: 0 auto; max-width: 760px; width: 100%; }
-  .lab-seats { grid-template-columns: repeat(5, 1fr); }
-  .lab-box-chips i { font-size: .72rem; height: 1.6rem; width: 1.6rem; }
+  .lab-seats { grid-template-columns: 1fr 1fr; }
 }
 
 /* ---- Lamp-lit: night as the lounge after dark ----
@@ -143,13 +127,17 @@
 .lab-room-tag { background: rgba(16, 32, 24, .9); border: 1px solid rgba(201, 164, 95, .8); border-radius: 6px; color: var(--cw-cream); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 3px 7px; pointer-events: none; position: absolute; text-align: center; transform: translateX(-50%); white-space: nowrap; }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
+.lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
+.lab-room-tag i { color: var(--cw-gold-lt); font-size: 1.05em; font-style: normal; line-height: 1; }
+.lab-room-tag:not(.has-news) { border-radius: 999px; padding: 3px 9px; }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
 .lab-room-spot.is-record .lab-room-tag { left: 4px; transform: none; }
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
 .lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
+.lab-room-spot.is-sportsbook .lab-room-tag { transform: translateX(-28%); }
+.lab-room-spot.is-plaques .lab-room-tag { margin-top: 6px; transform: translateX(-80%); }
 .lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; position: absolute; right: -4px; top: -6px; }
-.lab-room-labels { background: rgba(16, 32, 24, .82); border: 1px solid rgba(201, 164, 95, .7); border-radius: 999px; bottom: 10px; color: var(--cw-cream); cursor: pointer; font-size: .75rem; font-weight: 800; min-height: 2.25rem; padding: 0 12px; position: absolute; right: 10px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
 .lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
 /* Your ticket, pinned to the bottom of every clubhouse screen: a lamp for each pick and the next deadline; it opens the Window. */
@@ -419,13 +407,6 @@
 .lab-window-part { display: grid; gap: 6px; }
 .lab-window-part h4 { color: var(--cw-gold-lt); font-size: .8rem; letter-spacing: .16em; margin: 0; }
 .lab-window-part h4 small { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin-left: 6px; }
-.lab-window-rack { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
-.lab-window-rack li { border: 0; display: block; padding: 0; }
-.lab-window-chip { align-items: center; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 4px; color: var(--cw-cream); cursor: pointer; display: grid; font: inherit; gap: 4px; justify-items: center; min-height: 4.4rem; padding: 8px 2px 6px; width: 100%; }
-.lab-window-chip small { font-size: .58rem; letter-spacing: .1em; }
-.lab-window-chip[aria-pressed="true"] { border-color: var(--cw-gold); box-shadow: inset 0 0 0 1px var(--cw-gold); }
-.lab-window-chip:disabled { cursor: default; opacity: .55; }
-.lab-window-chip:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-window-out { color: var(--cw-cream); font-size: .8rem; margin: 0; }
 .lab-window-ticket { border-top: 1px dashed rgba(240, 180, 41, .4); display: grid; gap: 10px; padding-top: 10px; }
 .lab-window-ticket dl { display: grid; gap: 4px; margin: 0; }
@@ -435,3 +416,55 @@
 .lab-window-submit { background: var(--cw-gold); border: 0; border-radius: 999px; color: rgb(14 14 12); cursor: pointer; font: inherit; font-weight: 800; letter-spacing: .08em; min-height: 3rem; }
 .lab-window-submit:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--cw-gold); color: var(--cw-gold-lt); cursor: default; }
 .lab-window-submit:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
+
+/* Your row on the Big Board is your ticket: its cells are buttons, an owed pick reads PICK in amber, and a bar under the board says so. */
+.lab-tote-mine { background: transparent; border: 0; color: inherit; cursor: pointer; display: block; font: inherit; margin: -4px; min-height: 44px; padding: 4px; text-align: inherit; width: calc(100% + 8px); }
+.lab-tote-mine:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: -2px; }
+.lab-tote-owed { border: 1px dashed rgb(255 176 46); border-radius: 3px; color: rgb(255 176 46); display: inline-block; font-family: "Courier New", monospace; font-size: .74rem; font-weight: 800; letter-spacing: .1em; padding: 3px 7px; }
+.lab-tote-won { color: rgb(255 176 46); font-size: .66rem; font-weight: 800; letter-spacing: .12em; }
+.lab-tote tr.is-ticket th, .lab-tote tr.is-ticket td { background: rgb(251 247 236); border-bottom: 2px dashed var(--cw-gold); border-top: 2px dashed var(--cw-gold); box-shadow: none; color: rgb(29 42 34); height: 3rem; }
+.lab-tote tr.is-ticket .lab-tote-wins, .lab-tote tr.is-ticket .lab-tote-owed { border-color: rgb(160 70 10); color: rgb(160 70 10); text-shadow: none; }
+.lab-tote tr.is-ticket .lab-tote-slip { color: rgb(20 70 45); font-weight: 700; }
+.lab-tote tr.is-ticket .lab-tote-mark.is-w { color: rgb(20 120 60); text-shadow: none; }
+.lab-tote tr.is-ticket .lab-tote-mark.is-l { color: rgb(170 40 30); text-shadow: none; }
+.lab-tote tr.is-ticket .lab-tote-chip .lab-tote-mark { background: rgb(251 247 236); }
+.lab-tote-ticket { align-items: center; background: rgb(251 247 236); border: 0; border-radius: 4px; border-top: 3px dashed var(--cw-gold); color: rgb(29 42 34); cursor: pointer; display: grid; font: inherit; gap: 2px; justify-items: center; margin-top: 10px; min-height: 52px; padding: 8px 12px; width: 100%; }
+.lab-tote-ticket b { font-size: .86rem; letter-spacing: .12em; }
+.lab-tote-ticket span { font-size: .78rem; font-weight: 600; }
+.lab-tote-ticket.is-owed b { color: rgb(160 70 10); }
+.lab-tote-ticket:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
+.lab-board-used { color: rgba(240, 180, 41, .8); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-align: right; }
+.lab-board-cell.is-survivor.is-picked .lab-board-used { color: rgb(190 240 200); }
+
+/* The Survivor table in plain words. On the felt: a line per team taken this week (the team, who is on it, won or lost). On each
+   seat: the teams used, each with its week under it, and how many are left. In a seat's sheet: all 32 teams, used ones dimmed. */
+.lab-taken-title { color: var(--cw-gold-lt); font-size: .7rem; letter-spacing: .2em; margin: 0; }
+.lab-taken { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.lab-taken li { align-items: center; background: rgba(244, 239, 227, .1); border: 1px solid rgba(244, 239, 227, .3); border-radius: 8px; display: grid; gap: 10px; grid-template-columns: 2.6rem 1fr auto; min-height: 3.2rem; padding: 4px 10px 4px 6px; }
+.lab-taken-chip { align-items: center; background: var(--cw-cream); border: 2px solid var(--cw-gold); border-radius: 50%; display: inline-flex; height: 2.5rem; justify-content: center; width: 2.5rem; }
+.lab-taken-chip.is-empty { background: transparent; border-style: dashed; }
+.lab-taken-team { display: grid; line-height: 1.25; }
+.lab-taken-team b { font-size: .95rem; }
+.lab-taken-team span { color: rgba(244, 239, 227, .9); font-size: .88rem; }
+.lab-taken strong { color: rgb(150 235 175); font-size: .74rem; letter-spacing: .12em; }
+.lab-taken li.is-swept { background: rgba(0, 0, 0, .28); border-color: rgba(244, 239, 227, .2); }
+.lab-taken li.is-swept strong { color: rgb(252 150 140); }
+.lab-taken li.is-swept .lab-taken-chip { filter: grayscale(.9); opacity: .7; }
+.lab-seat-top { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
+.lab-seat-row { align-items: center; display: grid; gap: 8px; grid-template-columns: 2.6rem 1fr; }
+.lab-seat-row em { color: var(--club-muted); font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .12em; }
+.lab-used { display: flex; flex-wrap: wrap; gap: 4px 3px; }
+.lab-used i { color: var(--club-muted); font-size: .8rem; }
+.lab-used-chip { display: grid; justify-items: center; }
+.lab-used-chip .lab-stack-chip { margin: 0; }
+.lab-used-chip small { color: var(--club-muted); font-size: .6rem; font-weight: 700; line-height: 1.2; }
+.lab-used-chip.is-lost small { color: var(--cw-bad); }
+.lab-seat-left b { font-size: .95rem; }
+.lab-seat-left i { color: var(--cw-green); font-size: .8rem; font-style: normal; font-weight: 700; margin-left: 6px; }
+.lab-seat-sheet { display: grid; gap: 10px; }
+.lab-seat-sheet h4 { color: var(--club-muted); font-size: .72rem; letter-spacing: .14em; margin: 6px 0 0; }
+.lab-left { background: var(--cw-green); border-radius: 10px; color: var(--cw-cream); padding: 10px; }
+.lab-left .lab-box.is-left { background: rgba(244, 239, 227, .14); border-color: var(--cw-gold-lt); }
+.lab-left .lab-box.is-used { background: rgba(0, 0, 0, .3); border-color: rgba(244, 239, 227, .18); }
+.lab-left .lab-box.is-used .lab-felt-logo { filter: grayscale(1); opacity: .3; }
+.lab-left .lab-box small { bottom: 1px; color: rgba(244, 239, 227, .85); font-size: .56rem; font-weight: 800; left: 0; position: absolute; right: 0; text-align: center; }

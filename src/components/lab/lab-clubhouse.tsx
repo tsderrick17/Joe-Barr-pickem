@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, WindowRoom } from "@/components/lab/lab-tote";
+import { BigBoardRoom } from "@/components/lab/lab-tote";
 import { LAB_VIEWER, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
@@ -20,17 +20,19 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    framed constitution) (it opens today's turning table and banners), the lounge by the fire (the record book open on
  *    its table), the oval Survivor poker table forward in the middle with a chair for every player, and from Dec 7 the Bowl Pool's
  *    bulletin board, wheeled in at the front left.
- *  - Only a few things carry a label (where their news is worth a glance); "Show labels" names everything, and a plain list of the
- *    rooms sits under the picture for anyone who would rather tap a word.
- *  - Your ticket is pinned at the bottom of every screen: a lamp for each pick, lit once it is in, and the next deadline; it opens the
- *    Window. The picks wall glows while a pick is still owed.
+ *  - Everything that can be tapped says so: a gilt name plate with an arrow sits on each thing, always, and the three with news worth
+ *    a glance (the Big Board, Survivor, the Bowl Pool) carry a line of it. A plain list of the rooms sits under the picture for anyone
+ *    who would rather tap a word.
+ *  - Picks are made on the Big Board: your own row there is your ticket. Your ticket is also pinned at the bottom of every screen (a
+ *    lamp for each pick, lit once it is in, and the next deadline) and opens the Big Board with the ticket ready. The picks wall glows
+ *    while a pick is still owed.
  *  - One tap opens a room; one "Back to Clubhouse" button at the top of every room goes back. No swiping.
  * Other players' picks stay hidden until their game kicks off, exactly as on the real pages.
  */
 
-type Room = "board" | "window" | "trophies" | "plaques" | "survivor" | "bowl" | "chat" | "record" | "constitution";
+type Room = "board" | "trophies" | "plaques" | "survivor" | "bowl" | "chat" | "record" | "constitution";
 const ROOM_TITLE: Record<Room, string> = {
-  board: "The Big Board", window: "The Window", trophies: "Trophy Room", survivor: "Survivor", bowl: "Bowl Pool", chat: "Pool chat",
+  board: "The Big Board", trophies: "Trophy Room", survivor: "Survivor", bowl: "Bowl Pool", chat: "Pool chat",
   record: "Record book", constitution: "Constitution", plaques: "Plaques",
 };
 
@@ -123,18 +125,19 @@ type Point = number[];
 type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]> };
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
-/** Each thing in the picture that can be tapped: where it goes, its name, and whether its label shows without "Show labels". */
-const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label?: "above" | "below"; always?: boolean }> = [
+/** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
+const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below"; ticket?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
-  { spot: "survivor", room: "survivor", name: "Survivor", label: "below", always: true },
-  { spot: "sportsbook", room: "window", name: "The Window", label: "below", always: true },
-  { spot: "trophies", room: "trophies", name: "Trophy Room", label: "above" },
-  { spot: "plaques", room: "plaques", name: "Plaques" },
-  { spot: "board", room: "board", name: "The Big Board", label: "above", always: true },
-  { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below", always: true },
+  { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
+  // The spreads under the Big Board are where picks are made: they open the Big Board with your ticket ready.
+  { spot: "sportsbook", room: "board", name: "Make your picks", tag: "Your picks", label: "below", ticket: true },
+  { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
+  { spot: "plaques", room: "plaques", name: "Plaques", label: "below" },
+  { spot: "board", room: "board", name: "The Big Board", label: "above" },
+  { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
   { spot: "record", room: "record", name: "Record book", tag: "Records", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
-  { spot: "constitution", room: "constitution", name: "Constitution", label: "below" },
+  { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
 ];
 
 type Season = "regular" | "bowls";
@@ -191,7 +194,7 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
   );
 }
 
-/** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Window. */
+/** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
 function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
   const lamps = allIn ? [true, true, true] : [true, true, false];
   return (
@@ -204,8 +207,7 @@ function Ticket({ allIn, onOpen }: { allIn: boolean; onOpen: () => void }) {
 }
 
 /** The room: the picture by day and at night, a tap spot over each thing in it, a few labels, and the plain list of rooms below. */
-function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boolean; mail: boolean; onEnter: (room: Room) => void }) {
-  const [labels, setLabels] = useState(false);
+function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boolean; mail: boolean; onEnter: (room: Room, ticket?: boolean) => void }) {
   const key = season === "bowls" ? "-bowl" : "";
   const picture = PICTURES[`day${key}`];
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
@@ -213,7 +215,7 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
   const seats = labSurvivorAt(9);
   const news: Partial<Record<string, string>> = {
     board: `${rows[0].name} leads · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`,
-    sportsbook: allIn ? "All picks in" : "A pick is owed",
+    sportsbook: allIn ? "All in" : "1 owed",
     survivor: `${seats.filter((seat) => !seat.out).length} of ${seats.length} still in · ${seats.find((seat) => seat.name === LAB_VIEWER)?.out ? "You’re out" : "You’re in"}`,
     bowl: "Open now",
   };
@@ -235,21 +237,19 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
         <RoomNews frame={frame} picture={picture} />
-        {spots.map(({ spot, room, name, tag, label, always }) => {
+        {spots.map(({ spot, room, name, tag, label, ticket }) => {
           const at = picture.spots[spot];
           const style = { left: `${(at.x + at.w / 2) * 100}%`, top: `${(at.y + at.h / 2) * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` } as CSSProperties;
-          const shown = Boolean(label) && (labels || always);
           return (
-            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => onEnter(room)} style={style} type="button">
+            <button aria-label={name} className={`lab-room-spot is-${spot}${spot === "sportsbook" && !allIn ? " is-owed" : ""}`} key={spot} onClick={() => onEnter(room, ticket)} style={style} type="button">
               {spot === "chat" && mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
-              {shown ? <span aria-hidden="true" className={`lab-room-tag is-${label}`}>{tag ?? name}{news[spot] ? <small>{news[spot]}</small> : null}</span> : null}
+              <span aria-hidden="true" className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`}><b>{tag ?? name}<i>›</i></b>{news[spot] ? <small>{news[spot]}</small> : null}</span>
             </button>
           );
         })}
-        <button aria-pressed={labels} className="lab-room-labels" onClick={() => setLabels(!labels)} type="button">{labels ? "Hide labels" : "Show labels"}</button>
       </nav>
       <div aria-label="Rooms" className="lab-room-list" role="group">
-        {(["window", "board", "survivor", "trophies", "plaques", "record", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
+        {(["board", "survivor", "trophies", "plaques", "record", "constitution", "chat", ...(season === "bowls" ? ["bowl"] : [])] as Room[]).map((room) => (
           <button key={room} onClick={() => onEnter(room)} type="button">{ROOM_TITLE[room]}{room === "chat" && mail ? " · new" : ""}</button>
         ))}
       </div>
@@ -264,6 +264,10 @@ function StandIn({ children }: { children: ReactNode }) {
 
 export function LabClubhouse() {
   const [room, setRoom] = useState<Room | null>(null);
+  // Coming in by the picks wall or the pinned ticket opens the Big Board with the ticket ready; each arrival is a fresh one.
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [visit, setVisit] = useState(0);
+  const enter = (next: Room, ticket = false) => { setRoom(next); setTicketOpen(ticket); setVisit((count) => count + 1); };
   const [season, setSeason] = useState<Season>("regular");
   const [allIn, setAllIn] = useState(false);
   const [mail, setMail] = useState(true);
@@ -276,7 +280,7 @@ export function LabClubhouse() {
             <Chips label="Picks" onChange={(value) => setAllIn(value === "in")} options={[["owed", "A pick owed"], ["in", "All in"]] as const} value={allIn ? "in" : "owed"} />
             <Chips label="Chat" onChange={(value) => setMail(value === "new")} options={[["new", "New message"], ["none", "Nothing new"]] as const} value={mail ? "new" : "none"} />
           </div>
-          <ClubRoom allIn={allIn} mail={mail} onEnter={setRoom} season={season} />
+          <ClubRoom allIn={allIn} mail={mail} onEnter={enter} season={season} />
         </>
       ) : (
         <header className="lab-room-bar">
@@ -284,8 +288,7 @@ export function LabClubhouse() {
           <h3>{ROOM_TITLE[room]}</h3>
         </header>
       )}
-      {room === "board" ? <BigBoardRoom /> : null}
-      {room === "window" ? <WindowRoom /> : null}
+      {room === "board" ? <BigBoardRoom key={visit} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
       {room === "plaques" ? <PlaquesRoom /> : null}
       {room === "survivor" ? <LabSurvivorTable /> : null}
@@ -293,7 +296,7 @@ export function LabClubhouse() {
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "record" ? <StandIn>The record book opens here: the pool’s stats, season by season.</StandIn> : null}
       {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
-      {room === "window" ? null : <Ticket allIn={allIn} onOpen={() => setRoom("window")} />}
+      <Ticket allIn={allIn} onOpen={() => enter("board", true)} />
     </section>
   );
 }
