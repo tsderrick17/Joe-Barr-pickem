@@ -363,9 +363,7 @@
 .lab-tote-mark.is-l { color: rgb(252 120 110); text-shadow: 0 0 6px rgba(252, 120, 110, .7); }
 /* Survivor: the real chip, centred in its column, its W or L lamp beside it. */
 .lab-tote .lab-tote-surv { text-align: center; }
-.lab-tote-chip { display: inline-block; position: relative; vertical-align: middle; }
 /* The chip's W or L sits on a small black lamp at its lower right, inside the column. */
-.lab-tote-chip .lab-tote-mark { background: rgb(8 10 9); border-radius: 50%; bottom: -3px; font-size: .7rem; height: 1rem; line-height: 1rem; position: absolute; right: -5px; width: 1rem; }
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: center; }
@@ -477,3 +475,9 @@
 .lab-records th:nth-child(2) { text-align: left; }
 .lab-records td:first-child, .lab-records thead th:first-child { text-align: center; width: 2rem; }
 .lab-records thead th { color: var(--club-muted); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
+
+/* One ticket, one list: a two-way switch at the top says what is being picked; Survivor on the board is plain text like a pick. */
+.lab-ticket-switch { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+.lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
+.lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
+.lab-tote-slip.is-survivor { grid-template-columns: 1fr 1.3rem; }

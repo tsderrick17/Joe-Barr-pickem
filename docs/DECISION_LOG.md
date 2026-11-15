@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - One ticket, one list: Pick 2 and Survivor share one game list (Lab)
+
+Owner: making and seeing picks must be simpler. The Big Board stays the only place to see picks (one row a player, a green IN until
+kickoff). Making picks is one sheet with one list of the week's games and a two-way switch, "Pick 2" or "Survivor" (with "N teams left");
+the second Pick'em pick moves on to Survivor if it is still owed. The board's Survivor column is plain text like a pick (no chips).
+A used team still reads "USED WK n" and cannot be picked. Lab only, sample players; nothing here reads or writes the pool.
+
 ## 2026-11-15 - The room's boards move; plaques and records go into the Trophy Room (Lab)
 
 The owner: the Big Board "should have some movement on it": the standings auto-scroll and the spreads run across "like a sportsbook
