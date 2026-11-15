@@ -135,6 +135,7 @@ const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
   ["board-out-of-survivor", [["Moment", "Out of Survivor"]], false],
   ["board-survivor-decided", [["Moment", "Survivor decided"]], false],
   ["ticket-picking", [], true],
+  ["ticket-survivor", [["What to pick", "Survivor"]], true],
   ["ticket-game-day", [["Moment", "Game day"]], true],
   ["ticket-out-of-survivor", [["Moment", "Out of Survivor"]], true],
   ["ticket-survivor-decided", [["Moment", "Survivor decided"]], true],
@@ -143,8 +144,10 @@ for (const [shot, choices, ticket] of TOTE_SHOTS) {
   for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
     test(`Lab tote board, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "tote", { theme, size: SIZES[label] });
-      for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
+      for (const [group, choice] of choices.filter(([group]) => group !== "What to pick")) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
       if (ticket) await page.locator(".lab-tote-ticket").click();
+      // The ticket's own switch (Pick 2 or Survivor) is inside the sheet.
+      for (const [group, choice] of choices.filter(([group]) => group === "What to pick")) await page.getByRole("group", { name: group }).getByRole("button", { name: new RegExp(`^${choice}`) }).click();
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
       await expect(ticket ? page.getByRole("dialog", { name: "Your ticket" }) : page.locator(".lab-tote-room")).toHaveScreenshot(`lab-tote-${shot}-${theme}-${label}.png`, { maxDiffPixels: 12 });
@@ -204,12 +207,21 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   await pickem.getByRole("button", { name: "Colts -3.5" }).click();
   await expect(pickem.getByRole("button", { name: "Colts -3.5" })).toHaveAttribute("aria-pressed", "true");
   // Survivor is the same plain rows, one per game: used teams say the week and cannot be picked again; one team at a time.
+  // One switch says what is being picked, and how many Survivor teams are left.
+  const choose = sheet.getByRole("group", { name: "What to pick" });
+  await expect(choose.getByRole("button", { name: /^Pick 2/ })).toHaveAttribute("aria-pressed", "true");
+  await choose.getByRole("button", { name: /^Survivor/ }).click();
+  await expect(choose.getByRole("button", { name: /^Survivor/ })).toContainText("teams left");
   await expect(survivor.getByRole("listitem")).toHaveCount(4);
   await expect(survivor.getByRole("button")).toHaveCount(8);
   await expect(survivor.getByRole("button", { name: "Eagles" })).toBeDisabled();
   await expect(survivor.getByRole("button", { name: "Eagles" })).toContainText("USED WK 4");
   await survivor.getByRole("button", { name: "Colts" }).click();
   await expect(survivor.getByRole("button", { name: "Colts" })).toHaveAttribute("aria-pressed", "true");
+  await choose.getByRole("button", { name: /^Pick 2/ }).click();
+  await expect(pickem).toBeVisible();
+  await expect(survivor).toHaveCount(0);
+  await choose.getByRole("button", { name: /^Survivor/ }).click();
   await expect(survivor.getByRole("button", { pressed: true })).toHaveCount(1);
   await expect(ticket.getByRole("definition")).toHaveText(["IND -3.5", "LAR +3", "Colts"]);
   // One Submit for all three: the ticket closes and your row on the board shows what was sent.
@@ -222,6 +234,7 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
   await board.locator(".lab-tote-ticket").click();
   await expect(pickem.getByRole("button", { name: "Browns +2.5" })).toBeDisabled();
+  await expect(sheet.getByRole("group", { name: "What to pick" })).toBeVisible();
   await sheet.getByRole("button", { name: "Close" }).click();
   // Graded: the week is over, so the row is no longer a way in.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
@@ -231,14 +244,14 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Out of Survivor" }).click();
   await expect(board.locator("tr.is-you th")).toContainText("HANK");
   await board.locator(".lab-tote-ticket").click();
-  await expect(survivor).toContainText("lost in week 3");
-  await expect(survivor.getByRole("button")).toHaveCount(0);
+  await expect(sheet).toContainText("lost in week 3");
+  await expect(sheet.getByRole("group", { name: "What to pick" })).toHaveCount(0);
   await expect(ticket.getByRole("term")).toHaveText(["Pick 1", "Pick 2"]);
   await sheet.getByRole("button", { name: "Close" }).click();
   // Survivor decided: the pool is over, so it leaves the ticket.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Survivor decided" }).click();
   await board.locator(".lab-tote-ticket").click();
-  await expect(survivor).toHaveCount(0);
+  await expect(sheet.getByRole("group", { name: "What to pick" })).toHaveCount(0);
   await expect(ticket).toContainText("won it");
 });
 
@@ -255,6 +268,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await expect(board.getByRole("button", { name: "Survivor: not picked. Open your ticket" })).toHaveText("PICK");
   await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK OWED");
   await board.getByRole("button", { name: "Survivor: not picked. Open your ticket" }).click();
+  await sheet.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /^Survivor/ }).click();
   await sheet.getByRole("region", { name: "Survivor" }).getByRole("button", { name: "Broncos" }).click();
   await sheet.getByRole("button", { name: "Submit changes" }).click();
   await expect(board.getByRole("button", { name: /^Survivor: Broncos/ })).toBeVisible();

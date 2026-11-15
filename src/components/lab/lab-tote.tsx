@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import { Sheet } from "@/components/commissioner/wheel-parts";
-import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import { LAB_VIEWER, LAB_WEEK10_SURVIVOR, labKickedOff, labLeaderboard, labStandard, labSurvivorBoard } from "@/lib/lab-clubhouse.js";
 import { LAB_SLATE, LAB_TEAM_NAMES, labAtsResult, labLineFor, labSurvivorAt, labSurvivorChampion, LAB_SURVIVOR_LAST_WEEK } from "@/lib/lab-samples.js";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
@@ -91,9 +90,9 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
                   : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
                   : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
-                    <span className="lab-tote-chip">
-                      <SurvivorPokerChip abbreviation={survivor.team} size="summary" teamName={teamName(survivor.team)} unavailable={survivor.result === "L"} />
-                      {survivor.result ? <span aria-label={survivor.result === "W" ? "Survivor win" : "Survivor loss"} className={`lab-tote-mark is-${survivor.result.toLowerCase()}`} role="img">{survivor.result}</span> : null}
+                    <span className="lab-tote-slip is-survivor">
+                      <b>{survivor.team}</b>
+                      <span aria-label={survivor.result === "W" ? "Survivor win" : survivor.result === "L" ? "Survivor loss" : "not final"} className={`lab-tote-mark ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img">{survivor.result ?? ""}</span>
                     </span>
                   ))}
               </td>
@@ -139,15 +138,20 @@ function Logo({ team }: { team: string }) {
 function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: string; moment: string; champion: string | null; ticket: Ticket; onSubmit: (ticket: Ticket) => void }) {
   const [picks, setPicks] = useState(ticket.picks);
   const [chip, setChip] = useState(ticket.survivor);
-  const survivor = labSurvivorBoard({ moment, viewer });
+  const survivor = { ...labSurvivorBoard({ moment, viewer }), used: labSurvivorAt(9).find((seat) => seat.name === viewer)?.weeks.length ?? 0 };
   const alive = labSurvivorAt(9).filter((seat) => !seat.out).length;
   const pickingSurvivor = !champion && !survivor.out;
+  const [mode, setMode] = useState<"pickem" | "survivor">("pickem");
 
   const choose = (team: string, gameId: string) => {
     const game = LAB_SLATE.find((item) => item.id === gameId)!;
     const other = team === game.home ? game.away : game.home;
-    if (picks.includes(team)) setPicks(picks.filter((pick) => pick !== team));
-    else if (picks.length < 2 || picks.includes(other)) setPicks([...picks.filter((pick) => pick !== other), team]);
+    if (picks.includes(team)) { setPicks(picks.filter((pick) => pick !== team)); return; }
+    if (picks.length >= 2 && !picks.includes(other)) return;
+    const next = [...picks.filter((pick) => pick !== other), team];
+    setPicks(next);
+    // The second pick moves you on to Survivor, if it is still to do.
+    if (next.length === 2 && pickingSurvivor && !chip && !picks.includes(other)) setMode("survivor");
   };
 
   const ordered = inOrder(picks).map((team) => `${team} ${labLineFor(gameOf(team), team)}`);
@@ -159,12 +163,31 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
     <div className="lab-bigboard is-tote trace-gilt lab-window">
       <header><h3>WEEK 10</h3><span>{made} OF {lines.length} PICKED</span></header>
 
-      <section aria-label="Pick’em" className="lab-window-part">
-        <h4>PICK’EM <small>pick 2 against the spread</small></h4>
+      {pickingSurvivor ? (
+        <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
+          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick 2<small>against the spread</small></button>
+          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>{32 - survivor.used} teams left</small></button>
+        </div>
+      ) : null}
+      {survivor.out && !champion ? <p className="lab-window-out">You’re out of Survivor (lost in week {survivor.outWeek}). The pool goes on: follow it at the Survivor table.</p> : null}
+
+      <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
+        <h4>{mode === "survivor" ? <>SURVIVOR <small>pick 1 team to win its game</small></> : <>PICK’EM <small>pick 2 against the spread</small></>}</h4>
         <ol>
           {LAB_SLATE.map((game) => {
             const locked = labKickedOff(LAB_SLATE, game.id, moment);
             const cell = (team: string) => {
+              if (mode === "survivor") {
+                const entry = survivor.teams.find((item) => item.team === team)!;
+                const picked = chip === team;
+                return (
+                  <button aria-label={teamName(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { setChip(picked ? null : team); }} type="button">
+                    <span className="lab-board-team"><Logo team={team} />{team}</span>
+                    <span className="lab-board-used">{entry.usedWeek ? `USED WK ${entry.usedWeek}` : entry.locked ? "KICKED OFF" : picked ? "YOUR PICK" : ""}</span>
+                    <span aria-hidden="true" className="lab-board-trace" />
+                  </button>
+                );
+              }
               const picked = picks.includes(team);
               return (
                 <button aria-label={`${teamName(team)} ${labLineFor(game, team)}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
@@ -177,7 +200,7 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
             };
             return (
               <li key={game.id}>
-                <span className="lab-board-time">{game.kickoff.toUpperCase()}{locked ? " · KICKED OFF" : ""}</span>
+                <span className="lab-board-time">{game.kickoff.toUpperCase()}{labKickedOff(LAB_SLATE, game.id, moment) ? " · KICKED OFF" : ""}</span>
                 {cell(game.away)}
                 <span aria-hidden="true" className="lab-board-at">@</span>
                 {cell(game.home)}
@@ -186,39 +209,6 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
           })}
         </ol>
       </section>
-
-      {champion ? null : (
-        <section aria-label="Survivor" className="lab-window-part">
-          <h4>SURVIVOR <small>{survivor.out ? `${alive} of 10 still in` : "pick 1 team to win its game"}</small></h4>
-          {survivor.out ? (
-            <p className="lab-window-out">You’re out of Survivor (lost in week {survivor.outWeek}). The pool goes on: follow it at the Survivor table.</p>
-          ) : (
-            <ol>
-              {LAB_SLATE.map((game) => {
-                const cell = (team: string) => {
-                  const entry = survivor.teams.find((item) => item.team === team)!;
-                  const picked = chip === team;
-                  return (
-                    <button aria-label={teamName(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => setChip(picked ? null : team)} type="button">
-                      <span className="lab-board-team"><Logo team={team} />{team}</span>
-                      <span className="lab-board-used">{entry.usedWeek ? `USED WK ${entry.usedWeek}` : entry.locked ? "KICKED OFF" : picked ? "YOUR PICK" : ""}</span>
-                      <span aria-hidden="true" className="lab-board-trace" />
-                    </button>
-                  );
-                };
-                return (
-                  <li key={game.id}>
-                    <span className="lab-board-time">{game.kickoff.toUpperCase()}</span>
-                    {cell(game.away)}
-                    <span aria-hidden="true" className="lab-board-at">@</span>
-                    {cell(game.home)}
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </section>
-      )}
 
       <section aria-label="Your ticket" className="lab-window-ticket">
         <dl>
