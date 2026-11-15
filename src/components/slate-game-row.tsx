@@ -147,9 +147,9 @@ function SlateGameRow({ game, alternate, hasStarted, selectedTeamId, selectionFe
     const selected = selectedTeamId === team.id;
     const label = team.home ? team.name.toUpperCase() : team.name;
     // Keep the familiar home/away casing on the compact mobile treatment too:
-    // home abbreviations stay loud, while away abbreviations remain lowercase.
+    // home abbreviations stay loud, while away abbreviations remain lowercase, in every game state (live and final included).
     const compactBase = compactTeamAbbreviation(team.name, team.abbreviation);
-    const compactLabel = settledLayout ? compactBase.toUpperCase() : team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
+    const compactLabel = team.home ? compactBase.toUpperCase() : compactBase.toLowerCase();
     const feedbackType = selected && selectionFeedback?.teamId === team.id ? selectionFeedback.type : null;
     const inkStyle = selected ? strokeJitter(`${team.id}-${feedbackType ? selectionFeedback?.token : 0}`) : undefined;
     const className = `slate-team-side ${align === "right" ? "text-right" : "text-left"} min-w-0 text-[11px] font-bold leading-[1.12] tracking-tight min-[380px]:text-[12px] md:text-[15px] ${allowSelection ? "block w-full" : "block"} ${selected ? "slate-team-selection" : allowSelection && !hasStarted ? "hover:underline" : ""}`;

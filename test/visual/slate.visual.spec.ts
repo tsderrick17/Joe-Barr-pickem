@@ -128,6 +128,28 @@ for (const width of [360, 390, 700, 1280]) {
   }
 }
 
+// Home teams are capitalised and away teams are not, in every game state: a game that has started or finished keeps its casing.
+for (const scenario of ["upcoming-picked", "live-survivor", "complete-survivor"]) {
+  test(`Slate keeps home capitals and away lowercase on the compact names (${scenario})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await signIn(page, "day", "visual-player");
+    await serve(page, scenario);
+    await page.goto("/board");
+    await expect(page.locator(".slate-game-row").first()).toBeVisible({ timeout: 30_000 });
+    const names = await page.locator(".slate-team-label").evaluateAll((labels) => labels.map((label) => ({
+      full: label.querySelector(".slate-team-name-full")?.textContent ?? "",
+      short: label.querySelector(".slate-team-name-short")?.textContent ?? "",
+    })));
+    expect(names.length).toBeGreaterThan(10);
+    for (const { full, short } of names) {
+      const home = full === full.toUpperCase();
+      expect(short, `${full} is ${home ? "home" : "away"}`).toBe(home ? short.toUpperCase() : short.toLowerCase());
+    }
+    expect(names.some(({ full }) => full === full.toUpperCase())).toBe(true);
+    expect(names.some(({ full }) => full !== full.toUpperCase())).toBe(true);
+  });
+}
+
 // The Survivor instruction is only for a player who can still pick that week: shown while they are in, gone once they are out.
 for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-survivor", false]] as const) {
   test(`Slate Survivor instruction ${shown ? "shows" : "is gone"} (${scenario})`, async ({ page }) => {
