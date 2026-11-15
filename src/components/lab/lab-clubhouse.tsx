@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
+import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
@@ -311,6 +312,45 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
   );
 }
 
+/**
+ * The pool's constitution, posted in full: the very text the Commissioner Handbook holds, so the two can never differ. Quick to use:
+ * a row of the ten articles at the top jumps straight to one, each article is a short numbered list, and the three parts are headed
+ * like the sections of a printed rule book.
+ */
+function Constitution() {
+  const articles = POOL_CONSTITUTION.flatMap(({ articles: list }) => list);
+  const idFor = (title: string) => `rule-${title.split(" · ")[0].split(" ")[1].toLowerCase()}`;
+  return (
+    <article aria-label="Pool constitution" className="lab-rules">
+      <header>
+        <p>THE JOE BARR MEMORIAL PICK’EM</p>
+        <h4>Pool Constitution</h4>
+        <small>Everything you need to know to play. Every time is Eastern.</small>
+      </header>
+      <nav aria-label="Articles" className="lab-rules-index">
+        {articles.map(({ title }) => {
+          const [number, name] = title.split(" · ");
+          return <a href={`#${idFor(title)}`} key={title}><b>{number.replace("Article ", "")}</b>{name}</a>;
+        })}
+      </nav>
+      {POOL_CONSTITUTION.map(({ part, articles: list }) => (
+        <section aria-label={part} className="lab-rules-part" key={part}>
+          <h5>{part}</h5>
+          {list.map(({ title, clauses }) => {
+            const [number, name] = title.split(" · ");
+            return (
+              <section aria-labelledby={`${idFor(title)}-title`} className="lab-rules-article" id={idFor(title)} key={title}>
+                <h6 id={`${idFor(title)}-title`}><span>{number}</span>{name}</h6>
+                <ol>{clauses.map((clause) => <li key={clause}>{clause}</li>)}</ol>
+              </section>
+            );
+          })}
+        </section>
+      ))}
+    </article>
+  );
+}
+
 /** A room not built yet: it says plainly what will open here. */
 function StandIn({ children }: { children: ReactNode }) {
   return <p className="lab-stand-in">{children}</p>;
@@ -344,12 +384,12 @@ export function LabClubhouse() {
           <h3>{ROOM_TITLE[room]}</h3>
         </header>
       )}
-      {room === "board" ? <BigBoardRoom key={visit} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
+      {room === "board" ? <BigBoardRoom key={visit} onSurvivor={() => enter("survivor")} onTicket={setAllIn} startOpen={ticketOpen} survivorIn={allIn} /> : null}
       {room === "trophies" ? <TrophyRoom /> : null}
       {room === "survivor" ? <LabSurvivorTable /> : null}
       {room === "chat" ? <StandIn>The pool chat opens here, exactly as it works today.</StandIn> : null}
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
-      {room === "constitution" ? <StandIn>The pool’s constitution opens here, posted in full.</StandIn> : null}
+      {room === "constitution" ? <Constitution /> : null}
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
       <Ticket allIn={allIn} onOpen={() => enter("board", true)} />
     </section>

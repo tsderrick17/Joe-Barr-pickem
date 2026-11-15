@@ -25,14 +25,14 @@ async function holdStill(page: Page) {
 test("the Lab remembers the try-out on this device and in the address", async ({ page }) => {
   await openLab(page, "feel");
   await expect(page.locator("[data-haptic-test]")).toBeVisible();
-  await page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor table" }).click();
+  await page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor", exact: true }).click();
   await expect(page).toHaveURL(/try=survivor/);
   await page.goto("/admin/workshop/lab");
   await expect(page.locator(".lab-survivor-room")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor table" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("group", { name: "Try-outs" }).getByRole("button", { name: "Survivor", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
-// The Survivor table: each state gets a picture, phone and desktop by day, phone at night.
+// Survivor (the pool's own table, from the sample players): each state gets a picture, phone and desktop by day, phone at night.
 const TABLE_SHOTS: Array<[string, number, string | null]> = [
   ["week-7-graded", 7, null], ["week-7-before-kickoff", 7, "Before kickoff"], ["week-7-game-day", 7, "Game day"],
   ["week-3-graded", 3, null], ["week-12-champion", 12, null], ["playoffs", 13, null],
@@ -54,75 +54,19 @@ for (const [shot, week, moment] of TABLE_SHOTS) {
   }
 }
 
-test("Lab Survivor table: tap a player for all 32 teams, the used ones dimmed with their week", async ({ page }) => {
+test("Lab Survivor shows the pool's own Survivor table, fed from the sample players, at any week", async ({ page }) => {
   await openLab(page, "survivor");
-  // Dottie is still in after week 7: seven used, twenty-five left.
-  const seat = page.getByRole("button", { name: "Dottie: teams used and left" });
-  await expect(seat).toContainText("Seahawks");
-  await expect(seat).toContainText("WON");
-  await expect(seat.locator(".lab-seat-used .lab-stack-chip")).toHaveCount(6);   // weeks 1 to 6; this week's team is on the top line
-  await expect(seat).toContainText("25 left");
-  await seat.click();
-  const sheet = page.getByRole("dialog", { name: "Dottie: 7 used, 25 left" });
-  await expect(sheet.getByRole("img", { name: /: used in week \d+$/ })).toHaveCount(7);
-  await expect(sheet.getByRole("img", { name: /: left$/ })).toHaveCount(25);
-  await expect(sheet.getByRole("img", { name: "Lions: used in week 1" })).toContainText("WK 1");
-  // The divisions line up, East to West, in both conferences.
-  const rows = await sheet.locator(".lab-conference").evaluateAll((blocks) => blocks.map((block) => [...block.querySelectorAll(".lab-division-name")].map((name) => name.textContent)));
-  expect(rows).toEqual([["EAST", "NORTH", "SOUTH", "WEST"], ["EAST", "NORTH", "SOUTH", "WEST"]]);
-  await holdStill(page);
-  await expect(sheet).toHaveScreenshot("lab-survivor-seat-sheet-day-phone-390.png", { maxDiffPixels: 12 });
-  await sheet.getByRole("button", { name: "Close" }).click();
-  // Marge lost this week with the Texans: her row says so, and has no "left".
-  const out = page.getByRole("button", { name: "Marge: teams used and left" });
-  await expect(out).toContainText("Texans");
-  await expect(out).toContainText("LOST");
-  await expect(out).not.toContainText("left");
-  await out.click();
-  await expect(page.getByRole("dialog", { name: "Marge: 7 used" }).getByRole("img", { name: "Texans: used in week 7, lost" })).toBeVisible();
-});
-
-test("Lab Survivor table: one row a player with this week's team, and the table and the list agree", async ({ page }) => {
-  await openLab(page, "survivor");
+  const room = page.locator(".lab-survivor-room");
+  // The real table: ten players, a team logo for each week used; week 7 graded has three out (Gus, Bev, Marge).
+  await expect(room.getByRole("heading", { name: "Survivor Table" })).toBeVisible();
+  await expect(room.locator(".survivor-standings-row")).toHaveCount(10);
+  await expect(room.locator(".survivor-sticky-status.is-out")).toHaveCount(4);
+  // Earlier weeks: fewer out.
   await stepTo(page, 3);
-  const row = (name: string) => page.getByRole("button", { name: `${name}: teams used and left` });
-  await expect(page.locator(".lab-seat")).toHaveCount(10);
-  // Week 3, graded: each player's team and whether it won; the Bengals (Hank) and Dolphins (Bev) lost; Gus went out in week 2.
-  await expect(row("Walt")).toContainText("ChiefsWON");
-  await expect(row("Hank")).toContainText("BengalsLOST");
-  await expect(row("Bev")).toContainText("DolphinsLOST");
-  await expect(row("Gus")).toContainText("Out · week 2");
-  await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);
-  await expect(page.locator(".lab-felt-count")).toHaveText("7 of 10 alive");
-  // Before kickoff: you see your own team; another player's reads "Pick in" and never names the team; June has not picked.
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
-  await expect(row("Walt")).toContainText("Chiefs");
-  await expect(row("Rosie")).toContainText("Pick in");
-  await expect(row("Rosie")).not.toContainText("Lions");
-  await expect(row("June")).toContainText("No pick yet");
-  await expect(page.getByText("Pick in", { exact: true })).toHaveCount(7);   // nine still in, less Walt (the viewer) and June (no pick yet)
-  await expect(page.getByText(/WON|LOST/)).toHaveCount(0);   // nothing has won or lost yet
-  await expect(page.locator(".lab-seat.is-out")).toHaveCount(1);   // only Gus: this week's losses have not happened yet
-  // A pick that is in but hidden is not counted as used: Rosie has used two teams and has thirty left.
-  await expect(row("Rosie").locator(".lab-seat-used .lab-stack-chip")).toHaveCount(2);
-  await expect(row("Rosie")).toContainText("30 left");
-  // The list from the same data: the same players out.
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
-  await page.getByRole("group", { name: "View" }).getByRole("button", { name: "List" }).click();
-  await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
-  await expect(page.locator(".lab-felt")).toHaveCount(0);
-});
-
-test("Lab Survivor table: the season ends with a champion, and the playoffs clear the felt", async ({ page }) => {
-  await openLab(page, "survivor");
-  await stepTo(page, 12);
-  await expect(page.locator(".lab-felt-count")).toHaveText("Earl wins Survivor");
-  await expect(page.locator(".lab-seat.is-champion")).toHaveCount(1);
-  await expect(page.getByRole("img", { name: "Champion" })).toBeVisible();
-  await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" }).click();
-  await expect(page.getByText("Survivor runs through the regular season. Earl won it in Week 12.")).toBeVisible();
-  await expect(page.locator(".lab-seat")).toHaveCount(0);
-  await expect(page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" })).toBeDisabled();
+  await expect(room.locator(".survivor-sticky-status.is-out")).toHaveCount(3);
+  // The last week: one player left, the champion.
+  for (let at = 3; at < 12; at++) await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" }).click();
+  await expect(room.locator(".survivor-sticky-status.is-in")).toHaveCount(1);
 });
 
 // The tote board: the Big Board (everyone's picks, today's Pad columns plus Survivor's chips, the season standings on its other face)
@@ -145,7 +89,7 @@ for (const [shot, choices, ticket] of TOTE_SHOTS) {
       await openLab(page, "tote", { theme, size: SIZES[label] });
       for (const [group, choice] of choices.filter(([group]) => group !== "What to pick")) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
       if (ticket) await page.locator(".lab-tote-ticket").click();
-      // The ticket's own switch (Pick 2 or Survivor) is inside the sheet.
+      // The ticket's own switch (Pick’em or Survivor) is inside the sheet.
       for (const [group, choice] of choices.filter(([group]) => group === "What to pick")) await page.getByRole("group", { name: group }).getByRole("button", { name: new RegExp(`^${choice}`) }).click();
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
       await holdStill(page);
@@ -185,11 +129,17 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.getByRole("img", { name: /, Survivor (win|loss)$/ }).first()).toBeVisible();
 });
 
-test("the Big Board is one face: this week's picks, with no standings tab (the room's board and the Standings page have those)", async ({ page }) => {
+test("the Big Board is one face (no standings tab); in the clubhouse a quick link under its title goes to the Survivor table", async ({ page }) => {
   await openLab(page, "tote");
   const board = page.locator(".lab-tote");
   await expect(board.getByRole("group", { name: "Show" })).toHaveCount(0);
   await expect(board.locator("thead th")).toHaveCount(5);
+  // In the clubhouse, where there is a Survivor room to go to, the link is there and one tap gets you to it.
+  await openLab(page, "clubhouse");
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).locator(".lab-room-spot.is-board .lab-room-tag").click();
+  await page.locator(".lab-tote").getByRole("button", { name: "Survivor table" }).click();
+  await expect(page.getByRole("heading", { name: "Survivor", level: 3, exact: true })).toBeVisible();
+  await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
 });
 
 test("your row on the Big Board is your ticket: two against the spread and a Survivor team as plain rows, one Submit, and the row shows it", async ({ page }) => {
@@ -216,16 +166,16 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   // Survivor is the same plain rows, one per game: used teams say the week and cannot be picked again; one team at a time.
   // One switch says what is being picked, and how many Survivor teams are left.
   const choose = sheet.getByRole("group", { name: "What to pick" });
-  await expect(choose.getByRole("button", { name: /^Pick 2/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(choose.getByRole("button", { name: /^Pick’em/ })).toHaveAttribute("aria-pressed", "true");
   await choose.getByRole("button", { name: /^Survivor/ }).click();
-  await expect(choose.getByRole("button", { name: /^Survivor/ })).toContainText("teams left");
+  await expect(choose.getByRole("button", { name: /^Survivor/ })).toContainText("pick 1 to win · 23 of 32 unused");
   await expect(survivor.getByRole("listitem")).toHaveCount(4);
   await expect(survivor.getByRole("button")).toHaveCount(8);
   await expect(survivor.getByRole("button", { name: "Eagles" })).toBeDisabled();
   await expect(survivor.getByRole("button", { name: "Eagles" })).toContainText("USED WK 4");
   await survivor.getByRole("button", { name: "Colts" }).click();
   await expect(survivor.getByRole("button", { name: "Colts" })).toHaveAttribute("aria-pressed", "true");
-  await choose.getByRole("button", { name: /^Pick 2/ }).click();
+  await choose.getByRole("button", { name: /^Pick’em/ }).click();
   await expect(pickem).toBeVisible();
   await expect(survivor).toHaveCount(0);
   await choose.getByRole("button", { name: /^Survivor/ }).click();
@@ -389,7 +339,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
     ["Make your picks", "The Big Board", ".lab-window"], ["Your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
-    ["Survivor", "Survivor", ".lab-survivor-room"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-stand-in"],
+    ["Survivor", "Survivor", ".lab-survivor-room"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-rules"],
   ];
   // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate, except
   // the spreads board: it looks like the ticket it opens, and the "Your picks" button stands by itself in the gap between the chairs.

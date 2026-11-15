@@ -8,7 +8,7 @@ export const LAB_SHELF = [
   { id: "tote", name: "Tote board" },
   { id: "skins", name: "Pad skins" },
   { id: "clubhouse", name: "Clubhouse" },
-  { id: "survivor", name: "Survivor table" },
+  { id: "survivor", name: "Survivor" },
   { id: "race", name: "Horse race" },
   { id: "feel", name: "Feel test" },
 ];

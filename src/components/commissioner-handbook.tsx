@@ -9,7 +9,7 @@ const runbook = [
 
 // The pool's constitution, written to the player: what they pick, how it is scored and how each contest is won.
 // Every clause states something the site does today; change the rule in the code and its clause here together.
-const constitution: Array<{ part: string; articles: Array<{ title: string; clauses: string[] }> }> = [
+export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: string; clauses: string[] }> }> = [
   {
     part: "THE BASICS",
     articles: [
@@ -110,7 +110,7 @@ export default function CommissionerHandbook() {
       <div className="pool-constitution mt-6">
         <h3 className="font-serif text-2xl font-bold">Pool constitution</h3>
         <p className="mt-2 text-sm leading-5 text-(color:--themed-text-29)">Everything you need to know to play. Every time is Eastern.</p>
-        {constitution.map(({ part, articles }) => (
+        {POOL_CONSTITUTION.map(({ part, articles }) => (
           <section className="mt-5" key={part}>
             <h4 className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">{part}</h4>
             <div className="mt-2 space-y-2">

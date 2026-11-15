@@ -140,14 +140,13 @@ function TicketForm({ viewer, moment, champion, ticket, onSubmit }: { viewer: st
 
       {pickingSurvivor ? (
         <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick 2<small>against the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>{32 - survivor.used} teams left</small></button>
+          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick 2 against the spread</small></button>
+          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 to win · {32 - survivor.used} of 32 unused</small></button>
         </div>
       ) : null}
       {survivor.out && !champion ? <p className="lab-window-out">You’re out of Survivor (lost in week {survivor.outWeek}). The pool goes on: follow it at the Survivor table.</p> : null}
 
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
-        <h4>{mode === "survivor" ? <>SURVIVOR <small>pick 1 team to win its game</small></> : <>PICK’EM <small>pick 2 against the spread</small></>}</h4>
         <ol>
           {LAB_SLATE.map((game) => {
             const locked = labKickedOff(LAB_SLATE, game.id, moment);
@@ -214,7 +213,7 @@ function sampleTicket(viewer: string, survivorIn: boolean): Ticket {
  * the Survivor pick still owed; `startOpen` opens the ticket at once (the room's picks wall and pinned ticket lead here);
  * `onTicket` hears whether every pick is in.
  */
-export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }: { survivorIn?: boolean; startOpen?: boolean; onTicket?: (allIn: boolean) => void }) {
+export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket, onSurvivor }: { survivorIn?: boolean; startOpen?: boolean; onTicket?: (allIn: boolean) => void; onSurvivor?: () => void }) {
   const [scene, setSceneOnly] = useState<Scene>("before");
   const [ticket, setTicket] = useState<Ticket>(() => sampleTicket(LAB_VIEWER, survivorIn));
   const [open, setOpen] = useState(startOpen);
@@ -244,6 +243,12 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }:
       <Chips label="Moment" onChange={setScene} options={SCENES} value={scene} />
       <div className="lab-tote">
         <header><h3>PICK’EM</h3><span>WEEK 10 · OFFICIAL</span></header>
+        {onSurvivor ? (
+          <div className="lab-tote-links">
+            <span aria-current="page">This week’s picks</span>
+            <button onClick={onSurvivor} type="button">Survivor table <i aria-hidden="true">›</i></button>
+          </div>
+        ) : null}
         <WeekFace mine={{ name: viewer, ticket, open: canPick ? () => setOpen(true) : null, champion }} moment={moment} />
         {canPick ? (
           <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => setOpen(true)} type="button">

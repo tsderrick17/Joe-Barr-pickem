@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - Lab: the real constitution and the real Survivor table; a Survivor quick link (Lab)
+
+Owner: post the actual constitution; the pool's current Survivor view is clearly better than the Lab's poker-table try-outs, so those
+are gone. The Lab's Constitution room shows the very text the Commissioner Handbook holds (one list, exported, so they cannot differ),
+set as a printed rule book with a row of the ten articles at the top that jumps to each. The Lab's Survivor room (and the shelf's
+"Survivor" try-out) shows the pool's own Survivor table fed from the sample players, with a week stepper; improvements to Survivor are
+tried on that. On the Big Board page a quick link under the title ("Survivor table") stands where the standings tab was. The ticket's
+switch reads "Pick'em / pick 2 against the spread" and "Survivor / pick 1 to win · N of 32 unused". Lab only.
+
 ## 2026-11-15 - The Big Board is one face; the pinned ticket is built like the board (Lab)
 
 Owner: ditch the Season standings tab, and the pinned "Your ticket" bar clashed. The Big Board page is now just this week's picks (the
