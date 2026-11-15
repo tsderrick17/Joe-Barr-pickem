@@ -382,7 +382,7 @@ export async function buildRoom(q) {
   const coupe = new THREE.LatheGeometry([[0, 0], [0.032, 0], [0.032, 0.006], [0.005, 0.012], [0.004, 0.09], [0.03, 0.1], [0.055, 0.13], [0.052, 0.132], [0.028, 0.104], [0, 0.098]].map(([r, y]) => new THREE.Vector2(r, y)), 22);
   add(bar, box(0.3, 0.008, 1.4), std(0x111111, { roughness: 0.9 }), [WALL + 0.3, 0.965, BZ + 1.6], { cast: false });
   for (let r = 0; r < 2; r++) for (let k = 0; k < 9; k++) add(bar, k % 3 === 2 ? coupe : rocks, crystal, [WALL + 0.22 + r * 0.12, 0.97, BZ + 1.0 + k * 0.14 + r * 0.07], { cast: false });
-  add(bar, new THREE.PlaneGeometry(2.2, 0.43), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -9.6], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
   // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
@@ -625,9 +625,9 @@ export async function buildRoom(q) {
   scene.fog = new THREE.Fog(night ? 0x0b1424 : 0xe8f1f2, 6, night ? 170 : 120);           // a little air between you and the far wall, more over the sea
 
   // ----- camera: standing just inside the front door at eye level, looking down the room to the boards, the glass wall and the sea
-  const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 68), W / H, 0.1, 200);
-  camera.position.set(...(q.get("cam") ?? "0.3,1.72,0.9").split(",").map(Number));
-  camera.lookAt(...(q.get("look") ?? "-0.35,1.8,-9").split(",").map(Number));
+  const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 63), W / H, 0.1, 200);
+  camera.position.set(...(q.get("cam") ?? "0.45,1.72,0.4").split(",").map(Number));
+  camera.lookAt(...(q.get("look") ?? "-0.08,1.8,-9").split(",").map(Number));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
   if (q.get("zoom")) { const [k, cx, cy] = q.get("zoom").split(",").map(Number); camera.setViewOffset(W, H, (cx - 0.5 / k) * W, (cy - 0.5 / k) * H, W / k, H / k); }

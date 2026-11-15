@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom } from "@/components/lab/lab-tote";
-import { LAB_VIEWER, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
+import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 
@@ -188,27 +188,31 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * if you are further down) and the spreads board shows this week's lines with your own picks lit. Nobody else's unstarted pick is
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
-/** The Big Board in the room: five players a page, a new page every 15 seconds. */
-const BOARD_PAGE = 5;
+/** The Big Board in the room: the leader always on the top line, then up to four players a page, a new page every 15 seconds. */
+const BOARD_PAGE = 4;
 const BOARD_PAGE_MS = 15_000;
 
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const mine = labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team);
-  // The standings show five players a page and turn to the next page every 15 seconds; the lines run across the spreads board like a
-  // ticker (shown twice in a row so the loop has no seam).
-  const pages = Math.ceil(rows.length / BOARD_PAGE);
+  // The top line always shows the leader and their wins (or, when level, how many lead and on what), so every page has a sense of
+  // scale. Below it the rest of the standings turn a page every 15 seconds, the pages kept even (nine players are three pages of
+  // three); a single leader is not repeated below, level leaders are. The lines run across the spreads board like a ticker (shown
+  // twice in a row so the loop has no seam).
+  const { leaders, pages: board } = labBoardPages(rows, BOARD_PAGE);
+  const pages = board.length;
   const [page, setPage] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => setPage((at) => (at + 1) % pages), BOARD_PAGE_MS);
     return () => window.clearInterval(timer);
   }, [pages]);
-  const standings = rows.slice(page * BOARD_PAGE, page * BOARD_PAGE + BOARD_PAGE);
+  const standings = board[page % pages];
   const lines = [...LAB_SLATE, ...LAB_SLATE];
   return (
     <div aria-hidden="true" className="lab-room-live">
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={180} w={360}>
         <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS · {page + 1}/{pages}</span></header>
+        <p className="lab-room-leader">{leaders.length === 1 ? <><i>LEADER</i><span>{leaders[0].name}</span></> : <><i>{leaders.length} LEADERS</i><span /></>}<b>{leaders[0].wins}</b></p>
         <div className="lab-roll">
           <ol data-page={page + 1}>
             {standings.map((row, index) => (
