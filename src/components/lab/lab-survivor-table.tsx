@@ -8,16 +8,13 @@ import { LAB_DIVISIONS, LAB_SURVIVOR_LAST_WEEK, LAB_TEAM_NAMES, labSurvivorAt, l
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
 
 /**
- * Lab try-out: Survivor as a card table, built to answer three questions at a glance, in plain words:
- *  - Who took which team this week? On the felt, one line per team taken: the team, the full names of the players on it, and WON or
- *    LOST once it is graded. Before kickoff another player's pick is face down: they are named together on one line, never beside a
- *    team; a player who has not picked is named on a NO PICK YET line.
- *  - What has each player used? Under the felt, a card per player in standings order: every team they have used, in week order, each
- *    with its week number under it; the one that knocked them out is marked.
- *  - What do they have left? Each card of a player still in says how many teams are left; tap the card for all 32 teams by division,
- *    the used ones dimmed with the week they were used, the rest lit.
- * A week stepper shows the table as any week finished; the season ends with one seat left, the champion. In the playoffs the felt is
- * cleared (Survivor runs through the regular season). The List view shows today's Survivor list from the same data.
+ * Lab try-out: the Survivor table, kept simple: one row a player, in standings order.
+ *  - Top line: the player, and the team they took this week (WON or LOST once graded). Before kickoff another player's pick reads
+ *    "Pick in" and never names the team; a player who has not picked reads "No pick yet"; a player already out reads "Out · week n".
+ *  - Bottom line: the teams they used in earlier weeks, in order, and how many teams they have left.
+ *  - Tap a row for all 32 teams by division: the ones that player has used are dimmed with the week, the rest are lit.
+ * A week stepper shows the table as any week finished; the season ends with one player left, the champion. In the playoffs the
+ * table is cleared (Survivor runs through the regular season). The List view shows today's Survivor list from the same data.
  * Sample players only; nothing here reads or writes the pool.
  */
 
@@ -89,10 +86,7 @@ export function LabSurvivorTable() {
   const [week, setWeek] = useState(7);
   const [moment, setMoment] = useState<Moment>("graded");
   const [open, setOpen] = useState<string | null>(null);
-  const { seats, onBox, graded, alive, champion } = tableAt(week, moment);
-  const faceDown = seats.filter((seat) => seat.hidden).map((seat) => seat.name);
-  const noPick = seats.filter((seat) => seat.noPick).map((seat) => seat.name);
-  const names = (list: string[]) => list.length > 1 ? `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}` : list[0];
+  const { seats, graded, alive, champion } = tableAt(week, moment);
   const chosen = seats.find((seat) => seat.name === open) ?? null;
   const playoffs = week >= PLAYOFFS;
   const weekLabel = playoffs ? "Playoffs" : `Week ${week}`;
@@ -120,76 +114,50 @@ export function LabSurvivorTable() {
             <span aria-label={weekLabel} className="lab-dealer" role="img">{playoffs ? <small>PLAY<br />OFFS</small> : <><small>WEEK</small>{week}</>}</span>
             <p className="lab-felt-count">{champion ? <><strong>{champion}</strong> wins Survivor</> : <><strong>{alive} of {seats.length}</strong> alive</>}</p>
           </div>
-          {playoffs ? <p className="lab-felt-cleared">Survivor runs through the regular season. {champion ? `${champion} won it in Week ${LAB_SURVIVOR_LAST_WEEK}.` : null}</p> : <>
-            <h4 className="lab-taken-title">THIS WEEK’S PICKS</h4>
-            <ul aria-label="This week’s picks" className="lab-taken">
-              {[...onBox.entries()].sort((a, b) => b[1].names.length - a[1].names.length || teamName(a[0]).localeCompare(teamName(b[0]))).map(([team, box]) => (
-                <li className={box.swept ? "is-swept" : ""} key={team}>
-                  <span className="lab-taken-chip"><Logo size={30} team={team} /></span>
-                  <span className="lab-taken-team"><b>{teamName(team)}</b><span>{names(box.names)}</span></span>
-                  {graded ? <strong>{box.swept ? "LOST" : "WON"}</strong> : null}
-                </li>
-              ))}
-              {faceDown.length ? <li className="is-face-down"><span aria-hidden="true" className="lab-taken-chip is-back" /><span className="lab-taken-team"><b>Face down until kickoff</b><span>{names(faceDown)}</span></span></li> : null}
-              {noPick.length ? <li className="is-no-pick"><span aria-hidden="true" className="lab-taken-chip is-empty" /><span className="lab-taken-team"><b>No pick yet</b><span>{names(noPick)}</span></span></li> : null}
-            </ul>
-          </>}
+          {playoffs ? <p className="lab-felt-cleared">Survivor runs through the regular season. {champion ? `${champion} won it in Week ${LAB_SURVIVOR_LAST_WEEK}.` : null}</p> : null}
         </div>
 
-        <ol className="lab-seats">
+        {playoffs ? null : <ol className="lab-seats">
           {seats.map((seat) => {
-            const left = 32 - seat.weeks.length;
+            const now = seat.pickThisWeek && !seat.hidden ? seat.pickThisWeek : null;
+            const before = seat.weeks.filter((pick) => pick.week < week);
             return <li key={seat.name}>
-              <button aria-label={`${seat.name}: teams used${seat.out ? "" : " and left"}`} className={`lab-seat ${seat.out ? "is-out" : ""} ${champion === seat.name ? "is-champion" : ""}`} onClick={() => setOpen(seat.name)} type="button">
-                <span className="lab-seat-top">
+              <button aria-label={`${seat.name}: teams used and left`} className={`lab-seat ${seat.out ? "is-out" : ""} ${champion === seat.name ? "is-champion" : ""}`} onClick={() => setOpen(seat.name)} type="button">
+                <span className="lab-seat-line">
                   <span className="lab-seat-name">{seat.name}{champion === seat.name ? <span aria-label="Champion" className="lab-seat-crown" role="img">👑</span> : null}</span>
-                  <span className="lab-seat-status">{seat.out ? `OUT · WEEK ${seat.outWeek} · LOST WITH ${seat.lostTo ? teamName(seat.lostTo).toUpperCase() : ""}` : champion === seat.name ? "CHAMPION" : "STILL IN"}</span>
+                  {now ? <span className={`lab-seat-now ${graded && now.result === "L" ? "is-lost" : ""}`}><span className="lab-stack-chip"><Logo size={18} team={now.team} /></span>{teamName(now.team)}{graded ? <strong>{now.result === "W" ? "WON" : "LOST"}</strong> : null}</span>
+                    : seat.hidden ? <span className="lab-seat-now is-quiet">Pick in</span>
+                    : seat.noPick ? <span className="lab-seat-now is-quiet">No pick yet</span>
+                    : <span className="lab-seat-now is-gone">Out · week {seat.outWeek}</span>}
                 </span>
-                <span className="lab-seat-row"><em>USED</em>
-                  <span className="lab-used">
-                    {seat.weeks.map((pick) => <span className={`lab-used-chip ${pick.result === "L" ? "is-lost" : ""}`} key={pick.week}><span className="lab-stack-chip"><Logo size={18} team={pick.team} /></span><small>{pick.week}</small></span>)}
-                    {seat.weeks.length === 0 ? <i>none yet</i> : null}
-                  </span>
+                <span className="lab-seat-line">
+                  <span aria-hidden="true" className="lab-seat-used">{before.map((pick) => <span className={`lab-stack-chip ${pick.result === "L" ? "is-lost" : ""}`} key={pick.week}><Logo size={18} team={pick.team} /></span>)}</span>
+                  {seat.out ? null : <span className="lab-seat-left">{32 - seat.weeks.length} left</span>}
                 </span>
-                {seat.out ? null : <span className="lab-seat-row"><em>LEFT</em><span className="lab-seat-left"><b>{left} teams</b> <i>see them ›</i></span></span>}
               </button>
             </li>;
           })}
-        </ol>
+        </ol>}
       </div>}
 
-      <Sheet onClose={() => setOpen(null)} open={chosen !== null} title={chosen ? `${chosen.name}: teams used${chosen.out ? "" : " and left"}` : "Teams"}>
-        {chosen ? <div className="lab-seat-sheet">
-          <h4>USED · {chosen.weeks.length}</h4>
-          <ol className="lab-fan">
-            {chosen.weeks.map((pick) => <li className={pick.result === "L" ? "is-lost" : ""} key={pick.week}>
-              <span className="lab-fan-week">WEEK {pick.week}</span>
-              <span className="lab-stack-chip is-large"><Logo size={30} team={pick.team} /></span>
-              <span className="lab-fan-team">{teamName(pick.team)}</span>
-              <strong>{pick.result === "W" ? "WON" : "LOST"}</strong>
-            </li>)}
-          </ol>
-          {chosen.out ? null : <>
-            <h4>LEFT · {32 - chosen.weeks.length}</h4>
-            <div className="lab-layout lab-left">
-              {(["AFC", "NFC"] as const).map((conference) => <div className="lab-conference" key={conference}>
-                <p className="lab-conference-name">{conference}</p>
-                {DIVISION_ORDER.map((name) => {
-                  const division = LAB_DIVISIONS.find((item) => item.conference === conference && item.name === name)!;
-                  return <div className="lab-division" key={name}>
-                    <span className="lab-division-name">{name.toUpperCase()}</span>
-                    {division.teams.map((team) => {
-                      const used = chosen.weeks.find((pick) => pick.team === team);
-                      return <div aria-label={`${teamName(team)}: ${used ? `used in week ${used.week}` : "left"}`} className={`lab-box ${used ? "is-used" : "is-left"}`} key={team} role="img">
-                        <Logo size={26} team={team} />
-                        {used ? <small>WK {used.week}</small> : null}
-                      </div>;
-                    })}
+      <Sheet onClose={() => setOpen(null)} open={chosen !== null} title={chosen ? `${chosen.name}: ${chosen.weeks.length} used${chosen.out ? "" : `, ${32 - chosen.weeks.length} left`}` : "Teams"}>
+        {chosen ? <div className="lab-layout lab-left">
+          {(["AFC", "NFC"] as const).map((conference) => <div className="lab-conference" key={conference}>
+            <p className="lab-conference-name">{conference}</p>
+            {DIVISION_ORDER.map((name) => {
+              const division = LAB_DIVISIONS.find((item) => item.conference === conference && item.name === name)!;
+              return <div className="lab-division" key={name}>
+                <span className="lab-division-name">{name.toUpperCase()}</span>
+                {division.teams.map((team) => {
+                  const used = chosen.weeks.find((pick) => pick.team === team);
+                  return <div aria-label={`${teamName(team)}: ${used ? `used in week ${used.week}${used.result === "L" ? ", lost" : ""}` : "left"}`} className={`lab-box ${used ? "is-used" : "is-left"}`} key={team} role="img">
+                    <Logo size={26} team={team} />
+                    {used ? <small>WK {used.week}</small> : null}
                   </div>;
                 })}
-              </div>)}
-            </div>
-          </>}
+              </div>;
+            })}
+          </div>)}
         </div> : null}
       </Sheet>
     </section>

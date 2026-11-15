@@ -54,16 +54,16 @@ for (const [shot, week, moment] of TABLE_SHOTS) {
   }
 }
 
-test("Lab Survivor table: a seat's sheet shows every team used, in week order, and every team left", async ({ page }) => {
+test("Lab Survivor table: tap a player for all 32 teams, the used ones dimmed with their week", async ({ page }) => {
   await openLab(page, "survivor");
   // Dottie is still in after week 7: seven used, twenty-five left.
   const seat = page.getByRole("button", { name: "Dottie: teams used and left" });
-  await expect(seat).toContainText("STILL IN");
-  await expect(seat.locator(".lab-used-chip small")).toHaveText(["1", "2", "3", "4", "5", "6", "7"]);
-  await expect(seat).toContainText("25 teams");
+  await expect(seat).toContainText("Seahawks");
+  await expect(seat).toContainText("WON");
+  await expect(seat.locator(".lab-seat-used .lab-stack-chip")).toHaveCount(6);   // weeks 1 to 6; this week's team is on the top line
+  await expect(seat).toContainText("25 left");
   await seat.click();
-  const sheet = page.getByRole("dialog", { name: "Dottie: teams used and left" });
-  await expect(sheet.locator(".lab-fan li")).toHaveCount(7);
+  const sheet = page.getByRole("dialog", { name: "Dottie: 7 used, 25 left" });
   await expect(sheet.getByRole("img", { name: /: used in week \d+$/ })).toHaveCount(7);
   await expect(sheet.getByRole("img", { name: /: left$/ })).toHaveCount(25);
   await expect(sheet.getByRole("img", { name: "Lions: used in week 1" })).toContainText("WK 1");
@@ -73,41 +73,39 @@ test("Lab Survivor table: a seat's sheet shows every team used, in week order, a
   await holdStill(page);
   await expect(sheet).toHaveScreenshot("lab-survivor-seat-sheet-day-phone-390.png", { maxDiffPixels: 12 });
   await sheet.getByRole("button", { name: "Close" }).click();
-  // Marge went out in week 7 with the Texans: her card says so, and there is nothing left to show.
-  const out = page.getByRole("button", { name: "Marge: teams used", exact: true });
-  await expect(out).toContainText("OUT · WEEK 7 · LOST WITH TEXANS");
-  await expect(out.locator(".lab-used-chip.is-lost small")).toHaveText("7");
-  await expect(out).not.toContainText("teams");
+  // Marge lost this week with the Texans: her row says so, and has no "left".
+  const out = page.getByRole("button", { name: "Marge: teams used and left" });
+  await expect(out).toContainText("Texans");
+  await expect(out).toContainText("LOST");
+  await expect(out).not.toContainText("left");
   await out.click();
-  const gone = page.getByRole("dialog", { name: "Marge: teams used" });
-  await expect(gone.locator(".lab-fan li.is-lost")).toHaveCount(1);
-  await expect(gone.locator(".lab-box")).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Marge: 7 used" }).getByRole("img", { name: "Texans: used in week 7, lost" })).toBeVisible();
 });
 
-test("Lab Survivor table: who took which team this week, in full names, and the table and the list agree", async ({ page }) => {
+test("Lab Survivor table: one row a player with this week's team, and the table and the list agree", async ({ page }) => {
   await openLab(page, "survivor");
   await stepTo(page, 3);
-  const taken = page.getByRole("list", { name: "This week’s picks" });
-  // Week 3, graded: a line per team taken, with who is on it and whether it won; the Bengals (Hank) and Dolphins (Bev) lost.
-  await expect(taken.getByRole("listitem").filter({ hasText: "Chiefs" })).toHaveText(/Chiefs.*Walt and June.*WON/);
-  await expect(taken.getByRole("listitem").filter({ hasText: "Bengals" })).toHaveText(/Bengals.*Hank.*LOST/);
-  await expect(taken.locator("li.is-swept")).toHaveCount(2);
+  const row = (name: string) => page.getByRole("button", { name: `${name}: teams used and left` });
+  await expect(page.locator(".lab-seat")).toHaveCount(10);
+  // Week 3, graded: each player's team and whether it won; the Bengals (Hank) and Dolphins (Bev) lost; Gus went out in week 2.
+  await expect(row("Walt")).toContainText("ChiefsWON");
+  await expect(row("Hank")).toContainText("BengalsLOST");
+  await expect(row("Bev")).toContainText("DolphinsLOST");
+  await expect(row("Gus")).toContainText("Out · week 2");
   await expect(page.locator(".lab-seat.is-out")).toHaveCount(3);
-  await expect(page.getByText("OUT · WEEK 2 · LOST WITH COWBOYS")).toBeVisible();
   await expect(page.locator(".lab-felt-count")).toHaveText("7 of 10 alive");
-  // Before kickoff: only the viewer's own pick is beside a team; the others are named face down, and June has not picked.
+  // Before kickoff: you see your own team; another player's reads "Pick in" and never names the team; June has not picked.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Before kickoff" }).click();
-  await expect(taken.getByRole("listitem")).toHaveCount(3);
-  await expect(taken.getByRole("listitem").first()).toHaveText(/Chiefs.*Walt$/);
-  await expect(taken.locator("li.is-face-down")).toHaveText(/Face down until kickoff.*Dottie.*Rosie/);
-  await expect(taken.locator("li.is-face-down")).not.toContainText("Walt");
-  await expect(taken.locator("li.is-no-pick")).toHaveText(/No pick yet.*June/);
-  await expect(taken.locator("strong")).toHaveCount(0);   // nothing has won or lost yet
+  await expect(row("Walt")).toContainText("Chiefs");
+  await expect(row("Rosie")).toContainText("Pick in");
+  await expect(row("Rosie")).not.toContainText("Lions");
+  await expect(row("June")).toContainText("No pick yet");
+  await expect(page.getByText("Pick in", { exact: true })).toHaveCount(7);   // nine still in, less Walt (the viewer) and June (no pick yet)
+  await expect(page.getByText(/WON|LOST/)).toHaveCount(0);   // nothing has won or lost yet
   await expect(page.locator(".lab-seat.is-out")).toHaveCount(1);   // only Gus: this week's losses have not happened yet
-  // A face-down pick is not counted as used: Rosie has used two teams and has thirty left.
-  const rosie = page.getByRole("button", { name: "Rosie: teams used and left" });
-  await expect(rosie.locator(".lab-used-chip")).toHaveCount(2);
-  await expect(rosie).toContainText("30 teams");
+  // A pick that is in but hidden is not counted as used: Rosie has used two teams and has thirty left.
+  await expect(row("Rosie").locator(".lab-seat-used .lab-stack-chip")).toHaveCount(2);
+  await expect(row("Rosie")).toContainText("30 left");
   // The list from the same data: the same players out.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await page.getByRole("group", { name: "View" }).getByRole("button", { name: "List" }).click();
@@ -123,7 +121,7 @@ test("Lab Survivor table: the season ends with a champion, and the playoffs clea
   await expect(page.getByRole("img", { name: "Champion" })).toBeVisible();
   await page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" }).click();
   await expect(page.getByText("Survivor runs through the regular season. Earl won it in Week 12.")).toBeVisible();
-  await expect(page.locator(".lab-taken")).toHaveCount(0);
+  await expect(page.locator(".lab-seat")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Week" }).getByRole("button", { name: "Later week" })).toBeDisabled();
 });
 
@@ -408,11 +406,11 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   }
   await expect(room.getByRole("button", { name: "The Big Board" })).toContainText("You: T2");
   await expect(room.getByRole("button", { name: "Survivor" })).toContainText("5 of 10 still in · You’re in");
-  // The boards in the room show today's news themselves: the standings with the leader and you, and this week's lines with your picks lit.
+  // The boards in the room show today's news themselves: the standings with the leader, and this week's lines with your picks lit.
   const board = page.locator(".lab-room-screen.is-board");
   await expect(board.locator("li")).toHaveCount(5);
   await expect(board.locator("li").first()).toContainText("Earl");
-  await expect(board.locator(".is-you")).toContainText("Walt (you)");
+  await expect(board.locator("li").nth(2)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   await expect(page.locator(".lab-room-screen.is-spreads .is-picked")).toHaveText([/PIT[\s\S]*YOURS/, /LAR[\s\S]*YOURS/]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();

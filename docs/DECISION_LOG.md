@@ -38,6 +38,13 @@ screen), and the clunky part was **the chip grid in the Window**. So:
   is never counted as used, so "left" cannot give it away.
 - **Every tap spot in the room wears a name plate with an arrow, always.** "Show labels" is gone; nothing has to be discovered.
 
+Same day, after seeing it, the owner: "the board doesn't need to mark whose account it is", the hidden Survivor chips "look
+terrible", and "you're doing too much with Survivor now". So the Big Board marks no row (your cells and the bar under the board
+still open the ticket); a hidden Survivor pick is the same plain green IN as a hidden pick against the spread, not a striped chip
+back; and the Survivor table is one row a player: this week's team on the top line, the teams used before and how many are left on
+the bottom line, with the 32-team sheet one tap away. The lines-per-team felt, the USED/LEFT captions and the week-by-week list in
+the sheet are gone. Lesson kept: for this pool, simpler wins.
+
 ## 2026-11-14 - The clubhouse room shows today's news itself (Lab)
 
 The owner: the room has to work in practice, "a place you can belong in", for poker players who are boomers: show the news on the

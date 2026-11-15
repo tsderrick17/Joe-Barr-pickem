@@ -177,8 +177,8 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
         <header><b>PICK’EM</b><span>WEEK 10 · STANDINGS</span></header>
         <ol>
           {shown.map((row) => (
-            <li className={row.name === LAB_VIEWER ? "is-you" : ""} key={row.name}>
-              <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name === LAB_VIEWER ? `${row.name} (you)` : row.name}</span><b>{row.wins}</b>
+            <li key={row.name}>
+              <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span><b>{row.wins}</b>
             </li>
           ))}
         </ol>

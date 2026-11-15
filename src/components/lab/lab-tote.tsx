@@ -12,7 +12,8 @@ import { teamLogoScale } from "@/lib/team-logo-scale.js";
  * The tote board family, the owner's pick of the Pad skins, as the clubhouse's main piece. Sample players only.
  *  - The Big Board: everyone's picks in one place, as the Pick'em Pad is today (wins, player, Pick 1, Pick 2, no place), with
  *    Survivor's chips in their own column. The standings fold into the same board: one tap turns it to the season table.
- *  - Your own row is your ticket. Tap it and the ticket opens over the board: this week's games as plain rows, pick two against the
+ *  - The board is where you pick. Tap the ticket bar under it (or your own row; the board does not mark whose row it is) and the
+ *    ticket opens over the board: this week's games as plain rows, pick two against the
  *    spread, then (while you are still in Survivor) the same games again as plain rows to pick one team straight up, the teams you
  *    have used marked with their week. One Submit sends all of it, and your row on the board shows it. There is no separate screen
  *    for picking. Survivor stays on the ticket for as long as the Survivor pool is going, read only for a player who is out.
@@ -69,7 +70,7 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
           const tap = you ? mine.open : null;
           const cell = (label: string, body: ReactNode) => tap ? <button aria-label={label} className="lab-tote-mine" onClick={tap} type="button">{body}</button> : body;
           return (
-            <tr className={you ? "is-you is-ticket" : ""} key={row.name}>
+            <tr className={you ? "is-you" : ""} key={row.name}>
               <td className="lab-tote-wins">{row.wins}</td>
               <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
               {slats.map((slat, index) => (
@@ -87,8 +88,8 @@ function WeekFace({ moment, mine }: { moment: string; mine: Mine }) {
               <td className="lab-tote-surv">
                 {mine.champion ? (row.name === mine.champion ? <span className="lab-tote-won">WON</span> : <span className="lab-tote-out">OUT</span>)
                   : survivor === null ? <span className="lab-tote-out">OUT</span>
-                  : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-chip-back" role="img" />
-                  : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-chip-back" role="img" />)
+                  : survivor.hidden ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
+                  : !survivor.team ? (you ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>) : <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>)
                   : cell(`Survivor: ${teamName(survivor.team)}${you ? ". Open your ticket" : ""}`, (
                     <span className="lab-tote-chip">
                       <SurvivorPokerChip abbreviation={survivor.team} size="summary" teamName={teamName(survivor.team)} unavailable={survivor.result === "L"} />
@@ -284,7 +285,7 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket }:
         {face === "week" && canPick ? (
           <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => setOpen(true)} type="button">
             <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} OWED` : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
-            <span>Your row is your ticket · {owed ? "tap to pick" : "tap to change"} ›</span>
+            <span>{owed ? "Tap to make your picks" : "Tap to change your picks"} ›</span>
           </button>
         ) : null}
       </div>
