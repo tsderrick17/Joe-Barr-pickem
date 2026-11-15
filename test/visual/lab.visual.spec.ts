@@ -445,7 +445,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   // The ticker reads like the ticket: each game's kickoff over its two teams with their lines, your own picks framed.
-  await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5@CLE+2.5");
+  await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5CLE+2.5");
   await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5", "LAR+3"]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
@@ -580,13 +580,13 @@ test("the room's labels are the buttons: tapping a label opens its room, and the
   await expect(page.getByRole("heading", { name: "Pool chat", level: 3 })).toBeVisible();
 });
 
-test("the room's Big Board keeps the leader on top and turns a page of standings every 15 seconds, and the spreads run across like a ticker that holds still for reduced motion", async ({ page }) => {
+test("the room's Big Board keeps the leader on top and turns a page of standings every 8 seconds, and the spreads run across like a ticker that holds still for reduced motion", async ({ page }) => {
   await page.clock.install();
   await openLab(page, "clubhouse");
   const board = page.locator(".lab-room-screen.is-board");
   await expect(board.locator("li").first()).toContainText("Dottie");
-  // Not yet: the first page stays up for the full 15 seconds.
-  await page.clock.runFor(14_000);
+  // Not yet: the first page stays up for the full 8 seconds.
+  await page.clock.runFor(7_000);
   await expect(board.locator("header")).toContainText("1/2");
   // Then the next page, then back to the first; the leader stays on the top line throughout.
   await page.clock.runFor(1_000);
@@ -594,7 +594,7 @@ test("the room's Big Board keeps the leader on top and turns a page of standings
   await expect(board.locator("li")).toHaveCount(4);
   await expect(board.locator("li").last()).toContainText("Gus");
   await expect(board.locator(".lab-room-leader")).toContainText("Earl");
-  await page.clock.runFor(15_000);
+  await page.clock.runFor(8_000);
   await expect(board.locator("li").first()).toContainText("Dottie");
   // The ticker: still for reduced motion, otherwise only ever one way.
   await page.clock.resume();
