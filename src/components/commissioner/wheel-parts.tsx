@@ -35,15 +35,20 @@ export function Sheet({ open, onClose, title, children, bare = false }: { open: 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // A bare sheet opens with focus on the sheet itself, not on its handle, so no focus ring is drawn on the handle for a finger.
+      if (bare) dialog.focus({ preventScroll: true });
+    }
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+  }, [open, bare]);
   // A bare sheet is just its picture, with a small handle at the top: slide it down with a finger to put it away. A pull only counts from
   // the top of the content (otherwise it is the content scrolling), and it springs back unless it went far enough.
   const lift = (dy: number, animate: boolean) => { const node = body.current; if (node) { node.style.transition = animate ? "transform .2s ease-out" : "none"; node.style.transform = dy > 0 ? `translateY(${dy}px)` : ""; } };
   return <dialog
     aria-label={title}
     className={`cw-sheet${bare ? " is-bare" : ""}`}
+    tabIndex={-1}
     onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
     onClose={onClose}
     ref={ref}

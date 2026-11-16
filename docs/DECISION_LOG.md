@@ -37,6 +37,8 @@ and add a row above.
   the ticket's All games / Pool action, the numbers pages' `ViewSwitch`). The Survivor tab has no arrow, so it matches Big Board.
 - On the ticket, a finished game shows under each side's score the players who took that team (as the Slate names them once a game has kicked
   off), not the margin; the gold score still says which side covered ("NO PICKS" when nobody took it). The ticker is unchanged.
+- A pop-up draws no focus ring round its own edge: putting the ticket away used to leave a blue line across the top of the Big Board. A bare
+  pop-up now opens with focus on the sheet, not its handle, and a sheet itself never shows an outline (its buttons still do for the keyboard).
 - The room's day picture is lit between the first bright try and the first soft one: the window glass and far wall were clipping to white.
 
 ## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)

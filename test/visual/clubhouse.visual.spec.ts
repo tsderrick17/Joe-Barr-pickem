@@ -259,6 +259,20 @@ test("the ticket has the Slate's All games / Pool action switch, kept on the pla
   expect(saved.at(-1)).toEqual({ showPoolAction: false });
 });
 
+test("no focus ring is left on a pop-up: not on its handle when it opens, and not round the board when the ticket is put away", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-picked"] });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  const ring = () => page.evaluate(() => { const active = document.activeElement as HTMLElement; const style = getComputedStyle(active); return { handle: active.classList.contains("cw-handle"), outline: style.outlineStyle }; });
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  expect(await ring()).toEqual({ handle: false, outline: "none" });   // a ticket opens with focus on the sheet, not its handle
+  await ticket.getByRole("button", { name: "Close" }).click();
+  await expect(ticket).toHaveCount(0);
+  expect(await ring()).toEqual({ handle: false, outline: "none" });   // and the board under it shows no ring when the ticket is gone
+});
+
 test("the rules' list of articles scrolls to the article and stays on the rules", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#rules" });
   const rules = page.getByRole("dialog", { name: "Constitution" });
