@@ -19,6 +19,12 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The clubhouse is a real view of the site (Commissioner only)
+
+- The light switch beside the day/night button now opens `/clubhouse`, not the Lab. It is another way into the same site: the room fills the screen under the site's bar (a taller phone picture, `room-*-full.webp`, so a phone is filled with only a sliver cropped at the sides; plates near an edge are drawn in so none is cut off), and every thing in it is a link to the real page: the Big Board to the Standings, the games board, Your picks and the ticket to the Slate, the poker table to Survivor, the trophy to the Trophy Room, the laptop to the chat, the Bowl Pool board (from Dec 7 Eastern through January) to the Bowl Pool, the constitution to `/clubhouse/rules`.
+- The boards and the ticket read only the Standings' and the Slate's own reads (`/api/home`, `/api/board`), shaped by `src/lib/clubhouse-feed.js`: wins only on the Big Board, and the only picks lit are the viewer's own. It can never show more than those pages. No new routes, no new database rules.
+- Players cannot reach it: anyone but the Commissioner is sent to the Standings, and only the Commissioner has the switch. The Lab keeps its sample clubhouse for trying designs.
+
 ## 2026-11-15 - Only the two boards move; games two wide, shifting up every 7 seconds (Lab)
 
 - The fans and plants no longer move (owner: they look terrible). The still room picture is all there is; the pre-drawn frame strips were removed from the site. `tools/clubhouse-room` can still render them but nothing loads them.
