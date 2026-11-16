@@ -323,6 +323,7 @@
 .lab-tote { background: rgb(18 40 30); border-radius: 6px; box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); color: rgb(240 236 226); margin: 0 auto; max-width: 560px; padding: 12px 10px 10px; width: 100%; }
 .lab-tote header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
 .lab-tote h3 { font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: .2em; margin: 0; }
+.lab-survivor-tote header { align-items: center; }
 .lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
 /* The week is a button: the phone's own week list is a select laid, unseen, over the words. */
 .lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 44px; padding: 0 14px; position: relative; }
