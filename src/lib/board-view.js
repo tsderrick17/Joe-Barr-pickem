@@ -8,7 +8,7 @@
  * @typedef {{ hidden: boolean, team: string | null, line: string | null, result: "W" | "L" | null }} Slat
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "out" } | { kind: "owed" } | { kind: "hidden" } | { kind: "none" }} SurvivorCell
  * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell }} BoardRow
- * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final
+ * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null, pickers: string[] }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final; pickers: who took the team, as the Slate names them once the game has kicked off
  * @typedef {{ id: string, kickoff: string, kickedOff: boolean, action: boolean, away: string, home: string, awayLine: string, homeLine: string, results: Record<string, TeamResult> }} BoardGame   // action: a game to come, or one the pool has picks in (the Slate's Pool action)
  * @typedef {{ id: string, name: string, status: string }} BoardWeek
  * @typedef {{
@@ -74,8 +74,8 @@ export function realBoardView({ home, board }, { weekId = null } = {}) {
       awayLine,
       homeLine,
       results: {
-        [game.awayTeamAbbreviation]: { ats: mark(game.awayResult), su: finalWinner(game, "away"), score: away, margin: coverMargin(away, home, awayLine) },
-        [game.homeTeamAbbreviation]: { ats: mark(game.homeResult), su: finalWinner(game, "home"), score: home, margin: coverMargin(home, away, homeLine) },
+        [game.awayTeamAbbreviation]: { ats: mark(game.awayResult), su: finalWinner(game, "away"), score: away, margin: coverMargin(away, home, awayLine), pickers: game.awayPickers ?? [] },
+        [game.homeTeamAbbreviation]: { ats: mark(game.homeResult), su: finalWinner(game, "home"), score: home, margin: coverMargin(home, away, homeLine), pickers: game.homePickers ?? [] },
       },
     };
   });

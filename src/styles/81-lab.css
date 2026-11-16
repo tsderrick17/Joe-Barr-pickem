@@ -133,7 +133,7 @@
 .lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .12); color: rgba(240, 233, 214, .7); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
 .lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
-.lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; }
+.lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
 .lab-board-cell.is-locked { opacity: .55; }
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }

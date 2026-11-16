@@ -117,6 +117,17 @@ test("a final game carries each side's score and how far it finished past its li
   assert.deepEqual([live.results[live.away].score, live.results[live.away].margin], [null, null]);
 });
 
+test("each side carries the players who took it, as the Slate names them once the game has kicked off", () => {
+  const raw = boardResponse("complete-survivor");
+  const view = realBoardView(reads("complete-survivor"));
+  const first = raw.games[0];
+  assert.deepEqual(view.games[0].results[first.awayTeamAbbreviation].pickers, first.awayPickers);
+  assert.deepEqual(view.games[0].results[first.homeTeamAbbreviation].pickers, first.homePickers);
+  assert.ok(first.awayPickers.length > 0, "the fixture names someone");
+  const upcoming = realBoardView(reads("upcoming-picked"));
+  assert.deepEqual(upcoming.games.flatMap((game) => Object.values(game.results).flatMap((result) => result.pickers)), [], "nobody is named before a game kicks off");
+});
+
 test("a push is a margin of zero, and a game with no line has no margin", () => {
   assert.equal(coverMargin(20, 17, "-3"), 0);
   assert.equal(coverMargin(20, 20, "PK"), 0);

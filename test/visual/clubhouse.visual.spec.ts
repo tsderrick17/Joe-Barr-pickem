@@ -188,8 +188,10 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form).toBeVisible({ timeout: 30_000 });
   const first = form.locator("ol > li").first();
   await expect(first.locator(".lab-board-final").first()).toContainText("17");
-  await expect(first.locator(".lab-board-final.is-covered")).toContainText("COVERED BY 0.5");
-  await expect(first).toContainText("MISSED BY 0.5");
+  // Under each side's score are the players who took that team, not the margin; the gold still says which side covered.
+  await expect(first.locator(".lab-board-final.is-covered")).toContainText("TYLER · CHRIS");
+  await expect(first.locator(".lab-board-final:not(.is-covered)")).toContainText("MIKE · PAT");
+  await expect(first).not.toContainText("COVERED BY");
   await expect(form.locator(".lab-board-lock")).toHaveCount(0);
   // A game that has kicked off but is not final shows no score.
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);

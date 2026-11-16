@@ -164,11 +164,11 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { 
  * still in Survivor, pick one team straight up from the same rows, the teams you have used marked. One Submit. `onSubmit` may answer
  * with a message when the pick could not be saved, which is shown under the button.
  */
-/** What a decided side says about itself: its final score, and whether it covered its line and by how much (a push counts as a miss). */
+/** What a decided side says about itself: its final score, whether it covered its line (a push counts as a miss, and the gold says it), and who took it. */
 function coverNote(result: BoardView["games"][number]["results"][string]) {
   const covered = result.ats === "W";
   const size = result.margin === null ? "" : ` ${Math.abs(result.margin)}`;
-  return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim() };
+  return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim(), pickers: result.pickers };
 }
 
 export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void }) {
@@ -267,10 +267,10 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
               // Once a game is decided each side shows its final score and how it did against the spread, so who covered is plain.
               const final = result.ats !== null && result.score !== null ? coverNote(result) : null;
               return (
-                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
+                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
                   <span className="lab-board-line">{line}</span>
-                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.says}</em></span> : null}
+                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.join(" · ").toUpperCase() : "NO PICKS"}</em></span> : null}
                   <span aria-hidden="true" className="lab-board-trace" />
                 </button>
               );

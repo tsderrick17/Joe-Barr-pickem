@@ -35,6 +35,8 @@ and add a row above.
   like a lawyer's: Article III(b). The letters are drawn by the page (a counter), not typed into `POOL_CONSTITUTION`, so adding a clause renumbers itself.
 - A pair of toggle pills is two exact mirrors: the same width and height, words centred, stacked where a half is too narrow (the Big Board's tabs,
   the ticket's All games / Pool action, the numbers pages' `ViewSwitch`). The Survivor tab has no arrow, so it matches Big Board.
+- On the ticket, a finished game shows under each side's score the players who took that team (as the Slate names them once a game has kicked
+  off), not the margin; the gold score still says which side covered ("NO PICKS" when nobody took it). The ticker is unchanged.
 - The room's day picture is lit between the first bright try and the first soft one: the window glass and far wall were clipping to white.
 
 ## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)

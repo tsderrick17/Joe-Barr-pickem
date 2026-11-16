@@ -30,7 +30,7 @@ export function labBoardView({ moment, viewer = LAB_VIEWER, ticket, champion = n
       homeLine: labLineFor(game, game.home),
       results: Object.fromEntries([game.away, game.home].map((team) => {
         const other = team === game.home ? game.away : game.home;
-        return [team, { ats: kickedOff ? labAtsResult(game, team) : null, su: kickedOff ? straightUp(game, team) : null, score: kickedOff ? game.final[team] : null, margin: kickedOff ? coverMargin(game.final[team], game.final[other], labLineFor(game, team)) : null }];
+        return [team, { ats: kickedOff ? labAtsResult(game, team) : null, su: kickedOff ? straightUp(game, team) : null, score: kickedOff ? game.final[team] : null, margin: kickedOff ? coverMargin(game.final[team], game.final[other], labLineFor(game, team)) : null, pickers: [] }];
       })),
     };
   });
@@ -52,6 +52,9 @@ export function labBoardView({ moment, viewer = LAB_VIEWER, ticket, champion = n
     else survivor = standard.survivor.team ? { kind: "pick", team: standard.survivor.team, result: standard.survivor.result } : { kind: "hidden" };
     return { id: row.name, name: row.name, wins: row.wins, you, slats: base, survivor };
   });
+
+  // Once a game has kicked off, each side names the players who took it (a hidden pick is not named).
+  for (const game of games) if (game.kickedOff) for (const team of [game.away, game.home]) game.results[team].pickers = rows.filter((row) => row.slats.some((slat) => slat && !slat.hidden && slat.team === team)).map((row) => row.name);
 
   const used = labSurvivorAt(9).find((seat) => seat.name === viewer)?.weeks.length ?? 0;
   const teams = Object.fromEntries(board.teams.map((entry) => [entry.team, { free: entry.free, usedWeek: entry.usedWeek, used: entry.usedWeek !== null, locked: entry.locked }]));
