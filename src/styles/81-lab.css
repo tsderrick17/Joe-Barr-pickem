@@ -335,7 +335,7 @@
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; gap: 3px; padding-left: 6px; white-space: nowrap; }
 .lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
-.lab-tote-slip.is-l { color: rgb(252 120 110); text-decoration: line-through; text-decoration-thickness: 1px; }
+.lab-tote-slip.is-l { color: rgb(252 120 110); }
 .lab-tote-slip small { font-size: .7rem; opacity: .8; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; padding-left: 6px; }
@@ -408,10 +408,10 @@
 .lab-tote-mine:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: -2px; }
 .lab-tote-owed { border: 1px dashed rgb(255 176 46); border-radius: 3px; color: rgb(255 176 46); display: inline-block; font-family: "Courier New", monospace; font-size: .74rem; font-weight: 800; letter-spacing: .1em; padding: 3px 7px; }
 .lab-tote-won { color: rgb(255 176 46); font-size: .66rem; font-weight: 800; letter-spacing: .12em; }
-.lab-tote-ticket { align-items: center; background: rgb(251 247 236); border: 0; border-radius: 4px; border-top: 3px dashed var(--cw-gold); color: rgb(29 42 34); cursor: pointer; display: grid; font: inherit; gap: 2px; justify-items: center; margin-top: 10px; min-height: 52px; padding: 8px 12px; width: 100%; }
-.lab-tote-ticket b { font-size: .86rem; letter-spacing: .12em; }
+.lab-tote-ticket { align-items: center; background: rgba(240, 180, 41, .08); border: 1px solid rgba(240, 180, 41, .45); border-radius: 4px; border-top: 2px dashed var(--cw-gold); color: var(--cw-cream); cursor: pointer; display: grid; font: inherit; gap: 2px; justify-items: center; margin-top: 10px; min-height: 52px; padding: 8px 12px; width: 100%; }
+.lab-tote-ticket b { color: var(--cw-gold-lt); font-size: .86rem; letter-spacing: .12em; }
 .lab-tote-ticket span { font-size: .78rem; font-weight: 600; }
-.lab-tote-ticket.is-owed b { color: rgb(160 70 10); }
+.lab-tote-ticket.is-owed b { color: rgb(255 176 46); }
 .lab-tote-ticket:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-used { color: rgba(240, 180, 41, .8); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-align: right; }
 .lab-board-cell.is-survivor.is-picked .lab-board-used { color: rgb(190 240 200); }
