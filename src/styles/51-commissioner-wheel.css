@@ -103,7 +103,7 @@
 @keyframes cw-up { from { opacity: 0; transform: translateY(40px); } }
 .cw-sheet-body { background: var(--club-paper); border-radius: 18px 18px 0 0; border-top: 5px solid var(--cw-felt); max-height: 88dvh; overflow: auto; overscroll-behavior: contain; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; }
 /* A bare sheet: no paper, only the picture and a handle on top. */
-.cw-sheet.is-bare h2 { clip: rect(0 0 0 0); height: 1px; margin: 0; overflow: hidden; position: absolute; width: 1px; }
+.cw-sheet.is-bare h2, .cw-sheet.is-untitled h2 { clip: rect(0 0 0 0); height: 1px; margin: 0; overflow: hidden; position: absolute; width: 1px; }
 .cw-sheet.is-bare .cw-sheet-body { background: transparent; border: 0; border-radius: 0; padding: 0 10px calc(14px + env(safe-area-inset-bottom)); }
 /* The handle at the top of every sheet: slide the sheet down, or tap it, to put the sheet away. There is no X. */
 .cw-handle { background: var(--club-line); border: 0; border-radius: 3px; cursor: pointer; display: block; height: 5px; margin: 0 auto 10px; padding: 0; position: relative; width: 48px; }

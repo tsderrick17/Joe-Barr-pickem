@@ -69,12 +69,14 @@
 .lab-room-screen.is-spreads p em { color: rgb(255 176 46); font-size: 19px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-room-screen.is-spreads p > span.is-covered { background: rgba(240, 180, 41, .22); }
 /* A game that is over keeps its spread on the card: small and quiet between the team and the score. */
-.lab-room-screen.is-spreads p > span.is-final { gap: 4px; grid-template-columns: 1fr auto auto; white-space: nowrap; }
+/* Three columns that line up down the card and across cards: the team, the spread in the middle, the score (with its check) at the right. */
+.lab-room-screen.is-spreads p > span.is-final { gap: 0; grid-template-columns: 38px 1fr 38px; white-space: nowrap; }
 .lab-room-screen.is-spreads p > span.is-final b { font-size: 17px; letter-spacing: .06em; }
-.lab-room-screen.is-spreads p > span.is-final em { font-size: 17px; }
+.lab-room-screen.is-spreads p > span.is-final i { text-align: center; }
+.lab-room-screen.is-spreads p > span.is-final em { font-size: 19px; position: relative; text-align: right; }
 .lab-room-screen.is-spreads p i { color: rgba(240, 236, 226, .7); font-size: 12px; font-style: normal; letter-spacing: .04em; }
-.lab-room-screen.is-spreads p > span.is-covered em::before { content: "✓ "; }
-.lab-room-screen.is-spreads p > span.is-final.is-covered em::before { font-size: .62em; }
+/* The side that covered is the lit one: a gold cell and a glowing score; the other side's score is plain. */
+.lab-room-screen.is-spreads p > span.is-final:not(.is-covered) em { color: rgba(240, 236, 226, .8); text-shadow: none; }
 .lab-room-screen.is-spreads p > span.is-picked { box-shadow: inset 0 0 0 2px var(--cw-gold); }
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }

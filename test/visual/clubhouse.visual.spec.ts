@@ -284,6 +284,9 @@ test("the rules' list of articles scrolls to the article and stays on the rules"
   await openClubhouse(page, { at: "/clubhouse#rules" });
   const rules = page.getByRole("dialog", { name: "Constitution" });
   await expect(rules).toBeVisible({ timeout: 30_000 });
+  // No sub-line under the title, and no second "Constitution" heading above it: the page's own "Pool Constitution" is the only title shown.
+  await expect(rules).not.toContainText("Everything you need to know");
+  expect((await rules.locator("h2").boundingBox())?.width ?? 0).toBeLessThanOrEqual(1);
   await rules.getByRole("navigation", { name: "Articles" }).getByRole("link").nth(3).click();
   await expect(rules).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toHaveCount(0);

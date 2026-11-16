@@ -16,7 +16,6 @@ export default function ClubhouseRulesPage() {
     <main className="clubhouse-page is-rules">
       <header className="lab-room-bar">
         <Link className="lab-room-back" href="/clubhouse"><span aria-hidden="true">‹</span> Back to Clubhouse</Link>
-        <h3>Constitution</h3>
       </header>
       <Constitution />
       <Link className="lab-room-back is-foot" href="/clubhouse"><span aria-hidden="true">‹</span> Back to Clubhouse</Link>

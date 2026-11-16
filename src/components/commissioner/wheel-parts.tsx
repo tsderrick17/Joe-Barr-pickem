@@ -31,8 +31,9 @@ const SLIDE_MS = 240;
  * A sheet that rises from the bottom on a phone and sits in the middle on a computer. It is the browser's own dialog, so focus stays inside
  * and focus goes back to the button that opened it. There is no X: a sheet is put away by sliding it down with a finger, by tapping the
  * handle at its top or the empty space above it, or with Escape, and every one of those slides it closed rather than blinking it out.
+ * An untitled sheet keeps its title for screen readers only (the page inside it carries its own heading).
  */
-export function Sheet({ open, onClose, title, children, bare = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean }) {
+export function Sheet({ open, onClose, title, children, bare = false, untitled = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean; untitled?: boolean }) {
   const ref = useRef<HTMLDialogElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ x: number; y: number; dy: number; down: boolean | null } | null>(null);
@@ -73,7 +74,7 @@ export function Sheet({ open, onClose, title, children, bare = false }: { open: 
   const lift = (dy: number, animate: boolean) => { const node = body.current; if (node) { node.style.transition = animate ? "transform .2s ease-out" : "none"; node.style.transform = dy > 0 ? `translateY(${dy}px)` : ""; } };
   return <dialog
     aria-label={title}
-    className={`cw-sheet${bare ? " is-bare" : ""}`}
+    className={`cw-sheet${bare ? " is-bare" : ""}${untitled ? " is-untitled" : ""}`}
     tabIndex={-1}
     onCancel={(event) => { event.preventDefault(); slideAway(); }}
     onClick={(event) => { if (event.target === event.currentTarget) slideAway(); }}

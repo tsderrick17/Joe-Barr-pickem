@@ -202,7 +202,7 @@ export default function ClubhousePage() {
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
       {popup("survivor") ? <Sheet bare onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} onBoard={newBoard ? () => show("standings") : undefined} /></Sheet> : null}
       {popup("trophies") ? <Sheet onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
-      {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
+      {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution" untitled><Constitution /></Sheet> : null}
       {classic ? <section aria-label={TITLE[classic] === "The Big Board" ? "Standings" : TITLE[classic]} className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>

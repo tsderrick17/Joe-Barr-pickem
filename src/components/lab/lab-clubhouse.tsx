@@ -459,7 +459,6 @@ export function Constitution() {
       <header>
         <p>THE JOE BARR MEMORIAL PICK’EM</p>
         <h4>Pool Constitution</h4>
-        <small>Everything you need to know to play. Every time is Eastern.</small>
       </header>
       <nav aria-label="Articles" className="lab-rules-index">
         {articles.map(({ title }) => {
