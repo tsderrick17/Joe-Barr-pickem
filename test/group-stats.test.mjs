@@ -64,6 +64,14 @@ test("the group record counts every graded pick, and the splits add up", () => {
   assert.deepEqual(stats.bySeason.map((season) => season.seasonYear), [2026, 2025]);
 });
 
+test("net pts add up how far each graded pick landed past (+) or short of (-) its number, for the league, a season and a player", () => {
+  // 27-20 with the favorite giving 3: a favorite pick lands +4, an underdog pick -4. 14 favorite wins, 4 underdog losses.
+  assert.equal(stats.record.net, 14 * 4 - 4 * 4);
+  assert.equal(stats.bySeason.reduce((sum, season) => sum + season.net, 0), stats.record.net);
+  const ann = stats.players.find((player) => player.playerId === "ann");
+  assert.equal(ann.record.net, (ann.record.wins - ann.record.losses) * 4);
+});
+
 test("a pick that lands exactly on the number is a push, graded as a loss, and tallied", () => {
   const g = "push-game";
   const withPush = buildGroupStats({

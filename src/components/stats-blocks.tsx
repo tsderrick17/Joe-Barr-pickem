@@ -6,7 +6,7 @@
 export type Bucket = { wins: number; losses: number; picks: number; hitRate: number | null };
 export type Split = Bucket & { share: number | null };
 export type Weeks = { total: number; donut: number; split: number; sweep: number };
-export type RecordSummary = Bucket & { pushes: number; pushedGames: number; pushShare: number | null };
+export type RecordSummary = Bucket & { net: number; pushes: number; pushedGames: number; pushShare: number | null };
 export type TeamPicked = Bucket & { teamId: string; name: string; abbreviation: string; share: number | null };
 export type Splits = { side: { favorite: Split; underdog: Split; pickem: Split }; venue: { home: Split; away: Split } };
 

@@ -54,6 +54,7 @@
 .is-ink { --dash-c: var(--club-ink); }
 .dash-grid { stroke: var(--dash-grid); stroke-width: 1; }
 .dash-axis { fill: var(--club-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.dash-axis.is-s2 { fill: var(--dash-c); }
 .dash-ref { stroke: var(--dash-ref); stroke-width: 1.5; }
 .dash-ref-label { fill: var(--club-muted); font-size: 11px; font-weight: 700; }
 .dash-today { stroke: var(--club-muted); stroke-dasharray: 2 3; stroke-width: 1; }

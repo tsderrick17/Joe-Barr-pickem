@@ -19,6 +19,17 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - Only the two boards move; games two wide, shifting up every 7 seconds (Lab)
+
+- The fans and plants no longer move (owner: they look terrible). The still room picture is all there is; the pre-drawn frame strips were removed from the site. `tools/clubhouse-room` can still render them but nothing loads them.
+- The games board stands two wide, so two whole games are always up. Every 7 seconds it shifts up one row, like a slot machine or the ticker along the bottom of ESPN, and the last row runs on into the first with no jump. Reduced motion holds it still.
+
+## 2026-11-15 - Net pts on Pool stats (Commissioner)
+
+- **Net pts** is the sum, over graded Pick’em picks, of how far each pick landed past (+) or short of (−) its locked number (a push is 0). Kept for the league and for each player, and per season. It is a measure only; nothing shown influences picks.
+- It replaces Perfect weeks as the third headline tile (the tile also shows the average per game picked). Perfect weeks stay in the Trophy Room.
+- The Hit rate by season chart has a second axis on the right for Net pts, in its own colour. Both axes are symmetric about their middle line, so .500 and 0 sit on the same line, and that line no longer carries the words “Coin flip”.
+
 ## 2026-11-15 - The room breathes; brighter, softer light; a trophy shelf; the Commissioner's light switch (Lab)
 
 Owner: shadows too harsh and late in the day; the Trophy Room sign implied a hallway; plants more real, swaying; fans spinning; all

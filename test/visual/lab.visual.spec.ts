@@ -400,7 +400,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   // The ticker reads like the ticket: each game's kickoff over its two teams with their lines, your own picks framed.
   await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5CLE+2.5");
-  await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5", "LAR+3"]);
+  await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5"]);
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
@@ -584,7 +584,7 @@ test("the room's labels are the buttons, and the way back to the Clubhouse is al
   await expect(page.getByRole("heading", { name: "Pool chat", level: 3 })).toBeVisible();
 });
 
-test("the room's Big Board keeps the leader on top and turns a page of standings every 8 seconds, and the spreads run across like a ticker that holds still for reduced motion", async ({ page }) => {
+test("the room's Big Board keeps the leader on top and turns a page of standings every 8 seconds,", async ({ page }) => {
   await page.clock.install();
   await openLab(page, "clubhouse");
   const board = page.locator(".lab-room-screen.is-board");
@@ -600,14 +600,23 @@ test("the room's Big Board keeps the leader on top and turns a page of standings
   await expect(board.locator(".lab-room-leader")).toContainText("Earl");
   await page.clock.runFor(8_000);
   await expect(board.locator("li").first()).toContainText("Dottie");
-  // The ticker: still for reduced motion, otherwise only ever one way.
-  await page.clock.resume();
-  const offset = () => page.locator(".lab-ticker").evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m41);
-  const still = await offset();
-  await page.waitForTimeout(800);
-  expect(await offset()).toEqual(still);
+});
+
+test("the room's games stand two wide and the board shifts up a row every 7 seconds, with two whole games always up; nothing else in the room moves", async ({ page }) => {
+  await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const first = await offset();
-  await page.waitForTimeout(1_200);
-  expect(await offset()).toBeLessThan(first);
+  await openLab(page, "clubhouse");
+  const view = page.locator(".lab-ticker-view");
+  const shown = async () => view.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    return [...node.querySelectorAll("p")].filter((card) => { const r = card.getBoundingClientRect(); return r.top >= box.top - 1 && r.bottom <= box.bottom + 1; }).map((card) => card.querySelector("small")?.textContent ?? "");
+  });
+  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);
+  await page.clock.runFor(6_900);
+  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // not yet: the first two stay up the full 7 seconds
+  await page.clock.runFor(200);
+  await expect.poll(shown).toEqual(["SUN 1:00 PM", "SUN 4:25 PM"]);
+  await page.clock.runFor(7_000);
+  await expect.poll(shown).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // and round to the start again with no gap
+  await expect(page.locator(".lab-room-motion")).toHaveCount(0);   // the fans and plants hold still
 });

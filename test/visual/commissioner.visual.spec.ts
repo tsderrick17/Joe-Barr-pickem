@@ -487,6 +487,9 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("Kansas City Chiefs");
   await expect(section.getByRole("heading", { name: "Donut Free Weeks" })).toHaveCount(0);   // the league has no streak boards: the streaks are in the Trophy Room
   await expect(section.getByText("Neutral site")).toHaveCount(0);
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("+1,136.5");   // Net pts is the third headline; Perfect weeks is gone
+  await expect(section.locator(".pool-stats-tiles").first()).not.toContainText("Perfect weeks");
+  await expect(section.getByText("Coin flip", { exact: true })).toHaveCount(0);   // the .500 line has no name on it
   await expect(section.getByRole("heading", { name: "Hit rate by season" })).toBeVisible();   // the league has its seasons too
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   await section.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
@@ -522,6 +525,7 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(section.locator(".pool-stats-block").filter({ hasText: "What Connor picks" }).locator("tbody th")).toHaveText(["Favorites", "Underdogs", "Pick’em", "Home", "Away"]);
   await names.getByRole("button", { name: "Rick" }).click();
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("3 teams tied");
+  await expect(section.locator(".pool-stats-tiles").first()).toContainText("−62");   // under the number overall
 });
 
 // Pool stats: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.

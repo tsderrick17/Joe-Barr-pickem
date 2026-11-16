@@ -6,8 +6,10 @@ import {
 } from "@/lib/dash-chart.js";
 
 export type Tone = "s1" | "s2";
-export type DashSeries = { key: string; label: string; tone: Tone; values: Array<number | null>; dash?: boolean; area?: boolean };
-type Reference = { y: number; label: string };
+/** `axis2` puts a series on the chart's second (right-hand) axis. */
+export type DashSeries = { key: string; label: string; tone: Tone; values: Array<number | null>; dash?: boolean; area?: boolean; axis2?: boolean };
+type Reference = { y: number; label?: string };
+export type SecondAxis = { yMin: number; yMax: number; yTicks: number[]; format: (value: number) => string };
 
 const plain = (value: number) => (Math.abs(value) >= 100 ? Math.round(value).toLocaleString("en-US") : String(Number(value.toFixed(2))));
 
@@ -34,8 +36,9 @@ function useWidth() {
  */
 export function DashChart({
   label, kind = "line", x, xTicks, series, yMin = 0, yMax, yTicks, format = plain, refs = [], today, endLabels = false, capLabels = false,
-  marks, markLabel, note, height = 200, bins, extraKey,
+  marks, markLabel, note, height = 200, bins, extraKey, secondAxis,
 }: {
+  secondAxis?: SecondAxis;
   label: string;
   kind?: "line" | "columns" | "histogram";
   x: string[];
@@ -61,8 +64,11 @@ export function DashChart({
   const columns = kind === "columns";
   // Columns with marks carry their figures under the axis, above the column names, so no mark or column top ever crosses one.
   const under = columns && capLabels && Boolean(marks);
-  const area = plotArea(width, height, { bottom: under ? 38 : 22, endLabels: endLabels && kind === "line", left: Math.max(30, 8 + Math.max(...yTicks.map((tick) => format(tick).length)) * 6.5) });
+  const area = plotArea(width, height, { bottom: under ? 38 : 22, endLabels: (endLabels || Boolean(secondAxis)) && kind === "line", left: Math.max(30, 8 + Math.max(...yTicks.map((tick) => format(tick).length)) * 6.5) });
   const y = yScale(area, yMin, yMax);
+  const y2 = secondAxis ? yScale(area, secondAxis.yMin, secondAxis.yMax) : y;
+  const scaleOf = (line: DashSeries) => (line.axis2 && secondAxis ? y2 : y);
+  const formatOf = (line: DashSeries) => (line.axis2 && secondAxis ? secondAxis.format : format);
   const count = x.length;
   const at = xScale(area, count, columns);
   type Bar = { x: number; width: number; top: number; height: number; centre: number };
@@ -75,7 +81,7 @@ export function DashChart({
   const faded = (index: number) => today !== undefined && index > today;
 
   const ends: Array<{ y: number; text: string }> = [];
-  if (kind === "line" && endLabels) {
+  if (kind === "line" && endLabels && !secondAxis) {
     series.forEach((line) => {
       const span = extent(line.values);
       if (span && span.last === count - 1) ends.push({ y: y(line.values[span.last] as number) + 4, text: format(line.values[span.last] as number) });
@@ -98,7 +104,7 @@ export function DashChart({
     const flip = left + 200 > width;
     return <div className="dash-tip" style={{ left: flip ? undefined : left + 12, right: flip ? width - left + 12 : undefined, top: area.top }}>
       <b>{x[hover]}</b>
-      {rows.map((line) => <span key={line.key}><i className={`is-${line.tone}`} />{line.label}<em>{format(line.values[hover] as number)}</em></span>)}
+      {rows.map((line) => <span key={line.key}><i className={`is-${line.tone}`} />{line.label}<em>{formatOf(line)(line.values[hover] as number)}</em></span>)}
       {marks && marks[hover] !== null && marks[hover] !== undefined ? <span><i className="is-ink" />{markLabel}<em>{format(marks[hover] as number)}</em></span> : null}
       {note?.(hover) ? <small>{note(hover)}</small> : null}
     </div>;
@@ -126,24 +132,26 @@ export function DashChart({
           const histogramAnchor = order === 0 && tick.index <= (bins?.[0]?.start ?? 0) ? "start" : order === all.length - 1 && tick.index >= (bins?.at(-1)?.end ?? 0) ? "end" : "middle";
           return <text className="dash-axis" key={`${tick.index}-${tick.text}`} textAnchor={kind === "histogram" ? histogramAnchor : anchor} x={tx} y={height - 5}>{tick.text}</text>;
         })}
+        {secondAxis ? secondAxis.yTicks.map((tick) => <text className="dash-axis is-s2" key={`right-${tick}`} textAnchor="start" x={area.left + area.width + 7} y={y2(tick) + 4}>{secondAxis.format(tick)}</text>) : null}
         {today !== undefined ? <g>
           <line className="dash-today" x1={at(today)} x2={at(today)} y1={area.top} y2={area.top + area.height} />
           <text className="dash-axis" textAnchor="middle" x={at(today)} y={area.top - 6}>Today</text>
         </g> : null}
-        {refs.map((ref) => <g key={ref.label}>
+        {refs.map((ref) => <g key={ref.label ?? ref.y}>
           <line className="dash-ref" x1={area.left} x2={area.left + area.width} y1={y(ref.y)} y2={y(ref.y)} />
-          <text className="dash-ref-label" x={area.left + 4} y={y(ref.y) + (refsBelow ? 13 : -5)}>{ref.label}</text>
+          {ref.label ? <text className="dash-ref-label" x={area.left + 4} y={y(ref.y) + (refsBelow ? 13 : -5)}>{ref.label}</text> : null}
         </g>)}
         {kind === "line" ? series.map((line) => {
           const span = extent(line.values);
           if (!span) return null;
-          const path = linePath(line.values, at, y);
+          const scale = scaleOf(line);
+          const path = linePath(line.values, at, scale);
           const last = line.values[span.last] as number;
           return <g key={line.key}>
             {line.area ? <path className={`dash-area is-${line.tone}`} d={`${path}L${at(span.last)} ${y(yMin)}L${at(span.first)} ${y(yMin)}Z`} /> : null}
             <path className={`dash-line is-${line.tone} ${line.dash ? "is-dash" : ""}`} d={path} />
-            <circle className={`dash-dot is-${line.tone}`} cx={at(span.last)} cy={y(last)} r={4.5} />
-            {endLabels && span.last < count - 1 ? <text className="dash-value" textAnchor="end" x={at(span.last) - 8} y={y(last) - 9}>{format(last)}</text> : null}
+            <circle className={`dash-dot is-${line.tone}`} cx={at(span.last)} cy={scale(last)} r={4.5} />
+            {endLabels && span.last < count - 1 ? <text className="dash-value" textAnchor="end" x={at(span.last) - 8} y={scale(last) - 9}>{formatOf(line)(last)}</text> : null}
           </g>;
         }) : null}
         {columns ? x.map((_, index) => {
@@ -172,7 +180,7 @@ export function DashChart({
     <div className="sr-only"><table>
       <caption>{label}</caption>
       <thead><tr><th scope="col">Point</th>{series.map((line) => <th key={line.key} scope="col">{line.label}</th>)}</tr></thead>
-      <tbody>{x.map((name, index) => <tr key={index}><th scope="row">{name}</th>{series.map((line) => <td key={line.key}>{line.values[index] === null || line.values[index] === undefined ? "–" : format(line.values[index] as number)}</td>)}</tr>)}</tbody>
+      <tbody>{x.map((name, index) => <tr key={index}><th scope="row">{name}</th>{series.map((line) => <td key={line.key}>{line.values[index] === null || line.values[index] === undefined ? "–" : formatOf(line)(line.values[index] as number)}</td>)}</tr>)}</tbody>
     </table></div>
   </figure>;
 }

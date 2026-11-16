@@ -148,8 +148,7 @@ function PlaquesShelf() {
 
 type Spot = { x: number; y: number; w: number; h: number };
 type Point = number[];
-type Motion = { frames: number; patches: Array<{ name: string; x: number; y: number; w: number; h: number }> };
-type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]>; motion?: Motion };
+type Picture = { width: number; height: number; spots: Record<string, Spot>; screens?: Record<string, Point[]> };
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
@@ -195,6 +194,7 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
 /** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 8 seconds. */
 const BOARD_PAGE = 5;
 const BOARD_PAGE_MS = 8_000;
+const TICKER_MS = 7_000;
 
 function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number; height: number } | null }) {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
@@ -211,7 +211,15 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
     return () => window.clearInterval(timer);
   }, [pages]);
   const standings = board[page % pages];
-  const lines = [...LAB_SLATE, ...LAB_SLATE];
+  // The games stand two wide, so two whole games are always up. Every 7 seconds the board shifts up one row, like a slot machine or the
+  // ticker along the bottom of ESPN; the first row is repeated at the foot so the last shift runs on into the first with no jump.
+  const rowCount = Math.ceil(LAB_SLATE.length / 2);
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setStep((at) => (at >= rowCount ? 1 : at + 1)), TICKER_MS);
+    return () => window.clearInterval(timer);
+  }, [rowCount]);
+  const gameRows = Array.from({ length: rowCount + 1 }, (_, row) => [0, 1].map((side) => LAB_SLATE[(2 * (row % rowCount) + side) % LAB_SLATE.length]));
   return (
     <div aria-hidden="true" className="lab-room-live">
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
@@ -228,37 +236,21 @@ function RoomNews({ picture, frame }: { picture: Picture; frame: { width: number
         </div>
       </Screen>
       <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={103} w={360}>
-        <div className="lab-ticker">
-          {lines.map((game, index) => {
-            // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
-            // with its logo and line; your pick is lit in gold inside the card.
-            const side = (team: string) => <span className={mine.includes(team) ? "is-picked" : ""}><Logo eager team={team} /><b>{team}</b><em>{labLineFor(game, team)}</em></span>;
-            return <p key={`${game.id}-${index}`}><small>{game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
-          })}
+        <div className="lab-ticker-view">
+          <div className={`lab-ticker${step === 0 ? " is-snap" : ""}`} onTransitionEnd={() => setStep((at) => (at >= rowCount ? 0 : at))} style={{ ["--rows" as string]: rowCount + 1, ["--step" as string]: step }}>
+            {gameRows.map((row, index) => (
+              <div key={index}>
+                {row.map((game) => {
+                  // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
+                  // with its logo and line; your pick is lit in gold inside the card.
+                  const side = (team: string) => <span className={mine.includes(team) ? "is-picked" : ""}><Logo eager team={team} /><b>{team}</b><em>{labLineFor(game, team)}</em></span>;
+                  return <p key={game.id}><small>{game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
+                })}
+              </div>
+            ))}
+          </div>
         </div>
       </Screen>
-    </div>
-  );
-}
-
-/**
- * The room breathes a little: the fans turn slowly and the indoor plants sway. Each moving thing is a small patch laid exactly over
- * its place in the picture, playing a short loop of frames drawn from the same 3D room (one strip per patch, so nothing is computed
- * on the phone). The still picture is frame 0, so with reduced motion on (or before a strip has loaded) the room simply holds still.
- */
-function RoomMotion({ name }: { name: string }) {
-  return (
-    <div aria-hidden="true" className="lab-room-live">
-      {(["day", "night"] as const).flatMap((time) => {
-        const motion = PICTURES[`${time}${name}`]?.motion;
-        return (motion?.patches ?? []).map((patch) => (
-          <span
-            className={`lab-room-motion is-${time} is-${patch.name.replace(/\d+$/, "")}`}
-            key={`${time}-${patch.name}`}
-            style={{ backgroundImage: `url(/lab/clubhouse/room-${time}${name}-${patch.name}.webp)`, height: `${patch.h * 100}%`, left: `${patch.x * 100}%`, top: `${patch.y * 100}%`, width: `${patch.w * 100}%`, ["--frames" as string]: motion!.frames }}
-          />
-        ));
-      })}
     </div>
   );
 }
@@ -316,7 +308,6 @@ function ClubRoom({ season, allIn, mail, onEnter }: { season: Season; allIn: boo
       <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}` }}>
         <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
         <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
-        <RoomMotion name={key} />
         <RoomNews frame={frame} picture={picture} />
         {spots.map(({ spot, room, name, tag, label, at: tall, wideAt, ticket }) => {
           const free = wide ? wideAt ?? tall : tall;

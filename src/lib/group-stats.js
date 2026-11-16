@@ -46,9 +46,10 @@ function runs(weeks, good) {
  * Only graded picks count; a push is a loss.
  */
 function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, teamById }) {
-  let wins = 0, losses = 0, pushPicks = 0;
+  let wins = 0, losses = 0, pushPicks = 0, net = 0;
   const pushedGames = new Set(), pickedGames = new Set();
   const bucket = () => ({ wins: 0, losses: 0 });
+  const netBySeason = new Map();
   const side = { favorite: bucket(), underdog: bucket(), pickem: bucket() }, venue = { home: bucket(), away: bucket() };
   const bySeason = new Map(), byTeam = new Map();
   for (const pick of subset) {
@@ -63,6 +64,8 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     if (game && line && Number.isInteger(game.home_score) && Number.isInteger(game.away_score)) {
       const margin = pick.selected_team_id === game.home_team_id ? game.home_score - game.away_score : game.away_score - game.home_score;
       const adjusted = margin + (pick.selected_team_id === line.favorite_team_id ? -line.locked_spread : line.locked_spread);
+      net += adjusted;   // Net pts: how far the pick landed past (+) or short of (-) its number, added up
+      if (year !== undefined) netBySeason.set(year, (netBySeason.get(year) ?? 0) + adjusted);
       if (!won && adjusted === 0) { pushPicks += 1; pushedGames.add(pick.game_id); }   // landing exactly on the number (or a tied pick'em game) is a push, graded as a loss
     }
     const kind = line && line.locked_spread != null && Number(line.locked_spread) === 0 ? "pickem" : line?.favorite_team_id ? (pick.selected_team_id === line.favorite_team_id ? "favorite" : "underdog") : null;
@@ -82,14 +85,14 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   const teamsByLowestHitRate = [...everyTeam].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
   const tiedForMost = everyTeam.length ? everyTeam.filter((team) => team.picks === everyTeam[0].picks).length : 0;   // how many teams share the top spot
   return {
-    record: { ...withRate({ wins, losses }), pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
+    record: { ...withRate({ wins, losses }), net, pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
     teams,
     teamsByHitRate,
     teamsLeastPicked,
     teamsByLowestHitRate,
     mostPicked: teams[0] ?? null,
     mostPickedTied: tiedForMost,   // 1 when one team leads; more when teams tie for the most picks
-    bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record) })),
+    bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record), net: netBySeason.get(year) ?? 0 })),
     splits: {
       side: { favorite: share(side.favorite, sideTotal), underdog: share(side.underdog, sideTotal), pickem: share(side.pickem, sideTotal) },
       venue: { home: share(venue.home, venueTotal), away: share(venue.away, venueTotal) },

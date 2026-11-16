@@ -12,13 +12,18 @@ import { CardHead, Change, DashChart, Sparkline, Tile } from "@/components/commi
  * against a coin flip, hit rate by season against .500, the weekly 0-2 / 1-1 / 2-0 split against what coin flips would give, then two tables with
  * the bar inside the row: what the league (or the player) picks, and five teams. Private to the Commissioner. (Streaks are the Trophy Room's.)
  */
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number }> };
+type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number; net: number }> };
 type PlayerView = View & { playerId: string; name: string };
 type Stats = View & { players: PlayerView[] };
 
 const LEAGUE = "league";
 const COIN = 0.5;
 const average = (value: number) => formatAverage(value);
+/** Net pts: points past (+) or short of (−) the number, one decimal at most (spreads come in halves). */
+const netPts = (value: number, sign = true) => {
+  const text = Math.abs(Number(value.toFixed(1))).toLocaleString("en-US");
+  return !sign ? text : value > 0 ? `+${text}` : value < 0 ? `−${text}` : "0";
+};
 const signed = (value: number) => (value === 0 ? "level with" : `${formatAverage(Math.abs(value))} ${value > 0 ? "over" : "under"}`);
 
 export default function PoolStats() {
@@ -66,7 +71,7 @@ export default function PoolStats() {
         <PoolTiles view={view} />
 
         {view.bySeason.length ? <div className="dash-card">
-          <CardHead line="Against the spread; a push counts as a loss" title="Hit rate by season" />
+          <CardHead line="Against the spread; a push counts as a loss. Net pts: points past the number, added up" title="Hit rate by season" />
           <SeasonChart label={`${whose} hit rate by season`} seasons={[...view.bySeason].sort((a, b) => a.seasonYear - b.seasonYear)} />
         </div> : null}
 
@@ -93,8 +98,8 @@ export default function PoolStats() {
 }
 
 function PoolTiles({ view }: { view: View }) {
-  const { record, weeks, mostPicked, mostPickedTied } = view;
-  const sweeps = weeks.total ? weeks.sweep / weeks.total : null;
+  const { record, mostPicked, mostPickedTied } = view;
+  const perPick = record.picks ? record.net / record.picks : null;
   return <div className="dash-tiles pool-stats-tiles">
     <Tile label="Record" sub={`${formatAdminNumber(record.picks)} graded picks · ${record.pushedGames} push${record.pushedGames === 1 ? "" : "es"}`} value={`${formatAdminNumber(record.wins)}–${formatAdminNumber(record.losses)}`} />
     <Tile
@@ -104,9 +109,9 @@ function PoolTiles({ view }: { view: View }) {
       value={formatAverage(record.hitRate)}
     />
     <Tile
-      label="Perfect weeks"
-      sub={sweeps === null ? "No weeks yet" : <Change good={sweeps >= 0.25} up={sweeps >= 0.25}>{Math.abs(Math.round((sweeps - 0.25) * 100))} pts {sweeps >= 0.25 ? "over" : "under"} a coin flip</Change>}
-      value={percent(sweeps)}
+      label="Net pts"
+      sub={perPick === null ? "No graded picks yet" : <Change good={perPick >= 0} up={perPick >= 0}>{netPts(perPick)} avg per game picked</Change>}
+      value={netPts(record.net)}
     />
     {mostPicked && mostPickedTied > 1
       ? <Tile label="Most picked team" sub={`${mostPicked.picks} ${mostPicked.picks === 1 ? "pick" : "picks"} each`} value={`${mostPickedTied} teams tied`} />
@@ -114,24 +119,30 @@ function PoolTiles({ view }: { view: View }) {
   </div>;
 }
 
-function SeasonChart({ seasons, label }: { seasons: Array<Bucket & { seasonYear: number }>; label: string }) {
-  const rates = seasons.map((season) => season.hitRate).filter((rate): rate is number => rate !== null);
-  const low = Math.min(0.46, Math.floor((Math.min(...rates, COIN) - 0.01) * 50) / 50);
-  const high = Math.max(0.58, Math.ceil((Math.max(...rates, COIN) + 0.01) * 50) / 50);
-  const step = (high - low) / 3;
+function SeasonChart({ seasons, label }: { seasons: Array<Bucket & { seasonYear: number; net: number }>; label: string }) {
+  // Both axes are symmetric about their middle line, so .500 and 0 net pts sit on the same line.
+  const reach = Math.max(0.06, ...seasons.map((season) => (season.hitRate === null ? 0 : Math.ceil((Math.abs(season.hitRate - COIN) + 0.01) * 50) / 50)));
+  const low = COIN - reach, high = COIN + reach;
+  const biggest = Math.max(1, ...seasons.map((season) => Math.abs(season.net)));
+  const unit = 4 * 10 ** Math.max(0, Math.floor(Math.log10(biggest)) - 1);
+  const net = Math.ceil((biggest * 1.05) / unit) * unit;
   const every = seasons.length > 6 ? 2 : 1;
   return <DashChart
     endLabels
     format={average}
     label={label}
     note={(index) => `${formatAdminNumber(seasons[index].wins)}–${formatAdminNumber(seasons[index].losses)}`}
-    refs={[{ y: COIN, label: "Coin flip" }]}
-    series={[{ key: "rate", label: "Hit rate", tone: "s1", values: seasons.map((season) => season.hitRate) }]}
+    refs={[{ y: COIN }]}
+    secondAxis={{ format: (value) => netPts(value), yMax: net, yMin: -net, yTicks: [-net, -net / 2, 0, net / 2, net] }}
+    series={[
+      { key: "rate", label: "Hit rate", tone: "s1", values: seasons.map((season) => season.hitRate) },
+      { key: "net", label: "Net pts", tone: "s2", values: seasons.map((season) => season.net), axis2: true },
+    ]}
     x={seasons.map((season) => String(season.seasonYear))}
     xTicks={seasons.map((season, index) => ({ index, text: String(season.seasonYear) })).filter((tick) => (seasons.length - 1 - tick.index) % every === 0)}
     yMax={high}
     yMin={low}
-    yTicks={[low, low + step, low + 2 * step, high]}
+    yTicks={[low, COIN - reach / 2, COIN, COIN + reach / 2, high]}
   />;
 }
 
