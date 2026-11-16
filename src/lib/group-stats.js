@@ -224,6 +224,14 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
     return { total: weeks.length, ...counts };
   };
 
+  // The current season (the newest one) for the two tables' All-time / This season switch: its splits and five-team lists alone.
+  const currentSeason = seasons.reduce((newest, season) => (!newest || season.year > newest.year ? season : newest), null);
+  const inCurrentSeason = (pick) => Boolean(currentSeason) && periodById.get(pick.scoring_period_id)?.season_id === currentSeason.id;
+  const thisSeasonOf = (subset) => {
+    const { splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate } = recordsFor(subset.filter(inCurrentSeason), lookups);
+    return { seasonYear: currentSeason?.year ?? null, splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate };
+  };
+
   // Each player's own full set: the same record, histogram and splits from just their picks.
   const picksByPlayer = new Map();
   for (const pick of picks) picksByPlayer.set(pick.player_id, [...(picksByPlayer.get(pick.player_id) ?? []), pick]);
@@ -232,6 +240,7 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
       playerId,
       name: nameById.get(playerId) ?? "Former player",
       ...recordsFor(picksByPlayer.get(playerId) ?? [], lookups),
+      thisSeason: thisSeasonOf(picksByPlayer.get(playerId) ?? []),
       weeks: histogramOf(weeksByPlayer.get(playerId) ?? []),
     }))
     .filter((player) => player.graded > 0 || player.weeks.total > 0)
@@ -239,6 +248,7 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
 
   return {
     ...recordsFor(picks, lookups),
+    thisSeason: thisSeasonOf(picks),
     weeks: { total: weekCount, donut: histogram.donut, split: histogram.split, sweep: histogram.sweep },
     players: eachPlayer,
   };

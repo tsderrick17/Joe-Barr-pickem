@@ -223,6 +223,7 @@ TROPHY_ROOM.players = TROPHY_ROOM.players.map((player) => ({ ...player, streaks:
 /** The group's stats: a pool of eight over two seasons. */
 const bucket = (wins, losses) => ({ wins, losses, picks: wins + losses, hitRate: wins / (wins + losses) });
 const split = (wins, losses, share) => ({ ...bucket(wins, losses), share });
+const NONE = { wins: 0, losses: 0, picks: 0, hitRate: null, share: null };   // a split with no graded pick, as the route sends it
 const teamPicked = (teamId, name, abbreviation, wins, losses, share) => ({ teamId, name, abbreviation, ...bucket(wins, losses), share });
 /** The five teams with the best hit rate (ties to the team picked more often), as the stats route sends them beside the five most picked. */
 const byHitRate = (teams) => [...teams].sort((a, b) => b.hitRate - a.hitRate || b.picks - a.picks).slice(0, 5);
@@ -251,6 +252,14 @@ export const POOL_STATS = {
     venue: { home: split(1215, 1047, 0.503), away: split(1103, 1004, 0.469) },
   },
   graded: 4495,
+  // This season alone (the two tables' All-time / This season switch): the Bills lead this year, and the Raiders come in.
+  thisSeason: (() => {
+    const teams = [teamPicked("buf", "Buffalo Bills", "BUF", 118, 84, 0.092), teamPicked("kc", "Kansas City Chiefs", "KC", 101, 96, 0.089), teamPicked("lv", "Las Vegas Raiders", "LV", 88, 92, 0.082), teamPicked("det", "Detroit Lions", "DET", 90, 70, 0.073), teamPicked("phi", "Philadelphia Eagles", "PHI", 77, 75, 0.069)];
+    return {
+      seasonYear: 2026, teams, teamsByHitRate: byHitRate(teams), teamsLeastPicked: byLeastPicked(teams), teamsByLowestHitRate: byLowestHitRate(teams),
+      splits: { side: { favorite: split(640, 505, 0.52), underdog: split(512, 470, 0.446), pickem: split(38, 38, 0.034) }, venue: { home: split(600, 500, 0.5), away: split(590, 513, 0.5) } },
+    };
+  })(),
   players: [
     ["p1", "Gary", bucket(612, 498), { donut: 41, split: 118, sweep: 71 }, 0.55, 0.52, "buf", "Buffalo Bills", "BUF"],
     ["p3", "Tyler", bucket(587, 523), { donut: 52, split: 110, sweep: 68 }, 0.49, 0.5, "kc", "Kansas City Chiefs", "KC"],
@@ -274,6 +283,10 @@ export const POOL_STATS = {
         venue: { home: split(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5), homeShare), away: split(Math.round(record.wins * 0.45), Math.round(record.losses * 0.45), 0.95 - homeShare) },
       },
       graded: record.picks,
+      // Rick has no graded pick this season yet: his teams table says so.
+      thisSeason: playerId === "p4"
+        ? { seasonYear: 2026, teams: [], teamsByHitRate: [], teamsLeastPicked: [], teamsByLowestHitRate: [], splits: { side: { favorite: NONE, underdog: NONE, pickem: NONE }, venue: { home: NONE, away: NONE } } }
+        : { seasonYear: 2026, teams: teams.slice(0, 2), teamsByHitRate: byHitRate(teams.slice(0, 2)), teamsLeastPicked: byLeastPicked(teams.slice(0, 2)), teamsByLowestHitRate: byLowestHitRate(teams.slice(0, 2)), splits: { side: { favorite: split(60, 40, 0.5), underdog: split(48, 46, 0.47), pickem: split(3, 3, 0.03) }, venue: { home: split(55, 45, 0.5), away: split(56, 44, 0.5) } } },
     };
   }),
 };

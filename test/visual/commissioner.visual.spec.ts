@@ -528,6 +528,36 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("−62");   // under the number overall
 });
 
+// Each of the two tables has its own All-time / This season switch at the top right of its card.
+test("Pool stats: the splits and teams tables each switch between all-time and this season", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin/stats");
+  const section = page.locator("[aria-labelledby=pool-stats-title]");
+  const splitsBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /^What .* picks$/ }) });
+  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /teams$/ }) });
+  const splitsSwitch = splitsBlock.getByRole("group", { name: /all-time or this season/ });
+  const teamsSwitch = teamBlock.getByRole("group", { name: /all-time or this season/ });
+  await expect(splitsSwitch.getByRole("button", { name: "All-time" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  await expect(teamsSwitch.getByRole("button", { name: "All-time" })).toHaveAttribute("aria-pressed", "true");
+  // The switch sits at the top right, level with the title.
+  const title = await teamBlock.getByRole("heading").boundingBox();
+  const toggle = await teamsSwitch.boundingBox();
+  const card = await teamBlock.boundingBox();
+  expect(toggle!.x + toggle!.width).toBeGreaterThan(card!.x + card!.width - 40);
+  expect(toggle!.y).toBeLessThan(title!.y + title!.height);
+  await expect(teamBlock.locator("tbody th").first()).toHaveText("Kansas City Chiefs");
+  await teamsSwitch.getByRole("button", { name: "This season" }).click();
+  await expect(teamBlock.locator("tbody th")).toHaveText(["Buffalo Bills", "Kansas City Chiefs", "Las Vegas Raiders", "Detroit Lions", "Philadelphia Eagles"]);
+  await expect(splitsBlock.locator("tbody tr").first()).toContainText("1270–1048");   // the other table keeps its own choice
+  await splitsSwitch.getByRole("button", { name: "This season" }).click();
+  await expect(splitsBlock.locator("tbody tr").first()).toContainText("640–505");
+  await section.locator(".dash-pair").screenshot({ path: test.info().outputPath("pool-stats-this-season.png") });
+  await section.getByRole("group", { name: "Show" }).getByRole("button", { name: "Rick" }).click();
+  await expect(teamBlock.getByText("No graded picks this season yet.")).toBeVisible();
+});
+
 // Pool stats: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.
 for (const width of [390, 560, 768, 1280]) {
   test(`Pool stats: the tables fit their cards without scrolling sideways at ${width}px`, async ({ page }) => {

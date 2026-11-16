@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-16 - All-time / This season on the Pool stats tables (Commissioner)
+
+The two tables at the foot of Pool stats (What the league / a player picks, and the five-team table) each carry their own All-time / This
+season switch at the top right of the card; All-time is the default, and the other figures on the page stay all-time. "This season" is the
+newest season, and its numbers come from that season's graded picks alone (`thisSeason` from `buildGroupStats` in `src/lib/group-stats.js`).
+A player with no graded pick this season sees "No graded picks this season yet." in the teams card.
+
 ## 2026-11-16 - The Big Board's week, All games / Pool action, and no ticket when nothing can change (Commissioner only)
 
 - The Big Board's two tabs read "Big Board" and "Survivor" (they said "This week's picks" and "Survivor table").

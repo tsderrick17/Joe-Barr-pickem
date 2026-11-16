@@ -908,6 +908,7 @@ The provider cost chart's 15- and 30-day averages count only slates that started
 The Pool stats page's Pick'em performance splits are Favorites, Underdogs, Pick'em, Home and Away. A game whose locked spread is 0 is a pick'em game:
 the line names the home team as its "favorite" only by the pool's PK convention, so such a game is counted under Pick'em and never under
 Favorites or Underdogs (`recordsFor` in `src/lib/group-stats.js`). The streaks are the Trophy Room's; Pool stats no longer shows them.
+The splits table and the five-team table each have an All-time / This season switch (top right); This season is the newest season's graded picks alone (`thisSeason`).
 
 ### NCAA Bowl Pool schedule staging
 
