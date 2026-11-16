@@ -360,7 +360,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         // transform (a transform would trap each label under the spots drawn after it).
         const className = free ? `lab-room-bubble is-${spot}` : `lab-room-spot is-${spot}${spot === "sportsbook" && feed.owed ? " is-owed" : ""}`;
         const style = (free ? { left: `${free.x * 100}%`, top: `${free.y * 100}%` } : { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` }) as CSSProperties;
-        if (href) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
+        // A "#name" is not a page: it is a button that asks the screen to open that thing over the room (the chat).
+        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
         return <button aria-label={name} className={className} key={spot} onClick={() => onSpot?.(spot, next, ticket)} style={style} type="button">{plate}</button>;
       })}
     </nav>
