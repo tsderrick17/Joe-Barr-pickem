@@ -6,19 +6,21 @@ import { boardResponse } from "./slate-fixtures.mjs";
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
 
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
-async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true } = {}) {
+async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse" } = {}) {
   await page.setViewportSize(size);
   await signIn(page, theme);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const board = boardResponse("upcoming-picked");
+  // The Slate's read, one scenario per read (the last one repeats): a pick made on the Slate shows on the second read.
+  const board = boardResponse(scenarios[0]);
+  let reads = 0;
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/home**", (route) => route.fulfill({ json: homeResponse("regular-in") }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
-  await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: board }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
+  await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)]) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(board.serverTime) });
-  await page.goto("/clubhouse");
+  await page.goto(at);
 }
 
 for (const [label, size] of Object.entries(SIZES)) {
@@ -80,6 +82,50 @@ test("every thing in the room opens the real page over it, the boards show the r
   await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeHidden();
+});
+
+test("the open page has its own address: back closes it, a reload reopens it, a link to another page opens that page in place", async ({ page }) => {
+  await openClubhouse(page);
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Standings" })).toBeVisible();
+  await expect(page).toHaveURL(/\/clubhouse#standings$/);
+  // The header's link to the Slate opens the Slate in place of the Standings, still one step from the room.
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "The Slate" }).click();
+  await expect(page.getByRole("region", { name: "The Slate" })).toBeVisible();
+  await expect(page).toHaveURL(/\/clubhouse#slate$/);
+  await page.goBack();   // the phone's back gesture
+  await expect(page).toHaveURL(/\/clubhouse$/);
+  await expect(page.getByRole("region", { name: "The Slate" })).toHaveCount(0);
+  await expect(room).toBeVisible();
+  // A page can be linked to and reloaded.
+  await page.goto("/clubhouse#slate");
+  await expect(page.getByRole("region", { name: "The Slate" })).toBeVisible({ timeout: 30_000 });
+});
+
+test("a pick made in a page shows on the room's ticket the moment the page is closed", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
+  const ticket = page.getByRole("button", { name: /YOUR TICKET/ });
+  await expect(ticket).toContainText("0 of", { timeout: 30_000 });
+  await ticket.click();
+  await expect(page.getByRole("region", { name: "The Slate" })).toBeVisible();
+  await page.getByRole("button", { name: /Back to Clubhouse/ }).click();
+  await expect(page.getByRole("button", { name: /YOUR TICKET/ })).not.toContainText("0 of");
+});
+
+test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
+  await openClubhouse(page, { at: "/board" });
+  const nav = page.getByRole("navigation", { name: "Account navigation" });
+  await nav.getByRole("link", { name: "Clubhouse view" }).click();
+  await expect(page).toHaveURL(/\/clubhouse$/, { timeout: 30_000 });
+  await page.goto("/");   // the app's front door
+  await expect(page).toHaveURL(/\/clubhouse$/, { timeout: 30_000 });
+  await nav.getByRole("link", { name: "Classic view" }).click();
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {

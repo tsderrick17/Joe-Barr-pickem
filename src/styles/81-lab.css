@@ -103,7 +103,7 @@
 /* The way back is always in reach: the bar with Back to Clubhouse stays pinned at the top of every room as you scroll, and the same
    button waits again at the foot of the room. */
 .lab-room-bar { align-items: center; background: var(--club-page); display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr; padding: 8px 0; position: sticky; top: var(--site-nav-height, 0px); z-index: 4; }
-.lab-room-back { background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .95rem; font-weight: 800; justify-self: start; min-height: 2.75rem; padding: 0 16px; }
+.lab-room-back { white-space: nowrap; background: var(--cw-green); border: 0; border-radius: 999px; color: var(--cw-cream); cursor: pointer; font-size: .95rem; font-weight: 800; justify-self: start; min-height: 2.75rem; padding: 0 16px; }
 .lab-room-back.is-foot { display: block; margin: 18px auto 0; min-width: 14rem; }
 .lab-room-bar h3 { color: var(--club-ink); font-family: var(--font-serif); font-size: 1.3rem; margin: 0; }
 .lab-stand-in { background: var(--club-paper); border: 1px dashed var(--club-line); border-radius: 8px; color: var(--club-ink); margin: 0; padding: 28px 16px; text-align: center; }
