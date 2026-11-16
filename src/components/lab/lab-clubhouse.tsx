@@ -349,8 +349,11 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
     return () => query.removeEventListener("change", sync);
   }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
-  const key = `${feed.bowl ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
-  const picture = PICTURES[`day${key}`] ?? PICTURES[`day${feed.bowl ? "-bowl" : ""}`];
+  // The Bowl Pool's bulletin board is wheeled in only while Survivor still holds the table; once the table is the Bowl Pool's, the
+  // board stays away (kept for announcements).
+  const bulletin = feed.bowl && !feed.survivorOver;
+  const key = `${bulletin ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
+  const picture = PICTURES[`day${key}`] ?? PICTURES[`day${bulletin ? "-bowl" : ""}`];
   const news = feed.news;
   // Once Survivor is over (decided, or the playoffs), the poker table stops being Survivor's: it is where the Bowl Pool sits, in the
   // Bowl Pool's own navy and gold so it is not mistaken for the old table, and the Bowl Pool's separate spot is not drawn twice.
