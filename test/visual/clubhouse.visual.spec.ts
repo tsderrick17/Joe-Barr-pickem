@@ -55,13 +55,19 @@ test("every thing in the room is a link to the real page, the boards show the re
   expect(await href("Your picks")).toBe("/board");
   expect(await href("Survivor")).toBe("/survivor");
   expect(await href("Trophy Room")).toBe("/trophy-room");
-  expect(await href("Pool chat")).toBe("#pool-chat");
   expect(await href("Constitution")).toBe("/clubhouse/rules");
   // No sample players: the board's leader is the fixture's.
   await expect(page.locator(".lab-room-screen.is-board header")).not.toContainText("WEEK 10");
   await expect(page.locator(".lab-ticker p").first()).toBeVisible();   // the week's games came through
   await expect(page.getByText("You must choose a week")).toHaveCount(0);
   await expect(page.locator("a.lab-room-ticket")).toHaveAttribute("href", "/board");
+  // The room is one screen: the page does not scroll, and the chat opens over it.
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe("hidden");
+  await expect(page.locator(".pool-chat-dock")).toHaveCount(0);
+  await room.getByRole("button", { name: "Pool chat", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeHidden();
   await room.getByRole("link", { name: "Constitution", exact: true }).click();
   await expect(page.getByRole("article", { name: "Pool constitution" })).toBeVisible();
   await page.getByRole("link", { name: /Back to Clubhouse/ }).first().click();

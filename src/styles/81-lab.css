@@ -491,4 +491,3 @@
 a.lab-room-ticket { text-decoration: none; }
 a.lab-room-back { align-items: center; display: inline-flex; gap: 6px; text-decoration: none; }
 a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: fit-content; }
-#pool-chat { scroll-margin-top: var(--site-nav-height, 0px); }

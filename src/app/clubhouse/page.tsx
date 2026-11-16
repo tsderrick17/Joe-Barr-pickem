@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import PoolChat from "@/components/pool-chat";
+import { Sheet } from "@/components/commissioner/wheel-parts";
 import { RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -18,7 +20,7 @@ const HREF: Record<string, string> = {
   survivor: "/survivor",
   trophies: "/trophy-room",
   bowl: "/bowl-pool",
-  chat: "#pool-chat",
+  chat: "#chat",
   constitution: "/clubhouse/rules",
 };
 
@@ -33,6 +35,15 @@ export default function ClubhousePage() {
   const router = useRouter();
   const [room, setRoom] = useState<{ feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null } | null>(null);
   const [error, setError] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
+
+  // One screen, no scrolling: the page itself holds still, and everything is reached from the room (the chat opens over it).
+  useEffect(() => {
+    const { documentElement: html, body } = document;
+    const before = [html.style.overflow, body.style.overflow];
+    html.style.overflow = "hidden"; body.style.overflow = "hidden";
+    return () => { html.style.overflow = before[0]; body.style.overflow = before[1]; };
+  }, []);
 
   useEffect(() => {
     if (access === "denied") router.replace("/");
@@ -59,7 +70,8 @@ export default function ClubhousePage() {
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className="clubhouse-page">
-      <RoomScene feed={room.feed} full hrefFor={(spot) => HREF[spot] ?? null} />
+      <RoomScene feed={room.feed} full hrefFor={(spot) => HREF[spot] ?? null} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); }} />
+      <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket href="/board" lamps={room.ticket.lamps} line={room.ticket.line} week={room.feed.week} /> : null}
     </main>
   );
