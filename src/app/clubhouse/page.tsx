@@ -14,6 +14,7 @@ import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { clubhouseFeed } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
+import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useCommissionerAccess } from "@/lib/use-commissioner-access";
 import { useStableCallback } from "@/lib/use-stable-callback";
 
@@ -55,6 +56,7 @@ export default function ClubhousePage() {
   const [pane, setPane] = useState<Pane | null>(null);
   const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
   const [ticketOpen, setTicketOpen] = useState(false);   // your ticket, over the Big Board
+  const [lookBack, setLookBack] = useState<{ weekId: string; board: SlateResponse } | null>(null);   // another week on the Big Board, read from the Slate
   useEffect(() => { paneRef.current = pane; }, [pane]);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
   const lastRead = useRef(0);
@@ -118,7 +120,7 @@ export default function ClubhousePage() {
   const show = useCallback((next: Pane) => {
     setChatOpen(false);
     if (paneFromHash(window.location.hash)) window.history.replaceState(null, "", `/clubhouse#${next}`);   // page to page: still one step back to the room
-    else { window.history.pushState(null, "", `/clubhouse#${next}`); openedHere.current = true; }
+    else { window.history.pushState(null, "", `/clubhouse#${next}`); openedHere.current = true; setLookBack(null); }   // opened from the room: the board starts on this week
     setPane(next);
     setTicketOpen(next === "slate");   // the games board, Your picks and the ticket open the board with your ticket ready
   }, []);
@@ -162,7 +164,20 @@ export default function ClubhousePage() {
 
   // Which pop-up is open: the new views, or (the Bowl Pool, and a playoff week) the classic page in place.
   const newBoard = room ? boardViewSupported(room.home, room.board) : false;
-  const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: room.board }) : null), [room, newBoard]);
+  const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: lookBack?.board ?? room.board }, { weekId: lookBack?.weekId ?? null }) : null), [room, newBoard, lookBack]);
+  // The Big Board opens on this week; choosing another week reads that week from the Slate (the default week is the room's own read).
+  const chooseWeek = useStableCallback(async (weekId: string) => {
+    const current = room ? selectDefaultScoringPeriod(room.board.bootstrap?.weeks ?? [])?.id : null;
+    if (!room || weekId === (lookBack?.weekId ?? current)) return;
+    if (weekId === current) { setLookBack(null); return; }
+    try {
+      const response = await fetchWithSession(`/api/board?bootstrap=1&week=${encodeURIComponent(weekId)}`, { cache: "no-store" });
+      if (!response.ok) return;
+      setLookBack({ weekId, board: await response.json() as SlateResponse });
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+    }
+  });
   const popup = (...panes: Pane[]) => Boolean(pane && panes.includes(pane) && (pane === "survivor" ? !room?.home.isPlayoff : pane === "standings" || pane === "slate" ? newBoard : true));
   const classic: "standings" | "slate" | "bowl" | null = pane === "bowl" ? "bowl" : pane === "standings" || pane === "slate" ? (newBoard ? null : pane) : pane === "survivor" && room?.home.isPlayoff ? "standings" : null;
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
@@ -178,7 +193,7 @@ export default function ClubhousePage() {
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate")} open title="The Big Board">
-        <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} view={view} />
+        <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} />
       </Sheet> : null}
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
       {popup("survivor") ? <Sheet onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} /></Sheet> : null}

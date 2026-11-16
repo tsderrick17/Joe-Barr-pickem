@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-16 - The Big Board's week, All games / Pool action, and no ticket when nothing can change (Commissioner only)
+
+- The Big Board's two tabs read "Big Board" and "Survivor" (they said "This week's picks" and "Survivor table").
+- The week on the Big Board is a button (a native week list laid over the words): choosing another regular-season week, as far as the Slate
+  offers it, reads that week from the Slate (`/api/board?bootstrap=1&week=`) and draws the board from it. A player's picks are the ones the Slate
+  names under each team of a game that has kicked off, so nothing is shown that the Slate does not show; their wins are that week's; there is no
+  Survivor column and no ticket (a look back only). Opening the board from the room always starts on this week.
+- The ticket carries the Slate's All games / Pool action switch at its top, kept in the same place (`PUT /api/profile`, `showPoolAction`). Pool
+  action leaves out a game that has kicked off with nobody's pick in it (`BoardGame.action`).
+- The ticket bar (and the ticket) show only while something can still change: a pick or Survivor team whose game has not kicked off, or a pick
+  still owed. With every pick in and locked the Big Board has no bar and the room's ticket says "All 3 in · all locked".
+- Sliding a pop-up down never pulls the refresh chain: while a pop-up (`dialog[open]`) is open, a pull on the page is ignored.
+
 ## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)
 
 - Owner: "The locks shouldn't be over the spreads and we should figure out a way to show the final score and who covered better"; "Survivor should disappear the same time it does from the classic version ... the bowl pool could take its spot"; "show scores, who covered ... on the ticker"; the mail flag "should come out of the left side of the pill".

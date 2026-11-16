@@ -123,15 +123,27 @@ function owedCount(view: BoardView) {
  * The tote board: this week's picks for everyone, and (when there is a way to) the bar that opens your ticket. The Lab and the real
  * clubhouse both draw it from a `BoardView`.
  */
-export function ToteBoard({ view, onOpen, onSurvivor, sent = false }: { view: BoardView; onOpen: () => void; onSurvivor?: () => void; sent?: boolean }) {
+export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { view: BoardView; onOpen: () => void; onSurvivor?: () => void; onWeek?: (weekId: string) => void; sent?: boolean }) {
   const owed = owedCount(view);
+  const weekText = `${view.week}${view.status ? ` · ${view.status}` : ""}`;
   return (
     <div className="lab-tote">
-      <header><h3>PICK’EM</h3><span>{view.week}{view.status ? ` · ${view.status}` : ""}</span></header>
+      <header>
+        <h3>PICK’EM</h3>
+        {onWeek && view.weeks.length > 1 ? (
+          // The week is a button: tapping it opens the phone's own week list (a select laid over the words), and choosing one changes the board.
+          <label className="lab-tote-week">
+            <span>{weekText} <i aria-hidden="true">▾</i></span>
+            <select aria-label="Change week" onChange={(event) => onWeek(event.target.value)} value={view.weekId ?? ""}>
+              {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
+            </select>
+          </label>
+        ) : <span>{weekText}</span>}
+      </header>
       {onSurvivor ? (
         <div className="lab-tote-links">
-          <span aria-current="page">This week’s picks</span>
-          <button onClick={onSurvivor} type="button">Survivor table <i aria-hidden="true">›</i></button>
+          <span aria-current="page">Big Board</span>
+          <button onClick={onSurvivor} type="button">Survivor <i aria-hidden="true">›</i></button>
         </div>
       ) : null}
       <WeekFace open={view.canPick ? onOpen : null} view={view} />
@@ -159,7 +171,12 @@ function coverNote(result: BoardView["games"][number]["results"][string]) {
   return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim() };
 }
 
-export function TicketForm({ view, onSubmit }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string> }) {
+export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void }) {
+  // The Slate's All games / Pool action: Pool action leaves out a game that has kicked off with nobody's pick in it. Saved the Slate's way when `onPoolAction` is given.
+  const [localAction, setLocalAction] = useState(view.poolAction);
+  const actionOnly = poolAction ?? localAction;
+  const chooseAction = (on: boolean) => { setLocalAction(on); onPoolAction?.(on); };
+  const shownGames = actionOnly ? view.games.filter((game) => game.action) : view.games;
   const [picks, setPicks] = useState(view.mine.picks);
   const [chip, setChip] = useState(view.mine.survivor);
   const [sending, setSending] = useState(false);
@@ -214,6 +231,11 @@ export function TicketForm({ view, onSubmit }: { view: BoardView; onSubmit: (tic
         </ul>
       </header>
 
+      <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
+        <button aria-pressed={!actionOnly} onClick={() => chooseAction(false)} type="button">All games</button>
+        <button aria-pressed={actionOnly} onClick={() => chooseAction(true)} type="button">Pool action</button>
+      </div>
+
       {pickingSurvivor ? (
         <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
           <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick {cap} vs. the spread</small></button>
@@ -223,8 +245,9 @@ export function TicketForm({ view, onSubmit }: { view: BoardView; onSubmit: (tic
       {survivor.out && !view.champion ? <p className="lab-window-out">You’re out of Survivor{survivor.outWeek ? ` (lost in week ${survivor.outWeek})` : ""}. The pool goes on: follow it at the Survivor table.</p> : null}
 
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
+        {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
         <ol>
-          {view.games.map((game) => {
+          {shownGames.map((game) => {
             const locked = game.kickedOff;
             const cell = (team: string) => {
               if (mode === "survivor") {

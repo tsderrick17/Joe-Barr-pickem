@@ -319,6 +319,12 @@
 .lab-tote header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
 .lab-tote h3 { font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: .2em; margin: 0; }
 .lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
+/* The week is a button: the phone's own week list is a select laid, unseen, over the words. */
+.lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 44px; padding: 0 14px; position: relative; }
+.lab-tote header .lab-tote-week span { color: rgb(240 236 226); }
+.lab-tote-week i { color: var(--cw-gold-lt); font-style: normal; }
+.lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; height: 100%; inset: 0; opacity: 0; position: absolute; width: 100%; }
+.lab-tote-week:focus-within { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-tote table { border-collapse: separate; border-spacing: 0 4px; table-layout: fixed; width: 100%; }
 .lab-tote th, .lab-tote td { font-size: .8rem; padding: 0 4px; text-align: left; vertical-align: middle; }
 .lab-tote thead th { color: rgba(240, 236, 226, .75); font-size: .56rem; font-weight: 800; letter-spacing: .14em; padding-bottom: 2px; }
@@ -436,6 +442,7 @@
 .lab-ticket-switch { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
+.lab-ticket-switch.lab-ticket-action button { min-height: 44px; }
 .lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: auto 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .12em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
