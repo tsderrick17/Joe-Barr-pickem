@@ -31,6 +31,11 @@ and add a row above.
 - The ticket bar (and the ticket) show only while something can still change: a pick or Survivor team whose game has not kicked off, or a pick
   still owed. With every pick in and locked the Big Board has no bar and the room's ticket says "All 3 in · all locked".
 - Sliding a pop-up down never pulls the refresh chain: while a pop-up (`dialog[open]`) is open, a pull on the page is ignored.
+- Every clause of the constitution is lettered, (a) (b) (c), in the clubhouse's Constitution and in the Commissioner's Handbook, so a clause is cited
+  like a lawyer's: Article III(b). The letters are drawn by the page (a counter), not typed into `POOL_CONSTITUTION`, so adding a clause renumbers itself.
+- A pair of toggle pills is two exact mirrors: the same width and height, words centred, stacked where a half is too narrow (the Big Board's tabs,
+  the ticket's All games / Pool action, the numbers pages' `ViewSwitch`). The Survivor tab has no arrow, so it matches Big Board.
+- The room's day picture is lit between the first bright try and the first soft one: the window glass and far wall were clipping to white.
 
 ## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)
 

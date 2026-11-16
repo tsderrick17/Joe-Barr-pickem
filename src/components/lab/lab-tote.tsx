@@ -143,7 +143,7 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { 
       {onSurvivor ? (
         <div className="lab-tote-links">
           <span aria-current="page">Big Board</span>
-          <button onClick={onSurvivor} type="button">Survivor <i aria-hidden="true">›</i></button>
+          <button onClick={onSurvivor} type="button">Survivor</button>
         </div>
       ) : null}
       <WeekFace open={view.canPick ? onOpen : null} view={view} />

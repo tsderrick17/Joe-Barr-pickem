@@ -117,7 +117,7 @@ export default function CommissionerHandbook() {
               {articles.map(({ title, clauses }) => (
                 <article className="desk-panel p-3" key={title}>
                   <h5 className="font-bold">{title}</h5>
-                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm leading-5 text-(color:--themed-text-29)">
+                  <ol className="clauses-lettered mt-1 space-y-1 text-sm leading-5 text-(color:--themed-text-29)">
                     {clauses.map((clause) => <li key={clause}>{clause}</li>)}
                   </ol>
                 </article>

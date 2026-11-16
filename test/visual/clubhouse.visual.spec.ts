@@ -218,6 +218,9 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
   await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
+  // The two tabs are exact mirrors: the same width and height.
+  const tabs = await board.locator(".lab-tote-links > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(tabs).toHaveLength(2); expect(tabs[0]).toEqual(tabs[1]);
   await week.selectOption({ label: "Week 3 — Final" });
   await expect(board.locator("header")).toContainText("WEEK 3 · FINAL");
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
@@ -242,6 +245,8 @@ test("the ticket has the Slate's All games / Pool action switch, kept on the pla
   const games = ticket.locator(".lab-window-part li");
   const switcher = ticket.getByRole("group", { name: "Games shown" });
   await expect(switcher.getByRole("button", { name: "All games" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  const halves = await switcher.getByRole("button").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(halves[0]).toEqual(halves[1]);   // the two halves of the switch mirror each other
   const all = await games.count();
   expect(all).toBeGreaterThan(2);
   await switcher.getByRole("button", { name: "Pool action" }).click();
@@ -260,6 +265,10 @@ test("the rules' list of articles scrolls to the article and stays on the rules"
   await expect(rules).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toHaveCount(0);
   await expect(page).toHaveURL(/\/clubhouse#rules$/);
+  // Every clause is lettered, (a) (b) (c), so it can be cited like a lawyer's: Article III(b).
+  const letters = await rules.locator(".lab-rules-article").first().locator("li").evaluateAll((items) => items.map((item) => getComputedStyle(item, "::before").content));
+  expect(letters.length).toBeGreaterThan(2);
+  for (const content of letters) expect(content).toContain("counter(clause, lower-alpha)");   // a, b, c in order; the browser keeps the counter in the computed value
 });
 
 test("the Survivor pop-up shows the whole table", async ({ page }) => {
