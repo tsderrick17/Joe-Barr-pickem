@@ -281,9 +281,11 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
                   // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
                   // with its logo and line; your pick is lit in gold inside the card.
                   // A game that is over shows each side's final score instead of its line, the side that covered lit, and says FINAL.
+                  // The spread stays on the card once the game is over, small beside the score: it is what the score was measured against.
                   const side = (team: string) => {
                     const done = game.final?.[team === game.away ? "away" : "home"];
-                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}`}><Logo eager team={team} /><b>{team}</b><em>{done ? done.score : team === game.away ? game.awayLine : game.homeLine}</em></span>;
+                    const line = team === game.away ? game.awayLine : game.homeLine;
+                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}${done ? " is-final" : ""}`}><Logo eager team={team} /><b>{team}</b>{done ? <i>{line}</i> : null}<em>{done ? done.score : line}</em></span>;
                   };
                   return <p key={`${game.id}-${index}`}><small>{game.final ? `FINAL · ${game.kickoff.split(" ")[0].toUpperCase()}` : game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
                 })}

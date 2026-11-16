@@ -68,6 +68,9 @@
 .lab-room-screen.is-spreads p b { font-size: 19px; letter-spacing: .1em; }
 .lab-room-screen.is-spreads p em { color: rgb(255 176 46); font-size: 19px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-room-screen.is-spreads p > span.is-covered { background: rgba(240, 180, 41, .22); }
+/* A game that is over keeps its spread on the card: small and quiet between the team and the score. */
+.lab-room-screen.is-spreads p > span.is-final { gap: 5px; grid-template-columns: 22px 1fr auto auto; }
+.lab-room-screen.is-spreads p i { color: rgba(240, 236, 226, .7); font-size: 14px; font-style: normal; letter-spacing: .04em; }
 .lab-room-screen.is-spreads p > span.is-covered em::before { content: "✓ "; }
 .lab-room-screen.is-spreads p > span.is-picked { box-shadow: inset 0 0 0 2px var(--cw-gold); }
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
@@ -80,6 +83,8 @@
 .lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
+/* The poker table's plate (Survivor, then the Bowl Pool) sits up in the table's near rail, in the gap between the two chairs, not hanging under it. */
+.lab-room-spot.is-survivor .lab-room-tag { left: 73%; top: 32%; transform: translate(-50%, -50%); }
 .lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
 .lab-room-tag i { background: rgb(22 44 32); border-radius: 50%; color: rgb(255 230 160); display: inline-grid; font-size: .95em; font-style: normal; height: 1.25em; line-height: 1; place-items: center; width: 1.25em; }
 .lab-room-spot:active .lab-room-tag { opacity: .85; }
@@ -359,6 +364,22 @@
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* Sealed: a small gold seal stamped over the panel. */
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
+/* The Survivor table in the same housing: it scrolls sideways, the status and the name stay put, and each week's team has the lit ring a win or a loss gets on the board. */
+.lab-survivor-scroll { margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 6px; }
+.lab-survivor-scroll table { min-width: 56.8rem; }
+.lab-survivor-col-status { width: 3rem; }
+.lab-survivor-col-name { width: 7rem; }
+.lab-survivor-col-week { width: 2.6rem; }
+.lab-survivor-scroll thead th { background: rgb(18 40 30); text-align: center; }
+.lab-survivor-scroll td { text-align: center; }
+.lab-survivor-scroll th.lab-survivor-name { text-align: left; }
+.lab-survivor-scroll .lab-survivor-status { left: 0; position: sticky; z-index: 1; }
+.lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 3rem; position: sticky; z-index: 1; }
+.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: inset 4px 0 0 rgb(201 164 95), 2px 0 0 rgb(18 40 30); }
+.lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); text-decoration: line-through; }
+.lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
+.lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
+.lab-survivor-note { color: var(--cw-cream); margin: 8px 4px; }
 /* The Slate in the same housing: the tote board's green and gold around the black board. */
 .lab-bigboard.is-tote { background: rgb(8 10 9); border-color: rgb(18 40 30); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); }
 
@@ -498,7 +519,7 @@
 .lab-room.is-wide .lab-room-tag small { font-size: .74rem; }
 /* On a desktop the lobby has room for the ticket under the picture, so it never sits on the room itself. */
 .lab-clubhouse:has(.lab-room.is-wide) .lab-room-ticket { margin-top: 14px; position: static; }
-.lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; top: auto; }
+.lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; left: 50%; top: auto; transform: translateX(-50%); }
 /* The lamp is a small glass lens in a dark bezel: a soft highlight at its top left whatever its colour, so lit and unlit read as the
    same object, and the lit ones glow. */
 

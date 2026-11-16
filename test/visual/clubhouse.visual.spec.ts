@@ -7,6 +7,9 @@ const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { widt
 
 type BoardRead = ReturnType<typeof boardResponse>;
 
+/** Each player's wins added up through the week looked back on (the fixture's players p0 to p7): not the same as that week's own wins. */
+const WEEK_TOTALS = { p0: 21, p1: 18, p2: 15, p3: 12, p4: 9, p5: 6, p6: 3, p7: 0 };
+
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
 const sent: unknown[] = [];
 async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response } = {}) {
@@ -21,6 +24,7 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), ...homeExtra } }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
   await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: shapeBoard(boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)])) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
+  await page.route("**/api/board-totals**", (route) => route.fulfill({ json: { weekId: new URL(route.request().url()).searchParams.get("week"), totals: WEEK_TOTALS } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
   // A sent pick: every POST is kept so a test can read exactly what the real route would have been asked to save.
@@ -75,7 +79,7 @@ test("every thing in the room opens its pop-up over it, on the real week, and th
     await expect(page).toHaveURL(/\/clubhouse$/);
   };
   await opens("The Big Board", "The Big Board", /GARY/);
-  await opens("Survivor", "Survivor", /Survivor Table/);
+  await opens("Survivor", "Survivor", /GARY/);
   await opens("Trophy Room", "Trophy Room", /Plaques/);
   await opens("Constitution", "Constitution", /Constitution/);
   // The games board in the room opens the same board with your ticket ready.
@@ -228,6 +232,9 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
   await expect(board.getByRole("button", { name: /Survivor/ })).toBeVisible();   // the link to the Survivor table stays
   await expect(board.locator("thead th")).toHaveCount(4);   // W, player and two picks: no Survivor column for another week
+  // The board is the pool as it stood at the end of that week: every player's wins added up through it, in that order, not that week's own wins.
+  expect(await board.locator("tbody .lab-tote-wins").allTextContents()).toEqual(Object.values(WEEK_TOTALS).map(String));
+  await expect(board.locator("tbody .lab-tote-name").first()).toHaveText("GARY");
   // Back to this week: its own board, with the ticket bar again.
   await week.selectOption({ label: "Week 5" });
   await expect(board.locator("header")).not.toContainText("WEEK 3");
@@ -293,5 +300,106 @@ test("the Survivor pop-up shows the whole table", async ({ page }) => {
   await expect(popup).toBeVisible({ timeout: 30_000 });
   const table = popup.getByRole("region", { name: /Survivor Table/ });
   await expect(table).toBeVisible();
-  await expect(table).toContainText("Gary");   // a player's own "hide" choices never blank or thin this view
+  await expect(table).toContainText("GARY");   // a player's own "hide" choices never blank or thin this view (and the board writes names in capitals)
+});
+
+test("the Survivor pop-up wears the Big Board's housing, with the same two tabs, a ring round each week's team and the out players struck through", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor" });
+  const popup = page.getByRole("dialog", { name: "Survivor" });
+  await expect(popup.locator(".lab-tote.lab-survivor-tote")).toBeVisible({ timeout: 30_000 });
+  await expect(popup.locator(".survivor-ledger")).toHaveCount(0);   // not the classic ledger
+  // The tabs mirror the Big Board's: Survivor is the lit one here, and Big Board is the way across.
+  await expect(popup.locator(".lab-tote-links [aria-current=page]")).toHaveText("Survivor");
+  const tabs = await popup.locator(".lab-tote-links > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(tabs).toHaveLength(2); expect(tabs[0]).toEqual(tabs[1]);
+  // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
+  await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
+  expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
+  await expect(popup.locator(".lab-tote-logo.is-l").first()).toBeVisible();
+  await expect(popup.locator("tbody tr:not(.is-out) .lab-tote-in").first()).toHaveText("IN");
+  // Your own row is marked, and the names and status stay put while the weeks scroll sideways.
+  await expect(popup.locator("tbody tr.is-you")).toHaveCount(1);
+  const scroll = popup.getByRole("region", { name: /Survivor Table/ });
+  const place = () => scroll.locator("tbody tr").first().locator("th").evaluate((cell) => Math.round(cell.getBoundingClientRect().left));
+  const before = await place();
+  await scroll.evaluate((node) => { node.scrollLeft = 300; });
+  expect(await place()).toBe(before);
+  // The Big Board tab goes across to the board, in the same place.
+  await popup.locator(".lab-tote-links").getByRole("button", { name: "Big Board" }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
+  await expect(page).toHaveURL(/\/clubhouse#standings$/);
+});
+
+test("the ticker keeps each game's spread on its card once the game is over, beside the final score; a game still to play shows just its line", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["complete-survivor"], size: SIZES["desktop-1280"] });
+  const cards = page.locator(".lab-room-screen.is-spreads p");
+  await expect(cards.first()).toBeVisible({ timeout: 30_000 });
+  const done = cards.first().locator("span.is-final").first();
+  expect(await done.locator("i").innerText()).toMatch(/^([+-]\d+(\.\d)?|PK)$/);   // its line
+  expect(await done.locator("em").innerText()).toMatch(/^\d+$/);                   // and its final score
+  await expect(page.locator(".lab-room-screen.is-spreads p > span:not(.is-final) i")).toHaveCount(0);
+});
+
+test("a game still to play shows only its line on the ticker, with no small spread beside it", async ({ page }) => {
+  await openClubhouse(page, { size: SIZES["desktop-1280"] });
+  const cards = page.locator(".lab-room-screen.is-spreads p");
+  await expect(cards.first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".lab-room-screen.is-spreads p span.is-final")).toHaveCount(0);
+  expect(await cards.first().locator("span").first().locator("em").innerText()).toMatch(/^([+-]\d+(\.\d)?|PK)$/);
+});
+
+test("a pop-up has no X: sliding it down, tapping its handle or the space above it puts it away, and each one slides closed", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#rules" });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const sheet = page.getByRole("dialog", { name: "Constitution" });
+  await expect(sheet).toBeVisible({ timeout: 30_000 });
+  const handle = sheet.getByRole("button", { name: "Close" });
+  await expect(sheet.locator(".cw-close")).toHaveCount(0);
+  await expect(handle.locator("svg")).toHaveCount(0);   // the handle is a small bar, not an X
+  // What the sheet is doing the instant after it is told to go: still there, and on its way down.
+  const sliding = () => sheet.evaluate((dialog) => ({ open: (dialog as HTMLDialogElement).open, leaving: dialog.classList.contains("is-leaving"), moved: (dialog.querySelector(".cw-sheet-body") as HTMLElement).style.transform.startsWith("translateY(") }));
+  const reopen = async () => { await page.goto("/clubhouse#rules"); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
+  // The handle.
+  await handle.evaluate((button) => (button as HTMLButtonElement).click());
+  expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
+  await expect(sheet).toHaveCount(0);
+  await expect(page).toHaveURL(/\/clubhouse$/);
+  // The small empty space above the sheet.
+  await reopen();
+  await page.mouse.click(195, 6);
+  expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
+  await expect(sheet).toHaveCount(0);
+  // Escape.
+  await reopen();
+  await page.keyboard.press("Escape");
+  expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
+  await expect(sheet).toHaveCount(0);
+});
+
+test("sliding a pop-up down with a finger follows the finger, springs back when it is short or sideways, and slides closed when it goes far enough", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#rules" });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const sheet = page.getByRole("dialog", { name: "Constitution" });
+  await expect(sheet).toBeVisible({ timeout: 30_000 });
+  // A finger from (x0, y0) to (x1, y1) on the sheet; reports what the sheet looks like before the finger lifts, and just after.
+  const swipe = (x0: number, y0: number, x1: number, y1: number) => sheet.evaluate((dialog, [fx0, fy0, fx1, fy1]) => {
+    const body = dialog.querySelector(".cw-sheet-body") as HTMLElement;
+    const touch = (x: number, y: number) => new Touch({ identifier: 1, target: body, clientX: x, clientY: y });
+    const send = (type: string, x: number | null, y: number) => body.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: x === null ? [] : [touch(x, y)], changedTouches: [touch(x ?? 0, y)] }));
+    send("touchstart", fx0, fy0);
+    for (let step = 1; step <= 10; step += 1) send("touchmove", fx0 + ((fx1 - fx0) * step) / 10, fy0 + ((fy1 - fy0) * step) / 10);
+    const held = body.style.transform;
+    send("touchend", null, fy1);
+    return { held, leaving: dialog.classList.contains("is-leaving"), after: body.style.transform };
+  }, [x0, y0, x1, y1] as const);
+  // Across, and across and a little down: the sheet does not move (a swipe along something in it is that thing's).
+  expect(await swipe(300, 400, 100, 420)).toEqual({ held: "", leaving: false, after: "" });
+  // Down, but short: it follows the finger, then springs back.
+  expect(await swipe(200, 300, 200, 360)).toEqual({ held: "translateY(60px)", leaving: false, after: "" });
+  await expect(sheet).toBeVisible();
+  // Down far enough: it follows the finger, then slides the rest of the way and closes.
+  const far = await swipe(200, 300, 200, 480);
+  expect(far.held).toBe("translateY(180px)");
+  expect(far.leaving).toBe(true);
+  await expect(sheet).toHaveCount(0);
 });

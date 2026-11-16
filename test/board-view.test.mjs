@@ -90,6 +90,19 @@ test("another week's board is read from the Slate: a player's picks are the ones
   assert.deepEqual(current.weeks.map((week) => week.id), ["week-1", "week-2", "week-3", "week-4", "week-5"]);
 });
 
+test("another week's board is the pool as it stood then: each player's wins added up through that week, in that order, not that week's own wins", () => {
+  const raw = boardResponse("complete-survivor");
+  const home = homeResponse("regular-in");
+  const totals = Object.fromEntries(home.rows.map((row, index) => [row.id, 40 - index * 3]));   // the first row leads on the running totals
+  const view = realBoardView({ home, board: raw }, { weekId: "week-3", totals });
+  assert.deepEqual(view.rows.map((row) => row.wins), home.rows.map((_, index) => 40 - index * 3));
+  assert.equal(view.rows[0].id, home.rows[0].id);
+  // A player missing from the totals has no wins yet; the current week's board never uses them.
+  const sparse = realBoardView({ home, board: raw }, { weekId: "week-3", totals: { [home.rows[2].id]: 7 } });
+  assert.equal(sparse.rows[0].wins, 7); assert.equal(sparse.rows[1].wins, 0);
+  assert.deepEqual(realBoardView({ home, board: raw }, { totals }).rows.map((row) => row.wins), realBoardView({ home, board: raw }).rows.map((row) => row.wins));
+});
+
 test("Pool action: a game to come, or one the pool has a pick in; a finished game nobody picked is All games only", () => {
   const raw = boardResponse("live-mixed-locks-survivor");
   const bare = { ...raw, games: raw.games.map((game, index) => (index === 0 ? { ...game, awayPickers: [], homePickers: [] } : game)) };

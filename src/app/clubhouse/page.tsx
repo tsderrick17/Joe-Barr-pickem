@@ -56,7 +56,7 @@ export default function ClubhousePage() {
   const [pane, setPane] = useState<Pane | null>(null);
   const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
   const [ticketOpen, setTicketOpen] = useState(false);   // your ticket, over the Big Board
-  const [lookBack, setLookBack] = useState<{ weekId: string; board: SlateResponse } | null>(null);   // another week on the Big Board, read from the Slate
+  const [lookBack, setLookBack] = useState<{ weekId: string; board: SlateResponse; totals: Record<string, number> } | null>(null);   // another week on the Big Board: that week's Slate, and every player's wins added up through it
   useEffect(() => { paneRef.current = pane; }, [pane]);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
   const lastRead = useRef(0);
@@ -164,16 +164,20 @@ export default function ClubhousePage() {
 
   // Which pop-up is open: the new views, or (the Bowl Pool, and a playoff week) the classic page in place.
   const newBoard = room ? boardViewSupported(room.home, room.board) : false;
-  const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: lookBack?.board ?? room.board }, { weekId: lookBack?.weekId ?? null }) : null), [room, newBoard, lookBack]);
+  const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: lookBack?.board ?? room.board }, { weekId: lookBack?.weekId ?? null, totals: lookBack?.totals ?? null }) : null), [room, newBoard, lookBack]);
   // The Big Board opens on this week; choosing another week reads that week from the Slate (the default week is the room's own read).
   const chooseWeek = useStableCallback(async (weekId: string) => {
     const current = room ? selectDefaultScoringPeriod(room.board.bootstrap?.weeks ?? [])?.id : null;
     if (!room || weekId === (lookBack?.weekId ?? current)) return;
     if (weekId === current) { setLookBack(null); return; }
     try {
-      const response = await fetchWithSession(`/api/board?bootstrap=1&week=${encodeURIComponent(weekId)}`, { cache: "no-store" });
-      if (!response.ok) return;
-      setLookBack({ weekId, board: await response.json() as SlateResponse });
+      // The week's own games and picks, and the pool's running wins through it: the board shows the pool as it stood when that week ended.
+      const [response, totals] = await Promise.all([
+        fetchWithSession(`/api/board?bootstrap=1&week=${encodeURIComponent(weekId)}`, { cache: "no-store" }),
+        fetchWithSession(`/api/board-totals?week=${encodeURIComponent(weekId)}`, { cache: "no-store" }),
+      ]);
+      if (!response.ok || !totals.ok) return;
+      setLookBack({ weekId, board: await response.json() as SlateResponse, totals: ((await totals.json()) as { totals?: Record<string, number> }).totals ?? {} });
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
     }
@@ -196,7 +200,7 @@ export default function ClubhousePage() {
         <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} />
       </Sheet> : null}
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
-      {popup("survivor") ? <Sheet onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} /></Sheet> : null}
+      {popup("survivor") ? <Sheet bare onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} onBoard={newBoard ? () => show("standings") : undefined} /></Sheet> : null}
       {popup("trophies") ? <Sheet onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
       {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
       {classic ? <section aria-label={TITLE[classic] === "The Big Board" ? "Standings" : TITLE[classic]} className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>

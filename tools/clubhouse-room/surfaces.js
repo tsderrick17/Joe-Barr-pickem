@@ -204,8 +204,13 @@ export function sky(night) {
   if (night) { gr.addColorStop(0, "#03060f"); gr.addColorStop(0.72, "#101e44"); gr.addColorStop(0.9, "#2b3566"); gr.addColorStop(1, "#5a4a6a"); }
   else { gr.addColorStop(0, "#3f95dc"); gr.addColorStop(0.6, "#8cc8f0"); gr.addColorStop(0.88, "#d3ecf8"); gr.addColorStop(1, "#f4f6ec"); }
   g.fillStyle = gr; g.fillRect(0, 0, 1024, 512);
-  if (night) { for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255, 255, 255, ${0.3 + rand() * 0.7})`; g.fillRect(rand() * 1024, rand() * 420, 1 + rand(), 1 + rand()); } }
-  else for (let k = 0; k < 9; k++) {
+  if (night) {
+    // The stars have a counter of their own, and the shared one is stepped on by exactly the 270 draws the day's nine clouds take, so every
+    // surface made after the sky (the fieldstone chimney, the plants) comes out the same at night as by day.
+    let s = 11; const star = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+    for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255, 255, 255, ${0.3 + star() * 0.7})`; g.fillRect(star() * 1024, star() * 420, 1 + star(), 1 + star()); }
+    for (let i = 0; i < 270; i++) rand();
+  } else for (let k = 0; k < 9; k++) {
     const cx = rand() * 1024, cy = 330 + rand() * 110, s = 30 + rand() * 40;
     for (let p = 0; p < 9; p++) { const x = cx + (rand() - 0.5) * s * 3.4, y = cy + (rand() - 0.5) * s * 0.5, r = s * (0.5 + rand() * 0.6), cg = g.createRadialGradient(x, y, 0, x, y, r); cg.addColorStop(0, "rgba(255, 255, 255, .8)"); cg.addColorStop(1, "rgba(255, 255, 255, 0)"); g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r * 2); }
   }

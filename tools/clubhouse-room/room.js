@@ -140,7 +140,7 @@ export async function buildRoom(q) {
   };
 
   // ----- floor, shiplap walls and the thatch overhead
-  add(room, tile(box(RW, 0.1, RD), 1.44, 5.76), new THREE.MeshStandardMaterial({ ...oakFloor(), bumpScale: 1.6, roughness: 0.3, envMapIntensity: 1.0 }), [0, -0.05, -RD / 2], { cast: false });
+  add(room, tile(box(RW, 0.1, RD), 1.44, 5.76), new THREE.MeshStandardMaterial({ ...oakFloor(), bumpScale: 1.6, roughness: night ? 0.42 : 0.3, envMapIntensity: 1.0 }), [0, -0.05, -RD / 2], { cast: false });   // a little softer at night, so the fire's glare spreads instead of streaking
   const wallMat = new THREE.MeshStandardMaterial({ ...shiplap(), bumpScale: 1.6, roughness: 0.85 });
   // The side walls are full of windows, so the room is bright and the breeze comes through: on the right, four tall windows from the
   // door to the chimney; on the left, three tall windows at the front and a long strip of clerestory windows high over the bar. Each
@@ -433,7 +433,7 @@ export async function buildRoom(q) {
     [[-0.46, 0.5], [-0.24, 0.78], [0.0, 0.95], [0.22, 0.72], [0.44, 0.48], [-0.12, 0.6], [0.12, 0.66]].forEach(([dz, h], i) => {
       for (const turn of [-0.45, 0.5]) veil.push(add(fire, new THREE.PlaneGeometry(h * 0.52, h), fireMat, [X1 - CD - 0.11 - (i % 3) * 0.035, 0.58 + h / 2, FZ + dz], { cast: false, receive: false, rot: [0, -Math.PI / 2 + turn, 0] }));
     });
-    const flame = new THREE.PointLight(0xff8a3a, 9, 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
+    const flame = new THREE.PointLight(0xff8a3a, Number(q.get("flame") ?? 5.5), 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
   } else add(fire, box(0.3, 0.02, 1.0), std(0xb8b2a8, { roughness: 1 }), [X1 - CD - 0.14, 0.55, FZ], { cast: false });              // cold ash
   for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
   add(fire, rbox(0.42, 0.26, 3.8, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
@@ -591,6 +591,86 @@ export async function buildRoom(q) {
   };
   plant(2.0, ZB + 0.75, 1.3);
   monstera(2.15, -7.95, 0.9);
+  // More green, kept out of the way: a monstera at the near end of the bar, so the long dark front of it has a soft end (clear of the
+  // aisle and of the Bowl board), and, along the ledge of the clerestory windows over the bar back, a row of small plants of every
+  // sort (nothing stands on the floor to block the way through).
+  monstera(-3.25, -5.0, 0.95);
+  const LEDGE_Y = 3.45, LEDGE_X = -4.09;
+  add(room, box(0.22, 0.04, 5.45), white, [LEDGE_X - 0.0, LEDGE_Y - 0.02, -8.55], { cast: false });                                    // the ledge the windows' bottom rail makes
+  const terracotta = std(0xb4633a, { roughness: 0.8 }), chalk = std(0xf1ece2, { roughness: 0.5 }), slate = std(0x34302c, { roughness: 0.6 }), soil = std(0x2e2218, { roughness: 1 });
+  const succulent = std(0x6f9f80, { roughness: 0.5, side: THREE.DoubleSide }), sage = std(0x93b385, { roughness: 0.55, side: THREE.DoubleSide }), cactusGreen = std(0x4d8a55, { roughness: 0.6 });
+  // a small pot on the ledge: its mouth's height is returned, so the plant can be set into it
+  const smallPot = (z, r, h, material, dx = 0) => {
+    add(room, cyl(r, r * 0.74, h, 20), material, [LEDGE_X + dx, LEDGE_Y + h / 2, z]);
+    add(room, cyl(r * 0.92, r * 0.92, 0.01, 16), soil, [LEDGE_X + dx, LEDGE_Y + h - 0.004, z], { cast: false });
+    return LEDGE_Y + h;
+  };
+  // a little leaf on a stem: the broad leaf of a monstera or pothos at a small size, tilted out and over
+  const tinyLeaf = (x, y, z, size, turn, material) => {
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.set(rand() * 0.5 - 0.25, turn, -0.2 - rand() * 0.5); g.scale.setScalar(size * (0.85 + rand() * 0.3)); room.add(g);
+    add(g, broadLeaf, material, [0, 0, 0], { cast: false });
+  };
+  const ledgePlants = {
+    // a trailing pothos: vines spilling over the front of the ledge and hanging down the wall
+    pothos(z, material) {
+      const top = smallPot(z, 0.075, 0.13, material);
+      for (let k = 0; k < 6; k++) {
+        const turn = (k / 6) * Math.PI * 2, reach = 0.1 + rand() * 0.1, hang = 0.2 + rand() * 0.3, zz = z + Math.sin(turn) * 0.05;
+        for (let i = 0; i <= 5; i++) {
+          const t = i / 5, out = LEDGE_X + 0.12 + 0.05 * t, drop = top + 0.03 - Math.max(0, t - 0.2) * hang * 1.25;
+          if (i > 0) tinyLeaf(out + (i % 2 ? 0.01 : -0.01), drop, zz + (rand() - 0.5) * 0.05, 0.1, Math.PI / 2 + (rand() - 0.5) * 1.2, i % 2 ? leafFresh : leafGreen);
+        }
+        add(room, cyl(0.004, 0.004, hang + 0.1, 5), leafDeep, [LEDGE_X + 0.1, top - hang / 2 + 0.04, zz], { cast: false });
+        void reach;
+      }
+      spray(room, pottedLeaf, leafGreen, [LEDGE_X, top, z], 5, 0.11, [0.9, 1.2]);
+    },
+    // a small kentia or fern: a fan of fronds
+    fern(z, material, size = 0.2) { spray(room, pottedLeaf, leafGreen, [LEDGE_X, smallPot(z, 0.085, 0.14, material), z], 7, size, [0.5, 1.0]); spray(room, pottedLeaf, leafFresh, [LEDGE_X, LEDGE_Y + 0.14, z], 3, size * 0.8, [1.1, 1.3]); },
+    // an aloe: stiff pointed leaves rising and leaning out in a rosette
+    aloe(z, material) {
+      const top = smallPot(z, 0.08, 0.12, material);
+      for (let k = 0; k < 9; k++) {
+        const a = (k / 9) * Math.PI * 2 + rand() * 0.4, lean = 0.25 + (k % 3) * 0.28, len = 0.2 + (k % 3 === 0 ? 0.08 : 0);
+        const blade = add(room, new THREE.ConeGeometry(0.02, len, 5), k % 2 ? succulent : sage, [LEDGE_X + Math.cos(a) * lean * len * 0.5, top + len * 0.5 * Math.cos(lean * 0.9), z + Math.sin(a) * lean * len * 0.5], { cast: false });
+        blade.rotation.set(Math.sin(a) * lean * 0.9, 0, -Math.cos(a) * lean * 0.9);
+      }
+    },
+    // a snake plant: tall flat blades, a little askew
+    snake(z, material) {
+      const top = smallPot(z, 0.075, 0.13, material);
+      for (let k = 0; k < 7; k++) {
+        const h = 0.28 + (k % 3) * 0.1, a = rand() * Math.PI * 2, lean = 0.06 + rand() * 0.1;
+        const blade = add(room, box(0.034, h, 0.009), k % 2 ? leafDeep : leafGreen, [LEDGE_X + Math.cos(a) * 0.03, top + h / 2, z + Math.sin(a) * 0.03], { cast: false });
+        blade.rotation.set(Math.sin(a) * lean, a, Math.cos(a) * lean);
+      }
+    },
+    // a cactus with an arm and a pink flower
+    cactus(z, material) {
+      const top = smallPot(z, 0.065, 0.1, material);
+      add(room, cyl(0.036, 0.04, 0.2, 14), cactusGreen, [LEDGE_X, top + 0.1, z]);
+      add(room, new THREE.SphereGeometry(0.036, 14, 10), cactusGreen, [LEDGE_X, top + 0.2, z]);
+      add(room, cyl(0.022, 0.022, 0.07, 10), cactusGreen, [LEDGE_X, top + 0.1, z + 0.055], { rot: [Math.PI / 2, 0, 0] });
+      add(room, cyl(0.022, 0.022, 0.09, 10), cactusGreen, [LEDGE_X, top + 0.15, z + 0.09]);
+      add(room, new THREE.SphereGeometry(0.02, 10, 8), std(0xe05a8c, { roughness: 0.6 }), [LEDGE_X, top + 0.21, z], { cast: false });
+    },
+    // a baby monstera: three or four split leaves on slim stems
+    monstera(z, material) {
+      const top = smallPot(z, 0.08, 0.13, material);
+      for (let k = 0; k < 4; k++) {
+        const a = (k / 4) * Math.PI * 2 + rand(), reach = 0.07 + rand() * 0.06, high = 0.2 + rand() * 0.14;
+        add(room, cyl(0.004, 0.006, high, 5), leafDeep, [LEDGE_X + Math.cos(a) * reach * 0.5, top + high / 2, z - Math.sin(a) * reach * 0.5], { cast: false });
+        tinyLeaf(LEDGE_X + Math.cos(a) * reach, top + high, z - Math.sin(a) * reach, 0.28, a, k % 2 ? leafGreen : leafDeep);
+      }
+    },
+    // a pot of herbs: a soft mound of small leaves
+    herbs(z, material) {
+      const top = smallPot(z, 0.09, 0.11, material);
+      for (let k = 0; k < 16; k++) add(room, new THREE.SphereGeometry(0.03 + rand() * 0.015, 8, 6), k % 3 ? leafFresh : sage, [LEDGE_X + (rand() - 0.5) * 0.11, top + 0.03 + rand() * 0.07, z + (rand() - 0.5) * 0.11], { cast: false });
+    },
+  };
+  ledgePlants.aloe(-6.2, terracotta); ledgePlants.pothos(-6.8, chalk); ledgePlants.fern(-7.4, terracotta); ledgePlants.snake(-8.0, slate); ledgePlants.cactus(-8.55, chalk);
+  ledgePlants.monstera(-9.1, terracotta); ledgePlants.herbs(-9.65, slate); ledgePlants.pothos(-10.2, terracotta); ledgePlants.fern(-10.75, chalk, 0.17);
   add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
