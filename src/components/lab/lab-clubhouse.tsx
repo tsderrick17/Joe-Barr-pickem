@@ -181,7 +181,6 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
   // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
-  { spot: "picks", room: "board", name: "Your picks", label: "free", at: { x: 0.72, y: 0.735 }, wideAt: { x: 0.655, y: 0.88 }, fullAt: { x: 0.62, y: 0.76 }, ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
@@ -462,7 +461,7 @@ export function Constitution() {
       <nav aria-label="Articles" className="lab-rules-index">
         {articles.map(({ title }) => {
           const [number, name] = title.split(" · ");
-          return <a href={`#${idFor(title)}`} key={title}><b>{number.replace("Article ", "")}</b>{name}</a>;
+          return <a href={`#${idFor(title)}`} key={title} onClick={(event) => { event.preventDefault(); document.getElementById(idFor(title))?.scrollIntoView({ behavior: "smooth", block: "start" }); }}><b>{number.replace("Article ", "")}</b>{name}</a>;
         })}
       </nav>
       {POOL_CONSTITUTION.map(({ part, articles: list }) => (

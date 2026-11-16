@@ -13,6 +13,7 @@ export const PANES = ["standings", "slate", "survivor", "trophies", "bowl", "rul
 
 /** The pane a link opens in place, or null when it is a link out of the clubhouse (the profile, the Commissioner's pages). */
 export function paneForHref(href, origin) {
+  if (String(href).startsWith("#")) return null;   // a jump within the open page (the rules' list of articles), never another page
   let url;
   try { url = new URL(href, origin); } catch { return null; }
   if (url.origin !== origin) return null;

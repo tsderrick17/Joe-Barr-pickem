@@ -262,7 +262,7 @@ export default function SiteNav() {
         </div>
       </div>
     </nav>
-    <nav aria-label="Primary navigation" className="mobile-primary-nav border-b-2 border-(color:--themed-border-19) bg-[#171719] text-[#f5f0e6] md:hidden" ref={mobileNavRef}>
+    <nav aria-label="Primary navigation" className={`mobile-primary-nav border-b-2 border-(color:--themed-border-19) bg-[#171719] text-[#f5f0e6] md:hidden${inClubhouse ? " hidden" : ""}`} ref={mobileNavRef}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
         <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
         <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>

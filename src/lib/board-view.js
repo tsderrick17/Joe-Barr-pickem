@@ -85,9 +85,12 @@ export function realBoardView({ home, board }) {
 
   const maxPicks = home.maxPicks;
   const survivor = board.survivor;
-  const survivorShown = Boolean(home.survivorAvailable) && !home.isPlayoff;
+  // The winner is called out for the week after Survivor is decided (8 days from the crowning), then the column goes; the link stays.
+  const crowned = home.survivorComplete ? Date.parse(home.survivorCrownedAt ?? "") : Number.NaN;
+  const fresh = Boolean(home.survivorComplete) && (Number.isNaN(crowned) || now - crowned < 8 * 86_400_000);
+  const survivorShown = Boolean(home.survivorAvailable) && !home.isPlayoff && (!home.survivorComplete || fresh);
   const survivorRows = new Map((home.survivorRows ?? []).map((row) => [row.playerId, row]));
-  const championId = home.survivorComplete ? home.survivorChampionPlayerId ?? null : null;
+  const championId = fresh ? home.survivorChampionPlayerId ?? null : null;
   const mySurvivorGame = survivor?.pick ? gameById.get(survivor.pick.game_id) : null;
   const mySurvivorTeam = survivor?.pick && mySurvivorGame ? abbreviationOf(mySurvivorGame.raw, survivor.pick.selected_team_id) : null;
   const playing = Boolean(survivor?.available && survivor.status === "active") && !championId;
@@ -125,7 +128,7 @@ export function realBoardView({ home, board }) {
     rows,
     showSurvivor: survivorShown,
     championId,
-    champion: home.survivorComplete ? home.survivorChampionName ?? null : null,
+    champion: fresh ? home.survivorChampionName ?? null : null,
     mine: { picks: mineTeams, survivor: mySurvivorTeam },
     survivor: { playing, out, outWeek: null, left: 32 - used.size, teams },
     ids,

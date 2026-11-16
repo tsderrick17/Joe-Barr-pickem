@@ -71,7 +71,8 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
 
 /** The Survivor table, as the Standings shows it. */
 export function SurvivorPopup({ home }: { home: StandingsResponse }) {
-  const shown = home.seasonPhase === "off_season" ? { ...home, showSurvivorStandings: true, hideSurvivorEliminatedRows: false } : home;
+  // Always the whole table: this view has no show/hide switches, so a player's own display choices never blank it.
+  const shown = { ...home, showSurvivorStandings: true, hideSurvivorEliminatedRows: false };
   if (!home.survivorAvailable) return <p>Survivor is not running right now.</p>;
   return <SurvivorTable data={shown} displayLocked savingDisplay={false} setEliminatedRowsHidden={() => {}} setSurvivorDisplay={() => {}} />;
 }

@@ -80,3 +80,16 @@ test("a push is a margin of zero, and a game with no line has no margin", () => 
   assert.equal(coverMargin(20, 17, "—"), null);
   assert.equal(coverMargin(null, 17, "-3"), null);
 });
+
+test("the Survivor winner is called out for the week after being crowned, then the column goes (the link stays with the Big Board)", () => {
+  const crowned = { ...homeResponse("regular-in"), survivorComplete: true, survivorChampionPlayerId: "p2", survivorChampionName: "Zac" };
+  const board = boardResponse("upcoming-picked");
+  const day = 86_400_000;
+  const soon = realBoardView({ home: { ...crowned, survivorCrownedAt: new Date(Date.parse(board.serverTime) - 3 * day).toISOString() }, board });
+  assert.equal(soon.champion, "Zac");
+  assert.equal(soon.showSurvivor, true);
+  const later = realBoardView({ home: { ...crowned, survivorCrownedAt: new Date(Date.parse(board.serverTime) - 20 * day).toISOString() }, board });
+  assert.equal(later.champion, null);
+  assert.equal(later.championId, null);
+  assert.equal(later.showSurvivor, false);
+});

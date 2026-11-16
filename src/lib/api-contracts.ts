@@ -111,6 +111,8 @@ export type StandingsResponse = {
   survivorNotice: string | null;
   survivorChampionPlayerId: string | null;
   survivorComplete: boolean;
+  /** When Survivor was decided (the clubhouse calls the winner out for the week after). */
+  survivorCrownedAt?: string | null;
   survivorChampionName: string | null;
   survivorRows: {
     id: string;

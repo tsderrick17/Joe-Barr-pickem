@@ -76,8 +76,8 @@ test("every thing in the room opens its pop-up over it, on the real week, and th
   await opens("Survivor", "Survivor", /Survivor Table/);
   await opens("Trophy Room", "Trophy Room", /Plaques/);
   await opens("Constitution", "Constitution", /Constitution/);
-  // Your picks, and the ticket in the room, open the same board with your ticket ready.
-  await room.getByRole("button", { name: "Your picks", exact: true }).click();
+  // The games board in the room opens the same board with your ticket ready.
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
@@ -103,8 +103,10 @@ test("the open pop-up has its own address: back closes it, a reload reopens it, 
   await expect(page).toHaveURL(/\/clubhouse$/);
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toHaveCount(0);
   await expect(room).toBeVisible();
-  // The header's link to the Slate opens the board with your ticket ready, in place; the Survivor table opens from the board and goes back to the room in one step.
-  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "The Slate" }).click();
+  // The second bar of tabs under the header has no place in the clubhouse. The games board opens the board with your ticket ready, in place;
+  // the Survivor table opens from the board and goes back to the room in one step.
+  await expect(page.locator(".mobile-primary-nav")).toBeHidden();
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
   await expect(page).toHaveURL(/\/clubhouse#slate$/);
   await page.goBack();
@@ -201,4 +203,23 @@ test("once Survivor is decided the poker table is the Bowl Pool's, in its own co
   await page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: "Close" }).click();
   await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
   await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+});
+
+test("the rules' list of articles scrolls to the article and stays on the rules", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#rules" });
+  const rules = page.getByRole("dialog", { name: "Constitution" });
+  await expect(rules).toBeVisible({ timeout: 30_000 });
+  await rules.getByRole("navigation", { name: "Articles" }).getByRole("link").nth(3).click();
+  await expect(rules).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Your ticket" })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/clubhouse#rules$/);
+});
+
+test("the Survivor pop-up shows the whole table", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", homeExtra: { showSurvivorStandings: false, hideSurvivorEliminatedRows: true } });
+  const popup = page.getByRole("dialog", { name: "Survivor" });
+  await expect(popup).toBeVisible({ timeout: 30_000 });
+  const table = popup.getByRole("region", { name: /Survivor Table/ });
+  await expect(table).toBeVisible();
+  await expect(table).toContainText("Gary");   // a player's own "hide" choices never blank or thin this view
 });

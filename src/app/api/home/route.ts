@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     // unavailable while a production migration is still catching up.
     supabaseAdmin
       .from("seasons")
-      .select("survivor_champion_player_id")
+      .select("survivor_champion_player_id, survivor_champion_crowned_at")
       .eq("id", season.id)
       .maybeSingle(),
   ]);
@@ -507,6 +507,7 @@ export async function GET(request: NextRequest) {
     survivorRows,
     survivorChampionPlayerId,
     survivorComplete,
+    survivorCrownedAt: championSeason?.survivor_champion_crowned_at ?? null,
     survivorChampionName,
   } satisfies StandingsResponse);
 }

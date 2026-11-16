@@ -25,3 +25,7 @@ test("an address's hash names the pane to reopen; nothing else does", () => {
   assert.equal(paneFromHash(""), null);
   assert.equal(paneFromHash(undefined), null);
 });
+
+test("a link that only jumps within the page is never another page", () => {
+  assert.equal(paneForHref("#rule-1", "https://pickemjb.vercel.app"), null);
+});
