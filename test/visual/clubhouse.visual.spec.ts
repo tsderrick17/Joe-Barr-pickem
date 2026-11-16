@@ -13,7 +13,8 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   const board = boardResponse("upcoming-picked");
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/home**", (route) => route.fulfill({ json: homeResponse("regular-in") }));
-  await page.route("**/api/board**", (route) => route.fulfill({ json: board }));
+  // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
+  await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: board }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(board.serverTime) });
@@ -58,7 +59,8 @@ test("every thing in the room is a link to the real page, the boards show the re
   expect(await href("Constitution")).toBe("/clubhouse/rules");
   // No sample players: the board's leader is the fixture's.
   await expect(page.locator(".lab-room-screen.is-board header")).not.toContainText("WEEK 10");
-  await expect(page.locator(".lab-ticker p").first()).toBeVisible();
+  await expect(page.locator(".lab-ticker p").first()).toBeVisible();   // the week's games came through
+  await expect(page.getByText("You must choose a week")).toHaveCount(0);
   await expect(page.locator("a.lab-room-ticket")).toHaveAttribute("href", "/board");
   await room.getByRole("link", { name: "Constitution", exact: true }).click();
   await expect(page.getByRole("article", { name: "Pool constitution" })).toBeVisible();

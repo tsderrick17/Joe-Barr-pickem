@@ -40,10 +40,12 @@ export default function ClubhousePage() {
     let disposed = false;
     void (async () => {
       try {
-        const [homeResponse, boardResponse] = await Promise.all([fetchWithSession("/api/home"), fetchWithSession("/api/board")]);
+        // The Slate's read needs a week: bootstrap=1 asks for the default week, as the Slate itself does on first load.
+        const [homeResponse, boardResponse] = await Promise.all([fetchWithSession("/api/home"), fetchWithSession("/api/board?bootstrap=1")]);
         const home = await homeResponse.json() as StandingsResponse;
-        const board = await boardResponse.json() as SlateResponse;
-        if (!homeResponse.ok || !boardResponse.ok) throw new Error(home.error ?? board.error ?? "The clubhouse could not be loaded.");
+        if (!homeResponse.ok) throw new Error(home.error ?? "The clubhouse could not be loaded.");
+        // Without the week's games the room still opens: the standings on the Big Board, the games board dark, no ticket.
+        const board = boardResponse.ok ? await boardResponse.json() as SlateResponse : { games: [], myPicks: [], serverTime: home.serverTime } as unknown as SlateResponse;
         if (!disposed) setRoom(clubhouseFeed({ home, board }) as { feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null });
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
