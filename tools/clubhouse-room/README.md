@@ -24,6 +24,6 @@ The room borrows the trophy renderer's modules (its materials and helpers) and i
   sun, the room's own reflections, contact shadow, glow) and the camera.
 - `surfaces.js`: what the room is made of: the drawn surfaces (planks, shiplap, fieldstone, thatch, cane, sky, flame) and the one
   modelled leaf that every fan blade and plant is grown from.
-- `render.mjs`: renders the eight pictures (the four tall ones for a phone and the same four wide, `-wide`, for a desktop) and writes the tap spots, and for each picture the moving patches (`room-<view>-fan0.webp`, `-plant2.webp`...: a strip of 16 frames each, the fans turning and the plants swaying, the page plays them over the picture).  `shot.mjs`: design work, renders chosen views to a folder
+- `render.mjs`: renders the twelve pictures (the four tall ones for the Lab on a phone, the same four wide, `-wide`, for a desktop, and four taller ones, `-full`, that fill a phone screen in the real clubhouse) and writes the tap spots. Nothing in the room moves but its two boards, so no frame strips are drawn. `ONLY=day-full,night-full node render.mjs` renders just those and keeps the rest.  `shot.mjs`: design work, renders chosen views to a folder
   (for example `node shot.mjs out '[["day",""],["fan","zoom=2.2,0.5,0.2"],["night","night=1"]]'`; `zoom=k,x,y` renders the part of the
   picture centred at x,y, as fractions of it, k times larger, which is how to inspect a detail). `scene.html`, `serve.mjs`: the page and static server it drives.

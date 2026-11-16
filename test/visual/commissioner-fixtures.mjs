@@ -233,16 +233,18 @@ const leagueTeams = [
   teamPicked("kc", "Kansas City Chiefs", "KC", 236, 190, 0.095), teamPicked("buf", "Buffalo Bills", "BUF", 211, 176, 0.086),
   teamPicked("phi", "Philadelphia Eagles", "PHI", 198, 171, 0.082), teamPicked("sf", "San Francisco 49ers", "SF", 187, 169, 0.079), teamPicked("det", "Detroit Lions", "DET", 176, 150, 0.073),
 ];
+/** Net pts per player (all seasons): Rick is under the number overall. */
+const NET_PTS = { p1: 180, p2: 295, p3: 96.5, p4: -62 };
 /** Pick'em performance: the league, and four players (ids match the Trophy Room fixture, so its streak columns line up). */
 export const POOL_STATS = {
-  record: { ...bucket(2418, 2077), pushes: 96, pushedGames: 31, pushShare: 0.032 },
+  record: { ...bucket(2418, 2077), net: 1136.5, pushes: 96, pushedGames: 31, pushShare: 0.032 },
   teams: leagueTeams,
   teamsByHitRate: byHitRate(leagueTeams),
   teamsLeastPicked: byLeastPicked(leagueTeams),
   teamsByLowestHitRate: byLowestHitRate(leagueTeams),
   mostPicked: leagueTeams[0],
   mostPickedTied: 1,
-  bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013) }, { seasonYear: 2025, ...bucket(1228, 1064) }],
+  bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013), net: 402.5 }, { seasonYear: 2025, ...bucket(1228, 1064), net: 734 }],
   weeks: { total: 1120, donut: 262, split: 548, sweep: 310 },
   splits: {
     side: { favorite: split(1270, 1048, 0.516), underdog: split(1070, 960, 0.452), pickem: split(78, 69, 0.033) },
@@ -258,14 +260,14 @@ export const POOL_STATS = {
     const teams = [teamPicked(teamId, teamName, teamAbbreviation, Math.round(record.wins * 0.11), Math.round(record.losses * 0.1), 0.105), teamPicked("sf", "San Francisco 49ers", "SF", Math.round(record.wins * 0.09), Math.round(record.losses * 0.09), 0.088), teamPicked("det", "Detroit Lions", "DET", Math.round(record.wins * 0.08), Math.round(record.losses * 0.07), 0.074)];
     return {
       playerId, name,
-      record: { ...record, pushes: 14, pushedGames: 12, pushShare: 0.011 },
+      record: { ...record, net: NET_PTS[playerId], pushes: 14, pushedGames: 12, pushShare: 0.011 },
       teams,
       teamsByHitRate: byHitRate(teams),
       teamsLeastPicked: byLeastPicked(teams),
       teamsByLowestHitRate: byLowestHitRate(teams),
       mostPicked: teams[0],
       mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
-      bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)) }],
+      bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)), net: NET_PTS[playerId] * 0.4 }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)), net: NET_PTS[playerId] * 0.6 }],
       weeks: { total: weeks.donut + weeks.split + weeks.sweep, ...weeks },
       splits: {
         side: { favorite: split(Math.round(record.wins * 0.53), Math.round(record.losses * 0.43), favoriteShare - 0.02), underdog: split(Math.round(record.wins * 0.44), Math.round(record.losses * 0.54), 0.97 - favoriteShare), pickem: split(Math.round(record.wins * 0.03), Math.round(record.losses * 0.03), 0.03) },

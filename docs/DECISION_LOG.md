@@ -19,6 +19,23 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - The clubhouse is a real view of the site (Commissioner only)
+
+- The light switch beside the day/night button now opens `/clubhouse`, not the Lab. It is another way into the same site: the room fills the screen under the site's bar (a taller phone picture, `room-*-full.webp`, so a phone is filled with only a sliver cropped at the sides; plates near an edge are drawn in so none is cut off), and every thing in it is a link to the real page: the Big Board to the Standings, the games board, Your picks and the ticket to the Slate, the poker table to Survivor, the trophy to the Trophy Room, the laptop to the chat, the Bowl Pool board (from Dec 7 Eastern through January) to the Bowl Pool, the constitution to `/clubhouse/rules`.
+- The boards and the ticket read only the Standings' and the Slate's own reads (`/api/home`, `/api/board`), shaped by `src/lib/clubhouse-feed.js`: wins only on the Big Board, and the only picks lit are the viewer's own. It can never show more than those pages. No new routes, no new database rules.
+- Players cannot reach it: anyone but the Commissioner is sent to the Standings, and only the Commissioner has the switch. The Lab keeps its sample clubhouse for trying designs.
+
+## 2026-11-15 - Only the two boards move; games two wide, shifting up every 7 seconds (Lab)
+
+- The fans and plants no longer move (owner: they look terrible). The still room picture is all there is; the pre-drawn frame strips were removed from the site. `tools/clubhouse-room` can still render them but nothing loads them.
+- The games board stands two wide, so two whole games are always up. Every 7 seconds it shifts up one row, like a slot machine or the ticker along the bottom of ESPN, and the last row runs on into the first with no jump. Reduced motion holds it still.
+
+## 2026-11-15 - Net pts on Pool stats (Commissioner)
+
+- **Net pts** is the sum, over graded Pick’em picks, of how far each pick landed past (+) or short of (−) its locked number (a push is 0). Kept for the league and for each player, and per season. It is a measure only; nothing shown influences picks.
+- It replaces Perfect weeks as the third headline tile (the tile also shows the average per game picked). Perfect weeks stay in the Trophy Room.
+- The Hit rate by season chart has a second axis on the right for Net pts, in its own colour. Both axes are symmetric about their middle line, so .500 and 0 sit on the same line, and that line no longer carries the words “Coin flip”.
+
 ## 2026-11-15 - The room breathes; brighter, softer light; a trophy shelf; the Commissioner's light switch (Lab)
 
 Owner: shadows too harsh and late in the day; the Trophy Room sign implied a hallway; plants more real, swaying; fans spinning; all
