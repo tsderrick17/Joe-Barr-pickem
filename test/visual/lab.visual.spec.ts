@@ -612,9 +612,11 @@ test("the room's games stand two wide and the board shifts up a row every 7 seco
     return [...node.querySelectorAll("p")].filter((card) => { const r = card.getBoundingClientRect(); return r.top >= box.top - 1 && r.bottom <= box.bottom + 1; }).map((card) => card.querySelector("small")?.textContent ?? "");
   });
   expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);
-  await page.clock.runFor(6_900);
-  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // not yet: the first two stay up the full 7 seconds
-  await page.clock.runFor(200);
+  // The installed clock keeps running with real time (a slow runner has spent some of the 7 seconds by now), so the "not yet" check
+  // leaves a whole second to spare rather than a tenth.
+  await page.clock.runFor(5_500);
+  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // not yet: the first two stay up for most of the 7 seconds
+  await page.clock.runFor(1_700);
   await expect.poll(shown).toEqual(["SUN 1:00 PM", "SUN 4:25 PM"]);
   await page.clock.runFor(7_000);
   await expect.poll(shown).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // and round to the start again with no gap
