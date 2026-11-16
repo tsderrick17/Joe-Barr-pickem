@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { forgetTabs, rememberTabs } from "@/lib/nav-tabs";
 import { HapticTap } from "@/components/haptic-tap";
 import { haptic } from "@/lib/haptics-client";
+import { clubhouseModeOn, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 
 const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
 
@@ -125,15 +126,19 @@ export default function SiteNav() {
   }, [pathname]);
 
   // Commissioner only, for now: a little light switch beside the day/night button swaps between the site as it is (classic, switch
-  // down) and the clubhouse being built in the Lab (switch up; still on sample players). It carries no label. Players never see it.
+  // down) and the clubhouse (switch up). It carries no label. Players never see it. The switch is a mode, remembered on this device: with
+  // it up, opening the app (the Standings address) lands in the clubhouse, until it is put back down.
   const inClubhouse = pathname.startsWith("/clubhouse");
-  // A plain link, so the page loads afresh: the Lab reads which try-out to open from the address as it loads.
+  useEffect(() => {
+    if (isCommissioner && pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
+  }, [isCommissioner, pathname, router]);
   const viewSwitch = (size: string) => isCommissioner ? (
     <a
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
       className={`view-switch ${size}`}
       data-on={inClubhouse}
       href={inClubhouse ? "/" : "/clubhouse"}
+      onClick={() => setClubhouseMode(!inClubhouse)}
       title={inClubhouse ? "Classic view" : "Clubhouse view"}
     >
       <span aria-hidden="true" className="view-switch-lever" />
