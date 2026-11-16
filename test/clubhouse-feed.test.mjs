@@ -80,3 +80,22 @@ test("out of Survivor: no Survivor lamp; no games: no ticket and a dark spreads 
   assert.deepEqual(empty.feed.games, []);
   assert.equal("board" in empty.feed.news, false);
 });
+
+test("Survivor leaves the room when it leaves the classic pages: decided, or the playoffs (and its news line goes with it)", () => {
+  assert.equal(clubhouseFeed({ home: home(), board: board() }).feed.survivorOver, false);
+  const decided = clubhouseFeed({ home: home({ survivorComplete: true }), board: board() }).feed;
+  assert.equal(decided.survivorOver, true);
+  assert.equal("survivor" in decided.news, false);
+  assert.equal(clubhouseFeed({ home: home({ isPlayoff: true }), board: board() }).feed.survivorOver, true);
+});
+
+test("the ticker shows a final score and which side covered, and nothing for a game still to play or in play", () => {
+  const finalGame = game("g1", "PIT", "CLE", { status: "final", awayScore: 17, homeScore: 14, favoriteTeamId: "pit", officialSpread: 2.5, awayResult: "win", homeResult: "loss" });
+  const live = game("g2", "IND", "WAS", { status: "live", awayScore: 7, homeScore: 3 });
+  const feed = clubhouseFeed({ home: home(), board: board({ games: [finalGame, live] }) }).feed;
+  assert.deepEqual(feed.games[0].final, { away: { score: 17, covered: true }, home: { score: 14, covered: false } });
+  assert.equal("final" in feed.games[1], false);   // no live scores
+  // A push is a miss for both sides.
+  const push = game("g3", "SF", "DEN", { status: "final", awayScore: 20, homeScore: 17, favoriteTeamId: "sf", officialSpread: 3, awayResult: null, homeResult: null });
+  assert.deepEqual(clubhouseFeed({ home: home(), board: board({ games: [push] }) }).feed.games[0].final, { away: { score: 20, covered: false }, home: { score: 17, covered: false } });
+});

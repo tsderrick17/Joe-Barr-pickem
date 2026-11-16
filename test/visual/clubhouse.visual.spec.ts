@@ -7,7 +7,7 @@ const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { widt
 
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
 const sent: unknown[] = [];
-async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse" } = {}) {
+async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown> } = {}) {
   sent.length = 0;
   await page.setViewportSize(size);
   await signIn(page, theme);
@@ -16,7 +16,7 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   const board = boardResponse(scenarios[0]);
   let reads = 0;
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
-  await page.route("**/api/home**", (route) => route.fulfill({ json: homeResponse("regular-in") }));
+  await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), ...homeExtra } }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
   await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)]) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
@@ -174,4 +174,31 @@ test("a player who is not the Commissioner is sent to the Standings and has no s
   await openClubhouse(page, { commissioner: false });
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
   await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
+});
+
+test("a finished game on the ticket shows each side's final score and who covered, and there is no lock over the line", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["live-mixed-locks-survivor"], at: "/clubhouse#slate" });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(form).toBeVisible({ timeout: 30_000 });
+  const first = form.locator("ol > li").first();
+  await expect(first.locator(".lab-board-final").first()).toContainText("17");
+  await expect(first.locator(".lab-board-final.is-covered")).toContainText("COVERED BY 0.5");
+  await expect(first).toContainText("MISSED BY 0.5");
+  await expect(form.locator(".lab-board-lock")).toHaveCount(0);
+  // A game that has kicked off but is not final shows no score.
+  await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
+});
+
+test("once Survivor is decided the poker table is the Bowl Pool's, in its own colors, and the Big Board still links to Survivor", async ({ page }) => {
+  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt" } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
+  await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
+  await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
+  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: /Survivor/ })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: "Close" }).click();
+  await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
+  await expect(page).toHaveURL(/\/clubhouse#bowl$/);
 });

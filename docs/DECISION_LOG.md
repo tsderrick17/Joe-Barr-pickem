@@ -19,6 +19,15 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)
+
+- Owner: "The locks shouldn't be over the spreads and we should figure out a way to show the final score and who covered better"; "Survivor should disappear the same time it does from the classic version ... the bowl pool could take its spot"; "show scores, who covered ... on the ticker"; the mail flag "should come out of the left side of the pill".
+  - **The ticket** (`TicketForm`): no lock over a line (the header already says KICKED OFF). A game that is decided shows, under each side, its final score and "COVERED BY n" (lit gold) or "MISSED BY n" ("PUSH · A MISS" on a push: a push is a loss). The number is the margin past the spread (`coverMargin`), the word is the graded ATS result. A game in play shows no score: **only final scores are ever shown, never live ones** (owner: "I don't want live scores").
+  - **The ticker** in the room shows the same: a final game says "FINAL · THU", each side shows its score in place of its line, the covering side lit with a check. Both come from the same data (`BoardView` results; `clubhouseFeed` games), so they cannot disagree.
+  - **Survivor leaves the room when it leaves the classic pages:** once it is decided, and for the playoffs (`survivorOver` in the feed). Its poker-table spot then becomes the **Bowl Pool** (navy and gold plate, so it is not mistaken for the old table), the Bowl Pool's separate spot is not drawn twice, and Survivor's news line goes. The Big Board still links to the Survivor table. The picture itself is unchanged (a Bowl Pool table in the picture is a later piece of artwork).
+  - **The mail flag** is the pill carried on past its own left end in red with the envelope, the same height and rounded outside shape (the plate is drawn in by the flag's width so it is never cut off).
+  - Not built: picking a player to see their picks on the ticker (asked, the meaning is to be confirmed with the owner).
+
 ## 2026-11-15 - The clubhouse's pop-ups are the new views on real data (Commissioner only)
 
 - Owner: "it should just be pop ups over the clubhouse ... No we have the new views!!" The classic pages embedded full screen are replaced by pop-ups over the room that show the new views, drawn from the pool's real reads:

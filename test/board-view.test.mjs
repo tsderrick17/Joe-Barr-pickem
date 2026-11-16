@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boardViewSupported, realBoardView } from "../src/lib/board-view.js";
+import { boardViewSupported, coverMargin, realBoardView } from "../src/lib/board-view.js";
 import { homeResponse } from "./visual/standings-fixtures.mjs";
 import { boardResponse } from "./visual/slate-fixtures.mjs";
 
@@ -61,4 +61,22 @@ test("the week the pick is sent for is the Slate's own default week", () => {
   const view = realBoardView(reads());
   assert.ok(view.weekId);
   assert.equal(view.weekId, boardResponse("upcoming-picked").bootstrap.weeks.find((week) => week.status === "active" || week.status === "upcoming").id);
+});
+
+test("a final game carries each side's score and how far it finished past its line; a game not final carries none", () => {
+  const final = realBoardView(reads("complete-survivor")).games[0];
+  const [a, b] = [final.results[final.away], final.results[final.home]];
+  assert.equal(a.score, 17);
+  assert.equal(b.score, 14);
+  assert.equal(a.margin, 0.5);    // the 2.5-point favourite won by 3
+  assert.equal(b.margin, -0.5);
+  const live = realBoardView(reads("upcoming-picked")).games[0];
+  assert.deepEqual([live.results[live.away].score, live.results[live.away].margin], [null, null]);
+});
+
+test("a push is a margin of zero, and a game with no line has no margin", () => {
+  assert.equal(coverMargin(20, 17, "-3"), 0);
+  assert.equal(coverMargin(20, 20, "PK"), 0);
+  assert.equal(coverMargin(20, 17, "—"), null);
+  assert.equal(coverMargin(null, 17, "-3"), null);
 });

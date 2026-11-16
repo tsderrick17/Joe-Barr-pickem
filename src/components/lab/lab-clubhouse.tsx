@@ -7,8 +7,8 @@ import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
 import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
-import { LAB_VIEWER, labBoardPages, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
-import { LAB_RECORDS, LAB_SLATE, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
+import { LAB_VIEWER, labBoardPages, labKickedOff, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
+import { LAB_RECORDS, LAB_SLATE, labAtsResult, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
 
 /**
@@ -215,6 +215,7 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
 /** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 8 seconds. */
+const MAIL_FLAG = 30;   // px: the width of the red new-message flag on the chat plate (see .lab-room-mail)
 const BOARD_PAGE = 5;
 const BOARD_PAGE_MS = 8_000;
 const TICKER_MS = 7_000;
@@ -222,13 +223,13 @@ const TICKER_MS = 7_000;
 /** One player's line on the Big Board. */
 export type RoomStanding = { name: string; wins: number; place: number | null; tied: boolean };
 /** One game on the spreads board: its kickoff as shown, the two teams (abbreviations) and each one's line. */
-export type RoomGame = { id: string; kickoff: string; away: string; home: string; awayLine: string; homeLine: string };
+export type RoomGame = { id: string; kickoff: string; away: string; home: string; awayLine: string; homeLine: string; final?: { away: { score: number; covered: boolean }; home: { score: number; covered: boolean } } };
 /**
  * Everything the room shows by itself: the standings for the Big Board, the week's games for the spreads board, your own picks (lit
- * there), the line of news on a label, whether a pick is owed, a new chat message, and whether the Bowl Pool is wheeled in. The Lab
+ * there), the line of news on a label, whether a pick is owed, a new chat message, whether the Bowl Pool is wheeled in, and whether Survivor is over (then the poker table is the Bowl Pool's). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean };
+export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean };
 
 function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed }) {
   const rows = feed.standings;
@@ -280,8 +281,12 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
                 {row.map((game) => {
                   // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
                   // with its logo and line; your pick is lit in gold inside the card.
-                  const side = (team: string) => <span className={mine.includes(team) ? "is-picked" : ""}><Logo eager team={team} /><b>{team}</b><em>{team === game.away ? game.awayLine : game.homeLine}</em></span>;
-                  return <p key={`${game.id}-${index}`}><small>{game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
+                  // A game that is over shows each side's final score instead of its line, the side that covered lit, and says FINAL.
+                  const side = (team: string) => {
+                    const done = game.final?.[team === game.away ? "away" : "home"];
+                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}`}><Logo eager team={team} /><b>{team}</b><em>{done ? done.score : team === game.away ? game.awayLine : game.homeLine}</em></span>;
+                  };
+                  return <p key={`${game.id}-${index}`}><small>{game.final ? `FINAL · ${game.kickoff.split(" ")[0].toUpperCase()}` : game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
                 })}
               </div>
             ))}
@@ -310,7 +315,10 @@ function labFeed(season: Season, allIn: boolean, mail: boolean): RoomFeed {
   return {
     week: "Week 10",
     standings: rows,
-    games: LAB_SLATE.map((game) => ({ id: game.id, kickoff: game.kickoff, away: game.away, home: game.home, awayLine: labLineFor(game, game.away), homeLine: labLineFor(game, game.home) })),
+    games: LAB_SLATE.map((game) => {
+      const done = (team: string) => ({ score: (game.final as unknown as Record<string, number>)[team], covered: labAtsResult(game, team) === "W" });
+      return { id: game.id, kickoff: game.kickoff, away: game.away, home: game.home, awayLine: labLineFor(game, game.away), homeLine: labLineFor(game, game.home), ...(labKickedOff(LAB_SLATE, game.id, "gameday") ? { final: { away: done(game.away), home: done(game.home) } } : {}) };
+    }),
     mine: labStandard(LAB_VIEWER, { round: "regular", moment: "before" }).slats.map((slat) => slat.team),
     news: {
       board: `${rows[0].name} leads · You: ${you?.tied ? "T" : ""}${you?.place ?? ""}`,
@@ -344,7 +352,11 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   const key = `${feed.bowl ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
   const picture = PICTURES[`day${key}`] ?? PICTURES[`day${feed.bowl ? "-bowl" : ""}`];
   const news = feed.news;
-  const spots = SPOTS.filter(({ spot, at }) => (at || picture.spots[spot]) && (!hrefFor || hrefFor(spot) !== null));
+  // Once Survivor is over (decided, or the playoffs), the poker table stops being Survivor's: it is where the Bowl Pool sits, in the
+  // Bowl Pool's own navy and gold so it is not mistaken for the old table, and the Bowl Pool's separate spot is not drawn twice.
+  const taken = Boolean(feed.survivorOver);
+  const spots = SPOTS.filter(({ spot, at }) => (at || picture.spots[spot]) && (!hrefFor || hrefFor(spot) !== null) && !(taken && spot === "bowl"))
+    .map((item) => (taken && item.spot === "survivor" ? { ...item, room: "bowl" as Room, name: "Bowl Pool" } : item));
   const room = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
   useLayoutEffect(() => {
@@ -369,10 +381,15 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         if (full && frame && at && typeof window !== "undefined") {
           const crop = Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6;
           if (spot === "trophies" || spot === "constitution") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
-          if (spot === "chat") plateStyle = { left: Math.max(0, crop - at.x * frame.width) };
+        }
+        // The chat plate is drawn in from the left by what hangs off it: the picture's crop (filling the screen), and the red new-message flag
+        // carried on past its left end (in the Lab's frame as well).
+        if (spot === "chat" && frame && at && typeof window !== "undefined") {
+          const crop = full ? Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6 : 0;
+          plateStyle = { left: Math.max(0, crop + (feed.mail ? MAIL_FLAG : 0) - at.x * frame.width) };
         }
         const plate = label === "none" ? null : (
-          <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}`} style={plateStyle}>
+          <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
             <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>

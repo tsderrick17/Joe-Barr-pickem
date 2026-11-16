@@ -167,11 +167,14 @@ export default function ClubhousePage() {
   const classic: "standings" | "slate" | "bowl" | null = pane === "bowl" ? "bowl" : pane === "standings" || pane === "slate" ? (newBoard ? null : pane) : pane === "survivor" && room?.home.isPlayoff ? "standings" : null;
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
+  // Once Survivor is over, its poker table is the Bowl Pool's.
+  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room?.feed.survivorOver ? "bowl" : SPOT_PANE[spot] ?? null);
+
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
-      <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : SPOT_PANE[spot] ? `#${SPOT_PANE[spot]}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (SPOT_PANE[spot]) show(SPOT_PANE[spot]); }} />
+      <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {popup("standings", "slate") && view ? <Sheet onClose={() => leave("standings", "slate")} open title="The Big Board">

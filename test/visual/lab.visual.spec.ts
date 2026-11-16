@@ -398,11 +398,18 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
-  // The ticker reads like the ticket: each game's kickoff over its two teams with their lines, your own picks framed.
-  await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5CLE+2.5");
-  await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5"]);
+  // The ticker reads like the ticket: a game still to play shows its kickoff over its two teams with their lines, a game that is over says
+  // FINAL and shows each side's score with the side that covered lit; your own picks are framed.
+  await expect(page.locator(".lab-ticker p").first()).toHaveText("FINAL · THUPIT17CLE14");
+  await expect(page.locator(".lab-ticker p").first().locator(".is-covered")).toHaveText("PIT17");
+  await expect(page.locator(".lab-ticker .is-picked").first()).toHaveText("PIT17");
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
+  // The sign is the pill carried on past its left end: it touches the plate and the whole of it is on screen.
+  const flag = await room.getByRole("img", { name: "New message" }).evaluate((node) => { const sign = node.getBoundingClientRect(); const plate = node.parentElement!.getBoundingClientRect(); return { left: sign.left, gap: Math.abs(sign.right - plate.left), height: Math.abs(sign.height - plate.height) }; });
+  expect(flag.left).toBeGreaterThanOrEqual(0);
+  expect(flag.gap).toBeLessThanOrEqual(1);
+  expect(flag.height).toBeLessThanOrEqual(1);
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
   await expect(room.getByRole("img", { name: "New message" })).toHaveCount(0);
   // The Bowl Pool's bulletin board is wheeled in on Dec 7, and not before.
@@ -611,14 +618,14 @@ test("the room's games stand two wide and the board shifts up a row every 7 seco
     const box = node.getBoundingClientRect();
     return [...node.querySelectorAll("p")].filter((card) => { const r = card.getBoundingClientRect(); return r.top >= box.top - 1 && r.bottom <= box.bottom + 1; }).map((card) => card.querySelector("small")?.textContent ?? "");
   });
-  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);
+  expect(await shown()).toEqual(["FINAL · THU", "FINAL · SUN"]);
   // The installed clock keeps running with real time (a slow runner has spent some of the 7 seconds by now), so the "not yet" check
   // leaves a whole second to spare rather than a tenth.
   await page.clock.runFor(5_500);
-  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // not yet: the first two stay up for most of the 7 seconds
+  expect(await shown()).toEqual(["FINAL · THU", "FINAL · SUN"]);   // not yet: the first two stay up for most of the 7 seconds
   await page.clock.runFor(1_700);
   await expect.poll(shown).toEqual(["SUN 1:00 PM", "SUN 4:25 PM"]);
   await page.clock.runFor(7_000);
-  await expect.poll(shown).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // and round to the start again with no gap
+  await expect.poll(shown).toEqual(["FINAL · THU", "FINAL · SUN"]);   // and round to the start again with no gap
   await expect(page.locator(".lab-room-motion")).toHaveCount(0);   // the fans and plants hold still
 });

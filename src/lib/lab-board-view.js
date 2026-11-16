@@ -2,6 +2,7 @@
  * The Lab's sample players as a `BoardView` (see board-view.js), so the Lab draws the tote board and the ticket from the same shape the
  * real clubhouse does. `ticket` is what the viewer has sent in; `champion` is the Survivor champion once Survivor is decided.
  */
+import { coverMargin } from "./board-view.js";
 import { LAB_VIEWER, labKickedOff, labLeaderboard, labStandard, labSurvivorBoard } from "./lab-clubhouse.js";
 import { LAB_SLATE, LAB_TEAM_NAMES, labAtsResult, labLineFor, labSurvivorAt } from "./lab-samples.js";
 
@@ -26,7 +27,10 @@ export function labBoardView({ moment, viewer = LAB_VIEWER, ticket, champion = n
       home: game.home,
       awayLine: labLineFor(game, game.away),
       homeLine: labLineFor(game, game.home),
-      results: Object.fromEntries([game.away, game.home].map((team) => [team, { ats: kickedOff ? labAtsResult(game, team) : null, su: kickedOff ? straightUp(game, team) : null }])),
+      results: Object.fromEntries([game.away, game.home].map((team) => {
+        const other = team === game.home ? game.away : game.home;
+        return [team, { ats: kickedOff ? labAtsResult(game, team) : null, su: kickedOff ? straightUp(game, team) : null, score: kickedOff ? game.final[team] : null, margin: kickedOff ? coverMargin(game.final[team], game.final[other], labLineFor(game, team)) : null }];
+      })),
     };
   });
   const gameOf = (team) => games.find((game) => game.away === team || game.home === team);
