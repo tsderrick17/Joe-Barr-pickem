@@ -5,9 +5,11 @@ import { boardResponse } from "./slate-fixtures.mjs";
 
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
 
+type BoardRead = ReturnType<typeof boardResponse>;
+
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
 const sent: unknown[] = [];
-async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown> } = {}) {
+async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response } = {}) {
   sent.length = 0;
   await page.setViewportSize(size);
   await signIn(page, theme);
@@ -18,7 +20,7 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
   await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), ...homeExtra } }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
-  await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)]) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
+  await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: shapeBoard(boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)])) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
   // A sent pick: every POST is kept so a test can read exactly what the real route would have been asked to save.
@@ -112,7 +114,9 @@ test("the open pop-up has its own address: back closes it, a reload reopens it, 
   await page.goBack();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  await page.getByRole("button", { name: /Survivor table/ }).click();
+  const tabs = page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-links");
+  await expect(tabs.locator("[aria-current=page]")).toHaveText("Big Board");
+  await tabs.getByRole("button", { name: /^Survivor/ }).click();
   await expect(page.getByRole("dialog", { name: "Survivor" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toHaveCount(0);
   await expect(page).toHaveURL(/\/clubhouse#survivor$/);
@@ -184,8 +188,10 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form).toBeVisible({ timeout: 30_000 });
   const first = form.locator("ol > li").first();
   await expect(first.locator(".lab-board-final").first()).toContainText("17");
-  await expect(first.locator(".lab-board-final.is-covered")).toContainText("COVERED BY 0.5");
-  await expect(first).toContainText("MISSED BY 0.5");
+  // Under each side's score are the players who took that team, not the margin; the gold still says which side covered.
+  await expect(first.locator(".lab-board-final.is-covered")).toContainText("TYLER · CHRIS");
+  await expect(first.locator(".lab-board-final:not(.is-covered)")).toContainText("MIKE · PAT");
+  await expect(first).not.toContainText("COVERED BY");
   await expect(form.locator(".lab-board-lock")).toHaveCount(0);
   // A game that has kicked off but is not final shows no score.
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
@@ -205,6 +211,68 @@ test("once Survivor is decided the poker table is the Bowl Pool's, in its own co
   await expect(page).toHaveURL(/\/clubhouse#bowl$/);
 });
 
+test("the Big Board's week is a button: choosing another week shows that week's picks, with no ticket to change", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-picked", "complete-survivor"] });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+  const board = page.getByRole("dialog", { name: "The Big Board" });
+  const week = board.getByLabel("Change week");
+  await expect(week).toBeVisible({ timeout: 30_000 });
+  await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
+  // The two tabs are exact mirrors: the same width and height.
+  const tabs = await board.locator(".lab-tote-links > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(tabs).toHaveLength(2); expect(tabs[0]).toEqual(tabs[1]);
+  await week.selectOption({ label: "Week 3 — Final" });
+  await expect(board.locator("header")).toContainText("WEEK 3 · FINAL");
+  await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
+  await expect(board.getByRole("button", { name: /Survivor/ })).toBeVisible();   // the link to the Survivor table stays
+  await expect(board.locator("thead th")).toHaveCount(4);   // W, player and two picks: no Survivor column for another week
+  // Back to this week: its own board, with the ticket bar again.
+  await week.selectOption({ label: "Week 5" });
+  await expect(board.locator("header")).not.toContainText("WEEK 3");
+  await expect(board.locator(".lab-tote-ticket")).toBeVisible();
+});
+
+test("the ticket has the Slate's All games / Pool action switch, kept on the player's profile", async ({ page }) => {
+  // The first two games are over with nobody's pick in them: Pool action leaves them out.
+  const emptied = (response: BoardRead) => ({ ...response, games: response.games.map((game, index) => (index < 2 ? { ...game, awayPickers: [], homePickers: [] } : game)) });
+  await openClubhouse(page, { scenarios: ["live-mixed-locks-survivor"], shapeBoard: emptied });
+  const saved: unknown[] = [];
+  await page.route("**/api/profile", async (route) => { if (route.request().method() === "PUT") saved.push(route.request().postDataJSON()); await route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }); });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  const games = ticket.locator(".lab-window-part li");
+  const switcher = ticket.getByRole("group", { name: "Games shown" });
+  await expect(switcher.getByRole("button", { name: "All games" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  const halves = await switcher.getByRole("button").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(halves[0]).toEqual(halves[1]);   // the two halves of the switch mirror each other
+  const all = await games.count();
+  expect(all).toBeGreaterThan(2);
+  await switcher.getByRole("button", { name: "Pool action" }).click();
+  await expect(games).toHaveCount(all - 2);
+  expect(saved).toEqual([{ showPoolAction: true }]);
+  await switcher.getByRole("button", { name: "All games" }).click();
+  await expect(games).toHaveCount(all);
+  expect(saved.at(-1)).toEqual({ showPoolAction: false });
+});
+
+test("no focus ring is left on a pop-up: not on its handle when it opens, and not round the board when the ticket is put away", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-picked"] });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  const ring = () => page.evaluate(() => { const active = document.activeElement as HTMLElement; const style = getComputedStyle(active); return { handle: active.classList.contains("cw-handle"), outline: style.outlineStyle }; });
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  expect(await ring()).toEqual({ handle: false, outline: "none" });   // a ticket opens with focus on the sheet, not its handle
+  await ticket.getByRole("button", { name: "Close" }).click();
+  await expect(ticket).toHaveCount(0);
+  expect(await ring()).toEqual({ handle: false, outline: "none" });   // and the board under it shows no ring when the ticket is gone
+});
+
 test("the rules' list of articles scrolls to the article and stays on the rules", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#rules" });
   const rules = page.getByRole("dialog", { name: "Constitution" });
@@ -213,6 +281,10 @@ test("the rules' list of articles scrolls to the article and stays on the rules"
   await expect(rules).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toHaveCount(0);
   await expect(page).toHaveURL(/\/clubhouse#rules$/);
+  // Every clause is lettered, (a) (b) (c), so it can be cited like a lawyer's: Article III(b).
+  const letters = await rules.locator(".lab-rules-article").first().locator("li").evaluateAll((items) => items.map((item) => getComputedStyle(item, "::before").content));
+  expect(letters.length).toBeGreaterThan(2);
+  for (const content of letters) expect(content).toContain("counter(clause, lower-alpha)");   // a, b, c in order; the browser keeps the counter in the computed value
 });
 
 test("the Survivor pop-up shows the whole table", async ({ page }) => {

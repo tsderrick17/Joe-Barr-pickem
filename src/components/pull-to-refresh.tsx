@@ -28,10 +28,11 @@ function isInstalledApp() {
   return (navigator as { standalone?: boolean }).standalone === true || window.matchMedia("(display-mode: standalone)").matches;
 }
 
-/** True when the touch began inside something that is itself scrolled down (a menu, a table), so that scroll wins, or on a surface that moves
- *  under the finger itself (the Workshop board). */
+/** True when the touch began inside something that is itself scrolled down (a menu, a table), so that scroll wins, on a surface that moves
+ *  under the finger itself (the Workshop board), or in an open pop-up (sliding a pop-up down puts it away; it never pulls the chain). */
 function insideScrolledBox(target: EventTarget | null) {
   if (target instanceof Element && target.closest("[data-no-pull-refresh]")) return true;
+  if (document.querySelector("dialog[open]")) return true;
   for (let node = target instanceof Element ? target : null; node && node !== document.body; node = node.parentElement) {
     if (node.scrollTop > 0) return true;
   }

@@ -20,8 +20,8 @@ import { buildSlateSubmission } from "@/lib/slate-submission.js";
 const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 /** The Big Board: everyone's picks this week, and the bar that opens your ticket. */
-export function BoardPopup({ view, home, onOpenTicket, onSurvivor }: { view: BoardView; home: StandingsResponse; onOpenTicket: () => void; onSurvivor: () => void }) {
-  return <ToteBoard onOpen={onOpenTicket} onSurvivor={home.survivorAvailable ? onSurvivor : undefined} view={view} />;
+export function BoardPopup({ view, home, onOpenTicket, onSurvivor, onWeek }: { view: BoardView; home: StandingsResponse; onOpenTicket: () => void; onSurvivor: () => void; onWeek: (weekId: string) => void }) {
+  return <ToteBoard onOpen={onOpenTicket} onSurvivor={home.survivorAvailable ? onSurvivor : undefined} onWeek={onWeek} view={view} />;
 }
 
 /**
@@ -29,6 +29,17 @@ export function BoardPopup({ view, home, onOpenTicket, onSurvivor }: { view: Boa
  * under its parent's scrolling body), and after the board's own in the page, so it opens on top of it.
  */
 export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardView; open: boolean; onClose: () => void; onChanged: () => Promise<void> }) {
+  // All games / Pool action is the Slate's own choice, saved to the same place (the profile), and kept while the clubhouse is open.
+  const [actionOnly, setActionOnly] = useState<boolean | null>(null);
+  const poolAction = actionOnly ?? view.poolAction;
+  function choosePoolAction(next: boolean) {
+    const before = poolAction;
+    setActionOnly(next);
+    void fetchWithSession("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showPoolAction: next }) })
+      .then((response) => { if (!response.ok) throw new Error(); })
+      .catch(() => setActionOnly(before));
+  }
+
   async function submit(ticket: Ticket): Promise<string | void> {
     if (!view.weekId) return "This week could not be found. Please close the board and try again.";
     const find = (team: string) => ({ gameId: view.ids[team].gameId, teamId: view.ids[team].teamId });
@@ -64,7 +75,7 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
 
   return (
     <Sheet bare onClose={onClose} open={open && view.canPick} title="Your ticket">
-      <TicketForm onSubmit={submit} view={view} />
+      <TicketForm onPoolAction={choosePoolAction} onSubmit={submit} poolAction={poolAction} view={view} />
     </Sheet>
   );
 }

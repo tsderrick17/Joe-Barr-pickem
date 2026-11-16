@@ -103,6 +103,20 @@ test("a drag that goes sideways or diagonally never pulls; a mostly-down drag do
   await expect(page.locator(".pull-chain")).toContainText("Release to refresh");
 });
 
+// Sliding a pop-up down puts it away: while a pop-up is open, no pull of the finger brings the chain down (on the pop-up or beside it).
+test("a pull while a pop-up is open never brings the chain down", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await installedApp(page);
+  await page.goto("/login");
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
+  await page.evaluate(() => { const dialog = document.createElement("dialog"); dialog.textContent = "A pop-up"; document.body.append(dialog); dialog.showModal(); });
+  expect(await wander(page, [200, 100], [200, 300])).toBe(false);
+  await expect(page.locator(".pull-chain")).toHaveCount(0);
+  // Once it is closed, the pull works again.
+  await page.evaluate(() => document.querySelector("dialog")?.close());
+  expect(await wander(page, [200, 100], [200, 300])).toBe(true);
+});
+
 test("a short pull springs back without reloading", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await installedApp(page);

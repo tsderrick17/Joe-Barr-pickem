@@ -95,6 +95,8 @@
 
 /* Sheets: the browser's own dialog, rising from the bottom on a phone and centred on a computer, with a felt top edge */
 .cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); padding: 0; width: 100%; }
+/* The sheet itself is not a control: when focus lands on it (opening, or coming back from a pop-up put away) no ring is drawn round its edge. */
+.cw-sheet:focus, .cw-sheet:focus-visible, .cw-sheet-body:focus, .cw-sheet-body:focus-visible { outline: none; }
 .cw-sheet::backdrop { background: rgba(8, 16, 12, .55); }
 .cw-sheet[open] { animation: cw-up .3s ease-out; }
 @keyframes cw-up { from { opacity: 0; transform: translateY(40px); } }

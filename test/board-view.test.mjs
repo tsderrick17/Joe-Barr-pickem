@@ -57,6 +57,49 @@ test("a finished week or the off-season cannot be picked in", () => {
   assert.equal(realBoardView({ home: { ...homeResponse("regular-in"), seasonPhase: "off_season" }, board: boardResponse("upcoming-picked") }).canPick, false);
 });
 
+test("once every pick is in and its game has kicked off, there is nothing to change: no ticket", () => {
+  const raw = boardResponse("live-mixed-locks-survivor");
+  const now = Date.parse(raw.serverTime);
+  const started = raw.games.filter((game) => game.status !== "scheduled" || Date.parse(game.kickoffAt) <= now);
+  const waiting = raw.games.filter((game) => !started.includes(game));
+  assert.ok(started.length >= 3 && waiting.length >= 1, "the fixture has games both kicked off and still to come");
+  const pickOf = (game) => ({ gameId: game.id, teamId: game.awayTeamId });
+  const survivorOf = (game) => ({ game_id: game.id, selected_team_id: game.homeTeamId });
+  const view = (myPicks, survivorGame) => realBoardView({ home: homeResponse("regular-in"), board: { ...raw, myPicks, survivor: { ...raw.survivor, status: "active", pick: survivorOf(survivorGame), usedTeamIds: [] } } });
+  assert.equal(view([pickOf(started[0]), pickOf(started[1])], started[2]).canPick, false, "two picks and the Survivor team, all kicked off");
+  assert.equal(view([pickOf(started[0]), pickOf(waiting[0])], started[2]).canPick, true, "a pick still to kick off can change");
+  assert.equal(view([pickOf(started[0]), pickOf(started[1])], waiting[0]).canPick, true, "the Survivor team still to kick off can change");
+  assert.equal(view([pickOf(started[0])], started[2]).canPick, true, "a pick still owed");
+});
+
+test("another week's board is read from the Slate: a player's picks are the ones named under each team, their wins are that week's, and it is a look back only", () => {
+  const raw = boardResponse("complete-survivor");   // week 5 is the default; every game in this read is over
+  const view = realBoardView({ home: homeResponse("regular-in"), board: raw }, { weekId: "week-3" });
+  assert.equal(view.week, "WEEK 3"); assert.equal(view.status, "FINAL"); assert.equal(view.weekId, "week-3");
+  assert.equal(view.canPick, false, "another week is never picked in from the board");
+  assert.equal(view.showSurvivor, false);
+  const named = (name) => raw.games.flatMap((game) => [game.awayPickers.includes(name) ? game.awayTeamAbbreviation : null, game.homePickers.includes(name) ? game.homeTeamAbbreviation : null]).filter(Boolean);
+  const dana = view.rows.find((row) => row.name === "Dana");
+  assert.deepEqual(dana.slats.map((slat) => slat.team), named("Dana").slice(0, 2));
+  assert.equal(view.rows.find((row) => row.name === "Rick").slats.every((slat) => slat === null), true, "a player named nowhere has no picks that week");
+  const wins = view.rows.map((row) => row.wins);
+  assert.deepEqual(wins, [...wins].sort((a, b) => b - a), "the board is in order of that week's wins");
+  // The default week is untouched, and the weeks to choose from are the regular season's, as far as the pool has opened them.
+  const current = realBoardView({ home: homeResponse("regular-in"), board: raw });
+  assert.equal(current.weekId, "week-5");
+  assert.deepEqual(current.weeks.map((week) => week.id), ["week-1", "week-2", "week-3", "week-4", "week-5"]);
+});
+
+test("Pool action: a game to come, or one the pool has a pick in; a finished game nobody picked is All games only", () => {
+  const raw = boardResponse("live-mixed-locks-survivor");
+  const bare = { ...raw, games: raw.games.map((game, index) => (index === 0 ? { ...game, awayPickers: [], homePickers: [] } : game)) };
+  const view = realBoardView({ home: homeResponse("regular-in"), board: { ...bare, showPoolAction: true } });
+  assert.equal(view.poolAction, true);
+  assert.equal(view.games[0].kickedOff, true); assert.equal(view.games[0].action, false);
+  assert.equal(view.games.filter((game) => !game.kickedOff).every((game) => game.action), true);
+  assert.equal(view.games[1].action, true, "a game that has started with a pick in it is pool action");
+});
+
 test("the week the pick is sent for is the Slate's own default week", () => {
   const view = realBoardView(reads());
   assert.ok(view.weekId);
@@ -72,6 +115,17 @@ test("a final game carries each side's score and how far it finished past its li
   assert.equal(b.margin, -0.5);
   const live = realBoardView(reads("upcoming-picked")).games[0];
   assert.deepEqual([live.results[live.away].score, live.results[live.away].margin], [null, null]);
+});
+
+test("each side carries the players who took it, as the Slate names them once the game has kicked off", () => {
+  const raw = boardResponse("complete-survivor");
+  const view = realBoardView(reads("complete-survivor"));
+  const first = raw.games[0];
+  assert.deepEqual(view.games[0].results[first.awayTeamAbbreviation].pickers, first.awayPickers);
+  assert.deepEqual(view.games[0].results[first.homeTeamAbbreviation].pickers, first.homePickers);
+  assert.ok(first.awayPickers.length > 0, "the fixture names someone");
+  const upcoming = realBoardView(reads("upcoming-picked"));
+  assert.deepEqual(upcoming.games.flatMap((game) => Object.values(game.results).flatMap((result) => result.pickers)), [], "nobody is named before a game kicks off");
 });
 
 test("a push is a margin of zero, and a game with no line has no margin", () => {

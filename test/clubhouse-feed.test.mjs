@@ -72,6 +72,19 @@ test("graded picks light green or red; all in says so; a finished week owes noth
   assert.equal(done.feed.owed, false);
 });
 
+test("all in with every pick's game kicked off: the ticket says all locked, not that a pick can still change", () => {
+  const started = { status: "live", kickoffAt: "2026-11-15T11:00:00Z" };
+  const locked = board({
+    games: [game("g1", "PIT", "CLE", started), game("g2", "IND", "WAS", started), game("g3", "SF", "DEN"), game("g4", "NYG", "DAL", started)],
+    myPicks: [{ gameId: "g1", teamId: "pit" }, { gameId: "g2", teamId: "ind" }],
+    survivor: { available: true, status: "active", pick: { game_id: "g4", selected_team_id: "nyg" } },
+  });
+  assert.equal(clubhouseFeed({ home: home(), board: locked }).ticket.line, "All 3 in · all locked");
+  // The Survivor team's game still to come: that one can change.
+  const open = { ...locked, survivor: { available: true, status: "active", pick: { game_id: "g3", selected_team_id: "sf" } } };
+  assert.equal(clubhouseFeed({ home: home(), board: open }).ticket.line, "All 3 in · change any until its kickoff");
+});
+
 test("out of Survivor: no Survivor lamp; no games: no ticket and a dark spreads board", () => {
   const out = clubhouseFeed({ home: home(), board: board({ survivor: { available: true, status: "eliminated", pick: null } }) });
   assert.equal(out.ticket.lamps.length, 2);
