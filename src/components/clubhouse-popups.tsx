@@ -63,7 +63,7 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
   }
 
   return (
-    <Sheet onClose={onClose} open={open && view.canPick} title="Your ticket">
+    <Sheet bare onClose={onClose} open={open && view.canPick} title="Your ticket">
       <TicketForm onSubmit={submit} view={view} />
     </Sheet>
   );

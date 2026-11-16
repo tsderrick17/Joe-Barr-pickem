@@ -177,7 +177,7 @@ export default function ClubhousePage() {
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {popup("standings", "slate") && view ? <Sheet onClose={() => leave("standings", "slate")} open title="The Big Board">
+      {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate")} open title="The Big Board">
         <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} view={view} />
       </Sheet> : null}
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
