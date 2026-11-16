@@ -491,3 +491,6 @@
 a.lab-room-ticket { text-decoration: none; }
 a.lab-room-back { align-items: center; display: inline-flex; gap: 6px; text-decoration: none; }
 a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: fit-content; }
+/* A real page opened over the room: it fills the screen under the site's bar and scrolls on its own, with the way back pinned on top. */
+.clubhouse-pane { background: var(--club-page); bottom: 0; left: 0; overflow-y: auto; position: fixed; right: 0; z-index: 30; }
+.clubhouse-pane > .lab-room-bar { padding-inline: 16px; top: 0; }

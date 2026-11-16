@@ -45,33 +45,41 @@ for (const [label, size] of Object.entries(SIZES)) {
   }
 }
 
-test("every thing in the room is a link to the real page, the boards show the real week, and the ticket opens the Slate", async ({ page }) => {
+test("every thing in the room opens the real page over it, the boards show the real week, and the way back is always there", async ({ page }) => {
   await openClubhouse(page);
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   await expect(room).toBeVisible({ timeout: 30_000 });
-  const href = (name: string) => room.getByRole("link", { name, exact: true }).getAttribute("href");
-  expect(await href("The Big Board")).toBe("/");
-  expect(await href("Make your picks")).toBe("/board");
-  expect(await href("Your picks")).toBe("/board");
-  expect(await href("Survivor")).toBe("/survivor");
-  expect(await href("Trophy Room")).toBe("/trophy-room");
-  expect(await href("Constitution")).toBe("/clubhouse/rules");
-  // No sample players: the board's leader is the fixture's.
-  await expect(page.locator(".lab-room-screen.is-board header")).not.toContainText("WEEK 10");
-  await expect(page.locator(".lab-ticker p").first()).toBeVisible();   // the week's games came through
-  await expect(page.getByText("You must choose a week")).toHaveCount(0);
-  await expect(page.locator("a.lab-room-ticket")).toHaveAttribute("href", "/board");
-  // The room is one screen: the page does not scroll, and the chat opens over it.
+  // The room is one screen: the page does not scroll, and no chat sits under it.
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe("hidden");
   await expect(page.locator(".pool-chat-dock")).toHaveCount(0);
+  // No sample players: the boards show the fixture's league and week.
+  await expect(page.locator(".lab-room-screen.is-board header")).not.toContainText("WEEK 10");
+  await expect(page.locator(".lab-ticker p").first()).toBeVisible();
+  await expect(page.getByText("You must choose a week")).toHaveCount(0);
+  const opens = async (button: string, pane: string, inside: RegExp | string) => {
+    await room.getByRole("button", { name: button, exact: true }).click();
+    const sheet = page.getByRole("region", { name: pane });
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toContainText(inside, { timeout: 30_000 });
+    await page.clock.runFor(1_000);   // let the page settle under the held clock
+    const back = (await sheet.getByRole("button", { name: /Back to Clubhouse/ }).boundingBox())!;
+    const header = await page.getByRole("main", { name: "Clubhouse" }).evaluate((m) => m.previousElementSibling?.getBoundingClientRect().bottom ?? 0);
+    expect(back.y).toBeGreaterThanOrEqual(header - 1);   // never under the site's header
+    await sheet.getByRole("button", { name: /Back to Clubhouse/ }).click();
+    await expect(sheet).toHaveCount(0);
+  };
+  await opens("The Big Board", "Standings", /Gary/);
+  await opens("Your picks", "The Slate", /PIT|Pittsburgh|Make your picks|Submit/i);
+  await opens("Survivor", "Standings", /Gary/);
+  await opens("Trophy Room", "Trophy Room", /Trophy|Champion|Season/i);
+  await opens("Constitution", "Constitution", /Constitution/);
+  await page.getByRole("button", { name: /YOUR TICKET/ }).click();
+  await expect(page.getByRole("region", { name: "The Slate" })).toBeVisible();
+  await page.getByRole("button", { name: /Back to Clubhouse/ }).click();
   await room.getByRole("button", { name: "Pool chat", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Pool chat" })).toBeHidden();
-  await room.getByRole("link", { name: "Constitution", exact: true }).click();
-  await expect(page.getByRole("article", { name: "Pool constitution" })).toBeVisible();
-  await page.getByRole("link", { name: /Back to Clubhouse/ }).first().click();
-  await expect(room).toBeVisible();
 });
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
