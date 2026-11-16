@@ -345,7 +345,7 @@
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; gap: 3px; padding-left: 6px; white-space: nowrap; }
-.lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+.lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 3px rgba(110, 231, 150, .25); }
 .lab-tote-slip.is-l { color: rgb(252 120 110); }
 .lab-tote-slip small { font-size: .7rem; opacity: .8; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
