@@ -548,7 +548,7 @@ test("on a desktop the clubhouse is the wide picture: every label in view, none 
   const frame = (await room.boundingBox())!;
   expect(frame.width / frame.height).toBeGreaterThan(1.5);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
-  expect(plates.length).toBe(6);
+  expect(plates.length).toBe(5);   // Survivor, Trophies, the Big Board, Chat, Rules
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(frame.x - 1);
     expect(plate.right).toBeLessThanOrEqual(frame.x + frame.width + 1);
