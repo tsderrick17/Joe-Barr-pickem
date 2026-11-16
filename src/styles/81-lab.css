@@ -69,9 +69,12 @@
 .lab-room-screen.is-spreads p em { color: rgb(255 176 46); font-size: 19px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-room-screen.is-spreads p > span.is-covered { background: rgba(240, 180, 41, .22); }
 /* A game that is over keeps its spread on the card: small and quiet between the team and the score. */
-.lab-room-screen.is-spreads p > span.is-final { gap: 5px; grid-template-columns: 22px 1fr auto auto; }
-.lab-room-screen.is-spreads p i { color: rgba(240, 236, 226, .7); font-size: 14px; font-style: normal; letter-spacing: .04em; }
+.lab-room-screen.is-spreads p > span.is-final { gap: 4px; grid-template-columns: 1fr auto auto; white-space: nowrap; }
+.lab-room-screen.is-spreads p > span.is-final b { font-size: 17px; letter-spacing: .06em; }
+.lab-room-screen.is-spreads p > span.is-final em { font-size: 17px; }
+.lab-room-screen.is-spreads p i { color: rgba(240, 236, 226, .7); font-size: 12px; font-style: normal; letter-spacing: .04em; }
 .lab-room-screen.is-spreads p > span.is-covered em::before { content: "✓ "; }
+.lab-room-screen.is-spreads p > span.is-final.is-covered em::before { font-size: .62em; }
 .lab-room-screen.is-spreads p > span.is-picked { box-shadow: inset 0 0 0 2px var(--cw-gold); }
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
@@ -465,8 +468,8 @@
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
 .lab-ticket-switch.lab-ticket-action button { min-height: 44px; }
-.lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: auto 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
-.lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .12em; }
+.lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
+.lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .08em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-roll ol { align-content: space-evenly; height: 100%; }
 /* A button standing by itself in the picture (Your picks, in the gap between the chairs). */
