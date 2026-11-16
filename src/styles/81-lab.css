@@ -465,13 +465,13 @@
 .lab-rules-article { border-top: 1px solid var(--club-line); padding: 12px 0 4px; scroll-margin-top: calc(var(--site-nav-height, 0px) + 72px); }
 .lab-rules-article h6 { align-items: baseline; display: flex; font-family: var(--font-serif); font-size: 1.15rem; gap: 10px; margin: 0 0 6px; }
 .lab-rules-article h6 span { color: var(--club-gold-dk); font-size: .72rem; font-family: inherit; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
-.lab-rules-article ol { display: grid; gap: 6px; margin: 0; padding-left: 0; }
-.lab-rules-article li { font-size: .95rem; line-height: 1.45; }
-.lab-rules-article li::before { color: var(--club-gold-dk); }
 /* Every clause is lettered, (a) (b) (c), so one can be cited the way a lawyer would: Article III(b). The same in the Commissioner's Handbook. */
-.lab-rules-article ol, .clauses-lettered { counter-reset: clause; list-style: none; padding-left: 0; }
-.lab-rules-article li, .clauses-lettered li { counter-increment: clause; display: grid; gap: .45rem; grid-template-columns: 1.7rem minmax(0, 1fr); }
-.lab-rules-article li::before, .clauses-lettered li::before { content: "(" counter(clause, lower-alpha) ")"; font-weight: 700; white-space: nowrap; }
+.lab-rules-article ol { counter-reset: clause; display: grid; gap: 6px; list-style: none; margin: 0; padding-left: 0; }
+.lab-rules-article li { counter-increment: clause; display: grid; font-size: .95rem; gap: .45rem; grid-template-columns: 1.7rem minmax(0, 1fr); line-height: 1.45; }
+.lab-rules-article li::before { color: var(--club-gold-dk); content: "(" counter(clause, lower-alpha) ")"; font-weight: 700; white-space: nowrap; }
+.clauses-lettered { counter-reset: clause; list-style: none; padding-left: 0; }
+.clauses-lettered li { counter-increment: clause; display: grid; gap: .45rem; grid-template-columns: 1.7rem minmax(0, 1fr); }
+.clauses-lettered li::before { content: "(" counter(clause, lower-alpha) ")"; font-weight: 700; white-space: nowrap; }
 /* Under the Big Board's title: where you are, and one tap to the Survivor table. */
 .lab-tote-links { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin: 0 auto 8px; max-width: 20rem; }
 .lab-tote-links > * { align-items: center; justify-content: center; text-align: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; display: inline-flex; font: inherit; font-size: .85rem; font-weight: 800; gap: 6px; min-height: 44px; padding: 0 16px; }
