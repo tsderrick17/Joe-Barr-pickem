@@ -5,14 +5,17 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { formatAverage } from "@/lib/all-time-stats.js";
 import { formatAdminNumber } from "@/lib/format-admin-number.js";
 import { percent, type Bucket, type RecordSummary, type Split, type Splits, type TeamPicked, type TeamSort, type Weeks } from "@/components/stats-blocks";
-import { CardHead, Change, DashChart, Sparkline, Tile } from "@/components/commissioner/dash-chart";
+import { CardHead, Change, DashChart, Sparkline, Tile, ViewSwitch } from "@/components/commissioner/dash-chart";
 
 /**
  * Pick'em performance on the Pool stats page: the league's numbers, or any one player's, chosen from a row of names. Four headline tiles measured
  * against a coin flip, hit rate by season against .500, the weekly 0-2 / 1-1 / 2-0 split against what coin flips would give, then two tables with
  * the bar inside the row: what the league (or the player) picks, and five teams. Private to the Commissioner. (Streaks are the Trophy Room's.)
  */
-type View = { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[]; weeks: Weeks; splits: Splits; bySeason: Array<Bucket & { seasonYear: number; net: number }> };
+type Tables = { splits: Splits; teams: TeamPicked[]; teamsByHitRate: TeamPicked[]; teamsLeastPicked: TeamPicked[]; teamsByLowestHitRate: TeamPicked[] };
+type View = Tables & { record: RecordSummary; mostPicked: TeamPicked | null; mostPickedTied: number; weeks: Weeks; bySeason: Array<Bucket & { seasonYear: number; net: number }>; thisSeason?: Tables & { seasonYear: number | null } };
+type Span = "all" | "season";
+const SPANS: Array<[Span, string]> = [["all", "All-time"], ["season", "This season"]];
 type PlayerView = View & { playerId: string; name: string };
 type Stats = View & { players: PlayerView[] };
 
@@ -33,6 +36,9 @@ export default function PoolStats() {
   // Which five teams the table shows: the column chosen, most or least (pressing the chosen column again turns it over).
   const [teamSort, setTeamSort] = useState<{ key: TeamSort; descending: boolean }>({ key: "picked", descending: true });
   const chooseTeamSort = (key: TeamSort) => setTeamSort((current) => (current.key === key ? { key, descending: !current.descending } : { key, descending: true }));
+  // Each table's own All-time / This season switch (top right of its card).
+  const [splitsSpan, setSplitsSpan] = useState<Span>("all");
+  const [teamsSpan, setTeamsSpan] = useState<Span>("all");
 
   useEffect(() => {
     let disposed = false;
@@ -55,6 +61,10 @@ export default function PoolStats() {
   const view: View | null = player ?? stats;
   const who = player ? player.name : "the league";
   const whose = player ? `${player.name}’s` : "The league’s";
+  const tablesOf = (span: Span): Tables | null => (!view ? null : span === "season" && view.thisSeason ? view.thisSeason : view);
+  const splitsView = tablesOf(splitsSpan);
+  const teamsView = tablesOf(teamsSpan);
+  const spanSwitch = (label: string, value: Span, onChange: (span: Span) => void) => (view?.thisSeason ? <ViewSwitch label={label} onChange={onChange} options={SPANS} value={value} /> : null);
 
   return (
     <section aria-labelledby="pool-stats-title" className="pool-stats dash-page">
@@ -82,14 +92,17 @@ export default function PoolStats() {
 
         <div className="dash-pair">
           <div className="dash-card pool-stats-block">
-            <CardHead title={`What ${who} picks`} />
-            <SplitsTable splits={view.splits} />
+            <CardHead right={spanSwitch(`What ${who} picks: all-time or this season`, splitsSpan, setSplitsSpan)} title={`What ${who} picks`} />
+            <SplitsTable splits={(splitsView ?? view).splits} />
           </div>
-          {view.teams.length ? <div className="dash-card pool-stats-block">
+          {view.teams.length && teamsView ? <div className="dash-card pool-stats-block">
             <CardHead
+              right={spanSwitch("Teams: all-time or this season", teamsSpan, setTeamsSpan)}
               title={teamSort.key === "picked" ? (teamSort.descending ? "Most picked teams" : "Least picked teams") : (teamSort.descending ? "Best hit rate teams" : "Lowest hit rate teams")}
             />
-            <TeamsTable descending={teamSort.descending} onSort={chooseTeamSort} sort={teamSort.key} teams={teamSort.key === "picked" ? (teamSort.descending ? view.teams : view.teamsLeastPicked) : (teamSort.descending ? view.teamsByHitRate : view.teamsByLowestHitRate)} />
+            {teamsView.teams.length
+              ? <TeamsTable descending={teamSort.descending} onSort={chooseTeamSort} sort={teamSort.key} teams={teamSort.key === "picked" ? (teamSort.descending ? teamsView.teams : teamsView.teamsLeastPicked) : (teamSort.descending ? teamsView.teamsByHitRate : teamsView.teamsByLowestHitRate)} />
+              : <p className="dash-empty">No graded picks this season yet.</p>}
           </div> : null}
         </div>
       </> : null}

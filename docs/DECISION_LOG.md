@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-16 - All-time / This season on the Pool stats tables (Commissioner)
+
+The two tables at the foot of Pool stats (What the league / a player picks, and the five-team table) each carry their own All-time / This
+season switch at the top right of the card; All-time is the default, and the other figures on the page stay all-time. "This season" is the
+newest season, and its numbers come from that season's graded picks alone (`thisSeason` from `buildGroupStats` in `src/lib/group-stats.js`).
+A player with no graded pick this season sees "No graded picks this season yet." in the teams card.
+
 ## 2026-11-15 - Final scores and who covered; Survivor leaves the room with the classic pages; the mail flag (Commissioner only)
 
 - Owner: "The locks shouldn't be over the spreads and we should figure out a way to show the final score and who covered better"; "Survivor should disappear the same time it does from the classic version ... the bowl pool could take its spot"; "show scores, who covered ... on the ticker"; the mail flag "should come out of the left side of the pill".

@@ -64,6 +64,21 @@ test("the group record counts every graded pick, and the splits add up", () => {
   assert.deepEqual(stats.bySeason.map((season) => season.seasonYear), [2026, 2025]);
 });
 
+test("this season: the splits and the five-team lists from the newest season's graded picks alone, for the league and each player", () => {
+  const withTeams = buildGroupStats({ players, seasons, periods, games, lines, picks, teams: [{ id: "fav", full_name: "Favorites", abbreviation: "FAV" }, { id: "dog", full_name: "Dogs", abbreviation: "DOG" }] });
+  const season = withTeams.thisSeason;
+  assert.equal(season.seasonYear, 2026);
+  // 2026: Ann 3 graded wins (a void and a pending pick do not count), Bob 3 wins and a loss on the underdog.
+  assert.deepEqual([season.splits.side.favorite.wins, season.splits.side.favorite.losses, season.splits.side.underdog.wins, season.splits.side.underdog.losses], [6, 0, 0, 1]);
+  assert.deepEqual(season.teams.map((team) => [team.teamId, team.picks]), [["fav", 6], ["dog", 1]]);
+  assert.ok(withTeams.splits.side.favorite.picks > season.splits.side.favorite.picks, "all-time still counts 2025");
+  const bob = withTeams.players.find((player) => player.playerId === "bob").thisSeason;
+  assert.deepEqual([bob.splits.side.favorite.wins, bob.splits.side.underdog.losses], [3, 1]);
+  assert.equal("record" in season, false, "only the two tables switch");
+  const none = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).thisSeason;
+  assert.equal(none.seasonYear, null); assert.deepEqual(none.teams, []);
+});
+
 test("net pts add up how far each graded pick landed past (+) or short of (-) its number, for the league, a season and a player", () => {
   // 27-20 with the favorite giving 3: a favorite pick lands +4, an underdog pick -4. 14 favorite wins, 4 underdog losses.
   assert.equal(stats.record.net, 14 * 4 - 4 * 4);
