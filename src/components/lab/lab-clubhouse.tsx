@@ -261,7 +261,7 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
     <div aria-hidden="true" className="lab-room-live">
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
         <header><b>PICK’EM</b><span>{feed.week.toUpperCase()} · {page + 1}/{pages}</span></header>
-        {leaders.length ? <p className="lab-room-leader">{leaders.length === 1 ? <><i>LEADER</i><span>{leaders[0].name}</span></> : <><i>{leaders.length} LEADERS</i><span /></>}<b>{leaders[0].wins}</b></p> : null}
+        {leaders.length ? <p className="lab-room-leader"><i>LEAD</i><span>{leaders.length === 1 ? leaders[0].name : `${leaders.length}-WAY TIE`}</span><b>{leaders[0].wins}</b></p> : null}
         <div className="lab-roll">
           <ol data-page={page + 1}>
             {standings.map((row, index) => (
@@ -281,9 +281,12 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
                   // One matchup, one card, the way a sportsbook board lists them: the kickoff, then the away team over the home team, each
                   // with its logo and line; your pick is lit in gold inside the card.
                   // A game that is over shows each side's final score instead of its line, the side that covered lit, and says FINAL.
+                  // The spread stays on the card once the game is over, small beside the score: it is what the score was measured against. The logo
+                  // gives way to make room for it (team, spread and score do not fit beside a logo in half a screen).
                   const side = (team: string) => {
                     const done = game.final?.[team === game.away ? "away" : "home"];
-                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}`}><Logo eager team={team} /><b>{team}</b><em>{done ? done.score : team === game.away ? game.awayLine : game.homeLine}</em></span>;
+                    const line = team === game.away ? game.awayLine : game.homeLine;
+                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}${done ? " is-final" : ""}`}>{done ? null : <Logo eager team={team} />}<b>{team}</b>{done ? <i>{line}</i> : null}<em>{done ? done.score : line}</em></span>;
                   };
                   return <p key={`${game.id}-${index}`}><small>{game.final ? `FINAL · ${game.kickoff.split(" ")[0].toUpperCase()}` : game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
                 })}
@@ -456,7 +459,6 @@ export function Constitution() {
       <header>
         <p>THE JOE BARR MEMORIAL PICK’EM</p>
         <h4>Pool Constitution</h4>
-        <small>Everything you need to know to play. Every time is Eastern.</small>
       </header>
       <nav aria-label="Articles" className="lab-rules-index">
         {articles.map(({ title }) => {

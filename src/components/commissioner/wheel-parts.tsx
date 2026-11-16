@@ -24,46 +24,78 @@ export function Medallion({ icon, state, count = 0 }: { icon: string; state: Spo
   </>;
 }
 
+/** How long a sheet takes to slide away (ms). */
+const SLIDE_MS = 240;
+
 /**
- * A sheet that rises from the bottom on a phone and sits in the middle on a computer. It is the browser's own dialog, so focus stays inside,
- * Escape closes it and focus goes back to the button that opened it. Tapping outside closes it too.
+ * A sheet that rises from the bottom on a phone and sits in the middle on a computer. It is the browser's own dialog, so focus stays inside
+ * and focus goes back to the button that opened it. There is no X: a sheet is put away by sliding it down with a finger, by tapping the
+ * handle at its top or the empty space above it, or with Escape, and every one of those slides it closed rather than blinking it out.
+ * An untitled sheet keeps its title for screen readers only (the page inside it carries its own heading).
  */
-export function Sheet({ open, onClose, title, children, bare = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean }) {
+export function Sheet({ open, onClose, title, children, bare = false, untitled = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean; untitled?: boolean }) {
   const ref = useRef<HTMLDialogElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
-  const drag = useRef<{ y: number; dy: number } | null>(null);
+  const drag = useRef<{ x: number; y: number; dy: number; down: boolean | null } | null>(null);
+  const leaving = useRef<number | null>(null);
+
+  // Slides the sheet down off the screen from wherever it is, then closes the dialog (whose close event tells the page).
+  const slideAway = () => {
+    const dialog = ref.current;
+    const node = body.current;
+    if (!dialog || !dialog.open || leaving.current !== null) return;
+    const finish = () => { leaving.current = null; dialog.close(); dialog.classList.remove("is-leaving"); if (node) { node.style.transition = ""; node.style.transform = ""; } };
+    if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
+    dialog.classList.add("is-leaving");
+    node.style.transition = `transform ${SLIDE_MS}ms ease-in`;
+    node.style.transform = `translateY(${window.innerHeight}px)`;
+    leaving.current = window.setTimeout(finish, SLIDE_MS);
+  };
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
+    if (open && leaving.current !== null) {   // opened again while it was sliding away: bring it back
+      window.clearTimeout(leaving.current);
+      leaving.current = null;
+      dialog.classList.remove("is-leaving");
+      if (body.current) { body.current.style.transition = ""; body.current.style.transform = ""; }
+    }
     if (open && !dialog.open) {
       dialog.showModal();
       // A bare sheet opens with focus on the sheet itself, not on its handle, so no focus ring is drawn on the handle for a finger.
       if (bare) dialog.focus({ preventScroll: true });
     }
-    if (!open && dialog.open) dialog.close();
+    if (!open && dialog.open) slideAway();
   }, [open, bare]);
-  // A bare sheet is just its picture, with a small handle at the top: slide it down with a finger to put it away. A pull only counts from
-  // the top of the content (otherwise it is the content scrolling), and it springs back unless it went far enough.
+  useEffect(() => () => { if (leaving.current !== null) window.clearTimeout(leaving.current); }, []);
+
+  // Sliding it down with a finger puts it away. A pull only counts from the top of the content (otherwise it is the content scrolling) and
+  // only when it goes mostly down (a swipe along a chart is the chart's); it follows the finger, and springs back unless it went far enough.
   const lift = (dy: number, animate: boolean) => { const node = body.current; if (node) { node.style.transition = animate ? "transform .2s ease-out" : "none"; node.style.transform = dy > 0 ? `translateY(${dy}px)` : ""; } };
   return <dialog
     aria-label={title}
-    className={`cw-sheet${bare ? " is-bare" : ""}`}
+    className={`cw-sheet${bare ? " is-bare" : ""}${untitled ? " is-untitled" : ""}`}
     tabIndex={-1}
-    onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    onCancel={(event) => { event.preventDefault(); slideAway(); }}
+    onClick={(event) => { if (event.target === event.currentTarget) slideAway(); }}
     onClose={onClose}
     ref={ref}
   >
     <div
       className="cw-sheet-body"
-      onTouchEnd={bare ? () => { const pull = drag.current; drag.current = null; if (pull && pull.dy > 90) onClose(); lift(0, true); } : undefined}
-      onTouchMove={bare ? (event) => { const pull = drag.current; if (!pull) return; pull.dy = event.touches[0].clientY - pull.y; if (pull.dy > 0) lift(pull.dy, false); } : undefined}
-      onTouchStart={bare ? (event) => { drag.current = (body.current?.scrollTop ?? 0) <= 0 ? { y: event.touches[0].clientY, dy: 0 } : null; } : undefined}
+      onTouchEnd={() => { const pull = drag.current; drag.current = null; if (pull?.down && pull.dy > 90) slideAway(); else if (leaving.current === null) lift(0, true); }}
+      onTouchMove={(event) => {
+        const pull = drag.current;
+        if (!pull) return;
+        const dx = event.touches[0].clientX - pull.x;
+        pull.dy = event.touches[0].clientY - pull.y;
+        if (pull.down === null && Math.hypot(dx, pull.dy) > 6) pull.down = pull.dy > Math.abs(dx);
+        if (pull.down && pull.dy > 0) lift(pull.dy, false);
+      }}
+      onTouchStart={(event) => { drag.current = (body.current?.scrollTop ?? 0) <= 0 && leaving.current === null ? { x: event.touches[0].clientX, y: event.touches[0].clientY, dy: 0, down: null } : null; }}
       ref={body}
     >
-      {bare ? <button aria-label="Close" className="cw-handle" onClick={onClose} type="button" /> : <>
-        <div aria-hidden="true" className="cw-grab" />
-        <button aria-label="Close" className="cw-close" onClick={onClose} type="button"><WheelIcon name="close" /></button>
-      </>}
+      <button aria-label="Close" className="cw-handle" onClick={slideAway} type="button" />
       <h2>{title}</h2>
       {open ? children : null}
     </div>

@@ -35,11 +35,12 @@ export function boardViewSupported(home, board) {
 
 /**
  * @param {{ home: import("./api-contracts").StandingsResponse, board: import("./api-contracts").SlateResponse }} reads
- * @param {{ weekId?: string | null }} [options]  a week other than the default one: its picks come from the Slate's read of that week (every player's
- *   pick in a game that has kicked off, as the Slate shows them), and it is a look back only
+ * @param {{ weekId?: string | null, totals?: Record<string, number> | null }} [options]  a week other than the default one: its picks come from the
+ *   Slate's read of that week (every player's pick in a game that has kicked off, as the Slate shows them), and it is a look back only; `totals` is
+ *   each player's wins added up through the end of that week, so the board is the pool as it stood then (without it, a player's wins are that week's)
  * @returns {BoardView}
  */
-export function realBoardView({ home, board }, { weekId = null } = {}) {
+export function realBoardView({ home, board }, { weekId = null, totals = null } = {}) {
   const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
   const games = [...(board.games ?? [])].sort((a, b) => Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt));
   const names = {};
@@ -105,10 +106,11 @@ export function realBoardView({ home, board }, { weekId = null } = {}) {
   const playing = !lookBack && Boolean(survivor?.available && survivor.status === "active") && !championId;
   const out = survivor?.status === "eliminated";
 
-  // Another week: each player's picks are the ones the Slate names under each team of a game that has kicked off, and their wins are that week's.
+  // Another week: each player's picks are the ones the Slate names under each team of a game that has kicked off. Their wins are the pool's
+  // standing at the end of that week (every week's wins added up through it), or just that week's when no running totals were read.
   const slatePicks = (name) => boardGames.flatMap((view, index) => [["away", view.away, view.awayLine], ["home", view.home, view.homeLine]].flatMap(([side, team, line]) => (games[index][`${side}Pickers`] ?? []).includes(name) ? [{ hidden: false, team, line, result: view.results[team].ats }] : []));
   const sourceRows = lookBack
-    ? (home.rows ?? []).map((row) => ({ ...row, picks: undefined, slate: slatePicks(row.firstName), wins: slatePicks(row.firstName).filter((pick) => pick.result === "W").length }))
+    ? (home.rows ?? []).map((row) => ({ ...row, picks: undefined, slate: slatePicks(row.firstName), wins: totals ? totals[row.id] ?? 0 : slatePicks(row.firstName).filter((pick) => pick.result === "W").length }))
     : (home.rows ?? []);
   const rows = [...sourceRows].sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName)).map((row) => {
     const you = row.id === home.viewerPlayerId;

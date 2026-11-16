@@ -392,16 +392,16 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   // The boards in the room show today's news themselves: the leader always on the top line, then the rest of the standings a page at
   // a time (nine players: a page of five, then four), and the lines running across the spreads board like a ticker, your own picks lit.
   const board = page.locator(".lab-room-screen.is-board");
-  await expect(board.locator(".lab-room-leader")).toHaveText("LEADEREarl15");
+  await expect(board.locator(".lab-room-leader")).toHaveText("LEADEarl15");
   await expect(board.locator("li")).toHaveCount(5);
   await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
   // The ticker reads like the ticket: a game still to play shows its kickoff over its two teams with their lines, a game that is over says
   // FINAL and shows each side's score with the side that covered lit; your own picks are framed.
-  await expect(page.locator(".lab-ticker p").first()).toHaveText("FINAL · THUPIT17CLE14");
-  await expect(page.locator(".lab-ticker p").first().locator(".is-covered")).toHaveText("PIT17");
-  await expect(page.locator(".lab-ticker .is-picked").first()).toHaveText("PIT17");
+  await expect(page.locator(".lab-ticker p").first()).toHaveText("FINAL · THUPIT-2.517CLE+2.514");
+  await expect(page.locator(".lab-ticker p").first().locator(".is-covered")).toHaveText("PIT-2.517");
+  await expect(page.locator(".lab-ticker .is-picked").first()).toHaveText("PIT-2.517");
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
   // The sign is the pill carried on past its left end: it touches the plate and the whole of it is on screen.

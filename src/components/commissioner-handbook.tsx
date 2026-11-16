@@ -27,7 +27,7 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
       { title: "Article III · The lines", clauses: [
         "You pick against the spread. The favorite has to win by more than the line. The underdog covers by winning, or by losing by less than the line.",
         "On the Slate the favorite is on the left and the home team is in CAPITALS.",
-        "Lines lock at 8:00 AM on game day. Before that the line is black and can still move. Once it locks it turns teal and never changes.",
+        "Lines lock at 8:00 AM Eastern on game day. Before that the line is black and can still move. Once it locks it turns teal and never changes.",
         "Your pick is graded on the locked teal line, even if you picked earlier.",
       ] },
       { title: "Article IV · Winning", clauses: [
@@ -61,7 +61,7 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
         "The Bowl Pool is optional. It opens the day after Selection Sunday. Claim your seat before the first bowl kicks off; you can opt out only until then.",
         "Pick every bowl and College Football Playoff game against the spread, through the National Championship.",
         "Save your picks a few at a time if you like. Each game locks at its own kickoff.",
-        "Lines lock at 8:00 AM on game day. A whole-number line moves half a point so no game can push.",
+        "Lines lock at 8:00 AM Eastern on game day. A whole-number line moves half a point so no game can push.",
         "A game you did not pick is a loss.",
         "The tiebreaker is your guess of the total points both teams score in the National Championship. If players tie on wins, the closest guess wins, over or under. Skip the guess and you lose a tie to anyone who guessed.",
       ] },
@@ -76,7 +76,7 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
       ] },
       { title: "Article IX · Emails and reminders", clauses: [
         "Choose how much email you get in Notifications (Essentials, Regular or Full Card) and turn any single email on or off.",
-        "Reminders go out Sunday at 11:00 AM and 3:00 PM and before the Sunday and Monday night games, and only if you still have a pick to make.",
+        "Reminders go out Sunday at 11:00 AM and 3:00 PM Eastern and before the Sunday and Monday night games, and only if you still have a pick to make.",
         "The weekly recap arrives Tuesday morning.",
         "Add the pool to your phone's Home Screen and turn on notifications to get the same messages on your phone.",
       ] },
@@ -109,7 +109,6 @@ export default function CommissionerHandbook() {
 
       <div className="pool-constitution mt-6">
         <h3 className="font-serif text-2xl font-bold">Pool constitution</h3>
-        <p className="mt-2 text-sm leading-5 text-(color:--themed-text-29)">Everything you need to know to play. Every time is Eastern.</p>
         {POOL_CONSTITUTION.map(({ part, articles }) => (
           <section className="mt-5" key={part}>
             <h4 className="text-xs font-black tracking-[0.16em] text-(color:--themed-text-28)">{part}</h4>

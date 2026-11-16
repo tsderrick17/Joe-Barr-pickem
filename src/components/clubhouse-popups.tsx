@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import { RealTrophyRoom } from "@/components/lab/lab-clubhouse";
 import { TicketForm, ToteBoard, type Ticket } from "@/components/lab/lab-tote";
-import SurvivorTable from "@/components/survivor-table";
+import SurvivorToteBoard from "@/components/lab/lab-survivor-tote";
 import type { StandingsResponse } from "@/lib/api-contracts";
 import { PICKS_SAVED_EVENT } from "@/lib/app-badge.js";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -80,12 +80,12 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
   );
 }
 
-/** The Survivor table, as the Standings shows it. */
-export function SurvivorPopup({ home }: { home: StandingsResponse }) {
-  // Always the whole table: this view has no show/hide switches, so a player's own display choices never blank it.
-  const shown = { ...home, showSurvivorStandings: true, hideSurvivorEliminatedRows: false };
-  if (!home.survivorAvailable) return <p>Survivor is not running right now.</p>;
-  return <SurvivorTable data={shown} displayLocked savingDisplay={false} setEliminatedRowsHidden={() => {}} setSurvivorDisplay={() => {}} />;
+/**
+ * The Survivor table, the Standings' own rows, in the Big Board's housing with the same two tabs. Always the whole table: this view has no
+ * show/hide switches, so a player's own display choices never blank it.
+ */
+export function SurvivorPopup({ home, onBoard }: { home: StandingsResponse; onBoard?: () => void }) {
+  return <SurvivorToteBoard home={home} onBoard={onBoard} />;
 }
 
 type Season = Parameters<typeof RealTrophyRoom>[0]["trophies"][number];

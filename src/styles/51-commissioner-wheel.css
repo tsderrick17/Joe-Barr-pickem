@@ -97,20 +97,20 @@
 .cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); padding: 0; width: 100%; }
 /* The sheet itself is not a control: when focus lands on it (opening, or coming back from a pop-up put away) no ring is drawn round its edge. */
 .cw-sheet:focus, .cw-sheet:focus-visible, .cw-sheet-body:focus, .cw-sheet-body:focus-visible { outline: none; }
-.cw-sheet::backdrop { background: rgba(8, 16, 12, .55); }
+.cw-sheet::backdrop { background: rgba(8, 16, 12, .55); transition: opacity .24s ease-in; }
+.cw-sheet.is-leaving::backdrop { opacity: 0; }
 .cw-sheet[open] { animation: cw-up .3s ease-out; }
 @keyframes cw-up { from { opacity: 0; transform: translateY(40px); } }
 .cw-sheet-body { background: var(--club-paper); border-radius: 18px 18px 0 0; border-top: 5px solid var(--cw-felt); max-height: 88dvh; overflow: auto; overscroll-behavior: contain; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; }
 /* A bare sheet: no paper, only the picture and a handle on top. */
-.cw-sheet.is-bare h2 { clip: rect(0 0 0 0); height: 1px; margin: 0; overflow: hidden; position: absolute; width: 1px; }
+.cw-sheet.is-bare h2, .cw-sheet.is-untitled h2 { clip: rect(0 0 0 0); height: 1px; margin: 0; overflow: hidden; position: absolute; width: 1px; }
 .cw-sheet.is-bare .cw-sheet-body { background: transparent; border: 0; border-radius: 0; padding: 0 10px calc(14px + env(safe-area-inset-bottom)); }
-.cw-handle { background: rgba(255, 255, 255, .75); border: 0; border-radius: 3px; cursor: pointer; display: block; height: 5px; margin: 8px auto 10px; padding: 0; position: relative; width: 48px; }
+/* The handle at the top of every sheet: slide the sheet down, or tap it, to put the sheet away. There is no X. */
+.cw-handle { background: var(--club-line); border: 0; border-radius: 3px; cursor: pointer; display: block; height: 5px; margin: 0 auto 10px; padding: 0; position: relative; width: 48px; }
 .cw-handle::before { content: ""; inset: -14px -24px; position: absolute; }
+.cw-sheet.is-bare .cw-handle { background: rgba(255, 255, 255, .75); margin: 8px auto 10px; }
 @media (min-width: 700px) { .cw-sheet { margin: auto; max-width: 640px; } .cw-sheet-body { border-radius: 16px; } }
 .cw-sheet h2 { font-family: var(--font-serif); font-size: 21px; font-weight: 600; margin: 0 0 12px; }
-.cw-grab { background: var(--club-line); border-radius: 3px; height: 5px; margin: 0 auto 10px; width: 42px; }
-.cw-close { border-radius: 50%; color: var(--club-muted); cursor: pointer; display: grid; height: 44px; place-items: center; position: absolute; right: 10px; top: 10px; width: 44px; }
-.cw-close svg { height: 20px; width: 20px; }
 .cw-needs { list-style: none; margin: 0; padding: 0; }
 .cw-needs li { align-items: center; background: var(--club-page); border: 1px solid var(--club-line); border-radius: 12px; display: flex; gap: 12px; margin-bottom: 8px; padding: 12px; }
 .cw-dot { background: var(--cw-c); border-radius: 50%; box-shadow: 0 0 8px var(--cw-c); flex: none; height: 12px; width: 12px; }

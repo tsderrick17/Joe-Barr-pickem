@@ -68,7 +68,15 @@
 .lab-room-screen.is-spreads p b { font-size: 19px; letter-spacing: .1em; }
 .lab-room-screen.is-spreads p em { color: rgb(255 176 46); font-size: 19px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-room-screen.is-spreads p > span.is-covered { background: rgba(240, 180, 41, .22); }
-.lab-room-screen.is-spreads p > span.is-covered em::before { content: "✓ "; }
+/* A game that is over keeps its spread on the card: small and quiet between the team and the score. */
+/* Three columns that line up down the card and across cards: the team, the spread in the middle, the score (with its check) at the right. */
+.lab-room-screen.is-spreads p > span.is-final { gap: 0; grid-template-columns: 38px 1fr 38px; white-space: nowrap; }
+.lab-room-screen.is-spreads p > span.is-final b { font-size: 17px; letter-spacing: .06em; }
+.lab-room-screen.is-spreads p > span.is-final i { text-align: center; }
+.lab-room-screen.is-spreads p > span.is-final em { font-size: 19px; position: relative; text-align: right; }
+.lab-room-screen.is-spreads p i { color: rgba(240, 236, 226, .7); font-size: 12px; font-style: normal; letter-spacing: .04em; }
+/* The side that covered is the lit one: a gold cell and a glowing score; the other side's score is plain. */
+.lab-room-screen.is-spreads p > span.is-final:not(.is-covered) em { color: rgba(240, 236, 226, .8); text-shadow: none; }
 .lab-room-screen.is-spreads p > span.is-picked { box-shadow: inset 0 0 0 2px var(--cw-gold); }
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
@@ -80,6 +88,8 @@
 .lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
+/* The poker table's plate (Survivor, then the Bowl Pool) sits up in the table's near rail, in the gap between the two chairs, not hanging under it. */
+.lab-room-spot.is-survivor .lab-room-tag { left: 73%; top: 32%; transform: translate(-50%, -50%); }
 .lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
 .lab-room-tag i { background: rgb(22 44 32); border-radius: 50%; color: rgb(255 230 160); display: inline-grid; font-size: .95em; font-style: normal; height: 1.25em; line-height: 1; place-items: center; width: 1.25em; }
 .lab-room-spot:active .lab-room-tag { opacity: .85; }
@@ -318,6 +328,7 @@
 .lab-tote { background: rgb(18 40 30); border-radius: 6px; box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); color: rgb(240 236 226); margin: 0 auto; max-width: 560px; padding: 12px 10px 10px; width: 100%; }
 .lab-tote header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
 .lab-tote h3 { font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: .2em; margin: 0; }
+.lab-survivor-tote header { align-items: center; }
 .lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
 /* The week is a button: the phone's own week list is a select laid, unseen, over the words. */
 .lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 44px; padding: 0 14px; position: relative; }
@@ -340,7 +351,7 @@
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; gap: 3px; padding-left: 6px; white-space: nowrap; }
-.lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
+.lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 3px rgba(110, 231, 150, .25); }
 .lab-tote-slip.is-l { color: rgb(252 120 110); }
 .lab-tote-slip small { font-size: .7rem; opacity: .8; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
@@ -359,6 +370,22 @@
 .lab-tote-out { color: rgba(240, 236, 226, .35); font-size: .6rem; font-weight: 800; letter-spacing: .12em; }
 /* Sealed: a small gold seal stamped over the panel. */
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
+/* The Survivor table in the same housing: it scrolls sideways, the status and the name stay put, and each week's team has the lit ring a win or a loss gets on the board. */
+.lab-survivor-scroll { margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 6px; }
+.lab-survivor-scroll table { min-width: 56.8rem; }
+.lab-survivor-col-status { width: 3rem; }
+.lab-survivor-col-name { width: 7rem; }
+.lab-survivor-col-week { width: 2.6rem; }
+.lab-survivor-scroll thead th { background: rgb(18 40 30); text-align: center; }
+.lab-survivor-scroll td { text-align: center; }
+.lab-survivor-scroll th.lab-survivor-name { text-align: left; }
+.lab-survivor-scroll .lab-survivor-status { left: 0; position: sticky; z-index: 1; }
+.lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 3rem; position: sticky; z-index: 1; }
+.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: inset 4px 0 0 rgb(201 164 95), 2px 0 0 rgb(18 40 30); }
+.lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); text-decoration: line-through; }
+.lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
+.lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
+.lab-survivor-note { color: var(--cw-cream); margin: 8px 4px; }
 /* The Slate in the same housing: the tote board's green and gold around the black board. */
 .lab-bigboard.is-tote { background: rgb(8 10 9); border-color: rgb(18 40 30); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); }
 
@@ -443,8 +470,8 @@
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
 .lab-ticket-switch.lab-ticket-action button { min-height: 44px; }
-.lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: auto 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
-.lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .12em; }
+.lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
+.lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .08em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 8px rgb(255 154 32); }
 .lab-roll ol { align-content: space-evenly; height: 100%; }
 /* A button standing by itself in the picture (Your picks, in the gap between the chairs). */
@@ -498,7 +525,7 @@
 .lab-room.is-wide .lab-room-tag small { font-size: .74rem; }
 /* On a desktop the lobby has room for the ticket under the picture, so it never sits on the room itself. */
 .lab-clubhouse:has(.lab-room.is-wide) .lab-room-ticket { margin-top: 14px; position: static; }
-.lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; top: auto; }
+.lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; left: 50%; top: auto; transform: translateX(-50%); }
 /* The lamp is a small glass lens in a dark bezel: a soft highlight at its top left whatever its colour, so lit and unlit read as the
    same object, and the lit ones glow. */
 
