@@ -72,6 +72,10 @@ export function clubhouseFeed({ home, board }) {
   const atsOwed = Math.max(0, maxPicks - myPicks.length);
   const weekOpen = home.weekStatus !== "complete" && games.some((game) => game.status === "scheduled" || game.status === "live");
   const owedCount = weekOpen ? atsOwed + (survivorOwed ? 1 : 0) : 0;
+  // Whether any pick that is in can still be changed: its game has not kicked off.
+  const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
+  const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
+  const anyChangeable = myPicks.some((pick) => notStarted(pick.gameId)) || Boolean(inSurvivor && survivor.pick && notStarted(survivor.pick.game_id));
 
   const lamps = [
     ...myPicks.map((pick) => {
@@ -125,7 +129,7 @@ export function clubhouseFeed({ home, board }) {
     ticket: games.length && total ? {
       lamps,
       survivor: inSurvivor,
-      line: !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : `All ${total} in · change any until its kickoff`,
+      line: !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : anyChangeable ? `All ${total} in · change any until its kickoff` : `All ${total} in · all locked`,
     } : null,
   };
 }

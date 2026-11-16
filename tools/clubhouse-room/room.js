@@ -97,7 +97,7 @@ export async function buildRoom(q) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.45));
+  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.25));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(scale); renderer.setSize(W, H, false);
   document.body.appendChild(renderer.domElement);
@@ -621,8 +621,8 @@ export async function buildRoom(q) {
   // ----- light: a bright mid-afternoon, the sun high enough that its patches on the floor are short and its shadows soft-edged and
   // light (plenty of fill from the sky and the pale walls), or a warm evening with the pool and the lanterns lit. The room's own
   // glow is added below from a picture of itself.
-  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfffaf0, night ? 0x2a1e16 : 0xe0c49a, night ? 0.16 : 1.9));
-  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d8, night ? 0.25 : 3.7);
+  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfffaf0, night ? 0x2a1e16 : 0xe0c49a, night ? 0.16 : Number(q.get("hemi") ?? 1.6)));
+  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d8, night ? 0.25 : Number(q.get("sunk") ?? 3.5));
   sun.position.set(night ? 6 : 15, night ? 14 : 14, night ? ZB - 14 : -4.5); sun.target.position.set(-1, 0, -5.5);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; sun.shadow.radius = night ? 1 : 5;
   Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 16, bottom: -16, near: 1, far: 70 });
@@ -663,7 +663,7 @@ export async function buildRoom(q) {
     const eye = new THREE.CubeCamera(0.1, 200, around); eye.position.set(0.4, 2.4, -7.6); scene.add(eye);
     trophies.visible = false; skyPlane.material.color.setScalar(night ? 1.2 : 4);
     eye.update(renderer, scene);
-    trophies.visible = true; skyPlane.material.color.setScalar(1);
+    trophies.visible = true; skyPlane.material.color.setScalar(night ? 1 : Number(q.get("skyk") ?? 0.55));
     scene.environment = pmrem.fromCubemap(around.texture).texture; scene.environmentIntensity = Number(q.get("env") ?? (night ? 1.0 : 0.9));
   }
   // Finishing: soft shadow wherever two things meet (under the furniture, in the thatch, between the stones), a glow around

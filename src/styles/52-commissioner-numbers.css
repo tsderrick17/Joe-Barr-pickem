@@ -34,8 +34,9 @@
 .dash-big { flex: none; text-align: right; }
 .dash-big b { display: block; font-family: var(--font-serif); font-size: 26px; font-variant-numeric: tabular-nums lining-nums; font-weight: 600; line-height: 1; }
 .dash-big small { color: var(--club-muted); display: block; font-size: 12px; margin-top: 3px; }
-.dash-switch { background: var(--club-page); border: 1px solid var(--club-line); border-radius: 999px; display: inline-flex; flex: none; gap: 2px; padding: 3px; }
-.dash-switch button { border-radius: 999px; color: var(--club-muted); cursor: pointer; font-size: 12.5px; font-weight: 700; min-height: 36px; padding: 0 12px; position: relative; white-space: nowrap; }
+/* The halves are exact mirrors: equal columns, words centred, stacked in two lines where a half is too narrow for them. */
+.dash-switch { background: var(--club-page); border: 1px solid var(--club-line); border-radius: 999px; display: inline-grid; flex: none; gap: 2px; grid-auto-columns: 1fr; grid-auto-flow: column; padding: 3px; }
+.dash-switch button { align-items: center; border-radius: 999px; color: var(--club-muted); cursor: pointer; display: flex; font-size: 12.5px; font-weight: 700; justify-content: center; line-height: 1.15; min-height: 36px; padding: 0 12px; position: relative; text-align: center; white-space: nowrap; }
 .dash-switch button::before { content: ""; inset: -4px 0; position: absolute; }
 .dash-switch button[aria-pressed="true"] { background: var(--cw-green); color: var(--cw-cream); }
 

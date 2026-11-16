@@ -142,7 +142,7 @@ test("the Big Board is one face (no standings tab); in the clubhouse a quick lin
   // In the clubhouse, where there is a Survivor room to go to, the link is there and one tap gets you to it.
   await openLab(page, "clubhouse");
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).locator(".lab-room-spot.is-board .lab-room-tag").click();
-  await page.locator(".lab-tote").getByRole("button", { name: "Survivor table" }).click();
+  await page.locator(".lab-tote").locator(".lab-tote-links").getByRole("button", { name: /^Survivor/ }).click();
   await expect(page.getByRole("heading", { name: "Survivor", level: 3, exact: true })).toBeVisible();
   await expect(page.locator(".survivor-standings-row")).toHaveCount(10);
 });
