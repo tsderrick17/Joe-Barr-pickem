@@ -8,7 +8,7 @@
  * @typedef {{ hidden: boolean, team: string | null, line: string | null, result: "W" | "L" | null }} Slat
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "out" } | { kind: "owed" } | { kind: "hidden" } | { kind: "none" }} SurvivorCell
  * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell }} BoardRow
- * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null }} TeamResult
+ * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final
  * @typedef {{ id: string, kickoff: string, kickedOff: boolean, away: string, home: string, awayLine: string, homeLine: string, results: Record<string, TeamResult> }} BoardGame
  * @typedef {{
  *   week: string, status: string, maxPicks: number, canPick: boolean, weekId: string | null,
@@ -18,7 +18,9 @@
  *   ids: Record<string, { gameId: string, teamId: string }>,
  * }} BoardView
  */
-import { kickoffLabel, lineFor } from "./clubhouse-feed.js";
+import { coverMargin, kickoffLabel, lineFor } from "./clubhouse-feed.js";
+
+export { coverMargin };
 import { selectDefaultScoringPeriod } from "./scoring-period.js";
 
 const mark = (value) => (value === "W" || value === "win" ? "W" : value === "L" || value === "loss" ? "L" : null);
@@ -44,22 +46,27 @@ export function realBoardView({ home, board }) {
     const theirs = side === "away" ? game.homeScore : game.awayScore;
     return mine > theirs ? "W" : "L";   // a tie is a loss in Survivor
   };
+  const finalScore = (game, side) => (game.status === "final" && game.awayScore !== null && game.homeScore !== null ? (side === "away" ? game.awayScore : game.homeScore) : null);
   const boardGames = games.map((game) => {
     names[game.awayTeamAbbreviation] = game.awayTeam;
     names[game.homeTeamAbbreviation] = game.homeTeam;
     ids[game.awayTeamAbbreviation] = { gameId: game.id, teamId: game.awayTeamId };
     ids[game.homeTeamAbbreviation] = { gameId: game.id, teamId: game.homeTeamId };
+    const awayLine = lineFor(game, game.awayTeamId);
+    const homeLine = lineFor(game, game.homeTeamId);
+    const away = finalScore(game, "away");
+    const home = finalScore(game, "home");
     return {
       id: game.id,
       kickoff: kickoffLabel(game.kickoffAt),
       kickedOff: game.status !== "scheduled" || Date.parse(game.kickoffAt) <= now,
       away: game.awayTeamAbbreviation,
       home: game.homeTeamAbbreviation,
-      awayLine: lineFor(game, game.awayTeamId),
-      homeLine: lineFor(game, game.homeTeamId),
+      awayLine,
+      homeLine,
       results: {
-        [game.awayTeamAbbreviation]: { ats: mark(game.awayResult), su: finalWinner(game, "away") },
-        [game.homeTeamAbbreviation]: { ats: mark(game.homeResult), su: finalWinner(game, "home") },
+        [game.awayTeamAbbreviation]: { ats: mark(game.awayResult), su: finalWinner(game, "away"), score: away, margin: coverMargin(away, home, awayLine) },
+        [game.homeTeamAbbreviation]: { ats: mark(game.homeResult), su: finalWinner(game, "home"), score: home, margin: coverMargin(home, away, homeLine) },
       },
     };
   });
@@ -78,9 +85,12 @@ export function realBoardView({ home, board }) {
 
   const maxPicks = home.maxPicks;
   const survivor = board.survivor;
-  const survivorShown = Boolean(home.survivorAvailable) && !home.isPlayoff;
+  // The winner is called out for the week after Survivor is decided (8 days from the crowning), then the column goes; the link stays.
+  const crowned = home.survivorComplete ? Date.parse(home.survivorCrownedAt ?? "") : Number.NaN;
+  const fresh = Boolean(home.survivorComplete) && (Number.isNaN(crowned) || now - crowned < 8 * 86_400_000);
+  const survivorShown = Boolean(home.survivorAvailable) && !home.isPlayoff && (!home.survivorComplete || fresh);
   const survivorRows = new Map((home.survivorRows ?? []).map((row) => [row.playerId, row]));
-  const championId = home.survivorComplete ? home.survivorChampionPlayerId ?? null : null;
+  const championId = fresh ? home.survivorChampionPlayerId ?? null : null;
   const mySurvivorGame = survivor?.pick ? gameById.get(survivor.pick.game_id) : null;
   const mySurvivorTeam = survivor?.pick && mySurvivorGame ? abbreviationOf(mySurvivorGame.raw, survivor.pick.selected_team_id) : null;
   const playing = Boolean(survivor?.available && survivor.status === "active") && !championId;
@@ -118,7 +128,7 @@ export function realBoardView({ home, board }) {
     rows,
     showSurvivor: survivorShown,
     championId,
-    champion: home.survivorComplete ? home.survivorChampionName ?? null : null,
+    champion: fresh ? home.survivorChampionName ?? null : null,
     mine: { picks: mineTeams, survivor: mySurvivorTeam },
     survivor: { playing, out, outWeek: null, left: 32 - used.size, teams },
     ids,

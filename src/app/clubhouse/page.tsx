@@ -44,7 +44,7 @@ const PAGES: Record<"standings" | "slate" | "bowl", ReturnType<typeof dynamic>> 
 const REFRESH_MS = 5 * 60_000;       // as often as the Standings itself reads again
 const RETURN_GAP_MS = 30_000;        // coming back to the app sooner than this reads nothing new
 
-type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null; home: StandingsResponse; board: SlateResponse };
+type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string; survivor: boolean } | null; home: StandingsResponse; board: SlateResponse };
 
 export default function ClubhousePage() {
   const access = useCommissionerAccess();
@@ -167,14 +167,17 @@ export default function ClubhousePage() {
   const classic: "standings" | "slate" | "bowl" | null = pane === "bowl" ? "bowl" : pane === "standings" || pane === "slate" ? (newBoard ? null : pane) : pane === "survivor" && room?.home.isPlayoff ? "standings" : null;
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
+  // Once Survivor is over, its poker table is the Bowl Pool's.
+  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room?.feed.survivorOver ? "bowl" : SPOT_PANE[spot] ?? null);
+
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
-      <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : SPOT_PANE[spot] ? `#${SPOT_PANE[spot]}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (SPOT_PANE[spot]) show(SPOT_PANE[spot]); }} />
+      <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
-      {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {popup("standings", "slate") && view ? <Sheet onClose={() => leave("standings", "slate")} open title="The Big Board">
+      {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
+      {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate")} open title="The Big Board">
         <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} view={view} />
       </Sheet> : null}
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}

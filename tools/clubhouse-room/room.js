@@ -97,7 +97,7 @@ export async function buildRoom(q) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.16));
+  renderer.toneMappingExposure = Number(q.get("exp") ?? (night ? 1.0 : 1.45));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(scale); renderer.setSize(W, H, false);
   document.body.appendChild(renderer.domElement);
@@ -393,7 +393,7 @@ export async function buildRoom(q) {
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
   add(bar, new THREE.LatheGeometry([[0, 0], [0.04, 0], [0.045, 0.14], [0.03, 0.17], [0.03, 0.2], [0.012, 0.22], [0, 0.23]].map(([r, y]) => new THREE.Vector2(r, y)), 20), new THREE.MeshStandardMaterial({ color: 0xd8dbe0, metalness: 1, roughness: 0.18 }), [BXc + 0.1, 1.145, BZ - 2.1]);
   for (const dz of [0, 0.12]) add(bar, coupe, crystal, [BXc + 0.18, 1.145, BZ - 1.8 + dz], { cast: false });
-  for (const z of [BZ + 2.55, BZ - 2.5]) {                                                                                             // brass lamps with pleated shades
+  for (const z of [BZ + 2.55]) {                                                                                                       // a brass lamp with a pleated shade (none at the far end: it stood in front of the spreads board)
     add(bar, cyl(0.07, 0.09, 0.03, 20), brass, [BXc - 0.12, 1.16, z]);
     add(bar, cyl(0.012, 0.012, 0.36, 8), brass, [BXc - 0.12, 1.34, z]);
     add(bar, cyl(0.07, 0.14, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: 0xf3ead3, emissive: 0xffd9a0, emissiveIntensity: night ? 0.9 : 0.3, roughness: 0.9, side: THREE.DoubleSide }), [BXc - 0.12, 1.58, z], { cast: false });
@@ -621,8 +621,8 @@ export async function buildRoom(q) {
   // ----- light: a bright mid-afternoon, the sun high enough that its patches on the floor are short and its shadows soft-edged and
   // light (plenty of fill from the sky and the pale walls), or a warm evening with the pool and the lanterns lit. The room's own
   // glow is added below from a picture of itself.
-  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfffaf0, night ? 0x2a1e16 : 0xe0c49a, night ? 0.16 : 1.05));
-  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d8, night ? 0.25 : 3.3);
+  scene.add(new THREE.HemisphereLight(night ? 0x8090b8 : 0xfffaf0, night ? 0x2a1e16 : 0xe0c49a, night ? 0.16 : 1.9));
+  const sun = new THREE.DirectionalLight(night ? 0x9ab6ff : 0xfff0d8, night ? 0.25 : 3.7);
   sun.position.set(night ? 6 : 15, night ? 14 : 14, night ? ZB - 14 : -4.5); sun.target.position.set(-1, 0, -5.5);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02; sun.shadow.radius = night ? 1 : 5;
   Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 16, bottom: -16, near: 1, far: 70 });

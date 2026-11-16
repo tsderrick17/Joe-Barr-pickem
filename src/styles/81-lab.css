@@ -67,24 +67,30 @@
 .lab-room-screen.is-spreads p > span + span { border-top: 1px solid rgba(255, 255, 255, .1); }
 .lab-room-screen.is-spreads p b { font-size: 19px; letter-spacing: .1em; }
 .lab-room-screen.is-spreads p em { color: rgb(255 176 46); font-size: 19px; font-style: normal; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
+.lab-room-screen.is-spreads p > span.is-covered { background: rgba(240, 180, 41, .22); }
+.lab-room-screen.is-spreads p > span.is-covered em::before { content: "✓ "; }
 .lab-room-screen.is-spreads p > span.is-picked { box-shadow: inset 0 0 0 2px var(--cw-gold); }
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
 .lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 40% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
 @keyframes room-owed { from { opacity: .55; } to { opacity: 1; } }
-.lab-room-tag { background: linear-gradient(rgb(255 250 236), rgb(240 226 190)); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 3px 0 rgb(120 88 30), 0 6px 10px rgba(0, 0, 0, .45); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.lab-room-tag { background: rgb(250 244 226); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.lab-room-tag.is-bowl-pool { background: rgb(20 36 76); border-color: rgb(226 182 70); color: rgb(246 218 140); }
+.lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 .lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
 .lab-room-tag i { background: rgb(22 44 32); border-radius: 50%; color: rgb(255 230 160); display: inline-grid; font-size: .95em; font-style: normal; height: 1.25em; line-height: 1; place-items: center; width: 1.25em; }
-.lab-room-spot:active .lab-room-tag { box-shadow: 0 1px 0 rgb(120 88 30), 0 2px 4px rgba(0, 0, 0, .4); margin-top: 2px; }
+.lab-room-spot:active .lab-room-tag { opacity: .85; }
 .lab-room-tag:not(.has-news) { border-radius: 999px; padding: 5px 10px; }
 .lab-room-tag small { display: block; font-size: .62rem; font-weight: 600; opacity: .85; }
 .lab-room-spot.is-constitution .lab-room-tag,
 .lab-room-spot.is-trophies .lab-room-tag { left: auto; right: 0; transform: none; }
 .lab-room-spot.is-chat .lab-room-tag { left: 0; transform: none; }
-.lab-room-mail { background: rgb(189 48 40); border: 2px solid rgb(255 255 255); border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); color: rgb(255 255 255); font-size: .75rem; line-height: 1; padding: 3px 5px; left: -10px; position: absolute; top: -12px; }
+.lab-room-tag.has-mail { border-bottom-left-radius: 0; border-left-width: 0; border-top-left-radius: 0; }
+/* "You've got mail": the pill's own shape carried on past its left end, in red, with the envelope in it. */
+.lab-room-mail { align-items: center; background: rgb(196 52 44); border: 2px solid rgb(176 134 52); border-radius: 999px 0 0 999px; border-right: 0; bottom: -2px; box-shadow: -2px 2px 8px rgba(0, 0, 0, .3); color: rgb(255 255 255); display: flex; font-size: .8rem; justify-content: center; line-height: 1; position: absolute; right: 100%; top: -2px; width: 30px; }
 .lab-room-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: auto; max-width: 30rem; width: 100%; }
 .lab-room-list button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); cursor: pointer; font-weight: 700; min-height: 2.75rem; }
 /* Your ticket, pinned to the bottom of every clubhouse screen: a lamp for each pick and the next deadline; it opens the Window. */
@@ -125,7 +131,10 @@
 .lab-board-cell:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-team { align-items: center; color: var(--cw-cream); display: flex; font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .12em; }
 .lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
-.lab-board-lock { font-size: .7rem; opacity: .7; position: absolute; right: 6px; top: 4px; }
+.lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .12); color: rgba(240, 233, 214, .7); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
+.lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
+.lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; }
+.lab-board-final.is-covered { color: var(--cw-gold-lt); }
 .lab-board-cell.is-locked { opacity: .55; }
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }
 /* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, and stays: a single line,
@@ -326,7 +335,7 @@
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; gap: 3px; padding-left: 6px; white-space: nowrap; }
 .lab-tote-slip.is-w { color: rgb(110 231 150); text-shadow: 0 0 6px rgba(110, 231, 150, .7); }
-.lab-tote-slip.is-l { color: rgb(252 120 110); text-decoration: line-through; text-decoration-thickness: 1px; }
+.lab-tote-slip.is-l { color: rgb(252 120 110); }
 .lab-tote-slip small { font-size: .7rem; opacity: .8; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; padding-left: 6px; }
@@ -399,10 +408,10 @@
 .lab-tote-mine:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: -2px; }
 .lab-tote-owed { border: 1px dashed rgb(255 176 46); border-radius: 3px; color: rgb(255 176 46); display: inline-block; font-family: "Courier New", monospace; font-size: .74rem; font-weight: 800; letter-spacing: .1em; padding: 3px 7px; }
 .lab-tote-won { color: rgb(255 176 46); font-size: .66rem; font-weight: 800; letter-spacing: .12em; }
-.lab-tote-ticket { align-items: center; background: rgb(251 247 236); border: 0; border-radius: 4px; border-top: 3px dashed var(--cw-gold); color: rgb(29 42 34); cursor: pointer; display: grid; font: inherit; gap: 2px; justify-items: center; margin-top: 10px; min-height: 52px; padding: 8px 12px; width: 100%; }
-.lab-tote-ticket b { font-size: .86rem; letter-spacing: .12em; }
+.lab-tote-ticket { align-items: center; background: rgba(240, 180, 41, .08); border: 1px solid rgba(240, 180, 41, .45); border-radius: 4px; border-top: 2px dashed var(--cw-gold); color: var(--cw-cream); cursor: pointer; display: grid; font: inherit; gap: 2px; justify-items: center; margin-top: 10px; min-height: 52px; padding: 8px 12px; width: 100%; }
+.lab-tote-ticket b { color: var(--cw-gold-lt); font-size: .86rem; letter-spacing: .12em; }
 .lab-tote-ticket span { font-size: .78rem; font-weight: 600; }
-.lab-tote-ticket.is-owed b { color: rgb(160 70 10); }
+.lab-tote-ticket.is-owed b { color: rgb(255 176 46); }
 .lab-tote-ticket:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-used { color: rgba(240, 180, 41, .8); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-align: right; }
 .lab-board-cell.is-survivor.is-picked .lab-board-used { color: rgb(190 240 200); }
@@ -465,7 +474,8 @@
 .lab-lamp.is-in { background-color: rgb(255 200 40); box-shadow: 0 0 7px rgba(255, 190, 40, .9); }
 .lab-lamp.is-won { background-color: rgb(70 220 120); box-shadow: 0 0 7px rgba(70, 220, 120, .9); }
 .lab-lamp.is-lost { background-color: rgb(240 80 70); box-shadow: 0 0 7px rgba(240, 80, 70, .85); }
-.lab-lamp.is-survivor { outline: 2px dashed rgba(240, 236, 226, .85); outline-offset: 2px; }
+/* Survivor's lamp is a diamond, like a suit on a card: same light, different shape. */
+.lab-lamp.is-survivor { border-radius: 2px; margin: 0 2px; transform: rotate(45deg) scale(.85); }
 .lab-lamps { align-items: start; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; list-style: none; margin: 0; max-width: 60%; padding: 0; }
 .lab-bigboard .lab-lamps li { border: 0; display: grid; gap: 4px; grid-template-columns: auto; justify-items: center; padding: 0; }
 .lab-lamps small { color: rgba(240, 180, 41, .8); font-size: .56rem; letter-spacing: .1em; }

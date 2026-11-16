@@ -24,6 +24,15 @@ export function lineFor(game, teamId) {
   return `${teamId === game.favoriteTeamId ? "-" : "+"}${size}`;
 }
 
+/** A line as a number: "-3.5" is -3.5, "+3" is 3, "PK" is 0, no line yet is null. */
+const spreadOf = (line) => (line === "PK" ? 0 : /^[+-]?\d/.test(line) ? Number(line) : null);
+
+/** How far a team finished past its spread: its margin of victory plus its line. Positive covered it, zero is a push (a loss), negative missed it. */
+export function coverMargin(score, other, line) {
+  const spread = spreadOf(line);
+  return score === null || other === null || spread === null ? null : score - other + spread;
+}
+
 /** Standings by wins, most first: each with a place (level players share it) and whether it is shared. */
 export function placedStandings(rows) {
   const sorted = [...rows].sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName));
@@ -75,7 +84,9 @@ export function clubhouseFeed({ home, board }) {
   const total = maxPicks + (inSurvivor ? 1 : 0);
   const picked = total - (atsOwed + (survivorOwed ? 1 : 0));
 
-  const survivorRows = home.survivorAvailable ? home.survivorRows ?? [] : [];
+  // Survivor leaves the room when it leaves the classic pages: once it is decided, and for the playoffs.
+  const survivorOver = Boolean(home.isPlayoff || home.survivorComplete);
+  const survivorRows = home.survivorAvailable && !survivorOver ? home.survivorRows ?? [] : [];
   const stillIn = survivorRows.filter((row) => row.status !== "eliminated").length;
   const meInSurvivor = survivorRows.find((row) => row.playerId === home.viewerPlayerId);
   const leaders = standings.filter((row) => row.place === 1);
@@ -84,14 +95,22 @@ export function clubhouseFeed({ home, board }) {
     feed: {
       week: home.week ?? "",
       standings,
-      games: games.map((game) => ({
-        id: game.id,
-        kickoff: kickoffLabel(game.kickoffAt),
-        away: game.awayTeamAbbreviation,
-        home: game.homeTeamAbbreviation,
-        awayLine: lineFor(game, game.awayTeamId),
-        homeLine: lineFor(game, game.homeTeamId),
-      })),
+      games: games.map((game) => {
+        const awayLine = lineFor(game, game.awayTeamId);
+        const homeLine = lineFor(game, game.homeTeamId);
+        // Only a final game has a score to show (never a live one), and with it which side covered its line (a push is a miss).
+        const decided = game.status === "final" && game.awayScore !== null && game.awayScore !== undefined && game.homeScore !== null && game.homeScore !== undefined;
+        const side = (score, other, line, result) => ({ score, covered: result ? result === "win" : (coverMargin(score, other, line) ?? 0) > 0 });
+        return {
+          id: game.id,
+          kickoff: kickoffLabel(game.kickoffAt),
+          away: game.awayTeamAbbreviation,
+          home: game.homeTeamAbbreviation,
+          awayLine,
+          homeLine,
+          ...(decided ? { final: { away: side(game.awayScore, game.homeScore, awayLine, game.awayResult), home: side(game.homeScore, game.awayScore, homeLine, game.homeResult) } } : {}),
+        };
+      }),
       mine: mine.map((game, index) => abbreviation(game, myPicks[index].teamId)),
       news: {
         ...(standings.length ? { board: `${leaders.length === 1 ? `${leaders[0].name} leads` : `${leaders.length} lead`}${you ? ` · You: ${you.tied ? "T" : ""}${you.place}` : ""}` } : {}),
@@ -101,9 +120,11 @@ export function clubhouseFeed({ home, board }) {
       owed: owedCount > 0,
       mail: false,
       bowl: bowlSeason(home.serverTime ?? board.serverTime ?? new Date().toISOString()),
+      survivorOver,
     },
     ticket: games.length && total ? {
       lamps,
+      survivor: inSurvivor,
       line: !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : `All ${total} in · change any until its kickoff`,
     } : null,
   };

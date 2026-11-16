@@ -349,14 +349,13 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
   // The whole room is one picture that fits the phone's width: nothing to pan or swipe.
   expect((await room.boundingBox())!.width).toBeLessThanOrEqual(390);
   const spots: Array<[string, string, string]> = [
-    ["Make your picks", "The Big Board", ".lab-window"], ["Your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
+    ["Make your picks", "The Big Board", ".lab-window"], ["The Big Board", "The Big Board", ".lab-tote"], ["Trophy Room", "Trophy Room", ".trophy-display"],
     ["Survivor", "Survivor", ".lab-survivor-room"], ["Pool chat", "Pool chat", ".lab-stand-in"], ["Constitution", "Constitution", ".lab-rules"],
   ];
   // Everything is a comfortable size for a thumb, however small it looks in the picture, and every spot wears its name plate, except
-  // the spreads board: it looks like the ticket it opens, and the "Your picks" button stands by itself in the gap between the chairs.
+  // the spreads board: it looks like the ticket it opens.
   await expect(room.getByRole("button")).toHaveCount(spots.length);
   await expect(room.locator(".lab-room-tag")).toHaveCount(spots.length - 1);
-  expect((await room.locator(".lab-room-bubble").boundingBox())!.height).toBeGreaterThanOrEqual(44);
   for (const spot of await room.locator(".lab-room-spot").all()) {
     const box = (await spot.boundingBox())!;
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
@@ -370,7 +369,7 @@ test("the clubhouse room: everything in it opens its room in one tap, every spot
     await expect(room).toHaveCount(0);
     // The picks wall opens the Big Board with the ticket ready; the Big Board itself opens it shut.
     const sheet = page.getByRole("dialog", { name: "Your ticket" });
-    if (spot === "Make your picks" || spot === "Your picks") await sheet.getByRole("button", { name: "Close" }).click();
+    if (spot === "Make your picks") await sheet.getByRole("button", { name: "Close" }).click();
     await expect(sheet).toBeHidden();
     await page.getByRole("button", { name: "Back to Clubhouse" }).first().click();
     await expect(room).toBeVisible();
@@ -381,7 +380,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // Everything that can be tapped wears a name plate with an arrow, and no two plates overlap; the ones with news carry a line of it.
-  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Your picks›1 owed", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›✉", "Rules›"]);
+  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›✉", "Rules›"]);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(0);
@@ -398,11 +397,18 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await expect(board.locator("header")).toContainText("1/2");
   await expect(board.locator("li").first()).toContainText("Dottie");
   await expect(board.locator("li").nth(1)).toHaveText("T2Walt13");   // the board does not mark whose row it is
-  // The ticker reads like the ticket: each game's kickoff over its two teams with their lines, your own picks framed.
-  await expect(page.locator(".lab-ticker p").first()).toHaveText("THU 8:15 PMPIT-2.5CLE+2.5");
-  await expect(page.locator(".lab-ticker .is-picked")).toHaveText(["PIT-2.5", "LAR+3", "PIT-2.5"]);
+  // The ticker reads like the ticket: a game still to play shows its kickoff over its two teams with their lines, a game that is over says
+  // FINAL and shows each side's score with the side that covered lit; your own picks are framed.
+  await expect(page.locator(".lab-ticker p").first()).toHaveText("FINAL · THUPIT17CLE14");
+  await expect(page.locator(".lab-ticker p").first().locator(".is-covered")).toHaveText("PIT17");
+  await expect(page.locator(".lab-ticker .is-picked").first()).toHaveText("PIT17");
   // The laptop on the bar shows a mail sign only when there's a new message.
   await expect(room.getByRole("img", { name: "New message" })).toBeVisible();
+  // The sign is the pill carried on past its left end: it touches the plate and the whole of it is on screen.
+  const flag = await room.getByRole("img", { name: "New message" }).evaluate((node) => { const sign = node.getBoundingClientRect(); const plate = node.parentElement!.getBoundingClientRect(); return { left: sign.left, gap: Math.abs(sign.right - plate.left), height: Math.abs(sign.height - plate.height) }; });
+  expect(flag.left).toBeGreaterThanOrEqual(0);
+  expect(flag.gap).toBeLessThanOrEqual(1);
+  expect(flag.height).toBeLessThanOrEqual(1);
   await page.getByRole("group", { name: "Chat" }).getByRole("button", { name: "Nothing new" }).click();
   await expect(room.getByRole("img", { name: "New message" })).toHaveCount(0);
   // The Bowl Pool's bulletin board is wheeled in on Dec 7, and not before.
@@ -542,7 +548,7 @@ test("on a desktop the clubhouse is the wide picture: every label in view, none 
   const frame = (await room.boundingBox())!;
   expect(frame.width / frame.height).toBeGreaterThan(1.5);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
-  expect(plates.length).toBe(6);
+  expect(plates.length).toBe(5);   // Survivor, Trophies, the Big Board, Chat, Rules
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(frame.x - 1);
     expect(plate.right).toBeLessThanOrEqual(frame.x + frame.width + 1);
@@ -555,7 +561,7 @@ test("on a desktop the clubhouse is the wide picture: every label in view, none 
   expect(ticket.y).toBeGreaterThanOrEqual(frame.y + frame.height);
   // The boards are drawn on the wide picture too, and a label still opens its room.
   await expect(page.locator(".lab-room-screen.is-board .lab-room-leader")).toContainText("Earl");
-  await room.locator(".lab-room-bubble .lab-room-tag").click();
+  await room.getByRole("button", { name: "Make your picks", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Your ticket" })).toBeVisible();
 });
 
@@ -611,14 +617,14 @@ test("the room's games stand two wide and the board shifts up a row every 7 seco
     const box = node.getBoundingClientRect();
     return [...node.querySelectorAll("p")].filter((card) => { const r = card.getBoundingClientRect(); return r.top >= box.top - 1 && r.bottom <= box.bottom + 1; }).map((card) => card.querySelector("small")?.textContent ?? "");
   });
-  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);
+  expect(await shown()).toEqual(["FINAL · THU", "FINAL · SUN"]);
   // The installed clock keeps running with real time (a slow runner has spent some of the 7 seconds by now), so the "not yet" check
   // leaves a whole second to spare rather than a tenth.
   await page.clock.runFor(5_500);
-  expect(await shown()).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // not yet: the first two stay up for most of the 7 seconds
+  expect(await shown()).toEqual(["FINAL · THU", "FINAL · SUN"]);   // not yet: the first two stay up for most of the 7 seconds
   await page.clock.runFor(1_700);
   await expect.poll(shown).toEqual(["SUN 1:00 PM", "SUN 4:25 PM"]);
   await page.clock.runFor(7_000);
-  await expect.poll(shown).toEqual(["THU 8:15 PM", "SUN 1:00 PM"]);   // and round to the start again with no gap
+  await expect.poll(shown).toEqual(["FINAL · THU", "FINAL · SUN"]);   // and round to the start again with no gap
   await expect(page.locator(".lab-room-motion")).toHaveCount(0);   // the fans and plants hold still
 });
