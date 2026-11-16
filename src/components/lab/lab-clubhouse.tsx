@@ -298,11 +298,11 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
 }
 
 /** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
-export function Ticket({ week, lamps, line, onOpen, href }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string }) {
+export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1 }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean }) {
   const inside = <>
     <b>YOUR TICKET · {week.toUpperCase()}</b>
     <span>{line}</span>
-    <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={index === lamps.length - 1 && lamps.length > 1} />)}<em>›</em></span>
+    <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={survivor && index === lamps.length - 1} />)}<em>›</em></span>
   </>;
   return href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
 }

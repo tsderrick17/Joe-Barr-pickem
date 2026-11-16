@@ -44,7 +44,7 @@ const PAGES: Record<"standings" | "slate" | "bowl", ReturnType<typeof dynamic>> 
 const REFRESH_MS = 5 * 60_000;       // as often as the Standings itself reads again
 const RETURN_GAP_MS = 30_000;        // coming back to the app sooner than this reads nothing new
 
-type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null; home: StandingsResponse; board: SlateResponse };
+type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string; survivor: boolean } | null; home: StandingsResponse; board: SlateResponse };
 
 export default function ClubhousePage() {
   const access = useCommissionerAccess();
@@ -176,7 +176,7 @@ export default function ClubhousePage() {
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
-      {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} week={room.feed.week} /> : null}
+      {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {popup("standings", "slate") && view ? <Sheet onClose={() => leave("standings", "slate")} open title="The Big Board">
         <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} view={view} />
       </Sheet> : null}

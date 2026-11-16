@@ -99,3 +99,8 @@ test("the ticker shows a final score and which side covered, and nothing for a g
   const push = game("g3", "SF", "DEN", { status: "final", awayScore: 20, homeScore: 17, favoriteTeamId: "sf", officialSpread: 3, awayResult: null, homeResult: null });
   assert.deepEqual(clubhouseFeed({ home: home(), board: board({ games: [push] }) }).feed.games[0].final, { away: { score: 20, covered: false }, home: { score: 17, covered: false } });
 });
+
+test("the ticket's last lamp is Survivor's only while the viewer is still in Survivor", () => {
+  assert.equal(clubhouseFeed({ home: home(), board: board() }).ticket.survivor, true);
+  assert.equal(clubhouseFeed({ home: home(), board: board({ survivor: { available: true, status: "eliminated", pick: null } }) }).ticket.survivor, false);
+});

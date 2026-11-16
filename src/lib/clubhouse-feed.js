@@ -124,6 +124,7 @@ export function clubhouseFeed({ home, board }) {
     },
     ticket: games.length && total ? {
       lamps,
+      survivor: inSurvivor,
       line: !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : `All ${total} in · change any until its kickoff`,
     } : null,
   };
