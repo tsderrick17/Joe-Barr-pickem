@@ -521,7 +521,9 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
 test("the Commissioner swaps between the classic site and the clubhouse with one unlabeled button beside the day/night button", async ({ page }) => {
   await openLab(page, "clubhouse");
   const nav = page.getByRole("navigation", { name: "Account navigation" });
-  // In the clubhouse the button goes back to the classic site; it sits right after the day/night button.
+  // The button sits right after the day/night button; anywhere but the clubhouse it is down and goes to the clubhouse.
+  await expect(nav.getByRole("link", { name: "Clubhouse view" })).toBeVisible();
+  await page.goto("/clubhouse");
   const classic = nav.getByRole("link", { name: "Classic view" });
   await expect(classic).toBeVisible();
   const theme = (await nav.getByRole("button", { name: /Use (light|dark) mode/ }).boundingBox())!, swap = (await classic.boundingBox())!;
@@ -529,10 +531,8 @@ test("the Commissioner swaps between the classic site and the clubhouse with one
   expect(swap.x - (theme.x + theme.width)).toBeLessThanOrEqual(16);
   await classic.click();
   await expect(page).toHaveURL(/\/$/);
-  // On the classic site the same button goes to the clubhouse.
-  await nav.getByRole("link", { name: "Clubhouse view" }).click();
-  await expect(page).toHaveURL(/try=clubhouse/);
-  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  // On the classic site the same button goes to the real clubhouse (its own page, not the Lab).
+  await expect(nav.getByRole("link", { name: "Clubhouse view" })).toHaveAttribute("href", "/clubhouse");
 });
 
 test("on a desktop the clubhouse is the wide picture: every label in view, none overlapping, the ticket under the room", async ({ page }) => {

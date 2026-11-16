@@ -478,3 +478,17 @@
 .lab-room.is-wide .lab-room-spot.is-survivor .lab-room-tag { bottom: 70%; top: auto; }
 /* The lamp is a small glass lens in a dark bezel: a soft highlight at its top left whatever its colour, so lit and unlit read as the
    same object, and the lit ones glow. */
+
+/* The real clubhouse (/clubhouse, the Commissioner's for now): the room fills the screen under the site's bar, cropped evenly at the
+   sides (or top and bottom) like a photo, never stretched, so every spot stays on its thing. The ticket rides at the foot of the screen. */
+.clubhouse-page { background: var(--club-page); display: grid; }
+.clubhouse-page.is-rules { gap: 16px; margin-inline: auto; max-width: 46rem; padding: 0 16px 32px; width: 100%; }
+.lab-room-stage { align-items: center; display: flex; height: calc(100dvh - var(--stage-top, var(--site-nav-height, 0px))); justify-content: center; overflow: hidden; position: relative; }
+.lab-room.is-full { border-radius: 0; box-shadow: none; flex: none; max-width: none; width: max(100%, calc((100dvh - var(--stage-top, var(--site-nav-height, 0px))) * var(--room-aspect))); }
+.clubhouse-page > .lab-room-ticket { bottom: 12px; margin: -78px auto 12px; position: sticky; width: calc(100% - 32px); }
+/* On a desktop the ticket keeps to the bottom left, over the floor by the bar, clear of the poker table and its Your picks button. */
+@media (min-width: 900px) { .clubhouse-page > .lab-room-ticket { margin-left: 24px; max-width: 26rem; } }
+a.lab-room-ticket { text-decoration: none; }
+a.lab-room-back { align-items: center; display: inline-flex; gap: 6px; text-decoration: none; }
+a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: fit-content; }
+#pool-chat { scroll-margin-top: var(--site-nav-height, 0px); }
