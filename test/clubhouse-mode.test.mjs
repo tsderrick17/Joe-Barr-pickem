@@ -20,6 +20,7 @@ test("a link to a real page opens that page in place; any other link leaves the 
 test("an address's hash names the pane to reopen; nothing else does", () => {
   assert.equal(paneFromHash("#slate"), "slate");
   assert.equal(paneFromHash("#rules"), "rules");
+  assert.equal(paneFromHash("#survivor"), "survivor");
   assert.equal(paneFromHash("#nonsense"), null);
   assert.equal(paneFromHash(""), null);
   assert.equal(paneFromHash(undefined), null);

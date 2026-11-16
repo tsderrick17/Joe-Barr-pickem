@@ -1,15 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import PoolChat from "@/components/pool-chat";
 import { Sheet } from "@/components/commissioner/wheel-parts";
+import { BoardPopup, SurvivorPopup, TicketPopup, TrophyPopup } from "@/components/clubhouse-popups";
 import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
+import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { clubhouseFeed } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
 import { useCommissionerAccess } from "@/lib/use-commissioner-access";
@@ -18,30 +20,31 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 /**
  * The clubhouse: another way to live in the same site, for the Commissioner only for now.
  *
- * One screen that never scrolls. The room is the front door; everything else is the real page opened in place over it:
- *  - a thing in the room opens its page (the Big Board and Survivor the Standings, the games board / Your picks / the ticket the Slate,
- *    the trophy the Trophy Room, the Bowl Pool board NCAA Bowls, the constitution the rules); the chat is a sheet;
- *  - each open page has its own address (#slate...), so the phone's back gesture closes it, a reload brings it back, and a link to
- *    another real page (the header's, or one inside a page) opens that page in place rather than leaving the screen;
- *  - the room's boards and ticket come from one read (the Standings' and the Slate's own), which is read again whenever a page is closed
- *    (so a pick made there shows in the ticket's lamps at once), when the app comes back to the front, and every five minutes.
- * It can never show more than the classic pages do, and a pick made in a page is the very same pick.
+ * One screen that never scrolls. The room is the front door; everything else is a pop-up over it, showing the new views on the pool's real data:
+ *  - the Big Board and Survivor's spots open the Big Board (everyone's picks, and the ticket that sends yours), the games board / Your picks /
+ *    the ticket open the same board with the ticket ready, the Survivor spot the Survivor table, the trophy the Trophy Room (trophies,
+ *    plaques, records), the constitution the rules; the chat is a sheet. Only the Bowl Pool (and a playoff week, which has a pick for every
+ *    game) still opens the classic page, in place;
+ *  - each open pop-up has its own address (#slate...), so the phone's back gesture closes it, a reload brings it back, and a link to another
+ *    page (the header's, or one inside a pop-up) opens that page's pop-up in place rather than leaving the screen;
+ *  - the room's boards and ticket come from one read (the Standings' and the Slate's own), which is read again whenever a pop-up is closed
+ *    or a pick is sent (so a pick shows in the ticket's lamps at once), when the app comes back to the front, and every five minutes.
+ * It can never show more than the classic pages do, and a pick sent here is the very same pick (the same POST the Slate makes).
  */
-type Pane = "standings" | "slate" | "trophies" | "bowl" | "rules";
-const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "standings", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules" };
-const TITLE: Record<Pane, string> = { standings: "Standings", slate: "The Slate", trophies: "Trophy Room", bowl: "NCAA Bowls", rules: "Constitution" };
-// The real pages, loaded the first time they are opened.
-const PAGES: Record<Exclude<Pane, "rules">, ReturnType<typeof dynamic>> = {
+type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules";
+const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules" };
+const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "The Big Board", survivor: "Survivor", trophies: "Trophy Room", bowl: "NCAA Bowls", rules: "Constitution" };
+// The classic pages, loaded the first time they are opened: the Bowl Pool, and the playoff weeks the new board does not cover yet.
+const PAGES: Record<"standings" | "slate" | "bowl", ReturnType<typeof dynamic>> = {
   standings: dynamic(() => import("@/app/page")),
   slate: dynamic(() => import("@/app/board/page")),
-  trophies: dynamic(() => import("@/app/trophy-room/page")),
   bowl: dynamic(() => import("@/app/bowl-pool/page")),
 };
 
 const REFRESH_MS = 5 * 60_000;       // as often as the Standings itself reads again
 const RETURN_GAP_MS = 30_000;        // coming back to the app sooner than this reads nothing new
 
-type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null };
+type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string } | null; home: StandingsResponse; board: SlateResponse };
 
 export default function ClubhousePage() {
   const access = useCommissionerAccess();
@@ -50,6 +53,9 @@ export default function ClubhousePage() {
   const [error, setError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [pane, setPane] = useState<Pane | null>(null);
+  const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
+  const [ticketOpen, setTicketOpen] = useState(false);   // your ticket, over the Big Board
+  useEffect(() => { paneRef.current = pane; }, [pane]);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
   const lastRead = useRef(0);
   const wasOpen = useRef(false);
@@ -76,7 +82,7 @@ export default function ClubhousePage() {
       // Without the week's games the room still opens: the standings on the Big Board, the games board dark, no ticket.
       const board = boardResponse.ok ? await boardResponse.json() as SlateResponse : { games: [], myPicks: [], serverTime: home.serverTime } as unknown as SlateResponse;
       lastRead.current = Date.now();
-      setRoom(clubhouseFeed({ home, board }) as Room);
+      setRoom({ ...(clubhouseFeed({ home, board }) as Omit<Room, "home" | "board">), home, board });
       setError("");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -102,7 +108,7 @@ export default function ClubhousePage() {
 
   // The open page is part of the address: #slate. Back closes it, a reload reopens it.
   useEffect(() => {
-    const sync = () => setPane(paneFromHash(window.location.hash) as Pane | null);
+    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); setTicketOpen(next === "slate"); };
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
@@ -114,6 +120,7 @@ export default function ClubhousePage() {
     if (paneFromHash(window.location.hash)) window.history.replaceState(null, "", `/clubhouse#${next}`);   // page to page: still one step back to the room
     else { window.history.pushState(null, "", `/clubhouse#${next}`); openedHere.current = true; }
     setPane(next);
+    setTicketOpen(next === "slate");   // the games board, Your picks and the ticket open the board with your ticket ready
   }, []);
   const close = useCallback(() => {
     if (openedHere.current) { openedHere.current = false; window.history.back(); }
@@ -153,6 +160,13 @@ export default function ClubhousePage() {
     return () => window.removeEventListener("resize", measure);
   }, [room, pane]);
 
+  // Which pop-up is open: the new views, or (the Bowl Pool, and a playoff week) the classic page in place.
+  const newBoard = room ? boardViewSupported(room.home, room.board) : false;
+  const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: room.board }) : null), [room, newBoard]);
+  const popup = (...panes: Pane[]) => Boolean(pane && panes.includes(pane) && (pane === "survivor" ? !room?.home.isPlayoff : pane === "standings" || pane === "slate" ? newBoard : true));
+  const classic: "standings" | "slate" | "bowl" | null = pane === "bowl" ? "bowl" : pane === "standings" || pane === "slate" ? (newBoard ? null : pane) : pane === "survivor" && room?.home.isPlayoff ? "standings" : null;
+  const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
+
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
@@ -160,12 +174,19 @@ export default function ClubhousePage() {
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : SPOT_PANE[spot] ? `#${SPOT_PANE[spot]}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (SPOT_PANE[spot]) show(SPOT_PANE[spot]); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {pane ? <section aria-label={TITLE[pane]} className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
+      {popup("standings", "slate") && view ? <Sheet onClose={() => leave("standings", "slate")} open title="The Big Board">
+        <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} view={view} />
+      </Sheet> : null}
+      {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
+      {popup("survivor") ? <Sheet onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} /></Sheet> : null}
+      {popup("trophies") ? <Sheet onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
+      {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
+      {classic ? <section aria-label={TITLE[classic] === "The Big Board" ? "Standings" : TITLE[classic]} className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
-          <h3>{TITLE[pane]}</h3>
+          <h3>{classic === "slate" ? "The Slate" : TITLE[classic]}</h3>
         </header>
-        {pane === "rules" ? <div className="clubhouse-page is-rules"><Constitution /></div> : (() => { const Page = PAGES[pane]; return <Page />; })()}
+        {(() => { const Page = PAGES[classic]; return <Page />; })()}
       </section> : null}
     </main>
   );

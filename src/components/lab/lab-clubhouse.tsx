@@ -49,7 +49,8 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
 
 type Pool = "pickem" | "survivor" | "bowl";
 const POOL_LABEL: Record<Pool, string> = { pickem: "Pick’em", survivor: "Survivor", bowl: "Bowl Pool" };
-const CHAMPIONS: Array<{ season: string } & Record<Pool, string>> = [
+type Champions = { season: string } & Record<Pool, string>;
+const CHAMPIONS: Champions[] = [
   { season: "2026", pickem: "Earl", survivor: "Rosie", bowl: "Walt" },
   { season: "2025", pickem: "Walt", survivor: "Dottie", bowl: "Rosie" },
   { season: "2024", pickem: "Earl", survivor: "Walt", bowl: "June" },
@@ -60,7 +61,7 @@ const CHAMPIONS: Array<{ season: string } & Record<Pool, string>> = [
  * A season's plaque, kept quiet: satin brass with indented corners on walnut, one engraved keyline, the year over a diamond
  * rule, and each champion at the end of a dotted leader.
  */
-function Plaque({ year }: { year: (typeof CHAMPIONS)[number] }) {
+function Plaque({ year }: { year: Champions }) {
   return (
     <article aria-label={`${year.season} champions`} className="lab-plaque">
       <div className="lab-plaque-plate">
@@ -96,15 +97,36 @@ function TrophyRoom() {
   );
 }
 
+type RealSeason = { seasonYear: number; pickem: Array<{ name: string }> | null; survivor: Array<{ name: string }> | null; bowl: Array<{ name: string }> | null };
+type RealPlayer = { playerId: string; name: string; ab: number; h: number; avg: number | null };
+const names = (list: Array<{ name: string }> | null) => (list?.length ? list.map((champion) => champion.name).join(" & ") : "—");
+
+/**
+ * The Trophy Room on the pool's real champions and records (the Trophy Room page's own read): the trophies on their turning table, a plaque
+ * for every season that has a champion, and the all-time Pick'em records, best hit rate first.
+ */
+export function RealTrophyRoom({ trophies, players }: { trophies: RealSeason[]; players: RealPlayer[] }) {
+  const seasons = [...trophies].sort((a, b) => b.seasonYear - a.seasonYear).map((year) => ({ season: String(year.seasonYear), pickem: names(year.pickem), survivor: names(year.survivor), bowl: names(year.bowl) }));
+  const records = players.filter((player) => player.ab > 0 && player.avg !== null).sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0) || a.name.localeCompare(b.name))
+    .map((player) => ({ name: player.name, wins: player.h, losses: player.ab - player.h, rate: player.avg ?? 0 }));
+  return (
+    <div className="lab-room-stack lab-wall-table">
+      <TrophyTurntable seasons={trophies} />
+      <PlaquesShelf seasons={seasons} scenes={false} />
+      <RecordsTable rows={records} />
+    </div>
+  );
+}
+
 /** The all-time Pick'em records, best hit rate first: place, player, wins, losses and the rate they make. */
-function RecordsTable() {
+function RecordsTable({ rows = LAB_RECORDS }: { rows?: Array<{ name: string; wins: number; losses: number; rate: number }> }) {
   return (
     <section aria-label="Records" className="lab-records">
       <h4>Records <small>all-time Pick’em</small></h4>
       <table>
         <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col">W</th><th scope="col">L</th><th scope="col">Rate</th></tr></thead>
         <tbody>
-          {LAB_RECORDS.map((row, index) => (
+          {rows.map((row, index) => (
             <tr key={row.name}><td>{index + 1}</td><th scope="row">{row.name}</th><td>{row.wins}</td><td>{row.losses}</td><td>{row.rate.toFixed(3).slice(1)}</td></tr>
           ))}
         </tbody>
@@ -114,14 +136,14 @@ function RecordsTable() {
 }
 
 /** The plaques, one for every season, and the pennant a new champion is given. */
-function PlaquesShelf() {
+function PlaquesShelf({ seasons = CHAMPIONS, scenes = true }: { seasons?: Champions[]; scenes?: boolean }) {
   const [scene, setScene] = useState<"plaques" | "crowning">("plaques");
   const [crownings, setCrownings] = useState(0);
   return (
     <div className="lab-room-stack">
-      <div className="lab-room-controls">
+      {scenes ? <div className="lab-room-controls">
         <Chips label="Scene" onChange={(next) => { setScene(next); if (next === "crowning") setCrownings((count) => count + 1); }} options={[["plaques", "The plaques"], ["crowning", "A champion is crowned"]] as const} value={scene} />
-      </div>
+      </div> : null}
       <div className="lab-case lab-wall">
         {scene === "crowning" ? (
           <div className="lab-crowning" key={crownings}>
@@ -136,10 +158,10 @@ function PlaquesShelf() {
         <section aria-label="Plaques" className="lab-wall-part">
           <h4>Plaques <small>one for every season</small></h4>
           <div className="lab-case-shelf">
-            {CHAMPIONS.map((year) => <Plaque key={year.season} year={year} />)}
+            {seasons.length ? seasons.map((year) => <Plaque key={year.season} year={year} />) : <p className="lab-wall-empty">No champions yet.</p>}
           </div>
         </section>
-        <div className="lab-case-countdown"><span>THE 2027 SEASON OPENS AUG 1</span><strong>172 DAYS</strong><small>sample date: Feb 10</small></div>
+        {scenes ? <div className="lab-case-countdown"><span>THE 2027 SEASON OPENS AUG 1</span><strong>172 DAYS</strong><small>sample date: Feb 10</small></div> : null}
       </div>
     </div>
   );

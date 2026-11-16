@@ -1,15 +1,15 @@
 /**
  * How the Commissioner's clubhouse behaves as a place to live in, not just a page:
  *  - the light switch is a mode that is remembered on this device (switch up: opening the app lands in the clubhouse);
- *  - the real pages open over the room, each with its own address (#slate, #standings...) so the phone's back gesture closes it,
- *    a reload comes back to it, and a link to another real page opens that page in place instead of leaving the screen.
+ *  - the pop-ups open over the room, each with its own address (#slate, #survivor...) so the phone's back gesture closes it,
+ *    a reload comes back to it, and a link to another page opens its pop-up in place instead of leaving the screen.
  */
 
 export const MODE_KEY = "pickem-clubhouse-mode";
 
 /** The real page each pane shows, by its path. */
 export const PANE_PATHS = { "/": "standings", "/board": "slate", "/trophy-room": "trophies", "/bowl-pool": "bowl" };
-export const PANES = ["standings", "slate", "trophies", "bowl", "rules"];
+export const PANES = ["standings", "slate", "survivor", "trophies", "bowl", "rules"];
 
 /** The pane a link opens in place, or null when it is a link out of the clubhouse (the profile, the Commissioner's pages). */
 export function paneForHref(href, origin) {

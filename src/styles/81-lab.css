@@ -353,6 +353,8 @@
 .lab-window-part h4 { color: var(--cw-gold-lt); font-size: .8rem; letter-spacing: .16em; margin: 0; }
 .lab-window-part h4 small { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin-left: 6px; }
 .lab-window-out { color: var(--cw-cream); font-size: .8rem; margin: 0; }
+.lab-window-problem { color: rgb(255 130 110); font-size: .8rem; font-weight: 700; margin: 6px 0 0; }
+.lab-tote-none { color: rgb(255 255 255 / .35); font-family: "Courier New", monospace; font-size: .8rem; }
 .lab-window-ticket { border-top: 1px dashed rgba(240, 180, 41, .4); display: grid; gap: 10px; padding-top: 10px; }
 .lab-window-ticket dl { display: grid; gap: 4px; margin: 0; }
 .lab-window-ticket dl div { display: flex; gap: 8px; justify-content: space-between; }
