@@ -536,8 +536,8 @@
 .lab-room-stage { align-items: center; display: flex; height: calc(100dvh - var(--stage-top, var(--site-nav-height, 0px))); justify-content: center; overflow: hidden; position: relative; }
 .lab-room.is-full { border-radius: 0; box-shadow: none; flex: none; max-width: none; width: max(100%, calc((100dvh - var(--stage-top, var(--site-nav-height, 0px))) * var(--room-aspect))); }
 .clubhouse-page > .lab-room-ticket { bottom: 12px; margin: -78px auto 12px; position: sticky; width: calc(100% - 32px); }
-/* On a desktop the ticket keeps to the bottom left, over the floor by the bar, clear of the poker table and its Your picks button. */
-@media (min-width: 900px) { .clubhouse-page > .lab-room-ticket { margin-left: 24px; max-width: 26rem; } }
+/* On a desktop the ticket sits centred at the foot of the screen, the place every pop-up rises from. */
+@media (min-width: 900px) { .clubhouse-page > .lab-room-ticket { margin-inline: auto; max-width: 32rem; } }
 a.lab-room-ticket { text-decoration: none; }
 a.lab-room-back { align-items: center; display: inline-flex; gap: 6px; text-decoration: none; }
 a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: fit-content; }
@@ -637,3 +637,29 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-tote tr.is-out .lab-tote-wins, .lab-tote tr.is-out .lab-tote-logo { opacity: .5; }
 .lab-tote-race { color: rgb(240 236 226); font-size: .74rem; font-weight: 700; letter-spacing: .04em; margin: 0 4px 6px; }
 .lab-tote-owed-ring { border: 1.5px dashed rgb(255 176 46); border-radius: 50%; color: rgb(255 176 46); display: inline-grid; font-size: .44rem; font-weight: 900; height: 26px; letter-spacing: .04em; place-items: center; vertical-align: middle; width: 26px; }
+
+/* ---- The clubhouse on a desktop: the pop-ups use the width, stay clear of the site's bar, and the room answers the pointer ---- */
+@media (hover: hover) {
+  .lab-room-spot:hover .lab-room-tag { box-shadow: 0 0 0 3px rgba(255, 214, 120, .7), 0 6px 16px rgba(0, 0, 0, .45); }
+}
+@media (min-width: 1024px) {
+  .clubhouse-page .cw-sheet { margin: 96px auto 20px; max-height: calc(100dvh - 116px); max-width: 920px; }
+  .clubhouse-page .cw-sheet-body { max-height: calc(100dvh - 116px); }
+  .clubhouse-page .lab-tote, .clubhouse-page .lab-bigboard { max-width: none; }
+  /* The Big Board and Survivor read at a glance across a room: a narrower sheet, bigger type, taller rows. */
+  .clubhouse-page .cw-sheet:has(.lab-tote) { max-width: 760px; }
+  .clubhouse-page .lab-tote tbody th, .clubhouse-page .lab-tote tbody td { font-size: .98rem; height: 2.9rem; }
+  .clubhouse-page .lab-tote-slip { font-size: 1.12rem; }
+  .clubhouse-page .lab-tote-slip small { font-size: .85rem; }
+  .clubhouse-page .lab-tote thead th { font-size: .64rem; }
+  /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
+  .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
+  .clubhouse-page .lab-window-part > ol { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .clubhouse-page .lab-window-part > ol > li { grid-template-columns: 1fr 1fr; }
+  .clubhouse-page .lab-window-part .lab-board-time { grid-column: 1 / -1; }
+  .clubhouse-page .lab-window-part .lab-board-at { display: none; }
+  /* The Trophy Room: the turning table and the plaques use the whole width, three plaques to a row. */
+  .clubhouse-page .lab-wall-table { margin-inline: auto; max-width: none; }
+  .clubhouse-page .lab-wall-table .trophy-display { margin-inline: auto; max-width: min(720px, calc(100dvh - 240px)); width: 100%; }
+  .clubhouse-page .lab-case-shelf { grid-template-columns: repeat(auto-fit, 15rem); justify-content: center; margin-inline: auto; max-width: 48rem; }
+}

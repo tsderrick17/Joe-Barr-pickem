@@ -19,6 +19,13 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-17 - The clubhouse on a desktop (Commissioner only)
+
+- From 1024 px wide, the clubhouse's pop-ups sit under the site's bar (never over it) and use the width: the Big Board and Survivor in a 760 px sheet with bigger type and taller rows, the ticket's games two across in a 920 px sheet, the Bowl ticket one bowl a row in a 720 px sheet, and the Trophy Room's turning table sized to the screen's height with the plaques up to three a row, centred.
+- Your ticket sits centred at the foot of the screen (it used to keep to the bottom left), the place every pop-up rises from.
+- With a mouse, pointing at a thing in the room lights its name plate.
+- Phones are unchanged.
+
 ## 2026-11-17 - Playoff rounds in the clubhouse: the Big Board and ticket cover a pick for every game (Commissioner only)
 
 - **No more classic page for the playoffs.** A playoff round opens on the clubhouse's own Big Board and ticket, as a regular week does (the Survivor spot shows the Big Board, Survivor being over). The pool's playoff rules are unchanged and still enforced by the server: a pick for every game against the spread, the whole round can be sent at once, any pick can be changed until its game kicks off, a pick is hidden from everyone else until its game kicks off, and eligibility is frozen at the start of each Eastern game day.

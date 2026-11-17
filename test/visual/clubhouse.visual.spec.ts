@@ -487,3 +487,23 @@ test("out of the playoff race, the Big Board says so and there is no ticket", as
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);
   await expect(board.locator("tr.is-you")).toHaveClass(/is-out/);
 });
+
+test("on a desktop the pop-ups sit under the site's bar, the Big Board reads large, and your ticket's games stand two across", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#standings", size: SIZES["desktop-1280"] });
+  const board = page.getByRole("dialog", { name: "The Big Board" });
+  await expect(board.locator(".lab-tote")).toBeVisible({ timeout: 30_000 });
+  const bar = await page.locator("main.clubhouse-page").evaluate((main) => main.getBoundingClientRect().top);   // the room starts under the site's bar
+  const sheet = (await board.boundingBox())!;
+  expect(sheet.y).toBeGreaterThanOrEqual(bar);
+  expect(sheet.width).toBeLessThanOrEqual(760);
+  expect(sheet.width).toBeGreaterThan(640);
+  // The ticket centred at the foot of the screen.
+  const ticket = (await page.locator(".clubhouse-page > .lab-room-ticket").boundingBox())!;
+  expect(Math.abs(ticket.x + ticket.width / 2 - 640)).toBeLessThanOrEqual(2);
+  await page.goto("/clubhouse#slate"); await page.reload();
+  const games = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-window-part > ol > li");
+  await expect(games.first()).toBeVisible({ timeout: 30_000 });
+  const [first, second] = await Promise.all([games.nth(0).boundingBox(), games.nth(1).boundingBox()]);
+  expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);   // side by side
+  expect(second!.x).toBeGreaterThan(first!.x + first!.width);
+});
