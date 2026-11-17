@@ -23,9 +23,10 @@ import { useStableCallback } from "@/lib/use-stable-callback";
  *
  * One screen that never scrolls. The room is the front door; everything else is a pop-up over it, showing the new views on the pool's real data:
  *  - the Big Board and Survivor's spots open the Big Board (everyone's picks, and the ticket that sends yours), the games board / Your picks /
- *    the ticket open the same board with the ticket ready, the Survivor spot the Survivor table, the trophy the Trophy Room (trophies,
- *    plaques, records), the constitution the rules, the Bowl Pool's spot the Bowl ticket (picks and standings); the chat is a sheet. Only a
- *    playoff week (a pick for every game) still opens the classic page, in place;
+ *    the ticket open the same board with the ticket ready (a playoff round too: a pick for every game, and the race to catch the
+ *    leader), the Survivor spot the Survivor table, the trophy the Trophy Room (trophies, plaques, records), the constitution the rules,
+ *    the Bowl Pool's spot the Bowl ticket (picks and standings); the chat is a sheet. Only a week the new board does not cover opens the
+ *    classic page, in place;
  *  - each open pop-up has its own address (#slate...), so the phone's back gesture closes it, a reload brings it back, and a link to another
  *    page (the header's, or one inside a pop-up) opens that page's pop-up in place rather than leaving the screen;
  *  - the room's boards and ticket come from one read (the Standings' and the Slate's own), which is read again whenever a pop-up is closed
@@ -35,7 +36,7 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules";
 const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "The Big Board", survivor: "Survivor", trophies: "Trophy Room", bowl: "NCAA Bowls", rules: "Constitution" };
-// The classic pages, loaded the first time they are opened: the playoff weeks the new board does not cover yet.
+// The classic pages, loaded the first time they are opened: any week the new board does not cover.
 const PAGES: Record<"standings" | "slate", ReturnType<typeof dynamic>> = {
   standings: dynamic(() => import("@/app/page")),
   slate: dynamic(() => import("@/app/board/page")),
@@ -161,7 +162,7 @@ export default function ClubhousePage() {
     return () => window.removeEventListener("resize", measure);
   }, [room, pane]);
 
-  // Which pop-up is open: the new views, or (a playoff week) the classic page in place.
+  // Which pop-up is open: the new views, or (a week the new board does not cover) the classic page in place.
   const newBoard = room ? boardViewSupported(room.home, room.board) : false;
   const view = useMemo(() => (room && newBoard ? realBoardView({ home: room.home, board: lookBack?.board ?? room.board }, { weekId: lookBack?.weekId ?? null, totals: lookBack?.totals ?? null }) : null), [room, newBoard, lookBack]);
   // The Big Board opens on this week; choosing another week reads that week from the Slate (the default week is the room's own read).
@@ -181,8 +182,10 @@ export default function ClubhousePage() {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
     }
   });
-  const popup = (...panes: Pane[]) => Boolean(pane && panes.includes(pane) && (pane === "survivor" ? !room?.home.isPlayoff : pane === "standings" || pane === "slate" ? newBoard : true));
-  const classic: "standings" | "slate" | null = pane === "standings" || pane === "slate" ? (newBoard ? null : pane) : pane === "survivor" && room?.home.isPlayoff ? "standings" : null;
+  // In the playoffs Survivor is over, so its spot (and an old #survivor address) shows the Big Board with the race.
+  const shown: Pane | null = pane === "survivor" && room?.home.isPlayoff ? "standings" : pane;
+  const popup = (...panes: Pane[]) => Boolean(shown && panes.includes(shown) && (shown === "standings" || shown === "slate" ? newBoard : true));
+  const classic: "standings" | "slate" | null = shown === "standings" || shown === "slate" ? (newBoard ? null : shown) : null;
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // Once Survivor is over, its poker table is the Bowl Pool's.
@@ -195,7 +198,7 @@ export default function ClubhousePage() {
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate")} open title="The Big Board">
+      {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate", "survivor")} open title="The Big Board">
         <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} />
       </Sheet> : null}
       {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}

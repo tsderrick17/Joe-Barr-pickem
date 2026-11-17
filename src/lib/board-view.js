@@ -7,7 +7,8 @@
  *
  * @typedef {{ hidden: boolean, team: string | null, line: string | null, result: "W" | "L" | null }} Slat
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "out" } | { kind: "owed" } | { kind: "hidden" } | { kind: "none" }} SurvivorCell
- * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell }} BoardRow
+ * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell, out?: boolean, forfeited?: boolean, back?: number | null }} BoardRow   // out / forfeited / back: the playoff race (back: wins behind the leader)
+ * @typedef {{ leaders: string[], leaderWins: number, toPlay: number, you: { back: number | null, out: boolean, forfeited: boolean, forfeitAvailable: boolean } }} PlayoffRace   // toPlay: this round's games not yet kicked off
  * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null, pickers: string[] }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final; pickers: who took the team, as the Slate names them once the game has kicked off
  * @typedef {{ id: string, kickoff: string, kickedOff: boolean, action: boolean, away: string, home: string, awayLine: string, homeLine: string, results: Record<string, TeamResult> }} BoardGame   // action: a game to come, or one the pool has picks in (the Slate's Pool action)
  * @typedef {{ id: string, name: string, status: string }} BoardWeek
@@ -18,6 +19,7 @@
  *   mine: { picks: string[], survivor: string | null },
  *   survivor: { playing: boolean, out: boolean, outWeek: number | null, left: number, teams: Record<string, { free: boolean, usedWeek: number | null, used: boolean, locked: boolean }> },
  *   ids: Record<string, { gameId: string, teamId: string }>,
+ *   playoff?: PlayoffRace | null,   // a playoff round: a pick for every game, one column a game, and the race to catch the leader
  * }} BoardView
  */
 import { coverMargin, kickoffLabel, lineFor } from "./clubhouse-feed.js";
@@ -28,9 +30,13 @@ import { selectAvailableScoringPeriods, selectDefaultScoringPeriod } from "./sco
 const mark = (value) => (value === "W" || value === "win" ? "W" : value === "L" || value === "loss" ? "L" : null);
 const STATUS = { upcoming: "UPCOMING", active: "IN PLAY", complete: "FINAL" };
 
-/** Whether the new board and ticket cover this week. The playoffs (a pick for every game, no Survivor) still open the classic Slate. */
+/**
+ * Whether the new board and ticket cover this week: a regular week (one or two picks) or a playoff round (a pick for every game, no
+ * Survivor).
+ */
 export function boardViewSupported(home, board) {
-  return Boolean(home) && !home.isPlayoff && home.maxPicks >= 1 && home.maxPicks <= 2 && (board?.games?.length ?? 0) > 0 && Boolean(board?.bootstrap);
+  if (!home || (board?.games?.length ?? 0) === 0 || !board?.bootstrap || !(home.maxPicks >= 1)) return false;
+  return home.isPlayoff ? true : home.maxPicks <= 2;
 }
 
 /**
@@ -93,7 +99,20 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
     return { hidden: false, team, line: pick.teamId === raw.awayTeamId ? view.awayLine : view.homeLine, result: view.results[team].ats };
   });
 
-  const maxPicks = lookBack ? Math.min(2, shownWeek.max_picks ?? home.maxPicks) : home.maxPicks;
+  // A playoff round has a pick for every game, so each game is a column: a pick sits under its own game, not in the order it was made.
+  const playoff = !lookBack && Boolean(home.isPlayoff);
+  const maxPicks = playoff ? boardGames.length : lookBack ? Math.min(2, shownWeek.max_picks ?? home.maxPicks) : home.maxPicks;
+  const byGame = (picks) => {
+    const columns = boardGames.map(() => null);
+    for (const pick of picks) {
+      // A shown pick goes under its team's game; a hidden one under the first open game that kicks off when it does (it never says which).
+      let index = pick.team ? boardGames.findIndex((game) => game.away === pick.team || game.home === pick.team) : -1;
+      if (index < 0 && pick.kickoffAt) index = boardGames.findIndex((game, at) => columns[at] === null && Date.parse(games[at].kickoffAt) === Date.parse(pick.kickoffAt));
+      if (index < 0) index = columns.findIndex((column) => column === null);
+      if (index >= 0 && columns[index] === null) columns[index] = pick;
+    }
+    return columns;
+  };
   const survivor = board.survivor;
   // The winner is called out for the week after Survivor is decided (8 days from the crowning), then the column goes; the link stays.
   const crowned = home.survivorComplete ? Date.parse(home.survivorCrownedAt ?? "") : Number.NaN;
@@ -112,16 +131,19 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
   const sourceRows = lookBack
     ? (home.rows ?? []).map((row) => ({ ...row, picks: undefined, slate: slatePicks(row.firstName), wins: totals ? totals[row.id] ?? 0 : slatePicks(row.firstName).filter((pick) => pick.result === "W").length }))
     : (home.rows ?? []);
+  const leaderWins = Math.max(0, ...(home.rows ?? []).map((row) => row.wins));
   const rows = [...sourceRows].sort((a, b) => b.wins - a.wins || a.firstName.localeCompare(b.firstName)).map((row) => {
     const you = row.id === home.viewerPlayerId;
-    const base = you ? mySlats : lookBack ? row.slate : (row.picks ?? []).map((pick) => (pick.isHidden ? { hidden: true, team: null, line: null, result: null } : { hidden: false, team: pick.abbreviation ?? pick.label ?? null, line: pick.spread ?? null, result: mark(pick.resultMark) }));
-    const slats = Array.from({ length: maxPicks }, (_, index) => base[index] ?? null);
+    const base = you ? mySlats : lookBack ? row.slate : (row.picks ?? []).map((pick) => (pick.isHidden ? { hidden: true, team: null, line: null, result: null, kickoffAt: pick.kickoffAt ?? null } : { hidden: false, team: pick.abbreviation ?? pick.label ?? null, line: pick.spread ?? null, result: mark(pick.resultMark) }));
+    const slats = (playoff ? byGame(base) : Array.from({ length: maxPicks }, (_, index) => base[index] ?? null))
+      .map((slat) => (slat ? { hidden: slat.hidden, team: slat.team, line: slat.line, result: slat.result } : null));
     const seat = lookBack ? undefined : survivorRows.get(row.id);
     /** @type {SurvivorCell} */
     let cell = { kind: "none" };
     if (you) cell = out ? { kind: "out" } : mySurvivorTeam ? { kind: "pick", team: mySurvivorTeam, result: mySurvivorGame ? mySurvivorGame.view.results[mySurvivorTeam]?.su ?? null : null } : playing ? { kind: "owed" } : { kind: "none" };
     else if (seat) cell = seat.status === "eliminated" ? { kind: "out" } : !seat.pick ? { kind: "none" } : seat.pick.isHidden ? { kind: "hidden" } : { kind: "pick", team: seat.pick.abbreviation ?? "", result: mark(seat.pick.resultMark) };
-    return { id: row.id, name: row.firstName, wins: row.wins, you, slats, survivor: cell };
+    const race = playoff ? { out: Boolean(row.playoffEliminated) && !row.forfeited, forfeited: Boolean(row.forfeited), back: row.playoffEliminated || row.forfeited ? null : leaderWins - row.wins } : {};
+    return { id: row.id, name: row.firstName, wins: row.wins, you, slats, survivor: cell, ...race };
   });
 
   const used = new Set((survivor?.usedTeamIds ?? []).filter((teamId) => teamId !== survivor?.pick?.selected_team_id));
@@ -134,10 +156,19 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
   // The ticket opens only while the viewer has something left to do: a pick still owed, or a pick (or Survivor team) whose game has not
   // kicked off yet. Once every pick is in and locked, there is nothing to change, so the bar and the ticket go.
   const notStarted = (team) => { const ref = ids[team]; return Boolean(ref) && !gameById.get(ref.gameId).view.kickedOff; };
+  const raceOver = playoff && Boolean(board.pickem?.playoffEliminated || board.pickem?.forfeit?.forfeited);
   const owesPick = mineTeams.length < maxPicks;
   const owesSurvivor = playing && !out && !mySurvivorTeam && Object.values(teams).some((team) => team.free);
   const changeable = owesPick || owesSurvivor || mineTeams.some(notStarted) || (playing && Boolean(mySurvivorTeam) && notStarted(mySurvivorTeam));
-  const open = !lookBack && home.weekStatus !== "complete" && home.seasonPhase !== "off_season" && boardGames.some((game) => !game.kickedOff) && changeable;
+  const open = !lookBack && !raceOver && home.weekStatus !== "complete" && home.seasonPhase !== "off_season" && boardGames.some((game) => !game.kickedOff) && changeable;
+  const me = rows.find((row) => row.you);
+  const contenders = rows.filter((row) => !row.out && !row.forfeited);
+  const race = playoff ? {
+    leaders: contenders.filter((row) => row.wins === leaderWins).map((row) => row.name),
+    leaderWins,
+    toPlay: boardGames.filter((game) => !game.kickedOff).length,
+    you: { back: me?.back ?? null, out: Boolean(board.pickem?.playoffEliminated), forfeited: Boolean(board.pickem?.forfeit?.forfeited), forfeitAvailable: Boolean(board.pickem?.forfeit?.available) && !raceOver && home.weekStatus !== "complete" },
+  } : null;
   // The weeks the board can show: the regular season's, as far as the pool has opened them (the playoffs keep their own page).
   const pickable = selectAvailableScoringPeriods(allWeeks, { now, nextWeekAvailableAt: board.bootstrap?.nextWeekAvailableAt ? Date.parse(board.bootstrap.nextWeekAvailableAt) : null })
     .filter((period) => period.period_type === "regular" && period.max_picks <= 2);
@@ -158,5 +189,6 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
     mine: { picks: mineTeams, survivor: mySurvivorTeam },
     survivor: { playing, out, outWeek: null, left: 32 - used.size, teams },
     ids,
+    playoff: race,
   };
 }

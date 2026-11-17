@@ -363,7 +363,8 @@ test("a pop-up has no X: sliding it down, tapping its handle or the space above 
   await expect(handle.locator("svg")).toHaveCount(0);   // the handle is a small bar, not an X
   // What the sheet is doing the instant after it is told to go: still there, and on its way down.
   const sliding = () => sheet.evaluate((dialog) => ({ open: (dialog as HTMLDialogElement).open, leaving: dialog.classList.contains("is-leaving"), moved: (dialog.querySelector(".cw-sheet-body") as HTMLElement).style.transform.startsWith("translateY(") }));
-  const reopen = async () => { await page.goto("/clubhouse#rules"); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
+  // A fresh load each time: going to the same page with only a new #hash is not a real load, and could race the sheet just put away.
+  const reopen = async () => { await page.goto("/clubhouse#rules"); await page.reload(); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
   // The handle.
   await handle.evaluate((button) => (button as HTMLButtonElement).click());
   expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
@@ -455,4 +456,34 @@ test("before a player claims a seat the Bowl Pool's pop-up is the Claim your sea
   await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click({ timeout: 30_000 });
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
+});
+
+test("a playoff round opens on the Big Board: a column a game, the race in a line, and a ticket that sends a pick for every game", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#standings", homeExtra: homeResponse("playoff-wildcard"), scenarios: ["playoff-upcoming"] });
+  const board = page.getByRole("dialog", { name: "The Big Board" });
+  await expect(board.locator(".lab-tote table.is-playoff")).toBeVisible({ timeout: 30_000 });
+  await expect(board.locator(".lab-tote-race")).toContainText(/leads with \d+ · You: \d+ back|You lead/);
+  await expect(board.locator("th.lab-tote-game")).toHaveCount(6);
+  // Out and forfeited players are marked under their names; nobody else's pick shows before kickoff.
+  await expect(board.locator("tr.is-out")).toHaveCount(3);
+  await expect(board.locator("tr.is-out small").filter({ hasText: "FORFEITED" })).toHaveCount(1);
+  await expect(board.locator("tr.is-you .lab-tote-owed-ring")).toHaveCount(4);
+  await board.getByRole("button", { name: /4 PICKS OWED/ }).click();
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket.getByRole("img", { name: /P6/ })).toHaveCount(0);
+  await expect(ticket.getByRole("region", { name: "Forfeit the Pick’em season" })).toBeVisible();
+  // Pick the four open games and send the whole round at once.
+  const rows = ticket.locator(".lab-window-part ol > li");
+  for (const index of [1, 2, 4, 5]) await rows.nth(index).locator("button").first().click();
+  await ticket.getByRole("button", { name: /Submit/ }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect((sent[0] as { selections: unknown[] }).selections).toHaveLength(6);
+});
+
+test("out of the playoff race, the Big Board says so and there is no ticket", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#standings", homeExtra: homeResponse("playoff-viewer-out"), scenarios: ["playoff-eliminated"] });
+  const board = page.getByRole("dialog", { name: "The Big Board" });
+  await expect(board.locator(".lab-tote-race")).toContainText("You can no longer catch the leader; your score stands", { timeout: 30_000 });
+  await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);
+  await expect(board.locator("tr.is-you")).toHaveClass(/is-out/);
 });
