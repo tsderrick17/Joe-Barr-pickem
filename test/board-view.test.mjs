@@ -44,11 +44,71 @@ test("Survivor: the viewer's own pick and an eliminated viewer", () => {
   assert.equal(out.survivor.playing, false);
 });
 
-test("the new board covers the regular season only: a playoff week (a pick for every game) opens the classic Slate", () => {
+test("the new board covers a regular week (one or two picks) and a playoff round (a pick for every game)", () => {
   assert.equal(boardViewSupported(homeResponse("regular-in"), boardResponse("upcoming-picked")), true);
-  assert.equal(boardViewSupported({ ...homeResponse("regular-in"), isPlayoff: true }, boardResponse("playoff-upcoming")), false);
+  assert.equal(boardViewSupported(homeResponse("playoff-wildcard"), boardResponse("playoff-upcoming")), true);
+  // A regular week with more than two picks is not a shape the board knows.
   assert.equal(boardViewSupported({ ...homeResponse("regular-in"), maxPicks: 6 }, boardResponse("playoff-six-picks")), false);
   assert.equal(boardViewSupported(homeResponse("regular-in"), { ...boardResponse("upcoming-picked"), games: [] }), false);
+});
+
+const playoffReads = (homeScenario = "playoff-wildcard", boardScenario = "playoff-upcoming") => ({ home: homeResponse(homeScenario), board: boardResponse(boardScenario) });
+
+test("a playoff round is a pick for every game: one column a game, your picks under their own games, no Survivor", () => {
+  const view = realBoardView(playoffReads("playoff-wildcard", "playoff-six-picks"));
+  assert.equal(view.maxPicks, view.games.length);
+  assert.equal(view.showSurvivor, false);
+  assert.equal(view.survivor.playing, false);
+  const you = view.rows.find((row) => row.you);
+  // Each of your picks sits under the game it belongs to.
+  view.games.forEach((game, index) => { const slat = you.slats[index]; if (slat) assert.ok([game.away, game.home].includes(slat.team)); });
+  assert.equal(you.slats.filter(Boolean).length, 6);
+});
+
+test("with two of six picks in, the others are owed in their own games' columns", () => {
+  const view = realBoardView(playoffReads());
+  const you = view.rows.find((row) => row.you);
+  assert.equal(you.slats.length, view.games.length);
+  assert.equal(you.slats.filter(Boolean).length, 2);
+  assert.equal(view.canPick, true);
+});
+
+test("the playoff race: the leader, how far back each player is, and who is out or forfeited", () => {
+  const view = realBoardView(playoffReads());
+  assert.ok(view.playoff);
+  const top = Math.max(...view.rows.map((row) => row.wins));
+  assert.equal(view.playoff.leaderWins, top);
+  for (const row of view.rows) {
+    if (row.out || row.forfeited) assert.equal(row.back, null);
+    else assert.equal(row.back, top - row.wins);
+  }
+  assert.ok(view.rows.some((row) => row.out));
+  assert.ok(view.rows.some((row) => row.forfeited));
+  assert.equal(view.playoff.you.forfeitAvailable, true);
+  // A regular week has no race.
+  assert.equal(realBoardView(reads()).playoff, null);
+});
+
+test("out of the race or forfeited, the ticket closes and Forfeit is gone", () => {
+  const out = realBoardView(playoffReads("playoff-viewer-out", "playoff-eliminated"));
+  assert.equal(out.canPick, false);
+  assert.equal(out.playoff.you.out, true);
+  assert.equal(out.playoff.you.forfeitAvailable, false);
+  const gone = realBoardView(playoffReads("playoff-viewer-forfeited", "playoff-forfeited"));
+  assert.equal(gone.canPick, false);
+  assert.equal(gone.playoff.you.forfeited, true);
+});
+
+test("another player's hidden playoff pick sits under a game that kicks off when it does, and never names a team", () => {
+  const home = homeResponse("playoff-wildcard");
+  const board = boardResponse("playoff-upcoming");
+  const kickoff = [...board.games].sort((a, b) => Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt))[3].kickoffAt;
+  const rows = home.rows.map((row, index) => (index === 1 ? { ...row, picks: [{ label: null, abbreviation: null, isHidden: true, resultMark: "", kickoffAt: kickoff }] } : row));
+  const view = realBoardView({ home: { ...home, rows }, board });
+  const row = view.rows.find((item) => item.id === home.rows[1].id);
+  const at = row.slats.findIndex(Boolean);
+  assert.equal(Date.parse(view.games[at] && board.games.find((game) => game.id === view.games[at].id).kickoffAt), Date.parse(kickoff));
+  assert.deepEqual(row.slats[at], { hidden: true, team: null, line: null, result: null });
 });
 
 test("a finished week or the off-season cannot be picked in", () => {

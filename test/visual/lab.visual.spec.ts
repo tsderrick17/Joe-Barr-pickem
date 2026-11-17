@@ -82,6 +82,10 @@ const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
   ["ticket-game-day", [["Moment", "Game day"]], true],
   ["ticket-out-of-survivor", [["Moment", "Out of Survivor"]], true],
   ["ticket-survivor-decided", [["Moment", "Survivor decided"]], true],
+  // A playoff round: a column a game, the race in a line, the out players struck through; the ticket a pick for every game.
+  ["board-wild-card-game-day", [["Moment", "Wild Card game day"]], false],
+  ["board-out-of-the-race", [["Moment", "Out of the race"]], false],
+  ["ticket-wild-card", [["Moment", "Wild Card"]], true],
 ];
 for (const [shot, choices, ticket] of TOTE_SHOTS) {
   for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
@@ -111,7 +115,7 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
   // Game day has both in a column: every shown pick and every hidden pick's three dots start on one left edge, near the cell's left
   // side (not centred). A result is in the type (no letter): said aloud as win or loss.
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day", exact: true }).click();
   for (const column of [3, 4]) {
     const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left - node.closest("td")!.getBoundingClientRect().left)));
     const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover i:first-child");
@@ -199,7 +203,7 @@ test("your row on the Big Board is your ticket: two against the spread and a Sur
   await expect(mine.getByRole("button", { name: /^Survivor: Colts/ })).toBeVisible();
   await expect(board.locator(".lab-tote-ticket")).toContainText("SUBMITTED ✓");
   // Game day: a game that has kicked off cannot be changed.
-  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day" }).click();
+  await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day", exact: true }).click();
   await board.locator(".lab-tote-ticket").click();
   await expect(pickem.getByRole("button", { name: "Browns +2.5" })).toBeDisabled();
   await expect(sheet.getByRole("group", { name: "What to pick" })).toBeVisible();
@@ -646,4 +650,23 @@ test("the Bowl ticket counts the picks owed, fills the gauge and swaps to standi
   await page.getByRole("group", { name: "Day of bowl season" }).getByRole("button", { name: "Jan 20" }).click();
   await expect(ticket.getByRole("img", { name: "All 16 bowls played" })).toBeVisible();
   await expect(page.locator(".lab-bowl-gauge figcaption")).toHaveText("ALL PLAYED");
+});
+
+test("a Wild Card round on the Big Board: a column a game, the race under each name, owed picks as rings, and out of the race no ticket", async ({ page }) => {
+  await openLab(page, "tote");
+  const moment = page.getByRole("group", { name: "Moment" });
+  await moment.getByRole("button", { name: "Wild Card game day", exact: true }).click();
+  const board = page.locator(".lab-tote");
+  await expect(board.locator("th.lab-tote-game")).toHaveCount(6);
+  await expect(board.locator(".lab-tote-race")).toHaveText("Earl leads with 23 · You: 1 back");
+  await expect(board.locator("tr.is-you .lab-tote-owed-ring")).toHaveCount(2);
+  await expect(board.locator("tr.is-out")).toHaveCount(2);
+  // Another player's pick in a game still to kick off is hidden; in a kicked-off game it shows.
+  const earl = board.locator("tbody tr").first();
+  await expect(earl.locator("td.lab-tote-surv").nth(0).locator(".lab-tote-logo")).toHaveCount(1);
+  await expect(earl.locator("td.lab-tote-surv").nth(5).getByRole("img", { name: "Pick in, hidden until kickoff" })).toHaveCount(1);
+  await expect(board.getByRole("button", { name: /2 PICKS OWED/ })).toBeVisible();
+  await moment.getByRole("button", { name: "Out of the race", exact: true }).click();
+  await expect(board.locator(".lab-tote-race")).toContainText("You can no longer catch the leader; your score stands");
+  await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);
 });

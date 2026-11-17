@@ -66,8 +66,59 @@ const inOrder = (view: BoardView, picks: string[]) => view.games.flatMap((game) 
 const gameOf = (view: BoardView, team: string) => view.games.find((game) => game.away === team || game.home === team)!;
 const lineOf = (view: BoardView, team: string) => { const game = gameOf(view, team); return team === game.away ? game.awayLine : game.homeLine; };
 
+/**
+ * A playoff round's face: a pick for every game, so each game is a column headed by its two teams, and a pick is the team's logo under
+ * its game (lit green or red once decided, three dark dots while another player's pick is hidden, PICK where yours is owed). Under each
+ * name, the race: how far back of the leader, or OUT / FORFEITED (the row greyed and struck through).
+ */
+function PlayoffFace({ view, open }: { view: BoardView; open: (() => void) | null }) {
+  const name = (team: string) => view.names[team] ?? team;
+  return (
+    <table className="is-playoff">
+      <colgroup><col className="lab-tote-col-wins" /><col />{view.games.map((game) => <col className="lab-tote-col-game" key={game.id} />)}</colgroup>
+      <thead><tr><th scope="col">W</th><th scope="col">PLAYER</th>{view.games.map((game) => <th className="lab-tote-game" key={game.id} scope="col"><span>{game.away}</span><span>{game.home}</span></th>)}</tr></thead>
+      <tbody>
+        {view.rows.map((row) => {
+          const tap = row.you ? open : null;
+          const cell = (label: string, body: ReactNode) => tap ? <button aria-label={label} className="lab-tote-mine" onClick={tap} type="button">{body}</button> : body;
+          const standing = row.forfeited ? "FORFEITED" : row.out ? "OUT" : row.back === 0 ? "LEADS" : row.back ? `${row.back} BACK` : "";
+          return (
+            <tr className={`${row.you ? "is-you" : ""}${row.out || row.forfeited ? " is-out" : ""}`} key={row.id}>
+              <td className="lab-tote-wins">{row.wins}</td>
+              <th className="lab-tote-name" scope="row"><span className="lab-tote-player">{row.name.toUpperCase()}</span>{standing ? <small>{standing}</small> : null}</th>
+              {view.games.map((game, index) => {
+                const slat = row.slats[index];
+                const matchup = `${name(game.away)} at ${name(game.home)}`;
+                return (
+                  <td className="lab-tote-surv" key={game.id}>
+                    {slat === null ? (row.you && !game.kickedOff && !row.out && !row.forfeited ? cell(`${matchup}: not picked. Open your ticket`, <span className="lab-tote-owed-ring">PICK</span>) : <span aria-label={`${matchup}: no pick`} className="lab-tote-none">—</span>)
+                      : slat.hidden || !slat.team ? <HiddenPick />
+                      : cell(`${matchup}: ${name(slat.team)} ${slat.line ?? ""}${slat.result === "W" ? ", won" : slat.result === "L" ? ", lost" : ""}${row.you ? ". Open your ticket" : ""}`, (
+                        <span className={`lab-tote-logo ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`} role="img" aria-label={name(slat.team)}><Logo team={slat.team} /></span>
+                      ))}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+/** The race in a line: who leads, and where you stand (or that your score stands). */
+function raceLine(view: BoardView) {
+  const race = view.playoff;
+  if (!race) return null;
+  const leaders = race.leaders.length === 1 ? `${race.leaders[0]} leads with ${race.leaderWins}` : race.leaders.length > 1 ? `${race.leaders.length} tied for the lead at ${race.leaderWins}` : "";
+  const you = race.you.forfeited ? "You forfeited; your score stands" : race.you.out ? "You can no longer catch the leader; your score stands" : race.you.back === 0 ? "You lead" : race.you.back ? `You: ${race.you.back} back` : "";
+  return [leaders, you].filter(Boolean).join(" · ");
+}
+
 function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }) {
   const name = (team: string) => view.names[team] ?? team;
+  if (view.playoff) return <PlayoffFace open={open} view={view} />;
   return (
     <table>
       <colgroup><col className="lab-tote-col-wins" /><col />{Array.from({ length: view.maxPicks }, (_, index) => <col className="lab-tote-col-pick" key={index} />)}{view.showSurvivor ? <col className="lab-tote-col-surv" /> : null}</colgroup>
@@ -116,6 +167,8 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
 
 /** What the ticket bar says: the picks still owed (Pick'em, then Survivor while still in it). */
 function owedCount(view: BoardView) {
+  // A playoff round owes a pick for every game still to kick off that has none.
+  if (view.playoff) return view.games.filter((game) => !game.kickedOff && !view.mine.picks.some((team) => team === game.away || team === game.home)).length;
   return Math.max(0, view.maxPicks - view.mine.picks.length) + (view.survivor.playing && !view.mine.survivor ? 1 : 0);
 }
 
@@ -146,6 +199,7 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { 
           <button onClick={onSurvivor} type="button">Survivor</button>
         </div>
       ) : null}
+      {view.playoff ? <p className="lab-tote-race">{raceLine(view)}</p> : null}
       <WeekFace open={view.canPick ? onOpen : null} view={view} />
       {view.canPick ? (
         <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
@@ -199,7 +253,10 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
   };
 
   const ordered = inOrder(view, picks);
-  const lines = [...Array.from({ length: cap }, (_, index) => ({ label: `Pick ${index + 1}`, value: ordered[index] ? `${ordered[index]} ${lineOf(view, ordered[index])}` : null })), ...(pickingSurvivor ? [{ label: "Survivor", value: chip ? name(chip) : null }] : [])];
+  // A playoff round names each line by its game (a pick for every game); a regular week by Pick 1 and Pick 2.
+  const lines = view.playoff
+    ? view.games.map((game) => { const team = picks.find((pick) => pick === game.away || pick === game.home); return { label: `${game.away} @ ${game.home}`, value: team ? `${team} ${lineOf(view, team)}` : null }; })
+    : [...Array.from({ length: cap }, (_, index) => ({ label: `Pick ${index + 1}`, value: ordered[index] ? `${ordered[index]} ${lineOf(view, ordered[index])}` : null })), ...(pickingSurvivor ? [{ label: "Survivor", value: chip ? name(chip) : null }] : [])];
   // A lamp for every pick, in the ticket's own order: dark until picked, a ring while it is only on the ticket, lit once sent, then
   // green or red when its game is decided.
   const lampOf = (team: string | undefined, sentTeams: Array<string | null>, graded: (team: string) => string | null): LampState =>
@@ -295,7 +352,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
           {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
         </button>
         {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
-        <p className="lab-board-note">{view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
+        <p className="lab-board-note">{view.playoff ? "Pick every game against the spread. Send the whole round at once, and change any pick until its game kicks off." : view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
       </section>
     </div>
   );
@@ -303,14 +360,20 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
 
 /* ---------------------------------------------------------------- The room ---------------------------------------------------------------- */
 
-type Scene = "before" | "gameday" | "graded" | "out" | "over";
-const SCENES: ReadonlyArray<readonly [Scene, string]> = [["before", "Before kickoff"], ["gameday", "Game day"], ["graded", "Graded"], ["out", "Out of Survivor"], ["over", "Survivor decided"]];
+type Scene = "before" | "gameday" | "graded" | "out" | "over" | "wildcard" | "wildcard-day" | "wildcard-out";
+const SCENES: ReadonlyArray<readonly [Scene, string]> = [["before", "Before kickoff"], ["gameday", "Game day"], ["graded", "Graded"], ["out", "Out of Survivor"], ["over", "Survivor decided"], ["wildcard", "Wild Card"], ["wildcard-day", "Wild Card game day"], ["wildcard-out", "Out of the race"]];
 
-/** What a player has in at the start of a sample scene: both picks, and the Survivor team unless one is still owed. */
-function sampleTicket(viewer: string, survivorIn: boolean): Ticket {
-  const picks = labStandard(viewer, { round: "regular", moment: "before", viewer }).slats.map((slat) => slat.team as string);
+/**
+ * What a player has in at the start of a sample scene: both picks, and the Survivor team unless one is still owed. In the Wild Card
+ * round, four of the six picks, so two are owed.
+ */
+function sampleTicket(viewer: string, survivorIn: boolean, round: "regular" | "wildcard" = "regular"): Ticket {
+  const picks = labStandard(viewer, { round, moment: "before", viewer }).slats.map((slat) => slat.team as string);
+  if (round === "wildcard") return { picks: picks.slice(0, 4), survivor: null };
   return { picks, survivor: survivorIn ? (LAB_WEEK10_SURVIVOR as Record<string, string>)[viewer] ?? null : null };
 }
+const viewerOf = (scene: Scene) => (scene === "out" ? "Hank" : scene === "wildcard-out" ? "Bev" : LAB_VIEWER);
+const roundOf = (scene: Scene) => (scene.startsWith("wildcard") ? "wildcard" : "regular");
 
 /**
  * The Big Board with the Lab's moment chips above it. Your row is your ticket: tap it to pick or change. `survivorIn` false starts with
@@ -322,23 +385,24 @@ export function BigBoardRoom({ survivorIn = true, startOpen = false, onTicket, o
   const [ticket, setTicket] = useState<Ticket>(() => sampleTicket(LAB_VIEWER, survivorIn));
   const [open, setOpen] = useState(startOpen);
   const [sent, setSent] = useState(false);
-  // "Out of Survivor" is seen as Hank, who lost in week 3; everything else as Walt.
-  const viewer = scene === "out" ? "Hank" : LAB_VIEWER;
-  const moment = scene === "gameday" || scene === "graded" ? scene : "before";
+  // "Out of Survivor" is seen as Hank, who lost in week 3; "Out of the race" as Bev, who can no longer catch the leader; the rest as Walt.
+  const viewer = viewerOf(scene);
+  const round = roundOf(scene);
+  const moment = scene === "gameday" || scene === "graded" ? scene : scene === "wildcard-day" ? "gameday" : "before";
   const champion = scene === "over" ? labSurvivorChampion(LAB_SURVIVOR_LAST_WEEK) : null;
-  const view = labBoardView({ moment, viewer, ticket, champion });
+  const view = labBoardView({ moment, viewer, ticket, champion, round });
   const canPick = view.canPick;
 
   function setScene(next: Scene) {
     setSceneOnly(next);
-    setTicket(sampleTicket(next === "out" ? "Hank" : LAB_VIEWER, next === "before" ? survivorIn : true));
+    setTicket(sampleTicket(viewerOf(next), next === "before" ? survivorIn : true, roundOf(next)));
     setSent(false);
   }
   function submit(next: Ticket) {
     setTicket(next);
     setOpen(false);
     setSent(true);
-    onTicket?.(next.picks.length === 2 && (!view.survivor.playing || Boolean(next.survivor)));
+    onTicket?.(next.picks.length === view.maxPicks && (!view.survivor.playing || Boolean(next.survivor)));
   }
 
   return (

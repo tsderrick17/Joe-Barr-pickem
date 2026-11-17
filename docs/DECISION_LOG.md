@@ -19,6 +19,14 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-17 - Playoff rounds in the clubhouse: the Big Board and ticket cover a pick for every game (Commissioner only)
+
+- **No more classic page for the playoffs.** A playoff round opens on the clubhouse's own Big Board and ticket, as a regular week does (the Survivor spot shows the Big Board, Survivor being over). The pool's playoff rules are unchanged and still enforced by the server: a pick for every game against the spread, the whole round can be sent at once, any pick can be changed until its game kicks off, a pick is hidden from everyone else until its game kicks off, and eligibility is frozen at the start of each Eastern game day.
+- **One column a game.** The Big Board's playoff face heads each column with its two teams; a pick is the team's logo under its own game (lit green or red once decided, as Survivor's chips are), three dark dots while another player's pick is hidden, a dashed PICK ring where your own pick is still owed. A hidden pick is placed under a game that kicks off at its time, so it never says which team or game it is.
+- **The race.** Under each name: LEADS, "N BACK", OUT or FORFEITED (an out or forfeited row is greyed with the name struck through). Over the board, one line: who leads and with how many, and where you stand ("You: 1 back"), or that your score stands once you can no longer catch the leader or have forfeited.
+- **Out of the race, or forfeited:** no ticket bar and no ticket; everything stays in view. **Forfeit** sits at the foot of the ticket (the Slate's own three questions) while you are still in the race.
+- **The ticket** lists every game of the round by kickoff with one lamp a game, names each line on its summary by its game ("LAC @ HOU"), and sends the same POST the Slate sends.
+- **The Lab** gains Wild Card, Wild Card game day and Out of the race on the tote board.
 ## 2026-11-17 - The Bowl Pool in the clubhouse is the Bowl ticket, with each bowl's own pennant (Commissioner only)
 
 - **One ticket for the Bowl Pool.** The clubhouse's Bowl Pool spot no longer opens the classic page in place: it opens the Bowl ticket, the Pick'em ticket's layout in the Bowl Pool's navy and old gold, with Picks and Standings on one page and two tabs to swap between them. It is drawn from the Bowl Pool's own read (`/api/bowl-pool`) and saves with the very same POST the classic page makes (every open pick, favourite or underdog, and the tiebreaker; a game that has kicked off is never sent). Before a seat is claimed it is the Claim your seat ticket; Opt out sits under Save until the first kickoff and asks once before it happens. Before the pool opens to players it says when it opens.

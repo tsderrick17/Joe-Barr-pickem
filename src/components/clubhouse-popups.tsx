@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BowlClaimSeat } from "@/components/bowl-pool-marks";
 import { BowlTicketCard } from "@/components/bowl-ticket";
 import { Sheet } from "@/components/commissioner/wheel-parts";
+import ForfeitPanel from "@/components/forfeit-panel";
 import { RealTrophyRoom } from "@/components/lab/lab-clubhouse";
 import { TicketForm, ToteBoard, type Ticket } from "@/components/lab/lab-tote";
 import SurvivorToteBoard from "@/components/lab/lab-survivor-tote";
@@ -82,6 +83,8 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
   return (
     <Sheet bare onClose={onClose} open={open && view.canPick} title="Your ticket">
       <TicketForm onPoolAction={choosePoolAction} onSubmit={submit} poolAction={poolAction} view={view} />
+      {/* In the playoffs, Forfeit sits at the very foot of the ticket, as on the Slate: three questions, and only the last one acts. */}
+      {view.playoff?.you.forfeitAvailable ? <ForfeitPanel /> : null}
     </Sheet>
   );
 }
