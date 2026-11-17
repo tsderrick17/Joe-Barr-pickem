@@ -363,7 +363,8 @@ test("a pop-up has no X: sliding it down, tapping its handle or the space above 
   await expect(handle.locator("svg")).toHaveCount(0);   // the handle is a small bar, not an X
   // What the sheet is doing the instant after it is told to go: still there, and on its way down.
   const sliding = () => sheet.evaluate((dialog) => ({ open: (dialog as HTMLDialogElement).open, leaving: dialog.classList.contains("is-leaving"), moved: (dialog.querySelector(".cw-sheet-body") as HTMLElement).style.transform.startsWith("translateY(") }));
-  const reopen = async () => { await page.goto("/clubhouse#rules"); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
+  // A fresh load each time: going to the same page with only a new #hash is not a real load, and could race the sheet just put away.
+  const reopen = async () => { await page.goto("/clubhouse#rules"); await page.reload(); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
   // The handle.
   await handle.evaluate((button) => (button as HTMLButtonElement).click());
   expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
