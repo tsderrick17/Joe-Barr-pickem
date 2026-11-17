@@ -52,12 +52,43 @@ export function bowlSeason(iso) {
 }
 
 /**
- * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it).
- * @param {{ home: import("./api-contracts").StandingsResponse, board: import("./api-contracts").SlateResponse }} reads
+ * Each player's move since the last week: how many places they have climbed (positive) or slipped (negative), against the standings as
+ * they stood after `before` (every player's wins added up through that week). Nobody moves when there is nothing to compare with.
+ * @param {Array<{ id: string, name: string, wins: number, place: number, tied: boolean }>} standings
+ * @param {Array<{ id: string, firstName: string }>} rows
+ * @param {Record<string, number> | null | undefined} before
  */
-export function clubhouseFeed({ home, board }) {
-  const standings = placedStandings(home.rows ?? []);
-  const you = standings.find((row) => row.id === home.viewerPlayerId);
+export function withMovement(standings, rows, before) {
+  if (!before) return standings;
+  const then = new Map(placedStandings(rows.map((row) => ({ ...row, wins: before[row.id] ?? 0 }))).map((row) => [row.id, row.place]));
+  return standings.map((row) => ({ ...row, move: then.has(row.id) ? then.get(row.id) - row.place : 0 }));
+}
+
+/**
+ * The Big Board plate's line: what matters to this player right now about the standings. Leading: by how much (or that it is shared).
+ * Otherwise: who leads, and where you are and how far back; with the places you have moved since last week when you have.
+ */
+export function boardNews(standings, viewerId) {
+  if (!standings.length) return null;
+  const you = standings.find((row) => row.id === viewerId);
+  const leaders = standings.filter((row) => row.place === 1);
+  const moved = you?.move ? ` · ${you.move > 0 ? "▲" : "▼"}${Math.abs(you.move)}` : "";
+  if (you && you.place === 1) {
+    if (leaders.length > 1) return `You share the lead${moved}`;
+    const next = standings.find((row) => row.place > 1);
+    return `You lead by ${next ? you.wins - next.wins : you.wins}${moved}`;
+  }
+  const lead = leaders.length === 1 ? `${leaders[0].name} leads` : `${leaders.length} lead`;
+  return you ? `${lead} · You: ${you.tied ? "T" : ""}${you.place}, ${leaders[0].wins - you.wins} back${moved}` : lead;
+}
+
+/**
+ * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it). `before` is every
+ * player's wins through an earlier week, for the standings' week-over-week arrows (see withMovement).
+ * @param {{ home: import("./api-contracts").StandingsResponse, board: import("./api-contracts").SlateResponse, before?: Record<string, number> | null }} reads
+ */
+export function clubhouseFeed({ home, board, before = null }) {
+  const standings = withMovement(placedStandings(home.rows ?? []), home.rows ?? [], before);
   const games = board.games ?? [];
   const gameById = new Map(games.map((game) => [game.id, game]));
   const abbreviation = (game, teamId) => (teamId === game.awayTeamId ? game.awayTeamAbbreviation : game.homeTeamAbbreviation);
@@ -93,7 +124,6 @@ export function clubhouseFeed({ home, board }) {
   const survivorRows = home.survivorAvailable && !survivorOver ? home.survivorRows ?? [] : [];
   const stillIn = survivorRows.filter((row) => row.status !== "eliminated").length;
   const meInSurvivor = survivorRows.find((row) => row.playerId === home.viewerPlayerId);
-  const leaders = standings.filter((row) => row.place === 1);
 
   return {
     feed: {
@@ -117,7 +147,7 @@ export function clubhouseFeed({ home, board }) {
       }),
       mine: mine.map((game, index) => abbreviation(game, myPicks[index].teamId)),
       news: {
-        ...(standings.length ? { board: `${leaders.length === 1 ? `${leaders[0].name} leads` : `${leaders.length} lead`}${you ? ` · You: ${you.tied ? "T" : ""}${you.place}` : ""}` } : {}),
+        ...(standings.length ? { board: boardNews(standings, home.viewerPlayerId) } : {}),
         ...(games.length ? { picks: owedCount ? `${owedCount} owed` : "All in" } : {}),
         ...(survivorRows.length ? { survivor: `${stillIn} of ${survivorRows.length} still in${meInSurvivor ? ` · ${meInSurvivor.status === "eliminated" ? "You’re out" : "You’re in"}` : ""}` } : {}),
       },

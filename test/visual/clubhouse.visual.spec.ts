@@ -120,9 +120,9 @@ test("the open pop-up has its own address: back closes it, a reload reopens it, 
   await page.goBack();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  const tabs = page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-links");
+  const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
   await expect(tabs.locator("[aria-current=page]")).toHaveText("Big Board");
-  await tabs.getByRole("button", { name: /^Survivor/ }).click();
+  await tabs.getByRole("button", { name: "Survivor" }).click();
   await expect(page.getByRole("dialog", { name: "Survivor" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toHaveCount(0);
   await expect(page).toHaveURL(/\/clubhouse#survivor$/);
@@ -226,9 +226,9 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
   await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
-  // The two tabs are exact mirrors: the same width and height.
-  const tabs = await board.locator(".lab-tote-links > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
-  expect(tabs).toHaveLength(2); expect(tabs[0]).toEqual(tabs[1]);
+  // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
+  const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
+  expect(tabs).toHaveLength(3); expect(tabs[0]).toEqual(tabs[1]); expect(tabs[1]).toEqual(tabs[2]);
   await week.selectOption({ label: "Week 3 — Final" });
   await expect(board.locator("header")).toContainText("WEEK 3 · FINAL");
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
@@ -308,15 +308,14 @@ test("the Survivor pop-up shows the whole table", async ({ page }) => {
   await expect(table).toContainText("GARY");   // a player's own "hide" choices never blank or thin this view (and the board writes names in capitals)
 });
 
-test("the Survivor pop-up wears the Big Board's housing, with the same two tabs, a ring round each week's team and the out players struck through", async ({ page }) => {
+test("the Survivor pop-up wears the Big Board's housing, under the board's switch, a ring round each week's team and the out players struck through", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor" });
   const popup = page.getByRole("dialog", { name: "Survivor" });
   await expect(popup.locator(".lab-tote.lab-survivor-tote")).toBeVisible({ timeout: 30_000 });
   await expect(popup.locator(".survivor-ledger")).toHaveCount(0);   // not the classic ledger
-  // The tabs mirror the Big Board's: Survivor is the lit one here, and Big Board is the way across.
-  await expect(popup.locator(".lab-tote-links [aria-current=page]")).toHaveText("Survivor");
-  const tabs = await popup.locator(".lab-tote-links > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
-  expect(tabs).toHaveLength(2); expect(tabs[0]).toEqual(tabs[1]);
+  // The board's switch: Survivor is the lit one here, and Big Board and Ticket are the ways across.
+  await expect(popup.locator(".club-deck-tabs [aria-current=page]")).toHaveText("Survivor");
+  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Big Board", "Ticket", "Survivor"]);
   // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
   await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
   expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
@@ -330,7 +329,7 @@ test("the Survivor pop-up wears the Big Board's housing, with the same two tabs,
   await scroll.evaluate((node) => { node.scrollLeft = 300; });
   expect(await place()).toBe(before);
   // The Big Board tab goes across to the board, in the same place.
-  await popup.locator(".lab-tote-links").getByRole("button", { name: "Big Board" }).click();
+  await popup.locator(".club-deck-tabs").getByRole("button", { name: "Big Board" }).click();
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
@@ -506,4 +505,24 @@ test("on a desktop the pop-ups sit under the site's bar, the Big Board reads lar
   const [first, second] = await Promise.all([games.nth(0).boundingBox(), games.nth(1).boundingBox()]);
   expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);   // side by side
   expect(second!.x).toBeGreaterThan(first!.x + first!.width);
+});
+
+test("the board's switch: your ticket is always there to look at, even for a week looked back on, and sending it lands back on the Big Board", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#standings", scenarios: ["upcoming-picked", "complete-survivor"] });
+  const sheet = page.getByRole("dialog", { name: "The Big Board" });
+  const tabs = sheet.getByRole("navigation", { name: "Board" });
+  await expect(tabs).toBeVisible({ timeout: 30_000 });
+  await tabs.getByRole("button", { name: "Ticket" }).click();
+  await expect(page).toHaveURL(/\/clubhouse#slate$/);
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket.locator(".lab-window")).toBeVisible();
+  // One step back from any tab closes the board.
+  await page.goBack();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // A week looked back on: its ticket is there too, nothing left to change.
+  await page.goto("/clubhouse#standings"); await page.reload();
+  await sheet.getByLabel("Change week").selectOption({ label: "Week 3 — Final" }, { timeout: 30_000 });
+  await tabs.getByRole("button", { name: "Ticket" }).click();
+  await expect(ticket.locator(".lab-window header h3")).toHaveText("WEEK 3");
+  await expect(ticket.locator(".lab-board-cell:not([disabled])")).toHaveCount(0);
 });
