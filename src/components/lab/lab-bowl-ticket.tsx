@@ -12,14 +12,15 @@ const MINE = LAB_BOWL_MINE as Record<string, Side>;
  * Lab try-out: the Bowl Pool as one ticket, the Window's layout in the Bowl Pool's own navy and old gold.
  *  - Picks and Standings on one page, swapped with the two tabs at the top.
  *  - The header's gauge shows how much of bowl season is played, marked at a quarter, half and three quarters, with the games left under it.
- *  - Every bowl flies its own pennant. A bowl you still owe a pick flies it in gold and the header counts them ("3 TO PICK"); picking it
- *    lowers it to navy. A bowl that kicked off without your pick shows its pennant grey and MISSED (a loss). This is not the lamps.
- *  - The pennant is lettered with the bowl's short name. The Logo choice shows the bowl's logo in one colour instead, where a logo file exists.
+ *  - Every bowl flies its own pennant: its real logo, in full colour, on a pennant in the logo's own colours (or, with Name pennants, the
+ *    bowl's short name on navy and gold). A bowl you still owe a pick waves its pennant, its row carries a gold edge and PICK DUE with
+ *    the lock time, and the header counts them ("3 TO PICK"); once picked the pennant hangs still. A bowl that kicked off without your
+ *    pick shows its pennant faded to grey and MISSED (a loss). This is not the lamps.
  * Sample players and bowls only; nothing is saved.
  */
 export function LabBowlTicket() {
   const [stopId, setStopId] = useState(LAB_BOWL_STOPS[1].id);
-  const [flagStyle, setFlagStyle] = useState<"name" | "logo">("name");
+  const [flagStyle, setFlagStyle] = useState<"name" | "logo">("logo");
   const stop = LAB_BOWL_STOPS.find((item) => item.id === stopId) ?? LAB_BOWL_STOPS[0];
   return (
     <section aria-label="Bowl ticket try-out" className="lab-tote-room">
@@ -30,14 +31,10 @@ export function LabBowlTicket() {
         <button aria-pressed={flagStyle === "name"} onClick={() => setFlagStyle("name")} type="button">Name pennants</button>
         <button aria-pressed={flagStyle === "logo"} onClick={() => setFlagStyle("logo")} type="button">Logo pennants</button>
       </div>
-      {flagStyle === "logo" ? <p className="workshop-lab-intro">One-colour logos need the bowls&apos; logo files, which are not in the app yet, so these still show the names.</p> : null}
       <BowlTicket flagStyle={flagStyle} key={stop.id} played={stop.played} />
     </section>
   );
 }
-
-/** Bowl logo files by bowl id, drawn in one colour on the pennant. Empty until the files are added; a bowl without one shows its name. */
-const BOWL_LOGOS: Record<string, string> = {};
 
 function BowlTicket({ played, flagStyle }: { played: number; flagStyle: "name" | "logo" }) {
   const [tab, setTab] = useState<"picks" | "standings">("picks");
@@ -105,7 +102,7 @@ function BowlTicket({ played, flagStyle }: { played: number; flagStyle: "name" |
                   return (
                     <li className={`lab-bowl-game is-${state}`} key={game.id}>
                       <span className="lab-bowl-name">
-                        <BowlFlag flag={game.flag} logo={flagStyle === "logo" ? BOWL_LOGOS[game.id] : undefined} state={state} />
+                        {flagStyle === "logo" ? <BowlLogoFlag game={game} state={state} /> : <BowlFlag flag={game.flag} state={state} />}
                         <span><b>{game.bowl}</b><small>{state === "missed" ? "MISSED · COUNTS AS A LOSS" : state === "owed" ? `PICK DUE · LOCKS ${game.time}` : locked ? "FINAL" : game.time}</small></span>
                       </span>
                       {cell("away")}
@@ -156,19 +153,34 @@ function BowlTicket({ played, flagStyle }: { played: number; flagStyle: "name" |
 }
 
 /**
- * The bowl's pennant: a felt pennant with a gold hoist, lettered with the bowl's short name (or its logo in one colour). Gold while a pick
- * is owed, navy once picked, grey when the bowl kicked off without one.
+ * The bowl's name pennant: a felt pennant with a gold hoist, lettered with the bowl's short name. Gold while a pick is owed, navy once
+ * picked, grey when the bowl kicked off without one.
  */
-function BowlFlag({ flag, state, logo, small = false }: { flag: string; state: FlagState; logo?: string; small?: boolean }) {
+function BowlFlag({ flag, state, small = false }: { flag: string; state: FlagState; small?: boolean }) {
   const size = flag.length > 7 ? 11 : flag.length > 4 ? 13 : 16;
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-${state} ${small ? "is-small" : ""}`}>
       <svg focusable="false" viewBox="0 0 120 40">
         <path className="lab-bowl-flag-cloth" d="M8 1L118 20L8 39Z" />
         <rect className="lab-bowl-flag-hoist" height="40" rx="2" width="9" x="0" y="0" />
-        {logo ? null : <text className="lab-bowl-flag-name" fontSize={small ? 22 : size} x={small ? 40 : 14} y="21" {...(flag.length > 7 ? { lengthAdjust: "spacingAndGlyphs", textLength: 66 } : {})}>{flag}</text>}
+        <text className="lab-bowl-flag-name" fontSize={small ? 22 : size} x={small ? 40 : 14} y="21" {...(flag.length > 7 ? { lengthAdjust: "spacingAndGlyphs", textLength: 66 } : {})}>{flag}</text>
       </svg>
-      {logo ? <span className="lab-bowl-flag-logo" style={{ "--bowl-logo": `url(${logo})` } as CSSProperties} /> : null}
+    </span>
+  );
+}
+
+/**
+ * The bowl's logo pennant: the real logo in full colour, sewn on near the hoist like a patch, on a pennant in the logo's own colours (its
+ * cloth and hoist). It waves while a pick is owed and fades to grey when the bowl kicked off without one.
+ */
+function BowlLogoFlag({ game, state }: { game: Game; state: FlagState }) {
+  return (
+    <span aria-hidden="true" className={`lab-bowl-flag is-logo is-${state}`} style={{ "--flag-cloth": game.cloth, "--flag-hoist": game.hoist } as CSSProperties}>
+      <svg focusable="false" viewBox="0 0 140 56">
+        <path className="lab-bowl-flag-cloth" d="M10 1L138 28L10 55Z" />
+        <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
+        <image height="48" href={`/lab/bowl-logos/${game.logo}.webp`} preserveAspectRatio="xMidYMid meet" width="56" x="14" y="4" />
+      </svg>
     </span>
   );
 }
