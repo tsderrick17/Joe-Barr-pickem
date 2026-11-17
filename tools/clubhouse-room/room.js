@@ -1,17 +1,20 @@
 // The clubhouse: a grand beach bungalow and the ultimate man cave, seen at eye level from just inside the front, looking down the room. Nothing
 // in it is turned to the camera by a trick: what has to be read hangs on the wall that faces you, and the side walls carry the
-// things that look right in perspective.
+// things that look right in perspective. The room is BUILT the first way round (described below: bar on the left, chimney on the
+// right) and then DRAWN as its mirror image (see MIRROR), so in the pictures the bar runs down the right and the chimney stands on the
+// left; every left and right in the comments below is the room as built.
 //  - Ceiling: natural beach-hut thatch laid in courses, three dark timber trusses and a ridge beam up high, two big palm-leaf fans.
 //  - Back wall, left: where picks are made, face on: the Big Board, one wide board of spreads under it, the counter. No sign.
 //  - Back wall, right: glass to the thatch, the sliding doors standing open onto the pool patio, palms, tiki torches and the sea.
 //  - Side walls: full of windows (four tall on the right, three tall at the front left and a clerestory strip over the bar); the
 //    sun comes in through them across the floor.
 //  - Left wall: the bar running down the room (fluted walnut, marble, brass), leather stools, a mirrored back bar of bottles and
-//    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table).
-//  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), a painted Trophy Room sign on its near face with the
-//    constitution framed under it, and the lounge in front, set clear of the aisle.
-//  - Middle, forward: a long oval Survivor poker table with a chair for every player. The floor in front of it is the way in.
-//    From Dec 7 the Bowl Pool's board stands at the front left.
+//    glassware under the neon, the plaques along its front, the laptop on top (the record book is on the lounge table); at night a
+//    blue neon line under its lip and along its foot.
+//  - Right wall: a grand floor-to-thatch stone chimney (the fire lit at night), the Trophy Room shelf on its near face with the
+//    constitution framed under it, and the lounge in front (white slipcovers, white cane, blue cushions, a striped rug).
+//  - Middle, forward: a long oval Survivor poker table (cup holders sunk in its padded rail) with a swivel card-room chair for every player.
+//    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
 import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky } from "/surfaces.js";
@@ -578,11 +581,11 @@ export async function buildRoom(q) {
   const tubRoll = new THREE.TorusGeometry(0.222, 0.034, 12, 48, Math.PI * 0.8);
   for (let a = 0; a < SEATS; a++) {
     const t = Math.PI / 2 + ((a + 1) / (SEATS + 1)) * Math.PI * 2, cos = Math.cos(t), sin = Math.sin(t);                              // the dealer sits at the far side (t = -pi/2)
-    // a steel cup holder sunk into the felt at each seat's right hand, just inside the racetrack, and a drink in some of them
-    const along = Math.atan2(sin, cos) - 0.2, hx = PX + Math.cos(along) * (PRX - 0.2) * 0.86, hz = PZ + Math.sin(along) * (PRZ - 0.2) * 0.86;
-    add(poker, new THREE.TorusGeometry(0.046, 0.007, 8, 28), cupSteel, [hx, 0.822, hz], { rot: [Math.PI / 2, 0, 0], cast: false });
-    add(poker, cyl(0.043, 0.043, 0.003, 24), std(0x050505, { roughness: 0.7 }), [hx, 0.8215, hz], { cast: false });
-    if ([0, 3, 5, 8].includes(a)) { add(poker, tumbler, crystalGlass, [hx, 0.8, hz], { cast: false }); add(poker, cyl(0.03, 0.03, 0.035, 16), whiskey, [hx, 0.822, hz], { cast: false }); }
+    // a steel cup holder sunk into the padded leather rail at each seat's right hand, and a drink in some of them
+    const along = Math.atan2(sin, cos) - 0.2, RAIL_TOP = 0.84 + 0.085, hx = PX + Math.cos(along) * (PRX + 0.02), hz = PZ + Math.sin(along) * (PRZ + 0.02);
+    add(poker, new THREE.TorusGeometry(0.046, 0.008, 8, 28), cupSteel, [hx, RAIL_TOP - 0.004, hz], { rot: [Math.PI / 2, 0, 0], cast: false });
+    add(poker, cyl(0.043, 0.043, 0.004, 24), std(0x050505, { roughness: 0.7 }), [hx, RAIL_TOP - 0.003, hz], { cast: false });
+    if ([0, 3, 5, 8].includes(a)) { add(poker, tumbler, crystalGlass, [hx, RAIL_TOP - 0.04, hz], { cast: false }); add(poker, cyl(0.03, 0.03, 0.035, 16), whiskey, [hx, RAIL_TOP - 0.018, hz], { cast: false }); }
     const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.36), 0, PZ + sin * (PRZ + 0.36)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
     // A card-room chair as a real poker room has them: a swivel seat on a five-star base with casters, a deep round seat cushion and
     // a padded back that wraps round to the arms, all in the table rail's black leather with a stitched welt.

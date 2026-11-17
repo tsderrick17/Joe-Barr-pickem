@@ -17,11 +17,11 @@ import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
  *    inside, looking down the room under a thatched beach-hut ceiling with two big palm-leaf fans. There is room to walk: in past
  *    the poker table, along the bar, round the lounge and out through the open doors. Tap anything to go there: the wall that faces
  *    you where picks are made (the Big Board, under it one wide board of the week's spreads, the counter; no sign says
- *    "sportsbook"), the bar down the left wall (the plaques along its front, the laptop on top: the pool chat, a
- *    mail sign when there's a new message), the stone chimney on the right (the fire lit at night, a Trophy Room sign on it above the
+ *    "sportsbook"), the bar down the right wall (the plaques along its front, the laptop on top: the pool chat, a
+ *    mail sign when there's a new message), the stone chimney on the left (the fire lit at night, a Trophy Room sign on it above the
  *    framed constitution) (it opens today's turning table and banners), the lounge by the fire (the record book open on
  *    its table), the oval Survivor poker table forward in the middle with a chair for every player, and from Dec 7 the Bowl Pool's
- *    bulletin board, wheeled in at the front left.
+ *    bulletin board, wheeled in at the front right.
  *  - Everything that can be tapped says so: a gilt name plate with an arrow sits on each thing, always, and the three with news worth
  *    a glance (the Big Board, Survivor, the Bowl Pool) carry a line of it. A plain list of the rooms sits under the picture for anyone
  *    who would rather tap a word.
@@ -214,7 +214,6 @@ function Screen({ corners, box, w, h, className, children }: { corners: Point[] 
  * ever shown. The headline of each (and Survivor's) is also in its label, in type big enough to read at a glance.
  */
 /** The Big Board in the room: the leader always on the top line, then up to five players a page, a new page every 8 seconds. */
-const MAIL_FLAG = 30;   // px: the width of the red new-message flag on the chat plate (see .lab-room-mail)
 const BOARD_PAGE = 5;
 const BOARD_PAGE_MS = 8_000;
 const TICKER_MS = 7_000;
@@ -380,18 +379,15 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
       <RoomNews feed={feed} frame={frame} picture={picture} />
       {spots.map(({ spot, room: next, name, tag, label, at: tall, wideAt, fullAt, ticket }) => {
         const free = wide ? wideAt ?? tall : full ? fullAt ?? tall : tall;
-        // Filling the screen crops the picture a little at its sides; a plate that would be cut off there is drawn in from the edge.
+        // Filling the screen crops the picture a little at its sides; a plate that would be cut off there is drawn in from the edge: the
+        // chimney's (Trophies, Rules) at the left, the bar's chat plate at the right. (The chat plate's red new-message flag hangs off its
+        // left end, into the room, so it never needs room at the edge.)
         const at = picture.spots[spot];
         let plateStyle: CSSProperties | undefined;
         if (full && frame && at && typeof window !== "undefined") {
           const crop = Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6;
-          if (spot === "trophies" || spot === "constitution") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
-        }
-        // The chat plate is drawn in from the left by what hangs off it: the picture's crop (filling the screen), and the red new-message flag
-        // carried on past its left end (in the Lab's frame as well).
-        if (spot === "chat" && frame && at && typeof window !== "undefined") {
-          const crop = full ? Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6 : 0;
-          plateStyle = { left: Math.max(0, crop + (feed.mail ? MAIL_FLAG : 0) - at.x * frame.width) };
+          if (spot === "trophies" || spot === "constitution") plateStyle = { left: Math.max(0, crop - at.x * frame.width) };
+          if (spot === "chat") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
         }
         const plate = label === "none" ? null : (
           <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>

@@ -19,6 +19,18 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-17 - The clubhouse room turned round, and furnished again (Commissioner only)
+
+- The room picture is the mirror image of the old one: the bar now runs down the right wall and the stone chimney (Trophy Room,
+  Constitution) stands on the left. Words in the room (the neon, the constitution, the Bowl Pool's cards and pennant, the live
+  boards) still read the right way round; the name plates are anchored to the new sides.
+- The lounge is white and blue: white slipcovers and white-painted cane, navy, cornflower and ticking-stripe cushions, a white table,
+  a blue-and-white striped rug.
+- The poker table's chairs are swivel card-room chairs on five-star bases, and each seat's cup holder is sunk into the padded rail.
+- At night the blue light is placed on purpose: a neon line under the lip of the bar and of the picks counter and along the bar's foot.
+  The pool's light no longer reaches in to light the counter's corner.
+- The Bowl Pool's board (from Dec 7) hangs a little lower on its stand.
+
 ## 2026-11-17 - The clubhouse on a desktop (Commissioner only)
 
 - From 1024 px wide, the clubhouse's pop-ups sit under the site's bar (never over it) and use the width: the Big Board and Survivor in a 760 px sheet with bigger type and taller rows, the ticket's games two across in a 920 px sheet, the Bowl ticket one bowl a row in a 720 px sheet, and the Trophy Room's turning table sized to the screen's height with the plaques up to three a row, centred.
