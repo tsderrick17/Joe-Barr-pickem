@@ -544,3 +544,80 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* A real page opened over the room: it fills the screen under the site's bar and scrolls on its own, with the way back pinned on top. */
 .clubhouse-pane { background: var(--club-page); bottom: 0; left: 0; overflow-y: auto; position: fixed; right: 0; z-index: 30; }
 .clubhouse-pane > .lab-room-bar { padding-inline: 16px; top: 0; }
+
+/* ---- Bowl ticket (Lab): the Window's layout in the Bowl Pool's navy and old gold ----
+   Every bowl flies a pennant: gold while you owe its pick, navy once picked, grey when it kicked off without one. The header's gauge
+   shows how much of bowl season is played. */
+.lab-bigboard.lab-bowl-ticket { --bowl-ink: rgb(240 232 214); --bowl-gold-lt: rgb(222 192 136); background: rgb(18 28 50); border-color: rgb(12 19 36); box-shadow: inset 0 0 0 1px rgba(179, 139, 77, .6), 0 8px 18px rgba(0, 0, 0, .35); color: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; }
+.lab-bowl-ticket .lab-bowl-head { align-items: center; border-bottom: 1px solid rgba(179, 139, 77, .5); display: grid; padding: 4px 0 10px; gap: 12px; grid-template-columns: 1fr auto; }
+.lab-bowl-title { display: grid; gap: 4px; justify-items: start; }
+.lab-bowl-title p { color: var(--bowl-slip-gold); font-size: .62rem; letter-spacing: .4em; margin: 0; }
+.lab-bowl-title h3 { color: var(--bowl-ink); font-size: 1.35rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
+.lab-bowl-due { align-items: center; color: var(--bowl-gold-lt); display: inline-flex; font-size: .72rem; gap: 6px; letter-spacing: .12em; }
+.lab-bowl-due.is-clear { color: rgba(240, 232, 214, .6); }
+.lab-bowl-gauge { display: grid; justify-items: center; margin: 0; width: 8.5rem; }
+.lab-bowl-gauge svg { display: block; width: 100%; }
+.lab-bowl-gauge figcaption { color: rgba(240, 232, 214, .75); font-size: .66rem; letter-spacing: .14em; margin-top: -4px; }
+.lab-bowl-gauge figcaption b { color: var(--bowl-ink); font-size: .95rem; }
+.lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 6; stroke: rgba(240, 232, 214, .14); }
+.lab-bowl-gauge-fill { fill: none; stroke-linecap: round; stroke-width: 6; stroke: var(--bowl-slip-gold); }
+.lab-bowl-gauge-tick { stroke: rgba(240, 232, 214, .55); stroke-width: 1.5; }
+.lab-bowl-gauge-mark { fill: rgba(240, 232, 214, .7); font-family: Georgia, serif; font-size: 10px; font-weight: 700; text-anchor: middle; }
+.lab-bowl-gauge-needle { stroke: var(--bowl-ink); stroke-linecap: round; stroke-width: 2.2; }
+.lab-bowl-gauge-hub { fill: var(--bowl-slip-gold); }
+.lab-bowl-ticket .lab-chips button { border-color: rgba(179, 139, 77, .55); color: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .08em; }
+.lab-bowl-ticket .lab-chips button[aria-pressed="true"] { background: var(--bowl-slip-gold); border-color: var(--bowl-slip-gold); color: rgb(18 28 50); }
+.lab-bowl-day { display: grid; gap: 4px; }
+.lab-bowl-day h4 { border-bottom: 1px solid rgba(179, 139, 77, .3); color: var(--bowl-slip-gold); padding: 6px 0 4px; }
+.lab-bowl-ticket .lab-bowl-game { border-bottom: 1px solid rgba(240, 232, 214, .08); border-left: 3px solid transparent; grid-template-columns: 1fr 1fr; padding: 8px 0 10px 8px; }
+.lab-bowl-ticket .lab-bowl-game.is-owed { background: linear-gradient(90deg, rgba(179, 139, 77, .14), transparent 60%); border-left-color: var(--bowl-slip-gold); }
+.lab-bowl-name { align-items: center; display: flex; gap: 10px; grid-column: 1 / -1; min-width: 0; }
+.lab-bowl-name > span:last-child { display: grid; min-width: 0; }
+.lab-bowl-name b { color: var(--bowl-ink); font-size: .82rem; letter-spacing: .06em; }
+.lab-bowl-name small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .04em; }
+.lab-bowl-game.is-owed .lab-bowl-name small { color: var(--bowl-gold-lt); font-weight: 700; }
+.lab-bowl-game.is-missed .lab-bowl-name small { color: rgb(236 150 132); }
+.lab-bowl-ticket .lab-board-at { display: none; }
+.lab-bowl-ticket .lab-board-cell { background: rgb(26 38 64); border-color: rgba(240, 232, 214, .08); }
+.lab-bowl-ticket .lab-board-team { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .02em; min-width: 0; }
+.lab-bowl-ticket .lab-board-line { color: var(--bowl-gold-lt); text-shadow: none; }
+.lab-bowl-ticket .lab-board-final.is-covered { color: var(--bowl-gold-lt); }
+.lab-bowl-flag { display: inline-block; flex: none; position: relative; width: 6.6rem; }
+.lab-bowl-flag.is-small { width: 1.6rem; }
+.lab-bowl-flag svg { display: block; overflow: visible; width: 100%; }
+.lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
+.lab-bowl-flag-hoist { fill: var(--bowl-slip-gold); }
+.lab-bowl-flag-name { dominant-baseline: central; fill: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .04em; }
+.lab-bowl-flag-logo { background: var(--bowl-gold-lt); inset: 12% 30% 12% 12%; -webkit-mask: var(--bowl-logo) center / contain no-repeat; mask: var(--bowl-logo) center / contain no-repeat; position: absolute; }
+.lab-bowl-flag.is-owed svg { animation: lab-bowl-flutter 2.8s ease-in-out infinite; transform-origin: 4% 50%; }
+.lab-bowl-flag.is-owed .lab-bowl-flag-cloth { fill: var(--bowl-slip-gold); stroke: var(--bowl-gold-lt); }
+.lab-bowl-flag.is-owed .lab-bowl-flag-hoist { fill: var(--bowl-ink); }
+.lab-bowl-flag.is-owed .lab-bowl-flag-name { fill: rgb(18 28 50); }
+.lab-bowl-flag.is-owed .lab-bowl-flag-logo { background: rgb(18 28 50); }
+.lab-bowl-flag.is-missed { opacity: .5; }
+.lab-bowl-flag.is-missed .lab-bowl-flag-cloth { fill: rgb(70 74 84); stroke: rgba(240, 232, 214, .3); }
+.lab-bowl-flag.is-missed .lab-bowl-flag-hoist { fill: rgb(120 120 120); }
+.lab-bowl-flag.is-missed .lab-bowl-flag-name { fill: rgba(240, 232, 214, .7); }
+.lab-bowl-flag.is-done { opacity: .75; }
+@keyframes lab-bowl-flutter {
+  0%, 100% { transform: skewY(0) scaleX(1); }
+  50% { transform: skewY(-2deg) scaleX(.97); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-bowl-flag.is-owed svg { animation: none; }
+}
+.lab-bowl-tiebreaker { align-items: center; color: var(--bowl-ink); display: flex; font-family: Georgia, serif; font-size: .8rem; gap: 10px; grid-column: 1 / -1; justify-content: space-between; }
+.lab-bowl-tiebreaker input { background: rgb(26 38 64); border: 1px solid var(--bowl-slip-gold); border-radius: 4px; color: var(--bowl-ink); font: inherit; font-size: 1rem; min-height: 2.75rem; text-align: center; width: 4.5rem; }
+.lab-bowl-tiebreaker input:focus-visible { outline: 2px solid var(--bowl-gold-lt); outline-offset: 2px; }
+.lab-bowl-ticket .lab-window-ticket { border-top-color: rgba(179, 139, 77, .5); }
+.lab-bowl-ticket .lab-window-ticket dt { color: var(--bowl-gold-lt); font-family: Georgia, serif; }
+.lab-bowl-ticket .lab-window-ticket dd { color: var(--bowl-ink); }
+.lab-bowl-ticket .lab-window-submit { background: var(--bowl-slip-gold); color: rgb(18 28 50); font-family: var(--font-graduate), Georgia, serif; }
+.lab-bowl-ticket .lab-window-submit:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--bowl-slip-gold); color: var(--bowl-gold-lt); }
+.lab-bowl-ticket .lab-window-part h4 { color: var(--bowl-slip-gold); }
+.lab-bowl-ticket .lab-window-part h4 small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; }
+.lab-bowl-ticket .lab-bowl-standings li { border-bottom: 1px solid rgba(240, 232, 214, .08); color: var(--bowl-ink); grid-template-columns: 2.5rem 1fr auto; padding: 9px 4px; }
+.lab-bowl-standings span { color: var(--bowl-gold-lt); font-size: .8rem; }
+.lab-bowl-standings b { font-family: Georgia, serif; font-size: 1.05rem; }
+.lab-bowl-standings em { font-style: normal; letter-spacing: .06em; }
+.lab-bowl-ticket .lab-bowl-standings li.is-you { background: rgba(179, 139, 77, .16); box-shadow: inset 3px 0 0 var(--bowl-slip-gold); }
