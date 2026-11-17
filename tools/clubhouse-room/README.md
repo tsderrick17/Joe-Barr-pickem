@@ -18,7 +18,7 @@ The room borrows the trophy renderer's modules (its materials and helpers) and i
 
 ## Files
 
-- `room.js`: the room (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
+- `room.js`: the room, built and then drawn as its mirror image so the bar is on the right and the chimney on the left (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
   the bar and its mirrored back bar, the stone fireplace (lit only at night) and the Trophy Room sign, the lounge, the oval
   poker table, the Bowl Pool board), its light (the
   sun, the room's own reflections, contact shadow, glow) and the camera.
