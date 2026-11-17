@@ -727,7 +727,7 @@ export async function buildRoom(q) {
     // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
     // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-1.45, 0, -4.6); stand.rotation.y = 0.45; stand.scale.setScalar(0.85);
+    const stand = new THREE.Group(); stand.position.set(-0.8, 0, -3.8); stand.rotation.y = 0.55; stand.scale.setScalar(0.85);
     const LOW = 0.16;                                                                                                                   // the board hangs a tad lower on its posts than it did
     b2.add(stand);
     const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
@@ -769,7 +769,7 @@ export async function buildRoom(q) {
   for (const child of [...scene.children]) world.add(child);
   scene.add(world);
   const mirrored = ([x, y, z]) => [x * MIRROR, y, z];
-  camera.position.set(...mirrored((q.get("cam") ?? "0.45,1.72,0.4").split(",").map(Number)));
+  camera.position.set(...mirrored((q.get("cam") ?? "0.45,1.72,0.05").split(",").map(Number)));
   camera.lookAt(...mirrored((q.get("look") ?? "-0.08,1.8,-9").split(",").map(Number)));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
