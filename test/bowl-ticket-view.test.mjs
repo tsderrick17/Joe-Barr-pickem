@@ -64,8 +64,10 @@ test("a known bowl flies its logo in its own colours, whatever the sponsor; an u
   assert.equal(bowlPennant("College Football Playoff National Championship").logo, "championship");
   assert.equal(bowlPennant("Valero Alamo Bowl").cloth, "rgb(192 26 30)");
   assert.deepEqual(bowlPennant("Snoozeville Mattress Bowl"), { flag: "SNOOZEVILLE MATTRESS", logo: null, cloth: null, hoist: null });
-  assert.equal(bowlPennant("Vrbo Fiesta Bowl").logo, null);
-  assert.equal(bowlPennant("Vrbo Fiesta Bowl").flag, "FIESTA");
+  assert.equal(bowlPennant("Vrbo Fiesta Bowl").logo, "fiesta");
+  assert.equal(bowlPennant("Rate Bowl").logo, "rate");
+  assert.equal(bowlPennant("Duke's Mayo Bowl").logo, "dukes-mayo");
+  assert.equal(bowlPennant("Snoop Dogg Arizona Bowl presented by Gin & Juice").logo, "arizona");
 });
 
 test("every bowl logo file the pennants name exists", async () => {
