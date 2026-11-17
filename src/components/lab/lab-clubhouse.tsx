@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import AllTimeTable, { type AllTimeRow } from "@/components/all-time-table";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
@@ -98,22 +99,20 @@ function TrophyRoom() {
 }
 
 type RealSeason = { seasonYear: number; pickem: Array<{ name: string }> | null; survivor: Array<{ name: string }> | null; bowl: Array<{ name: string }> | null };
-type RealPlayer = { playerId: string; name: string; ab: number; h: number; avg: number | null };
+type RealPlayer = AllTimeRow;
 const names = (list: Array<{ name: string }> | null) => (list?.length ? list.map((champion) => champion.name).join(" & ") : "—");
 
 /**
  * The Trophy Room on the pool's real champions and records (the Trophy Room page's own read): the trophies on their turning table, a plaque
- * for every season that has a champion, and the all-time Pick'em records, best hit rate first.
+ * for every season that has a champion (side by side, up to three a row), and the All-Time Table with its Record / Other Stats switch.
  */
 export function RealTrophyRoom({ trophies, players }: { trophies: RealSeason[]; players: RealPlayer[] }) {
   const seasons = [...trophies].sort((a, b) => b.seasonYear - a.seasonYear).map((year) => ({ season: String(year.seasonYear), pickem: names(year.pickem), survivor: names(year.survivor), bowl: names(year.bowl) }));
-  const records = players.filter((player) => player.ab > 0 && player.avg !== null).sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0) || a.name.localeCompare(b.name))
-    .map((player) => ({ name: player.name, wins: player.h, losses: player.ab - player.h, rate: player.avg ?? 0 }));
   return (
     <div className="lab-room-stack lab-wall-table">
       <TrophyTurntable seasons={trophies} />
       <PlaquesShelf seasons={seasons} scenes={false} />
-      <RecordsTable rows={records} />
+      <AllTimeTable heading="Records" players={players} />
     </div>
   );
 }
@@ -219,7 +218,7 @@ const BOARD_PAGE_MS = 8_000;
 const TICKER_MS = 7_000;
 
 /** One player's line on the Big Board. */
-export type RoomStanding = { name: string; wins: number; place: number | null; tied: boolean };
+export type RoomStanding = { name: string; wins: number; place: number | null; tied: boolean; move?: number };
 /** One game on the spreads board: its kickoff as shown, the two teams (abbreviations) and each one's line. */
 export type RoomGame = { id: string; kickoff: string; away: string; home: string; awayLine: string; homeLine: string; final?: { away: { score: number; covered: boolean }; home: { score: number; covered: boolean } } };
 /**
@@ -265,7 +264,7 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
           <ol data-page={page + 1}>
             {standings.map((row, index) => (
               <li key={`${row.name}-${index}`}>
-                <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span><b>{row.wins}</b>
+                <i>{row.tied ? "T" : ""}{row.place}</i><span>{row.name}</span>{row.move ? <em className={row.move > 0 ? "is-up" : "is-down"}>{row.move > 0 ? "▲" : "▼"}{Math.abs(row.move)}</em> : <em />}<b>{row.wins}</b>
               </li>
             ))}
           </ol>

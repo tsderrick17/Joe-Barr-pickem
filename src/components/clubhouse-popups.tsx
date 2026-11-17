@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { BowlClaimSeat } from "@/components/bowl-pool-marks";
 import { BowlTicketCard } from "@/components/bowl-ticket";
-import { Sheet } from "@/components/commissioner/wheel-parts";
 import ForfeitPanel from "@/components/forfeit-panel";
 import { RealTrophyRoom } from "@/components/lab/lab-clubhouse";
 import { TicketForm, ToteBoard, type Ticket } from "@/components/lab/lab-tote";
@@ -27,15 +26,28 @@ import { currentSeasonYear } from "@/lib/season";
 const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 /** The Big Board: everyone's picks this week, and the bar that opens your ticket. */
-export function BoardPopup({ view, home, onOpenTicket, onSurvivor, onWeek }: { view: BoardView; home: StandingsResponse; onOpenTicket: () => void; onSurvivor: () => void; onWeek: (weekId: string) => void }) {
-  return <ToteBoard onOpen={onOpenTicket} onSurvivor={home.survivorAvailable ? onSurvivor : undefined} onWeek={onWeek} view={view} />;
+export function BoardPopup({ view, onOpenTicket, onWeek }: { view: BoardView; onOpenTicket: () => void; onWeek: (weekId: string) => void }) {
+  return <ToteBoard onOpen={onOpenTicket} onWeek={onWeek} view={view} />;
+}
+
+export type DeckTab = { pane: string; label: string };
+/**
+ * The clubhouse board's switch, always on top of it: Big Board, your Ticket, and Survivor (or, once Survivor is decided and the bowls are
+ * on, the Bowl Pool). Each tab is its own address, so the phone's back gesture still closes the board.
+ */
+export function DeckTabs({ tabs, current, onChoose }: { tabs: DeckTab[]; current: string; onChoose: (pane: string) => void }) {
+  return (
+    <nav aria-label="Board" className="club-deck-tabs" style={{ ["--tabs" as string]: tabs.length }}>
+      {tabs.map((tab) => <button aria-current={tab.pane === current ? "page" : undefined} key={tab.pane} onClick={() => { if (tab.pane !== current) onChoose(tab.pane); }} type="button">{tab.label}</button>)}
+    </nav>
+  );
 }
 
 /**
- * Your ticket: sends the very same POST the Slate makes. It stands beside the board's sheet, not inside it (a sheet inside a sheet is drawn
- * under its parent's scrolling body), and after the board's own in the page, so it opens on top of it.
+ * Your ticket, the middle tab of the clubhouse's board: sends the very same POST the Slate makes. Always there to look at, every week: once
+ * every game has kicked off it is the week's ticket as it stands, nothing left to change.
  */
-export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardView; open: boolean; onClose: () => void; onChanged: () => Promise<void> }) {
+export function TicketPanel({ view, onSent, onChanged }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void> }) {
   // All games / Pool action is the Slate's own choice, saved to the same place (the profile), and kept while the clubhouse is open.
   const [actionOnly, setActionOnly] = useState<boolean | null>(null);
   const poolAction = actionOnly ?? view.poolAction;
@@ -70,7 +82,7 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
       haptic("success");
       window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
       await onChanged();   // the board and the room's ticket read again, so the pick shows at once
-      onClose();
+      onSent();
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) { window.location.replace("/login"); return ""; }
       haptic("warning");
@@ -81,11 +93,11 @@ export function TicketPopup({ view, open, onClose, onChanged }: { view: BoardVie
   }
 
   return (
-    <Sheet bare onClose={onClose} open={open && view.canPick} title="Your ticket">
+    <>
       <TicketForm onPoolAction={choosePoolAction} onSubmit={submit} poolAction={poolAction} view={view} />
       {/* In the playoffs, Forfeit sits at the very foot of the ticket, as on the Slate: three questions, and only the last one acts. */}
       {view.playoff?.you.forfeitAvailable ? <ForfeitPanel /> : null}
-    </Sheet>
+    </>
   );
 }
 

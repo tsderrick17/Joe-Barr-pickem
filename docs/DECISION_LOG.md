@@ -19,6 +19,19 @@ Add new entries at the top of this file. When it passes about 150 KB, move
 everything older than the current month into a new file under `docs/decisions/`
 and add a row above.
 
+## 2026-11-17 - The clubhouse board's switch, your ticket every week, and a smoother, cleaner clubhouse (Commissioner only)
+
+- **One board, three tabs.** The Big Board, your Ticket and Survivor (the Bowl Pool instead once Survivor is decided and the bowls are on; whichever was asked for when both are) are one sheet with a switch pinned on top. Each tab keeps its own address (#standings, #slate, #survivor, #bowl), so back still closes the board in one step. The ticket is no longer a sheet over the board: it is the middle tab, and sending it lands back on the Big Board.
+- **Your ticket is always there to look at**, every week: once everything has kicked off (or for a week looked back on) it is that week's ticket as it stands, nothing left to change.
+- **The standings move week over week.** The room's Big Board shows ▲ or ▼ with the places each player has climbed or slipped since last week (against every player's wins through last week once this week has a graded game, else through the week before). Regular season only.
+- **The Big Board plate says what matters to you:** "You lead by 2", "You share the lead", or "Earl leads · You: T3, 2 back", with your own ▲▼ since last week.
+- **Pop-ups rise out of the ticket** at the foot of the screen: a quick slide that settles softly (440 ms), the dimmed room fading in behind it; no coloured band across the top of the paper ones. Reduced motion: no slide.
+- **On a phone the ticket is the foot of the screen itself:** edge to edge, flush with the bottom, top corners rounded like a drawer. On a desktop it stays a centred card.
+- **A losing pick keeps its logo in full colour**: only the red ring and slash say it lost (a win is the green ring).
+- **Your row on the Survivor table** is lit gold with a YOU tag.
+- **The ticker's spreads** on finished games are bigger.
+- **The Trophy Room** stands the plaques side by side (up to three a row, on a phone too) and has the All-Time Table with its Record / Other Stats switch, the same table the Trophy Room page shows (now one component).
+
 ## 2026-11-17 - The clubhouse room turned round, and furnished again (Commissioner only)
 
 - The room picture is the mirror image of the old one: the bar now runs down the right wall and the stone chimney (Trophy Room,
@@ -30,6 +43,7 @@ and add a row above.
 - At night the blue light is placed on purpose: a neon line under the lip of the bar and of the picks counter and along the bar's foot.
   The pool's light no longer reaches in to light the counter's corner.
 - The Bowl Pool's board (from Dec 7) hangs a little lower on its stand.
+
 
 ## 2026-11-17 - The clubhouse on a desktop (Commissioner only)
 

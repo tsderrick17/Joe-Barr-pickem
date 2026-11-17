@@ -50,7 +50,7 @@ test("the room lights only your own picks, says what is owed, and the ticket has
   const { feed, ticket } = clubhouseFeed({ home: home(), board: board() });
   assert.deepEqual(feed.mine, ["PIT"]);
   assert.deepEqual(feed.games.map((g) => [g.away, g.awayLine, g.home, g.homeLine]), [["PIT", "+3", "CLE", "-3"], ["IND", "-3", "WAS", "+3"], ["SF", "PK", "DEN", "PK"]]);
-  assert.equal(feed.news.board, "Earl leads · You: T2");
+  assert.equal(feed.news.board, "Earl leads · You: T2, 2 back");
   assert.equal(feed.news.picks, "2 owed");
   assert.equal(feed.news.survivor, "2 of 3 still in · You’re in");
   assert.equal(feed.owed, true);
@@ -116,4 +116,19 @@ test("the ticker shows a final score and which side covered, and nothing for a g
 test("the ticket's last lamp is Survivor's only while the viewer is still in Survivor", () => {
   assert.equal(clubhouseFeed({ home: home(), board: board() }).ticket.survivor, true);
   assert.equal(clubhouseFeed({ home: home(), board: board({ survivor: { available: true, status: "eliminated", pick: null } }) }).ticket.survivor, false);
+});
+
+test("the Big Board's standings move week over week: places climbed or slipped since last week, and the plate says where you are", async () => {
+  const { boardNews, placedStandings, withMovement } = await import("../src/lib/clubhouse-feed.js");
+  const rows = [{ id: "a", firstName: "Earl", wins: 12 }, { id: "b", firstName: "Walt", wins: 11 }, { id: "c", firstName: "Rosie", wins: 9 }];
+  // Last week Walt led, Earl was second, Rosie third.
+  const moved = withMovement(placedStandings(rows), rows, { a: 9, b: 10, c: 8 });
+  assert.deepEqual(moved.map((row) => [row.name, row.move]), [["Earl", 1], ["Walt", -1], ["Rosie", 0]]);
+  assert.equal(withMovement(placedStandings(rows), rows, null)[0].move, undefined);
+  assert.equal(boardNews(moved, "a"), "You lead by 1 · ▲1");
+  assert.equal(boardNews(moved, "b"), "Earl leads · You: 2, 1 back · ▼1");
+  assert.equal(boardNews(moved, "c"), "Earl leads · You: 3, 3 back");
+  const level = placedStandings([{ id: "a", firstName: "Earl", wins: 12 }, { id: "b", firstName: "Walt", wins: 12 }]);
+  assert.equal(boardNews(level, "a"), "You share the lead");
+  assert.equal(boardNews(level, "z"), "2 lead");
 });

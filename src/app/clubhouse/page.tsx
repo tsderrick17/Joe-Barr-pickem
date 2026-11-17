@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from "next/navigation";
 import PoolChat from "@/components/pool-chat";
 import { Sheet } from "@/components/commissioner/wheel-parts";
-import { BoardPopup, BowlPopup, SurvivorPopup, TicketPopup, TrophyPopup } from "@/components/clubhouse-popups";
+import { BoardPopup, BowlPopup, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
 import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -35,7 +35,9 @@ import { useStableCallback } from "@/lib/use-stable-callback";
  */
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules";
 const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules" };
-const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "The Big Board", survivor: "Survivor", trophies: "Trophy Room", bowl: "NCAA Bowls", rules: "Constitution" };
+const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution" };
+// The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
+const DECK: Pane[] = ["standings", "slate", "survivor", "bowl"];
 // The classic pages, loaded the first time they are opened: any week the new board does not cover.
 const PAGES: Record<"standings" | "slate", ReturnType<typeof dynamic>> = {
   standings: dynamic(() => import("@/app/page")),
@@ -47,6 +49,28 @@ const RETURN_GAP_MS = 30_000;        // coming back to the app sooner than this 
 
 type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string; survivor: boolean } | null; home: StandingsResponse; board: SlateResponse };
 
+/**
+ * Every player's wins as they stood a week ago, for the Big Board's ▲▼: through last week once this week has a graded game, else through
+ * the week before (so the arrows show last week's moves until this week's games start to count). Regular season only; any failure just
+ * leaves the arrows off.
+ */
+async function standingsBefore(board: SlateResponse): Promise<Record<string, number> | null> {
+  const weeks = (board.bootstrap?.weeks ?? []).filter((week) => week.period_type === "regular").sort((a, b) => a.display_order - b.display_order);
+  const current = selectDefaultScoringPeriod(board.bootstrap?.weeks ?? []);
+  const at = current && current.period_type === "regular" ? weeks.findIndex((week) => week.id === current.id) : -1;
+  if (at < 0) return null;
+  const graded = (board.games ?? []).some((game) => game.status === "final");
+  const base = weeks[at - (graded ? 1 : 2)];
+  if (!base) return null;
+  try {
+    const response = await fetchWithSession(`/api/board-totals?week=${encodeURIComponent(base.id)}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    return ((await response.json()) as { totals?: Record<string, number> }).totals ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ClubhousePage() {
   const access = useCommissionerAccess();
   const router = useRouter();
@@ -55,7 +79,6 @@ export default function ClubhousePage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [pane, setPane] = useState<Pane | null>(null);
   const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
-  const [ticketOpen, setTicketOpen] = useState(false);   // your ticket, over the Big Board
   const [lookBack, setLookBack] = useState<{ weekId: string; board: SlateResponse; totals: Record<string, number> } | null>(null);   // another week on the Big Board: that week's Slate, and every player's wins added up through it
   useEffect(() => { paneRef.current = pane; }, [pane]);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
@@ -83,8 +106,9 @@ export default function ClubhousePage() {
       if (!homeResponse.ok) throw new Error(home.error ?? "The clubhouse could not be loaded.");
       // Without the week's games the room still opens: the standings on the Big Board, the games board dark, no ticket.
       const board = boardResponse.ok ? await boardResponse.json() as SlateResponse : { games: [], myPicks: [], serverTime: home.serverTime } as unknown as SlateResponse;
+      const before = await standingsBefore(board);
       lastRead.current = Date.now();
-      setRoom({ ...(clubhouseFeed({ home, board }) as Omit<Room, "home" | "board">), home, board });
+      setRoom({ ...(clubhouseFeed({ home, board, before }) as Omit<Room, "home" | "board">), home, board });
       setError("");
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
@@ -110,7 +134,7 @@ export default function ClubhousePage() {
 
   // The open page is part of the address: #slate. Back closes it, a reload reopens it.
   useEffect(() => {
-    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); setTicketOpen(next === "slate"); };
+    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); };
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
@@ -122,7 +146,6 @@ export default function ClubhousePage() {
     if (paneFromHash(window.location.hash)) window.history.replaceState(null, "", `/clubhouse#${next}`);   // page to page: still one step back to the room
     else { window.history.pushState(null, "", `/clubhouse#${next}`); openedHere.current = true; setLookBack(null); }   // opened from the room: the board starts on this week
     setPane(next);
-    setTicketOpen(next === "slate");   // the games board, Your picks and the ticket open the board with your ticket ready
   }, []);
   const close = useCallback(() => {
     if (openedHere.current) { openedHere.current = false; window.history.back(); }
@@ -186,6 +209,12 @@ export default function ClubhousePage() {
   const shown: Pane | null = pane === "survivor" && room?.home.isPlayoff ? "standings" : pane;
   const popup = (...panes: Pane[]) => Boolean(shown && panes.includes(shown) && (shown === "standings" || shown === "slate" ? newBoard : true));
   const classic: "standings" | "slate" | null = shown === "standings" || shown === "slate" ? (newBoard ? null : shown) : null;
+  // The board's sheet: which pane it shows, and its switch. The third tab is Survivor while it runs, then the Bowl Pool in bowl season
+  // (whichever was asked for, when both are on).
+  const deck: Pane | null = shown && DECK.includes(shown) && popup(shown) && (shown === "survivor" || shown === "bowl" || view) ? shown : null;
+  const survivorTab = Boolean(room?.home.survivorAvailable) && !room?.home.isPlayoff;
+  const third: Pane | null = shown === "survivor" || shown === "bowl" ? shown : room?.feed.bowl && (room.feed.survivorOver || !survivorTab) ? "bowl" : survivorTab ? "survivor" : room?.feed.bowl ? "bowl" : null;
+  const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), ...(third ? [{ pane: third, label: third === "bowl" ? "Bowl Pool" : "Survivor" }] : [])];
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // Once Survivor is over, its poker table is the Bowl Pool's.
@@ -198,15 +227,16 @@ export default function ClubhousePage() {
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {popup("standings", "slate") && view ? <Sheet bare onClose={() => leave("standings", "slate", "survivor")} open title="The Big Board">
-        <BoardPopup home={room.home} onOpenTicket={() => setTicketOpen(true)} onSurvivor={() => show("survivor")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} />
+      {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
+        {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}
+        {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
+        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} view={view} /> : null}
+        {deck === "survivor" ? <SurvivorPopup home={room.home} /> : null}
+        {deck === "bowl" ? <BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
       </Sheet> : null}
-      {popup("standings", "slate") && view ? <TicketPopup onChanged={() => read(false)} onClose={() => setTicketOpen(false)} open={ticketOpen} view={view} /> : null}
-      {popup("survivor") ? <Sheet bare onClose={() => leave("survivor")} open title="Survivor"><SurvivorPopup home={room.home} onBoard={newBoard ? () => show("standings") : undefined} /></Sheet> : null}
       {popup("trophies") ? <Sheet onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
-      {popup("bowl") ? <Sheet bare onClose={() => leave("bowl")} open title="Bowl Pool"><BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /></Sheet> : null}
-      {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution" untitled><Constitution /></Sheet> : null}
-      {classic ? <section aria-label={TITLE[classic] === "The Big Board" ? "Standings" : TITLE[classic]} className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
+            {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution" untitled><Constitution /></Sheet> : null}
+      {classic ? <section aria-label="Standings" className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>
           <h3>{classic === "slate" ? "The Slate" : TITLE[classic]}</h3>
