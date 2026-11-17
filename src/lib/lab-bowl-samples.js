@@ -2,7 +2,7 @@
  * The Workshop Lab's sample bowl season: real bowl names and real schools in made-up matchups, made-up lines and scores, and the Lab's
  * invented players. Nothing here is pool data, and nothing is read from or written to the database.
  *
- * Each bowl carries a short name for its pennant ("ROSE"), the way a college pennant is lettered, and its real logo (public/lab/bowl-logos/,
+ * Each bowl carries a short name for its pennant ("ROSE"), the way a college pennant is lettered, and its real logo (public/bowl-logos/,
  * from the bowls' Wikipedia articles, for this try-out only) with a pennant cloth and hoist taken from the logo's own colours.
  */
 import { LAB_PLAYERS } from "./lab-samples.js";
@@ -66,4 +66,34 @@ export function labBowlStandings(played, mine) {
     });
     return { name, wins, losses: games.length - wins };
   }).sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name));
+}
+
+/**
+ * The Bowl ticket's view (the shape bowl-ticket-view.js makes from the real Bowl Pool) for the sample season at a stop: the first `played`
+ * bowls are final, `mine` holds the viewer's saved picks by "away" / "home".
+ * @param {number} played
+ * @param {Record<string, "away" | "home">} mine
+ * @param {string} guess
+ */
+export function labBowlView(played, mine, guess = "") {
+  const sideOf = (game, where) => (where === game.favourite ? "favorite" : "underdog");
+  const games = LAB_BOWLS.map((game, index) => {
+    const locked = index < played;
+    const pick = mine[game.id];
+    const state = locked ? (pick ? "done" : "missed") : pick ? "picked" : "owed";
+    const cell = (where, score) => ({ side: sideOf(game, where), teamId: `${game.id}-${where}`, name: where === "away" ? game.away : game.home, line: labBowlLine(game, where), score: locked ? score : null, covered: locked ? labBowlResult(game, where) === "W" : null });
+    return {
+      id: game.id, bowl: game.bowl, flag: game.flag, logo: game.logo, cloth: game.cloth, hoist: game.hoist, day: game.day.toUpperCase(), time: game.time,
+      cells: [cell("away", game.final[0]), cell("home", game.final[1])], locked, final: locked, note: null, state,
+      mine: pick ? sideOf(game, pick) : null, result: locked ? (pick ? labBowlResult(game, pick) : "L") : null, tiebreaker: Boolean(game.tiebreaker),
+    };
+  });
+  const rows = labBowlStandings(played, mine);
+  return {
+    optedIn: true, entryOpen: played === 0, games,
+    saved: Object.fromEntries(games.filter((game) => game.mine).map((game) => [game.id, game.mine])),
+    guess, tiebreakerLocked: played >= LAB_BOWLS.length, total: LAB_BOWLS.length, decided: played,
+    owed: games.filter((game) => game.state === "owed").length,
+    standings: rows.map((row) => ({ id: row.name, name: row.name, wins: row.wins, losses: row.losses, you: row.name === LAB_BOWL_VIEWER, place: rows.findIndex((other) => other.wins === row.wins) + 1, tied: rows.filter((other) => other.wins === row.wins).length > 1 })),
+  };
 }

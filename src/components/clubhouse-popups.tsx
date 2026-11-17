@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { BowlClaimSeat } from "@/components/bowl-pool-marks";
+import { BowlTicketCard } from "@/components/bowl-ticket";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import { RealTrophyRoom } from "@/components/lab/lab-clubhouse";
 import { TicketForm, ToteBoard, type Ticket } from "@/components/lab/lab-tote";
@@ -11,6 +13,10 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { BoardView } from "@/lib/board-view.js";
 import { haptic } from "@/lib/haptics-client";
 import { buildSlateSubmission } from "@/lib/slate-submission.js";
+import { bowlPoolLaunchAt } from "@/lib/bowl-pool.js";
+import { bowlTeamForSide, bowlTicketView, type BowlSide } from "@/lib/bowl-ticket-view.js";
+import { dateFormat } from "@/lib/date-format.js";
+import { currentSeasonYear } from "@/lib/season";
 
 /**
  * The clubhouse's pop-ups: the new views, on the pool's real data. The same pieces the Lab shows with sample players, drawn from the
@@ -114,4 +120,90 @@ export function TrophyPopup() {
   if (message) return <p role="alert">{message}</p>;
   if (!data) return <p>Loading the Trophy Room…</p>;
   return <RealTrophyRoom players={data.players} trophies={data.trophies} />;
+}
+
+/**
+ * The Bowl Pool as the Bowl ticket (src/components/bowl-ticket.tsx), from the Bowl Pool's own read; picks, the tiebreaker, claiming a seat
+ * and opting out send the very same POST the classic Bowl Pool page makes. Before the pool opens to players it says when it opens.
+ */
+export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
+  const [payload, setPayload] = useState<any>(null);
+  const [reads, setReads] = useState(0);
+  const [message, setMessage] = useState("");
+  const [claiming, setClaiming] = useState(false);
+
+  const [asked, setAsked] = useState(0);   // bumped to read the Bowl Pool again (after a save, a claim or an opt-out)
+  const load = useCallback(() => setAsked((count) => count + 1), []);
+  useEffect(() => {
+    let disposed = false;
+    (async () => {
+      try {
+        const response = await fetchWithSession("/api/bowl-pool", { cache: "no-store" });
+        if (response.status === 404) {
+          const opens = dateFormat("en-US", { timeZone: "America/New_York", month: "long", day: "numeric" }).format(new Date(bowlPoolLaunchAt(currentSeasonYear())));
+          if (!disposed) setMessage(`The Bowl Pool opens ${opens}.`);
+          return;
+        }
+        const body = await response.json();
+        if (!response.ok) throw new Error(body?.error ?? "The Bowl Pool could not be loaded.");
+        if (disposed) return;
+        setPayload(body);
+        setReads((count) => count + 1);
+        setMessage("");
+      } catch (reason) {
+        if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+        else if (!disposed) setMessage(reason instanceof Error ? reason.message : "The Bowl Pool could not be loaded.");
+      }
+    })();
+    return () => { disposed = true; };
+  }, [asked]);
+
+  async function send(body: object) {
+    const response = await fetchWithSession("/api/bowl-pool", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await response.json().catch(() => null) as { error?: string } | null;
+    if (!response.ok) throw new Error(data?.error ?? "Your Bowl Pool selections could not be saved.");
+  }
+
+  async function save(picks: Record<string, BowlSide>, guess: string): Promise<string | void> {
+    const now = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- a game of the Bowl Pool's read
+    const selections = (payload?.games ?? []).flatMap((game: any) => {
+      const side = picks[game.id];
+      const open = game.kickoff_at && now < Date.parse(game.kickoff_at) && !["postponed", "cancelled", "no_contest"].includes(game.status ?? "");
+      return side && open ? [{ gameId: game.id, teamId: bowlTeamForSide(game, side).id ?? "", side }] : [];
+    });
+    try {
+      await send({ optedIn: true, selections, championshipTotalGuess: guess.trim() === "" ? null : Number(guess) });
+      haptic("success");
+      load();
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) { window.location.replace("/login"); return ""; }
+      haptic("warning");
+      return reason instanceof Error ? reason.message : "Your Bowl Pool selections could not be saved.";
+    }
+  }
+
+  async function claim() {
+    setClaiming(true);
+    try { await send({ optedIn: true, selections: [], championshipTotalGuess: null }); haptic("success"); load(); }
+    catch (reason) { setMessage(reason instanceof Error ? reason.message : "Your seat could not be claimed."); }
+    finally { setClaiming(false); }
+  }
+
+  async function optOut() {
+    if (!window.confirm("Give up your seat in the Bowl Pool? You can claim it again until the first bowl kicks off.")) return;
+    try { await send({ optedIn: false, selections: [], championshipTotalGuess: null }); load(); }
+    catch (reason) { setMessage(reason instanceof Error ? reason.message : "Your opt-out could not be saved."); }
+  }
+
+  if (message && !payload) return <p className="lab-board-note" role="alert">{message}</p>;
+  if (!payload) return <p className="lab-board-note">Loading the Bowl Pool…</p>;
+  const view = bowlTicketView(payload, { viewerPlayerId });
+  if (!view.optedIn) {
+    return view.entryOpen
+      ? <BowlClaimSeat busy={claiming} onClaim={() => void claim()} />
+      : <p className="lab-board-note">Bowl Pool entry closed at the first kickoff. Check back next year.</p>;
+  }
+  return <BowlTicketCard key={reads} onOptOut={() => void optOut()} onSave={save} view={view} />;
 }

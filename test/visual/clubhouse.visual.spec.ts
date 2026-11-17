@@ -12,7 +12,7 @@ const WEEK_TOTALS = { p0: 21, p1: 18, p2: 15, p3: 12, p4: 9, p5: 6, p6: 3, p7: 0
 
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
 const sent: unknown[] = [];
-async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response } = {}) {
+async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response, bowl = null as Record<string, unknown> | null } = {}) {
   sent.length = 0;
   await page.setViewportSize(size);
   await signIn(page, theme);
@@ -29,6 +29,8 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
   // A sent pick: every POST is kept so a test can read exactly what the real route would have been asked to save.
   await page.route("**/api/picks", async (route) => { sent.push(route.request().postDataJSON()); await route.fulfill({ json: { message: "saved" } }); });
+  // The Bowl Pool's read, and every POST to it kept like a sent pick.
+  if (bowl) await page.route("**/api/bowl-pool", async (route) => { if (route.request().method() === "POST") { sent.push(route.request().postDataJSON()); await route.fulfill({ json: { optedIn: true, saved: 1 } }); } else await route.fulfill({ json: bowl }); });
   await page.route("https://placeholder.invalid/**", (route) => route.abort());
   await page.clock.install({ time: new Date(board.serverTime) });
   await page.goto(at);
@@ -405,4 +407,52 @@ test("sliding a pop-up down with a finger follows the finger, springs back when 
   expect(far.held).toBe("translateY(180px)");
   expect(far.leaving).toBe(true);
   await expect(sheet).toHaveCount(0);
+});
+
+/** A Bowl Pool read on the fixture's day (Sept 30): one bowl final and picked, one kicked off with no pick, two still open (one picked). */
+function bowlRead(optedIn = true) {
+  const team = (id: string, name: string) => ({ id, full_name: name, short_name: name });
+  return {
+    optedIn, entryOpen: !optedIn, season: { championship_game_id: "g4" }, entry: optedIn ? { championship_total_guess: null } : null,
+    games: [
+      { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
+      { id: "g2", bowl_name: "Valero Alamo Bowl", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
+      { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
+      { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
+    ],
+    ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
+    ownPreviewSelections: [],
+    standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 1 }, { playerId: "p2", playerName: "Tyler", wins: 1, losses: 1 }],
+  };
+}
+
+test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the season gauge, standings, and a save that sends the open picks", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
+  const ticket = sheet.locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  await expect(ticket.getByRole("img", { name: "3 of 4 bowls left" })).toBeVisible();
+  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/1 TO PICK/);
+  await expect(ticket.locator(".lab-bowl-game")).toHaveClass([/is-done/, /is-missed/, /is-owed/, /is-picked/]);
+  // A known bowl flies its own logo; one with no logo file its short name.
+  await expect(ticket.locator(".lab-bowl-game").nth(0).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/rose.webp");
+  await expect(ticket.locator(".lab-bowl-game").nth(2).locator(".lab-bowl-flag-name")).toHaveText("SNOOZEVILLE MATTRESS");
+  await expect(ticket.getByRole("button", { name: /^Ohio State -3.5, final 27, covered/ })).toBeDisabled();
+  // Pick the open bowl, set the tiebreaker, save: only open bowls are sent, as the classic page sends them.
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
+  await ticket.locator(".lab-bowl-tiebreaker input").fill("47");
+  await ticket.getByRole("button", { name: "Save picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0]).toEqual({ optedIn: true, championshipTotalGuess: 47, selections: [{ gameId: "g3", teamId: "h3", side: "favorite" }, { gameId: "g4", teamId: "a4", side: "underdog" }] });
+  await ticket.getByRole("button", { name: "Standings", exact: true }).click();
+  await expect(ticket.locator(".lab-bowl-standings li.is-you")).toContainText("Tyler");
+  await expect(ticket.locator(".lab-bowl-standings li").first()).toContainText("T1");
+});
+
+test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(false) });
+  const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
+  await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click({ timeout: 30_000 });
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
 });

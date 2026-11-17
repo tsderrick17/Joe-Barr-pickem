@@ -623,3 +623,4 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-standings b { font-family: Georgia, serif; font-size: 1.05rem; }
 .lab-bowl-standings em { font-style: normal; letter-spacing: .06em; }
 .lab-bowl-ticket .lab-bowl-standings li.is-you { background: rgba(179, 139, 77, .16); box-shadow: inset 3px 0 0 var(--bowl-slip-gold); }
+.lab-bowl-optout { background: none; border: 0; color: rgba(240, 232, 214, .6); cursor: pointer; font-family: Georgia, serif; font-size: .78rem; justify-self: center; min-height: 44px; text-decoration: underline; }
