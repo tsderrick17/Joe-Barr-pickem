@@ -46,6 +46,9 @@ function neon(text) {
   return texture(c);
 }
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
+// a flat-woven cotton rug in the room's white and blue: wide blue bands, a thin one either side, a white field
+function stripeRug() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#f4f1e8"; g.fillRect(0, 0, 256, 256); for (const [y, h, col] of [[18, 10, "#2f5f8a"], [34, 3, "#2f5f8a"], [118, 20, "#3f7fb0"], [218, 3, "#2f5f8a"], [228, 10, "#2f5f8a"]]) { g.fillStyle = col; g.fillRect(0, y, 256, h); } for (let y = 0; y < 256; y += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, y, 256, 1); } return texture(c, [1, 1]); }
+function ticking() { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = "#f4f1e8"; g.fillRect(0, 0, 128, 128); g.fillStyle = "#3f6f9f"; for (let x = 4; x < 128; x += 16) g.fillRect(x, 0, 5, 128); return texture(c, [2, 2]); }
 function jute() { const c = canvas(256, 256), g = c.getContext("2d"); g.fillStyle = "#c9b48a"; g.fillRect(0, 0, 256, 256); for (let y = 0; y < 256; y += 6) for (let x = 0; x < 256; x += 6) { g.fillStyle = `rgba(110, 85, 50, ${0.15 + rand() * 0.2})`; g.fillRect(x + ((y / 6) % 2) * 3, y, 4, 3); } g.strokeStyle = "#8a6a3e"; g.lineWidth = 10; g.strokeRect(10, 10, 236, 236); return texture(c, [1, 1]); }
 function spreadsFace() {
   const c = canvas(1860, 552), g = c.getContext("2d");
@@ -92,6 +95,12 @@ function pavers() { const c = canvas(512, 512), g = c.getContext("2d"); g.fillSt
 export async function buildRoom(q) {
   const night = q.get("night") === "1";
   const bowl = q.get("bowl") === "1";
+  // The room is built as it was first drawn (the bar on the left, the chimney on the right) and then turned round as a mirror image,
+  // so the bar runs down the right and the chimney stands on the left. Everything that carries words (the neon, the constitution, the
+  // Bowl Pool's cards and pennant, the live boards) has its picture turned back, so it still reads the right way round. flip=0 draws
+  // the room the old way round, for comparison.
+  const MIRROR = q.get("flip") === "0" ? 1 : -1;
+  const readable = (t) => { if (MIRROR < 0) { t.repeat.x = -1; t.offset.x = 1; } return t; };
   const W = Number(q.get("w") ?? 390), H = Number(q.get("h") ?? 560), scale = Number(q.get("scale") ?? 2);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -115,6 +124,12 @@ export async function buildRoom(q) {
   const brass = m.brass;
   const linen = new THREE.MeshStandardMaterial({ map: linenTex(), roughness: 0.95 });
   const navy = new THREE.MeshStandardMaterial({ map: linenTex("#2f4f6e"), roughness: 0.95 });
+  // the lounge's own: white slipcovers, cornflower and navy cushions, a blue-and-white ticking stripe, white-painted cane
+  const slipcover = new THREE.MeshStandardMaterial({ map: linenTex("#f7f5ee"), roughness: 0.95 });
+  const cornflower = new THREE.MeshStandardMaterial({ map: linenTex("#4f86b8"), roughness: 0.95 });
+  const stripe = new THREE.MeshStandardMaterial({ map: ticking(), roughness: 0.95 });
+  const whiteCane = new THREE.MeshStandardMaterial({ bumpMap: cane().bumpMap, color: 0xf3efe6, bumpScale: 2.5, roughness: 0.8 });   // the weave painted white: its relief, not its brown
+  const whiteWood = std(0xf1ede4, { roughness: 0.55 });
   const rattan = new THREE.MeshStandardMaterial({ ...cane(), bumpScale: 2.5, roughness: 0.8 });
   const green = std(0x234d3a, { roughness: 0.6 });
   const caneOpen = rattan.clone(); caneOpen.side = THREE.DoubleSide;
@@ -316,6 +331,10 @@ export async function buildRoom(q) {
   screen(book, "spreads", 3.5, 1.0, SX, 1.93);
   add(book, rbox(2.9, 1.05, 0.7, 0.03), m.walnut, [SX - 0.15, 0.525, ZB + 0.75]);
   add(book, box(3.0, 0.05, 0.8), brass, [SX - 0.15, 1.075, ZB + 0.75]);
+  if (night) {                                                                                                                          // the same blue under the counter's lip
+    add(book, box(2.9, 0.012, 0.012), glow(0x3aa8ff, 6), [SX - 0.15, 1.04, ZB + 1.15], { cast: false });
+    const l = new THREE.PointLight(0x3a9cff, 1.2, 2.2, 1.8); l.position.set(SX - 0.15, 0.6, ZB + 1.5); book.add(l);
+  }
   for (const dx of [-1.2, -0.15, 0.9]) add(book, box(0.2, 0.03, 0.12), white, [SX + dx, 1.115, ZB + 0.8], { cast: false });       // ticket pads
   const board = group("board");
   screen(board, "board", 2.8, 2.0, SX + 0.35, 3.6, 0x12281e);   // narrower and taller (the leader and five more), its right edge over the spreads board's
@@ -333,6 +352,13 @@ export async function buildRoom(q) {
   add(bar, rbox(0.06, 0.07, BL + 0.04, 0.015), m.walnut, [FRONT + 0.02, 1.0, BZ]);                                                    // moulding under the top
   add(bar, rbox(0.98, 0.09, BL + 0.14, 0.035), m.marble, [BXc + 0.02, 1.1, BZ]);                                                     // the marble top
   add(bar, cyl(0.028, 0.028, BL, 16), brass, [FRONT + 0.16, 0.22, BZ], { rot: [Math.PI / 2, 0, 0] });                                  // foot rail
+  // At night a blue neon line runs under the lip of the marble and another along the foot of the bar, washing the fluted front
+  // and the floor in front of it: the room's one cool light, where people gather.
+  if (night) {
+    add(bar, box(0.012, 0.012, BL + 0.08), glow(0x3aa8ff, 6), [FRONT + 0.1, 1.045, BZ], { cast: false });
+    add(bar, box(0.012, 0.012, BL - 0.1), glow(0x3aa8ff, 4), [FRONT + 0.05, 0.125, BZ], { cast: false });
+    for (const dz of [-1.8, 0, 1.8]) { const l = new THREE.PointLight(0x3a9cff, 1.4, 2.4, 1.8); l.position.set(FRONT + 0.25, 0.5, BZ + dz); bar.add(l); }
+  }
   for (let k = 0; k < 5; k++) add(bar, cyl(0.012, 0.016, 0.2, 10), brass, [FRONT + 0.08, 0.2, BZ - BL / 2 + 0.4 + k * (BL - 0.8) / 4], { rot: [0, 0, Math.PI / 2] });
   const plaques = group("plaques");
   for (let i = 0; i < 5; i++) { const z = BZ + 2.2 - i * 1.1; add(plaques, rbox(0.03, 0.32, 0.46, 0.008), timberDark, [FRONT + 0.035, 0.62, z]); add(plaques, box(0.02, 0.24, 0.38), brass, [FRONT + 0.055, 0.62, z]); }
@@ -387,7 +413,7 @@ export async function buildRoom(q) {
   const coupe = new THREE.LatheGeometry([[0, 0], [0.032, 0], [0.032, 0.006], [0.005, 0.012], [0.004, 0.09], [0.03, 0.1], [0.055, 0.13], [0.052, 0.132], [0.028, 0.104], [0, 0.098]].map(([r, y]) => new THREE.Vector2(r, y)), 22);
   add(bar, box(0.3, 0.008, 1.4), std(0x111111, { roughness: 0.9 }), [WALL + 0.3, 0.965, BZ + 1.6], { cast: false });
   for (let r = 0; r < 2; r++) for (let k = 0; k < 9; k++) add(bar, k % 3 === 2 ? coupe : rocks, crystal, [WALL + 0.22 + r * 0.12, 0.97, BZ + 1.0 + k * 0.14 + r * 0.07], { cast: false });
-  add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: neon("Lead Pipe Locks"), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
   // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
@@ -444,30 +470,35 @@ export async function buildRoom(q) {
   const charter = group("constitution");
   const CX = X1 - CD / 2, CZ = FZ + 1.8;
   add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.45, CZ + 0.03]);
-  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: parchment(), roughness: 0.9 }), [CX, 2.45, CZ + 0.065], { cast: false });
+  add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: readable(parchment()), roughness: 0.9 }), [CX, 2.45, CZ + 0.065], { cast: false });
   add(charter, box(0.5, 0.04, 0.12), brass, [CX, 2.99, CZ + 0.07]);
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
-  add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: jute(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
+  add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: stripeRug(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
   const sofa = (x, z, facing) => {
     const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = facing; scene.add(s);
-    // a deep slip-covered sofa on a cane plinth: three loose seat cushions, three back cushions, rolled arms, two navy pillows
-    add(s, rbox(2.4, 0.2, 0.98, 0.03), rattan, [0, 0.16, 0]);
-    for (const dx of [-1.12, 1.12]) for (const dz of [-0.4, 0.4]) add(s, cyl(0.03, 0.022, 0.08, 10), chairWood, [dx, 0.04, dz]);
-    add(s, rbox(2.4, 0.66, 0.2, 0.08), linen, [0, 0.56, -0.4]);
-    for (const dx of [-0.7, 0, 0.7]) { add(s, rbox(0.69, 0.22, 0.74, 0.09), linen, [dx, 0.36, 0.08]); add(s, rbox(0.68, 0.46, 0.2, 0.09), linen, [dx, 0.68, -0.26], { rot: [-0.16, 0, 0] }); }
-    for (const dx of [-1.16, 1.16]) add(s, rbox(0.24, 0.5, 0.98, 0.11), linen, [dx, 0.45, 0]);
+    // a deep white slip-covered sofa on a white cane plinth: three loose seat cushions, three back cushions, rolled arms, and
+    // pillows in navy, cornflower and a blue ticking stripe
+    add(s, rbox(2.4, 0.2, 0.98, 0.03), whiteCane, [0, 0.16, 0]);
+    for (const dx of [-1.12, 1.12]) for (const dz of [-0.4, 0.4]) add(s, cyl(0.03, 0.022, 0.08, 10), whiteWood, [dx, 0.04, dz]);
+    add(s, rbox(2.4, 0.66, 0.2, 0.08), slipcover, [0, 0.56, -0.4]);
+    for (const dx of [-0.7, 0, 0.7]) { add(s, rbox(0.69, 0.22, 0.74, 0.09), slipcover, [dx, 0.36, 0.08]); add(s, rbox(0.68, 0.46, 0.2, 0.09), slipcover, [dx, 0.68, -0.26], { rot: [-0.16, 0, 0] }); }
+    for (const dx of [-1.16, 1.16]) add(s, rbox(0.24, 0.5, 0.98, 0.11), slipcover, [dx, 0.45, 0]);
     for (const dx of [-0.82, 0.82]) add(s, rbox(0.44, 0.4, 0.16, 0.075), navy, [dx, 0.66, -0.1], { rot: [-0.3, dx > 0 ? -0.25 : 0.25, 0] });
+    for (const dx of [-0.42, 0.42]) add(s, rbox(0.38, 0.34, 0.14, 0.065), dx > 0 ? stripe : cornflower, [dx, 0.62, -0.02], { rot: [-0.26, dx > 0 ? -0.12 : 0.12, 0] });
   };
   sofa(0.55, FZ - 1.45, 0);
   for (const z of [FZ + 0.55, FZ - 0.55]) {
     const chair = new THREE.Group(); chair.position.set(-0.55, 0, z); chair.rotation.y = Math.PI / 2; scene.add(chair);
-    add(chair, rbox(0.85, 0.3, 0.8, 0.1), rattan, [0, 0.24, 0]); add(chair, rbox(0.85, 0.62, 0.14, 0.07), rattan, [0, 0.58, -0.36]); add(chair, rbox(0.7, 0.14, 0.64, 0.06), linen, [0, 0.45, 0.04]);
-    for (const dx of [-0.42, 0.42]) add(chair, rbox(0.1, 0.24, 0.76, 0.045), rattan, [dx, 0.52, 0.0]);
-    for (const dx of [-0.36, 0.36]) for (const dz of [-0.32, 0.32]) add(chair, cyl(0.025, 0.02, 0.1, 8), chairWood, [dx, 0.05, dz]);
+    // white-painted cane armchairs with a cornflower seat cushion and a striped one at the back
+    add(chair, rbox(0.85, 0.3, 0.8, 0.1), whiteCane, [0, 0.24, 0]); add(chair, rbox(0.85, 0.62, 0.14, 0.07), whiteCane, [0, 0.58, -0.36]); add(chair, rbox(0.7, 0.14, 0.64, 0.06), cornflower, [0, 0.45, 0.04]);
+    add(chair, rbox(0.6, 0.36, 0.13, 0.06), stripe, [0, 0.66, -0.25], { rot: [-0.2, 0, 0] });
+    for (const dx of [-0.42, 0.42]) add(chair, rbox(0.1, 0.24, 0.76, 0.045), whiteCane, [dx, 0.52, 0.0]);
+    for (const dx of [-0.36, 0.36]) for (const dz of [-0.32, 0.32]) add(chair, cyl(0.025, 0.02, 0.1, 8), whiteWood, [dx, 0.05, dz]);
   }
-  add(room, rbox(0.75, 0.06, 1.3, 0.02), m.walnut, [0.65, 0.4, FZ]);                                                                   // the low table
-  for (const dx of [-0.3, 0.3]) for (const dz of [-0.56, 0.56]) add(room, cyl(0.03, 0.022, 0.37, 10), m.walnut, [0.65 + dx, 0.185, FZ + dz]);
+  add(room, rbox(0.75, 0.06, 1.3, 0.02), whiteWood, [0.65, 0.4, FZ]);                                                                 // the low table, painted white
+  add(room, rbox(0.66, 0.02, 1.2, 0.01), whiteWood, [0.65, 0.12, FZ]);                                                                  // its lower shelf
+  for (const dx of [-0.3, 0.3]) for (const dz of [-0.56, 0.56]) add(room, cyl(0.03, 0.022, 0.37, 10), whiteWood, [0.65 + dx, 0.185, FZ + dz]);
   // the record book (the pool's stats) lies open on the low table, where anyone in the lounge can leaf through it
   const record = group("record");
   add(record, rbox(0.42, 0.05, 0.56, 0.01), std(0x6b1f1a, { roughness: 0.5 }), [0.62, 0.455, FZ + 0.25], { rot: [0, 0.15, 0] });
@@ -534,31 +565,42 @@ export async function buildRoom(q) {
   const whiskey = new THREE.MeshPhysicalMaterial({ color: 0x9a5414, roughness: 0.1, transmission: 0.5, thickness: 0.05, emissive: 0x3a1a04, emissiveIntensity: 0.3 });
   const tumbler = new THREE.LatheGeometry([[0, 0], [0.034, 0], [0.038, 0.004], [0.04, 0.08], [0.036, 0.08], [0.032, 0.012], [0, 0.012]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
   const blazer = std(0x1d2c44, { roughness: 0.9 });
+  const cupSteel = new THREE.MeshStandardMaterial({ color: 0xd8dbe0, metalness: 1, roughness: 0.22 });
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xc8ccd2, metalness: 1, roughness: 0.18 });
+  // A card-room chair's padded back: a curved band that wraps round the sitter (a slice of a ring, its edges rounded over), the
+  // same for every seat.
+  const tubBack = (() => {
+    const shape = new THREE.Shape(), r0 = 0.205, r1 = 0.24, a0 = Math.PI * 0.1, a1 = Math.PI * 0.9;
+    shape.absarc(0, 0, r1, a0, a1, false); shape.absarc(0, 0, r0, a1, a0, true); shape.closePath();
+    const g = new THREE.ExtrudeGeometry(shape, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 4, curveSegments: 40 });
+    g.rotateX(Math.PI / 2); g.translate(0, 0.2, 0); return g;      // stands up, its open side to the front (-z)
+  })();
+  const tubRoll = new THREE.TorusGeometry(0.222, 0.034, 12, 48, Math.PI * 0.8);
   for (let a = 0; a < SEATS; a++) {
     const t = Math.PI / 2 + ((a + 1) / (SEATS + 1)) * Math.PI * 2, cos = Math.cos(t), sin = Math.sin(t);                              // the dealer sits at the far side (t = -pi/2)
-    // a brass cup holder set into the racetrack at each seat's right hand, and a drink in some of them
-    const hx = PX + cos * (PRX - 0.08) - sin * 0.24, hz = PZ + sin * (PRZ - 0.08) + cos * 0.24 * (PRZ / PRX);
-    add(poker, new THREE.TorusGeometry(0.048, 0.008, 8, 24), brass, [hx, 0.828, hz], { rot: [Math.PI / 2, 0, 0], cast: false });
-    add(poker, cyl(0.044, 0.044, 0.004, 20), std(0x0a0a0a, { roughness: 0.6 }), [hx, 0.826, hz], { cast: false });
-    if ([0, 3, 5, 8].includes(a)) { add(poker, tumbler, crystalGlass, [hx, 0.828, hz], { cast: false }); add(poker, cyl(0.03, 0.03, 0.035, 16), whiskey, [hx, 0.85, hz], { cast: false }); }
+    // a steel cup holder sunk into the felt at each seat's right hand, just inside the racetrack, and a drink in some of them
+    const along = Math.atan2(sin, cos) - 0.2, hx = PX + Math.cos(along) * (PRX - 0.2) * 0.86, hz = PZ + Math.sin(along) * (PRZ - 0.2) * 0.86;
+    add(poker, new THREE.TorusGeometry(0.046, 0.007, 8, 28), cupSteel, [hx, 0.822, hz], { rot: [Math.PI / 2, 0, 0], cast: false });
+    add(poker, cyl(0.043, 0.043, 0.003, 24), std(0x050505, { roughness: 0.7 }), [hx, 0.8215, hz], { cast: false });
+    if ([0, 3, 5, 8].includes(a)) { add(poker, tumbler, crystalGlass, [hx, 0.8, hz], { cast: false }); add(poker, cyl(0.03, 0.03, 0.035, 16), whiskey, [hx, 0.822, hz], { cast: false }); }
     const c = new THREE.Group(); c.position.set(PX + cos * (PRX + 0.36), 0, PZ + sin * (PRZ + 0.36)); c.rotation.y = Math.PI / 2 - Math.atan2(sin * PRX, cos * PRZ); poker.add(c);
-    // a proper poker chair: four turned legs, a padded leather seat, an upright padded back on two posts leaning back a little,
-    // and wooden arms on front supports
-    for (const [lx, lz] of [[-0.2, -0.19], [0.2, -0.19], [-0.2, 0.19], [0.2, 0.19]]) add(c, cyl(0.024, 0.018, 0.44, 12), chairWood, [lx, 0.22, lz]);
-    for (const lx of [-0.2, 0.2]) add(c, cyl(0.012, 0.012, 0.38, 8), chairWood, [lx, 0.12, 0], { rot: [Math.PI / 2, 0, 0], cast: false });   // stretchers
-    add(c, rbox(0.5, 0.06, 0.48, 0.02), chairWood, [0, 0.47, 0]);
-    add(c, rbox(0.46, 0.09, 0.44, 0.04), saddle, [0, 0.54, -0.01]);
-    for (const lx of [-0.2, 0.2]) add(c, cyl(0.022, 0.022, 0.52, 10), chairWood, [lx, 0.74, 0.22], { rot: [0.12, 0, 0] });
-    add(c, rbox(0.44, 0.26, 0.07, 0.03), saddle, [0, 0.8, 0.245], { rot: [0.12, 0, 0] });
-    add(c, rbox(0.48, 0.05, 0.06, 0.02), chairWood, [0, 0.98, 0.265], { rot: [0.12, 0, 0] });
-    for (const lx of [-0.25, 0.25]) {
-      add(c, rbox(0.06, 0.04, 0.42, 0.015), chairWood, [lx, 0.72, 0.02]);
-      add(c, cyl(0.016, 0.016, 0.2, 8), chairWood, [lx, 0.61, -0.16]);
+    // A card-room chair as a real poker room has them: a swivel seat on a five-star base with casters, a deep round seat cushion and
+    // a padded back that wraps round to the arms, all in the table rail's black leather with a stitched welt.
+    for (let k = 0; k < 5; k++) {
+      const a5 = (k / 5) * Math.PI * 2 + 0.3, leg = add(c, rbox(0.3, 0.035, 0.05, 0.012), chrome, [Math.cos(a5) * 0.14, 0.06, Math.sin(a5) * 0.14], { rot: [0, -a5, 0] });
+      void leg; add(c, new THREE.SphereGeometry(0.026, 12, 8), std(0x111111, { roughness: 0.5 }), [Math.cos(a5) * 0.28, 0.026, Math.sin(a5) * 0.28], { cast: false });
     }
+    add(c, cyl(0.03, 0.03, 0.34, 16), chrome, [0, 0.24, 0]);
+    add(c, cyl(0.1, 0.07, 0.04, 24), chrome, [0, 0.41, 0]);
+    add(c, cyl(0.24, 0.23, 0.09, 40), saddle, [0, 0.475, 0]);
+    add(c, new THREE.TorusGeometry(0.236, 0.011, 8, 48), leather, [0, 0.52, 0], { rot: [Math.PI / 2, 0, 0], cast: false });           // a black welt round the seat
+    add(c, tubBack, saddle, [0, 0.5, 0.02]);
+    add(c, tubRoll, leather, [0, 0.73, 0.02], { rot: [Math.PI / 2, 0, Math.PI * 0.1] });                                                // the padded black roll along the top
+    for (const side of [-1, 1]) add(c, cyl(0.014, 0.014, 0.2, 8), chrome, [side * 0.2, 0.42, 0.1], { rot: [0.5, 0, 0], cast: false });   // the back's chrome stays to the seat
     if (a === 6) {                                                                                                                      // someone's blazer over the back of their chair
-      add(c, rbox(0.5, 0.44, 0.06, 0.03), blazer, [0, 0.8, 0.3], { rot: [0.16, 0, 0] });
-      add(c, rbox(0.52, 0.08, 0.16, 0.04), blazer, [0, 1.0, 0.26], { rot: [0.16, 0, 0] });
-      for (const lx of [-0.27, 0.27]) add(c, rbox(0.09, 0.4, 0.07, 0.03), blazer, [lx, 0.78, 0.29], { rot: [0.16, 0, lx > 0 ? -0.05 : 0.05] });
+      add(c, rbox(0.4, 0.34, 0.05, 0.03), blazer, [0, 0.6, 0.29], { rot: [0.06, 0, 0] });
+      add(c, rbox(0.42, 0.07, 0.14, 0.035), blazer, [0, 0.77, 0.24], { rot: [0.06, 0, 0] });
+      for (const lx of [-0.22, 0.22]) add(c, rbox(0.08, 0.3, 0.06, 0.03), blazer, [lx, 0.6, 0.27], { rot: [0.06, 0, lx > 0 ? -0.05 : 0.05] });
     }
   }
 
@@ -682,20 +724,22 @@ export async function buildRoom(q) {
     // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
     // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
     const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-1.7, 0, -4.4); stand.rotation.y = 0.45; stand.scale.setScalar(0.85); b2.add(stand);
+    const stand = new THREE.Group(); stand.position.set(-1.45, 0, -4.6); stand.rotation.y = 0.45; stand.scale.setScalar(0.85);
+    const LOW = 0.16;                                                                                                                   // the board hangs a tad lower on its posts than it did
+    b2.add(stand);
     const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
-    add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42, 0]);
-    for (const y of [0.87, 1.97]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
-    for (const x of [-0.78, 0.78]) { add(stand, rbox(0.07, 1.98, 0.08, 0.015), m.walnut, [x, 1.0, 0]); add(stand, rbox(0.08, 0.06, 0.6, 0.015), m.walnut, [x, 0.08, 0]); for (const dz of [-0.26, 0.26]) add(stand, cyl(0.045, 0.045, 0.035, 16), std(0x1a1a1a, { roughness: 0.6 }), [x, 0.045, dz], { rot: [0, 0, Math.PI / 2] }); }
+    add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42 - LOW, 0]);
+    for (const y of [0.87 - LOW, 1.97 - LOW]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
+    for (const x of [-0.78, 0.78]) { add(stand, rbox(0.07, 1.98 - LOW, 0.08, 0.015), m.walnut, [x, (1.98 - LOW) / 2 + 0.01, 0]); add(stand, rbox(0.08, 0.06, 0.6, 0.015), m.walnut, [x, 0.08, 0]); for (const dz of [-0.26, 0.26]) add(stand, cyl(0.045, 0.045, 0.035, 16), std(0x1a1a1a, { roughness: 0.6 }), [x, 0.045, dz], { rot: [0, 0, Math.PI / 2] }); }
     const card = (lines) => { const c = canvas(256, 200), g = c.getContext("2d"); g.fillStyle = "#f6f1e3"; g.fillRect(0, 0, 256, 200); g.fillStyle = "#1b2a4a"; g.fillRect(0, 0, 256, 44); g.fillStyle = "#e6cf98"; g.font = "700 26px Georgia"; g.textAlign = "center"; g.fillText(lines[0], 128, 31); g.fillStyle = "#1b2a4a"; g.font = "700 30px Arial"; lines.slice(1).forEach((line, i) => g.fillText(line, 128, 92 + i * 46)); return texture(c); };
     [["ROSE BOWL", "OSU -3.5", "ORE +3.5"], ["SUGAR BOWL", "UGA -6", "TEX +6"], ["ORANGE BOWL", "PSU -2.5", "FSU +2.5"], ["COTTON BOWL", "ND -1", "TCU +1"], ["FIESTA BOWL", "MICH -4", "UTAH +4"], ["PEACH BOWL", "LSU -7", "UCF +7"]].forEach((lines, i) => {
-      const x = -0.48 + (i % 3) * 0.48, y = 1.66 - Math.floor(i / 3) * 0.47, tilt = [0.04, -0.03, 0.02, -0.04, 0.03, -0.02][i];
-      add(stand, new THREE.PlaneGeometry(0.42, 0.33), new THREE.MeshStandardMaterial({ map: card(lines), roughness: 0.85 }), [x, y, 0.024], { cast: false, rot: [0, 0, tilt] });
+      const x = -0.48 + (i % 3) * 0.48, y = 1.66 - LOW - Math.floor(i / 3) * 0.47, tilt = [0.04, -0.03, 0.02, -0.04, 0.03, -0.02][i];
+      add(stand, new THREE.PlaneGeometry(0.42, 0.33), new THREE.MeshStandardMaterial({ map: readable(card(lines)), roughness: 0.85 }), [x, y, 0.024], { cast: false, rot: [0, 0, tilt] });
       add(stand, new THREE.SphereGeometry(0.012, 10, 8), std([0xd4342c, 0x1d3557, 0xf0b429][i % 3], { roughness: 0.3 }), [x, y + 0.14, 0.03], { cast: false });
     });
     const pc = canvas(512, 160), pg = pc.getContext("2d"); pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(512, 80); pg.lineTo(0, 160); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 52px Georgia"; pg.fillText("BOWL POOL", 26, 98);
-    add(stand, new THREE.PlaneGeometry(0.8, 0.25), new THREE.MeshStandardMaterial({ map: texture(pc), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), [-0.32, 2.14, 0.0], { cast: false });
-    add(stand, cyl(0.01, 0.01, 0.3, 8), brass, [-0.72, 2.12, 0]);
+    add(stand, new THREE.PlaneGeometry(0.8, 0.25), new THREE.MeshStandardMaterial({ map: readable(texture(pc)), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), [-0.32, 2.14 - LOW, 0.0], { cast: false });
+    add(stand, cyl(0.01, 0.01, 0.3, 8), brass, [-0.72, 2.12 - LOW, 0]);
   }
 
   // ----- light: a bright mid-afternoon, the sun high enough that its patches on the floor are short and its shadows soft-edged and
@@ -709,15 +753,21 @@ export async function buildRoom(q) {
   scene.add(sun, sun.target);
   for (const [x, y, z] of [[0, 4.6, -3.2], [-2.6, 3.4, -12.2]]) { const l = new THREE.PointLight(night ? 0xffc98a : 0xffe6c4, night ? 3.0 : 1.3, 10, 1.4); l.position.set(x, night ? Math.min(y, 3.3) : y, z); scene.add(l); }
   if (night) {
-    const poolGlow = new THREE.PointLight(0x3ad0ff, 14, 12, 1.4); poolGlow.position.set(0.6, 0.6, ZB - 6.2); scene.add(poolGlow);
+    const poolGlow = new THREE.PointLight(0x3ad0ff, 14, 7.5, 1.4); poolGlow.position.set(0.6, 0.6, ZB - 6.2); scene.add(poolGlow);
     for (let i = 0; i < 12; i++) add(out, new THREE.SphereGeometry(0.05, 8, 6), glow(0xffd28a, 3), [-5 + i * 0.9, 3.1 - Math.sin((i / 11) * Math.PI) * 0.5, ZB - 3.2], { cast: false });
   }
   scene.fog = new THREE.Fog(night ? 0x0b1424 : 0xe8f1f2, 6, night ? 170 : 120);           // a little air between you and the far wall, more over the sea
 
   // ----- camera: standing just inside the front door at eye level, looking down the room to the boards, the glass wall and the sea
   const camera = new THREE.PerspectiveCamera(Number(q.get("fov") ?? 63), W / H, 0.1, 200);
-  camera.position.set(...(q.get("cam") ?? "0.45,1.72,0.4").split(",").map(Number));
-  camera.lookAt(...(q.get("look") ?? "-0.08,1.8,-9").split(",").map(Number));
+  // Turn the whole room round (see MIRROR above): every thing and every light goes into one group drawn as its mirror image, and the
+  // camera stands at the mirrored spot. Positions given here are in the room as it was first drawn.
+  const world = new THREE.Group(); world.scale.x = MIRROR;
+  for (const child of [...scene.children]) world.add(child);
+  scene.add(world);
+  const mirrored = ([x, y, z]) => [x * MIRROR, y, z];
+  camera.position.set(...mirrored((q.get("cam") ?? "0.45,1.72,0.4").split(",").map(Number)));
+  camera.lookAt(...mirrored((q.get("look") ?? "-0.08,1.8,-9").split(",").map(Number)));
   camera.updateMatrixWorld(true); scene.updateMatrixWorld(true);
   // design work only: zoom=k,x,y renders the part of the picture centred at x,y (as fractions of it) k times larger
   if (q.get("zoom")) { const [k, cx, cy] = q.get("zoom").split(",").map(Number); camera.setViewOffset(W, H, (cx - 0.5 / k) * W, (cy - 0.5 / k) * H, W / k, H / k); }
@@ -734,13 +784,14 @@ export async function buildRoom(q) {
     const x0c = r(x0), y0c = r(y0);
     outSpots[name] = { x: x0c, y: y0c, w: r(r(x1) - x0c), h: r(r(y1) - y0c) };
   }
+  if (MIRROR < 0) for (const [name, [tl, tr, br, bl]] of Object.entries(screens)) screens[name] = [tr, tl, bl, br].map((v) => new THREE.Vector3(-v.x, v.y, v.z));
   const at = (v) => { const p = v.clone().project(camera); return [Math.round(((p.x + 1) / 2) * 10000) / 10000, Math.round(((1 - p.y) / 2) * 10000) / 10000]; };
   window.__spots = { width: W, height: H, spots: outSpots, screens: Object.fromEntries(Object.entries(screens).map(([k, corners]) => [k, corners.map(at)])) };
   // The room lights itself: a picture of the whole room taken from its middle (the sky bright, as the eye would find it) becomes the
   // soft light and the reflections on everything in it, so the brass, the floor and the trophies show the room they stand in.
   if (q.get("ibl") !== "0") {
     const around = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType });
-    const eye = new THREE.CubeCamera(0.1, 200, around); eye.position.set(0.4, 2.4, -7.6); scene.add(eye);
+    const eye = new THREE.CubeCamera(0.1, 200, around); eye.position.set(0.4 * MIRROR, 2.4, -7.6); scene.add(eye);
     trophies.visible = false; skyPlane.material.color.setScalar(night ? 1.2 : 4);
     eye.update(renderer, scene);
     trophies.visible = true; skyPlane.material.color.setScalar(night ? 1 : Number(q.get("skyk") ?? 0.55));
