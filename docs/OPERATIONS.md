@@ -605,6 +605,24 @@ The encrypted backup workflow restores and verifies the Bowl Pool tables in its
 disposable PostgreSQL database. A restore that lacks Bowl Pool tables fails the
 backup job even when the general database export is readable.
 
+### Bowl logos (every December)
+
+The clubhouse's Bowl ticket flies each bowl's real logo on a pennant in that logo's colours. The logos are
+small webp files in `public/bowl-logos/` and the table that matches a bowl's name to its logo and colours
+is `src/lib/bowl-logos.js` (matched by name, so a sponsor change in front, such as "TaxSlayer Gator Bowl",
+needs nothing). Once the December schedule is imported, check the Bowl ticket's pennants: a bowl that
+flies a plain navy pennant with only its name has no logo yet. For each one, and for any bowl whose logo
+changed:
+
+1. Take the logo from the bowl's Wikipedia article (the infobox image; space requests out, Wikipedia
+   refuses quick repeats), trim the empty edges, shrink it to at most 200 x 160 and save it as
+   `public/bowl-logos/<name>.webp`.
+2. Add or update its row in `src/lib/bowl-logos.js`: a pattern for its name, the logo file, a short name
+   for the plain pennant, and a cloth and hoist colour taken from the logo.
+3. `node --test test/bowl-ticket-view.test.mjs` checks every listed logo file exists.
+
+A bowl that is gone can keep its row; it simply never matches.
+
 ### Bowl Pool email operations
 
 Active Bowl Pool participants who have pool email enabled receive the same

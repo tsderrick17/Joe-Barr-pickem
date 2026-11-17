@@ -628,3 +628,22 @@ test("the room's games stand two wide and the board shifts up a row every 7 seco
   await expect.poll(shown).toEqual(["FINAL · THU", "FINAL · SUN"]);   // and round to the start again with no gap
   await expect(page.locator(".lab-room-motion")).toHaveCount(0);   // the fans and plants hold still
 });
+
+test("the Bowl ticket counts the picks owed, fills the gauge and swaps to standings", async ({ page }) => {
+  await openLab(page, "bowl");
+  const ticket = page.locator(".lab-bowl-ticket");
+  await expect(ticket.getByRole("img", { name: "10 of 16 bowls left" })).toBeVisible();
+  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/6 TO PICK/);
+  await expect(ticket.locator(".lab-bowl-game.is-owed")).toHaveCount(6);
+  await expect(ticket.locator(".lab-bowl-game.is-missed")).toHaveCount(1);
+  // Picking a bowl and saving lowers its pennant: one fewer to pick.
+  await ticket.getByRole("button", { name: "Texas Tech +7.5" }).click();
+  await ticket.getByRole("button", { name: "Save picks" }).click();
+  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/5 TO PICK/);
+  await expect(ticket.locator(".lab-bowl-game.is-owed")).toHaveCount(5);
+  await ticket.getByRole("button", { name: "Standings", exact: true }).click();
+  await expect(ticket.getByRole("region", { name: "Bowl standings" })).toContainText("after 6 of 16 bowls");
+  await page.getByRole("group", { name: "Day of bowl season" }).getByRole("button", { name: "Jan 20" }).click();
+  await expect(ticket.getByRole("img", { name: "All 16 bowls played" })).toBeVisible();
+  await expect(page.locator(".lab-bowl-gauge figcaption")).toHaveText("ALL PLAYED");
+});
