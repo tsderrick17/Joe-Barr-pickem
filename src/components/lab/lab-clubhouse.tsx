@@ -270,7 +270,7 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
           </ol>
         </div>
       </Screen>
-      <Screen box={frame} className="is-spreads" corners={picture.screens?.spreads} h={103} w={360}>
+      <Screen box={frame} className={`is-spreads${feed.owed ? " is-owed" : ""}`} corners={picture.screens?.spreads} h={103} w={360}>
         <div className="lab-ticker-view">
           <div className={`lab-ticker${step === 0 ? " is-snap" : ""}`} onTransitionEnd={() => setStep((at) => (at >= rowCount ? 0 : at))} style={{ ["--rows" as string]: rowCount + 1, ["--step" as string]: step }}>
             {gameRows.map((row, index) => (

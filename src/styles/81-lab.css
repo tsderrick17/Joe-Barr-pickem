@@ -84,8 +84,9 @@
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
 .lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
-.lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 60% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
-@keyframes room-owed { from { opacity: .55; } to { opacity: 1; } }
+/* A pick owed: the spreads screen glows round its edge (never over its face, where it would wash out the games). */
+.lab-room-screen.is-spreads.is-owed { animation: room-owed 2.4s ease-in-out infinite alternate; }
+@keyframes room-owed { from { box-shadow: 0 0 8px 1px rgba(255, 176, 46, .3); } to { box-shadow: 0 0 18px 4px rgba(255, 176, 46, .65); } }
 .lab-room-tag { background: rgb(250 244 226); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
 .lab-room-tag.is-bowl-pool { background: rgb(20 36 76); border-color: rgb(226 182 70); color: rgb(246 218 140); }
 .lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
@@ -118,7 +119,7 @@
 .lab-room-lamps { align-items: center; display: flex; gap: 8px; grid-column: 2; grid-row: 1 / 3; }
 .lab-room-lamps em { color: var(--cw-gold-lt); font-size: 1.2rem; font-style: normal; }
 @media (prefers-reduced-motion: reduce) {
-  .lab-room-spot.is-owed::before { animation: none; }
+  .lab-room-screen.is-spreads.is-owed { animation: none; box-shadow: 0 0 14px 3px rgba(255, 176, 46, .5); }
 }
 /* Inside a room: one way back, always in the same place, and the room's name. */
 /* The way back is always in reach: the bar with Back to Clubhouse stays pinned at the top of every room as you scroll, and the same
