@@ -47,7 +47,7 @@ export function DeckTabs({ tabs, current, onChoose }: { tabs: DeckTab[]; current
  * Your ticket, the middle tab of the clubhouse's board: sends the very same POST the Slate makes. Always there to look at, every week: once
  * every game has kicked off it is the week's ticket as it stands, nothing left to change.
  */
-export function TicketPanel({ view, onSent, onChanged }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void> }) {
+export function TicketPanel({ view, onSent, onChanged, onWeek }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void>; onWeek?: (weekId: string) => void }) {
   // All games / Pool action is the Slate's own choice, saved to the same place (the profile), and kept while the clubhouse is open.
   const [actionOnly, setActionOnly] = useState<boolean | null>(null);
   const poolAction = actionOnly ?? view.poolAction;
@@ -94,7 +94,7 @@ export function TicketPanel({ view, onSent, onChanged }: { view: BoardView; onSe
 
   return (
     <>
-      <TicketForm onPoolAction={choosePoolAction} onSubmit={submit} poolAction={poolAction} view={view} />
+      <TicketForm key={view.weekId ?? ""} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} view={view} />
       {/* In the playoffs, Forfeit sits at the very foot of the ticket, as on the Slate: three questions, and only the last one acts. */}
       {view.playoff?.you.forfeitAvailable ? <ForfeitPanel /> : null}
     </>
@@ -141,9 +141,20 @@ export function TrophyPopup() {
  * The Bowl Pool as the Bowl ticket (src/components/bowl-ticket.tsx), from the Bowl Pool's own read; picks, the tiebreaker, claiming a seat
  * and opting out send the very same POST the classic Bowl Pool page makes. Before the pool opens to players it says when it opens.
  */
+// The last Bowl Pool read, kept while the clubhouse is open: the room reads it ahead (prefetchBowlPool) so the ticket opens already full,
+// sliding up whole instead of opening on a line of "Loading" and snapping to its height. It is read again every time the ticket opens.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
+let lastBowlRead: any = null;
+export async function prefetchBowlPool() {
+  try {
+    const response = await fetchWithSession("/api/bowl-pool", { cache: "no-store" });
+    if (response.ok) lastBowlRead = await response.json();
+  } catch { /* the ticket reads it again when it opens */ }
+}
+
 export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
-  const [payload, setPayload] = useState<any>(null);
+  const [payload, setPayload] = useState<any>(lastBowlRead);
   const [reads, setReads] = useState(0);
   const [message, setMessage] = useState("");
   const [claiming, setClaiming] = useState(false);
@@ -163,6 +174,7 @@ export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null })
         const body = await response.json();
         if (!response.ok) throw new Error(body?.error ?? "The Bowl Pool could not be loaded.");
         if (disposed) return;
+        lastBowlRead = body;
         setPayload(body);
         setReads((count) => count + 1);
         setMessage("");

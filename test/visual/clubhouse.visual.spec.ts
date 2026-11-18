@@ -534,6 +534,6 @@ test("the board's switch: your ticket is always there to look at, even for a wee
   await page.goto("/clubhouse#standings"); await page.reload();
   await sheet.getByLabel("Change week").selectOption({ label: "Week 3 — Final" }, { timeout: 30_000 });
   await tabs.getByRole("button", { name: "Ticket" }).click();
-  await expect(ticket.locator(".lab-window header h3")).toHaveText("WEEK 3");
+  await expect(ticket.locator(".lab-window header .lab-tote-week span")).toHaveText(/^WEEK 3/);   // the week, which opens the week list (arrows either side flip a week)
   await expect(ticket.locator(".lab-board-cell:not([disabled])")).toHaveCount(0);
 });

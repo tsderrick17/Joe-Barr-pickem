@@ -390,7 +390,7 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         }
         const plate = label === "none" ? null : (
           <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
-            <b aria-hidden="true">{tag ?? name}<i>›</i></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
+            <b aria-hidden="true">{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>
         );

@@ -41,15 +41,7 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
   {
     part: "THE CONTESTS",
     articles: [
-      { title: "Article V · Survivor", clauses: [
-        "Everyone is in. Survivor runs through the regular season only.",
-        "Each week pick one team to win its game outright. There is no spread.",
-        "You can use each team only once all season.",
-        "Win and you move on. A loss, a tie or a missed week and you are out.",
-        "If your team's game is postponed or cancelled, that team is not used up, and you can pick another team that week.",
-        "The last player standing wins. If everyone left goes out the same week, they share the title.",
-      ] },
-      { title: "Article VI · The playoffs", clauses: [
+      { title: "Article V · The playoffs", clauses: [
         "You can submit a whole round at once and change any pick until its game kicks off. Playoff wins add to your season total.",
         "You stay in the race as long as you can still catch the leader: your wins plus the games left must reach the leader's wins.",
         "That is checked the morning of each playoff game day. If you are in that morning, you play every game that day.",
@@ -57,11 +49,19 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
         "If you want to bow out, Forfeit is at the bottom of the Slate. It asks you to confirm 3 times and cannot be undone.",
         "The morning after each playoff game day, a note in the chat shows the race: games left, the leader, how far back everyone is and who is out. It never shows picks.",
       ] },
+      { title: "Article VI · Survivor", clauses: [
+        "Everyone is in. Survivor runs through the regular season only.",
+        "Each week pick one team to win its game outright. There is no spread.",
+        "You can use each team only once all season.",
+        "Win and you move on. A loss, a tie or a missed week and you are out.",
+        "If your team's game is postponed or cancelled, that team is not used up, and you can pick another team that week.",
+        "The last player standing wins. If everyone left goes out the same week, they share the title.",
+      ] },
       { title: "Article VII · The Bowl Pool", clauses: [
         "The Bowl Pool is optional. It opens the day after Selection Sunday. Claim your seat before the first bowl kicks off; you can opt out only until then.",
         "Pick every bowl and College Football Playoff game against the spread, through the National Championship.",
         "Save your picks a few at a time if you like. Each game locks at its own kickoff.",
-        "Lines lock at 8:00 AM Eastern on game day. A whole-number line moves half a point so no game can push.",
+        "Lines lock at 8:00 AM Eastern on game day. A whole-number line moves half a point up so no game can push.",
         "A game you did not pick is a loss.",
         "The tiebreaker is your guess of the total points both teams score in the National Championship. If players tie on wins, the closest guess wins, over or under. Skip the guess and you lose a tie to anyone who guessed.",
       ] },

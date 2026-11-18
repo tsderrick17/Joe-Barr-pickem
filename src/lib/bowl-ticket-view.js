@@ -14,7 +14,7 @@ import { dateFormat } from "./date-format.js";
  * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
  * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
- *   result: "W" | "L" | null, tiebreaker: boolean }} BowlTicketGame
+ *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean }} BowlTicketGame
  */
 
 const EASTERN_DAY = dateFormat("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric" });
@@ -103,6 +103,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       mine,
       result: result ?? (state === "missed" && final ? "L" : null),
       tiebreaker: game.id === championshipId,
+      playoff: /cfp|playoff|first round|quarterfinal|semifinal/i.test(game.bowl_name ?? ""),
     };
   });
   const decided = games.filter((game) => game.final || game.state === "off").length;
@@ -122,6 +123,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
     total: games.length,
     decided,
     owed: games.filter((game) => game.state === "owed").length,
+    picked: games.filter((game) => game.state === "picked").length,   // still to play and already picked: with the picks owed, the bowls left
     standings: ranked,
   };
 }

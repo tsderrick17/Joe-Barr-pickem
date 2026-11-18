@@ -129,8 +129,8 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   // The names wear the colours of the ticket's lamps: yellow while undecided, green for a win, red for a loss.
   const colour = (selector: string) => pad.locator(selector).first().evaluate((node) => getComputedStyle(node).color);
   expect(await colour(".lab-tote-slip:not(.is-w):not(.is-l)")).toBe("rgb(255, 208, 80)");
-  expect(await colour(".lab-tote-slip.is-w")).toBe("rgb(110, 231, 150)");
-  expect(await colour(".lab-tote-slip.is-l")).toBe("rgb(252, 120, 110)");
+  expect(await colour(".lab-tote-slip.is-w")).toBe("rgb(128, 200, 152)");
+  expect(await colour(".lab-tote-slip.is-l")).toBe("rgb(220, 126, 114)");
   // Survivor is the team's logo, centred in its column whatever the result.
   const logos = await pad.locator(".lab-tote-logo").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(), cell = node.closest("td")!.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (cell.left + cell.right) / 2); }));
   expect(logos.length).toBeGreaterThan(1);
@@ -384,7 +384,7 @@ test("the clubhouse room: a name plate on everything, the mail sign, the Bowl Po
   await openLab(page, "clubhouse");
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   // Everything that can be tapped wears a name plate with an arrow, and no two plates overlap; the ones with news carry a line of it.
-  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor›5 of 10 still in · You’re in", "Trophies›", /^The Big Board›Earl leads · You: T2$/, "Chat›✉", "Rules›"]);
+  await expect(room.locator(".lab-room-tag")).toHaveText(["Survivor5 of 10 still in · You’re in", "Trophies", /^The Big BoardEarl leads · You: T2$/, "Chat✉", "Rules"]);
   const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
   for (const [index, plate] of plates.entries()) {
     expect(plate.left).toBeGreaterThanOrEqual(0);
