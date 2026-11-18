@@ -39,7 +39,7 @@ export const BOWL_PENNANTS = [
   { match: /gasparilla bowl/i, logo: "gasparilla", flag: "GASPARILLA", cloth: "rgb(0 100 100)", hoist: "rgb(240 100 0)" },
   { match: /68 ventures bowl/i, logo: "68-ventures", flag: "68 VENTURES", cloth: "rgb(24 24 24)", hoist: "rgb(200 30 40)" },
   { match: /\b(rate|cactus) bowl/i, logo: "rate", flag: "RATE", cloth: "rgb(60 10 70)", hoist: "rgb(240 150 40)" },
-  { match: /gameabove sports bowl/i, logo: "gameabove", flag: "GAMEABOVE", cloth: "rgb(20 20 20)", hoist: "rgb(60 180 60)" },
+  { match: /gameabove sports bowl|quick lane bowl/i, logo: "gameabove", flag: "GAMEABOVE", cloth: "rgb(20 20 20)", hoist: "rgb(60 180 60)" },
   { match: /arizona bowl/i, logo: "arizona", flag: "ARIZONA", cloth: "rgb(40 110 110)", hoist: "rgb(196 150 80)" },
   { match: /bahamas bowl/i, logo: "bahamas", flag: "BAHAMAS", cloth: "rgb(0 150 180)", hoist: "rgb(250 200 40)" },
   { match: /boca raton bowl/i, logo: "boca-raton", flag: "BOCA RATON", cloth: "rgb(30 40 100)", hoist: "rgb(230 70 120)" },
@@ -52,6 +52,8 @@ export const BOWL_PENNANTS = [
   { match: /myrtle beach bowl/i, logo: "myrtle-beach", flag: "MYRTLE BEACH", cloth: "rgb(20 130 200)", hoist: "rgb(240 120 30)" },
   { match: /reliaquest bowl/i, logo: "reliaquest", flag: "RELIAQUEST", cloth: "rgb(20 30 50)", hoist: "rgb(60 170 200)" },
   { match: /birmingham bowl/i, logo: "birmingham", flag: "BIRMINGHAM", cloth: "rgb(24 96 168)", hoist: "rgb(210 30 40)" },
+  { match: /san juan bowl/i, logo: "san-juan", flag: "SAN JUAN", cloth: "rgb(16 40 96)", hoist: "rgb(240 196 40)" },
+  { match: /celebration bowl/i, logo: "celebration", flag: "CELEBRATION", cloth: "rgb(20 60 140)", hoist: "rgb(240 110 30)" },
   { match: /cure bowl/i, logo: "cure", flag: "CURE", cloth: "rgb(222 102 152)", hoist: "rgb(24 24 24)" },
 ];
 
