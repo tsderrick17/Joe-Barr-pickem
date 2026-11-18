@@ -347,6 +347,19 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
 
+test("Survivor shows only the weeks played so far and the next one, and opens on the latest week, not week 1", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
+  const popup = page.getByRole("dialog", { name: "Survivor" });
+  const scroll = popup.getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").evaluateAll((cells) => cells.slice(2).map((cell) => Number(cell.textContent)));
+  const picked = await scroll.locator("tbody tr").evaluateAll((rows) => Math.max(0, ...rows.map((row) => [...row.querySelectorAll("td")].slice(1).reduce((last, cell, index) => (cell.children.length ? index + 1 : last), 0))));
+  expect(weeks.at(-1)).toBeLessThan(18);
+  expect(weeks.at(-1)).toBe(picked + 1);
+  // Scrolled all the way along, so the latest week is in view.
+  await expect.poll(() => scroll.evaluate((node) => node.scrollWidth - node.clientWidth - node.scrollLeft)).toBeLessThanOrEqual(1);
+});
+
 test("the ticker keeps each game's spread on its card once the game is over, beside the final score; a game still to play shows just its line", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["complete-survivor"], size: SIZES["desktop-1280"] });
   const cards = page.locator(".lab-room-screen.is-spreads p");
@@ -440,7 +453,7 @@ function bowlRead(optedIn = true) {
     optedIn, entryOpen: !optedIn, season: { championship_game_id: "g4" }, entry: optedIn ? { championship_total_guess: null } : null,
     games: [
       { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
-      { id: "g2", bowl_name: "Valero Alamo Bowl", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
+      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
       { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
       { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
     ],
@@ -459,6 +472,7 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.locator(".lab-bowl-due")).toHaveText(/1 TO PICK/);
   await expect(ticket.locator(".lab-bowl-game")).toHaveClass([/is-done/, /is-missed/, /is-owed/, /is-picked/]);
   // A known bowl flies its own logo; one with no logo file its short name.
+  await expect(ticket.locator(".lab-bowl-game").nth(1).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/cfp.webp");   // a first-round game on campus flies the playoff's logo
   await expect(ticket.locator(".lab-bowl-game").nth(0).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/rose.webp");
   await expect(ticket.locator(".lab-bowl-game").nth(2).locator(".lab-bowl-flag-name")).toHaveText("SNOOZEVILLE MATTRESS");
   await expect(ticket.getByRole("button", { name: /^Ohio State -3.5, final 27, covered/ })).toBeDisabled();
@@ -549,4 +563,17 @@ test("the board's switch: your ticket is always there to look at, even for a wee
   await tabs.getByRole("button", { name: "Ticket" }).click();
   await expect(ticket.locator(".lab-window header .lab-tote-week span")).toHaveText(/^WEEK 3/);   // the week, which opens the week list (arrows either side flip a week)
   await expect(ticket.locator(".lab-board-cell:not([disabled])")).toHaveCount(0);
+});
+
+test("the pool chat wears the Big Board's housing and opens already full, read ahead while the room was up", async ({ page }) => {
+  await openClubhouse(page);
+  let reads = 0;
+  await page.route("**/api/pool-chat**", (route) => { reads += 1; return route.fulfill({ json: { messages: [{ id: "m1", playerName: "Connor", body: "Bills by a million", createdAt: "2026-11-15T18:00:00Z", isDeleted: false, isModerator: false, canDelete: false }] } }); });
+  await page.reload();
+  await expect.poll(() => reads).toBeGreaterThan(0);   // read ahead, before the chat is opened
+  await page.goto("/clubhouse#chat");
+  const chat = page.getByRole("dialog", { name: "Pool chat" });
+  await expect(chat.locator(".lab-tote.club-chat")).toBeVisible({ timeout: 30_000 });
+  await expect(chat.locator(".pool-chat-message")).toContainText("Bills by a million");
+  await expect(chat.getByText("Opening chat...")).toHaveCount(0);
 });

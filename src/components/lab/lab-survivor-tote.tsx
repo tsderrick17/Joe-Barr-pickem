@@ -1,20 +1,46 @@
 "use client";
 
-import { Logo } from "@/components/lab/lab-tote";
+import { useLayoutEffect, useRef } from "react";
+import { HiddenPick, Logo } from "@/components/lab/lab-tote";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import type { StandingsResponse } from "@/lib/api-contracts";
 
 /**
  * The Survivor table in the Big Board's housing (green and gold, black panels, a lit ring round each week's team), with the same two tabs
  * over it. It shows exactly what the Survivor Table does: a row per player, a team for each week they have picked, IN or OUT beside the
- * name, and a hidden pick as three dark lamps until its game kicks off. It scrolls sideways; the status and the name stay put.
+ * name, and a hidden pick as one lit spade lamp until its game kicks off. It scrolls sideways; the status and the name stay put.
+ * Only the weeks played so far and the one after are columns (never the empty rest of the season), and it opens scrolled to the
+ * latest week, not week 1.
  */
 
-const WEEKS = 18;
+/** The columns to show: every week up to the latest anyone has picked, plus the next one, within the season's weeks. */
+export function survivorWeekCount(rows: StandingsResponse["survivorRows"]) {
+  const total = Math.max(0, ...rows.map((row) => row.picks.length));
+  const last = Math.max(-1, ...rows.flatMap((row) => row.picks.map((pick, index) => (pick ? index : -1))));
+  return Math.min(total, Math.max(1, last + 2));
+}
 const mark = (value: string) => (value === "W" ? "W" : value === "L" ? "L" : null);
 
 export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsResponse; onBoard?: () => void }) {
   const rows = home.survivorRows ?? [];
+  const WEEKS = survivorWeekCount(rows);
+  const scroller = useRef<HTMLDivElement>(null);
+  // Open on the latest week, and stay there while the sheet and its logos settle, until the player scrolls it themselves.
+  useLayoutEffect(() => {
+    const node = scroller.current;
+    if (!node) return;
+    let touched = false;
+    const toEnd = () => { if (!touched) node.scrollLeft = node.scrollWidth; };
+    const hold = () => { touched = true; };
+    toEnd();
+    const watch = new ResizeObserver(toEnd);
+    watch.observe(node);
+    if (node.firstElementChild) watch.observe(node.firstElementChild);
+    node.addEventListener("pointerdown", hold);
+    node.addEventListener("wheel", hold, { passive: true });
+    node.addEventListener("keydown", hold);
+    return () => { watch.disconnect(); node.removeEventListener("pointerdown", hold); node.removeEventListener("wheel", hold); node.removeEventListener("keydown", hold); };
+  }, [WEEKS]);
   return (
     <div className="lab-tote lab-survivor-tote">
       <header>
@@ -28,8 +54,8 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
         </div>
       ) : null}
       {!home.survivorAvailable ? <p className="lab-survivor-note">Survivor is not running right now.</p> : (
-        <div aria-label="Survivor Table, scrolls sideways" className="lab-survivor-scroll" role="region" tabIndex={0}>
-          <table>
+        <div aria-label="Survivor Table, scrolls sideways" className="lab-survivor-scroll" ref={scroller} role="region" tabIndex={0}>
+          <table style={{ minWidth: `${10 + WEEKS * 2.6}rem` }}>
             <colgroup><col className="lab-survivor-col-status" /><col className="lab-survivor-col-name" />{Array.from({ length: WEEKS }, (_, index) => <col className="lab-survivor-col-week" key={index} />)}</colgroup>
             <thead>
               <tr>
@@ -53,7 +79,7 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
                         <td key={index}>
                           {pick?.abbreviation
                             ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><Logo team={pick.abbreviation} /></span>
-                            : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="lab-tote-cover" role="img"><i /><i /><i /></span> : null}
+                            : pick?.isHidden ? <HiddenPick label="Selection submitted and hidden until kickoff" survivor /> : null}
                         </td>
                       );
                     })}

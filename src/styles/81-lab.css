@@ -84,8 +84,9 @@
 .lab-room-screen.is-spreads p > span.is-picked b { color: var(--cw-gold-lt); }
 .lab-room-spot { background: transparent; border: 0; border-radius: 6px; cursor: pointer; min-height: 44px; min-width: 44px; padding: 0; position: absolute; }
 .lab-room-spot:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
-.lab-room-spot.is-owed::before { animation: room-owed 2.4s ease-in-out infinite alternate; background: radial-gradient(ellipse 60% 45% at 60% 38%, rgba(255, 176, 46, .42), transparent 70%); content: ""; inset: 0; mix-blend-mode: screen; position: absolute; }
-@keyframes room-owed { from { opacity: .55; } to { opacity: 1; } }
+/* A pick owed: the spreads screen glows round its edge (never over its face, where it would wash out the games). */
+.lab-room-screen.is-spreads.is-owed { animation: room-owed 2.4s ease-in-out infinite alternate; }
+@keyframes room-owed { from { box-shadow: 0 0 8px 1px rgba(255, 176, 46, .3); } to { box-shadow: 0 0 18px 4px rgba(255, 176, 46, .65); } }
 .lab-room-tag { background: rgb(250 244 226); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
 .lab-room-tag.is-bowl-pool { background: rgb(20 36 76); border-color: rgb(226 182 70); color: rgb(246 218 140); }
 .lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
@@ -118,7 +119,7 @@
 .lab-room-lamps { align-items: center; display: flex; gap: 8px; grid-column: 2; grid-row: 1 / 3; }
 .lab-room-lamps em { color: var(--cw-gold-lt); font-size: 1.2rem; font-style: normal; }
 @media (prefers-reduced-motion: reduce) {
-  .lab-room-spot.is-owed::before { animation: none; }
+  .lab-room-screen.is-spreads.is-owed { animation: none; box-shadow: 0 0 14px 3px rgba(255, 176, 46, .5); }
 }
 /* Inside a room: one way back, always in the same place, and the room's name. */
 /* The way back is always in reach: the bar with Back to Clubhouse stays pinned at the top of every room as you scroll, and the same
@@ -340,10 +341,11 @@
 .lab-survivor-tote header { align-items: center; }
 .lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
 /* The week is a button: the phone's own week list is a select laid, unseen, over the words. */
-.lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 44px; padding: 0 14px; position: relative; }
+.lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 32px; padding: 0 11px; position: relative; }
 .lab-tote header .lab-tote-week span { color: rgb(240 236 226); }
 .lab-tote-week i { color: var(--cw-gold-lt); font-style: normal; }
-.lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; height: 100%; inset: 0; opacity: 0; position: absolute; width: 100%; }
+/* the pill is short to save room; the menu under it reaches past it, so the finger target is still 44px tall */
+.lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; inset: -6px 0; opacity: 0; position: absolute; }
 /* The Window's week: arrows either side flip a week at a time; the week itself opens the list. */
 .lab-week-step { align-items: center; display: flex; gap: 6px; }
 .lab-week-step > button { align-items: center; background: transparent; border: 1px solid rgba(201, 164, 95, .55); border-radius: 50%; color: var(--cw-gold-lt); cursor: pointer; display: inline-flex; flex: none; height: 44px; justify-content: center; padding: 0; width: 44px; }
@@ -370,7 +372,7 @@
 /* While a sheet is open the room's name plates step back, so none peeks out behind the board's tabs. */
 .clubhouse-page:has(.cw-sheet[open]) .lab-room-tag { visibility: hidden; }
 /* Team, line, lamp: the lamp slot has one width in every row, so the W and L line up down the column. */
-/* Every pick in a column starts on one left edge: a shown pick's team, and the three dots that stand in for a hidden one. Its
+/* Every pick in a column starts on one left edge: a shown pick's team, and the lamp that stands in for a hidden one. Its
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; font-size: 1.06rem; gap: 3px; padding-left: 6px; white-space: nowrap; }
@@ -379,7 +381,6 @@
 .lab-tote-slip small { font-size: .82rem; opacity: .85; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; padding-left: 6px; }
-.lab-tote-cover i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
 .lab-tote-in { color: rgb(128 200 152); font-family: "Courier New", monospace; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-shadow: 0 0 6px rgba(128, 200, 152, .3); }
 /* Survivor: the team's logo, always centred. A win is a lit green ring; a loss is a red ring with a bar through a greyed logo. */
 .lab-tote-logo { border-radius: 50%; display: inline-grid; height: 30px; place-items: center; position: relative; vertical-align: middle; width: 30px; }
@@ -394,7 +395,6 @@
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
 /* The Survivor table in the same housing: it scrolls sideways, the status and the name stay put, and each week's team has the lit ring a win or a loss gets on the board. */
 .lab-survivor-scroll { margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 6px; }
-.lab-survivor-scroll table { min-width: 56.8rem; }
 .lab-survivor-col-status { width: 3rem; }
 .lab-survivor-col-name { width: 7rem; }
 .lab-survivor-col-week { width: 2.6rem; }
@@ -406,7 +406,6 @@
 /* Your row, said quietly: the warm tint and gold name, a hairline YOU, no bar down its edge. */
 .lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
 .lab-survivor-scroll tr.is-you > * { background: rgb(44 40 18); }
-.lab-survivor-scroll tr.is-you .lab-survivor-name::after { border: 1px solid rgba(255, 196, 84, .5); border-radius: 3px; color: rgba(255, 214, 120, .85); content: "YOU"; font-size: .56rem; font-weight: 900; letter-spacing: .1em; margin-left: 6px; padding: 1px 4px; vertical-align: 2px; }
 .lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); text-decoration: line-through; }
 .lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
 .lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
@@ -728,3 +727,30 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   .clubhouse-page .lab-plaque dt::after { display: none; }
   .clubhouse-page .lab-plaque dd { font-size: .78rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* The pool chat in the clubhouse wears the Big Board's housing: green and gold, each message a black slat, the names in gold. */
+.club-chat .pool-chat { background: transparent; border: 0; color: rgb(240 236 226); padding: 0 4px; }
+.club-chat .pool-chat-composer { border-color: rgba(201, 164, 95, .35); }
+.club-chat .pool-chat-composer button[aria-expanded] { background: rgb(8 10 9); border-color: rgba(201, 164, 95, .55); }
+.club-chat [aria-label="Emoji picker"] { border-color: rgba(201, 164, 95, .35); }
+.club-chat .pool-chat .pool-chat-input { background: rgb(8 10 9); border-color: rgba(201, 164, 95, .55); border-radius: 4px; color: rgb(240 236 226); }
+.club-chat .pool-chat .pool-chat-input::placeholder { color: rgba(240, 236, 226, .5); }
+.club-chat .pool-chat .pool-chat-input:focus { border-color: var(--cw-gold-lt); }
+.club-chat .pool-chat-composer button[type="submit"] { background: var(--cw-gold); border-radius: 4px; color: rgb(14 14 12); font-family: "Courier New", monospace; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.club-chat .pool-chat-composer button[type="submit"]:disabled { background: rgba(201, 164, 95, .3); color: rgba(14, 14, 12, .6); }
+.club-chat .pool-chat-note, .club-chat .pool-chat-empty { color: rgba(240, 236, 226, .65); }
+.club-chat .pool-chat-hide { color: var(--cw-gold-lt); }
+.club-chat .pool-chat-message { background: rgb(8 10 9); border: 0; border-radius: 3px; margin-bottom: 4px; padding: .5rem .65rem; }
+.club-chat .pool-chat-message.is-moderator { box-shadow: inset 3px 0 0 var(--cw-gold); }
+.club-chat .pool-chat-message.is-deleted .pool-chat-body { color: rgba(240, 236, 226, .45); }
+.club-chat .pool-chat-body { color: rgb(240 236 226); }
+.club-chat .pool-chat-message-meta strong { color: rgb(255 176 46); font-family: "Courier New", monospace; letter-spacing: .06em; text-transform: uppercase; }
+.club-chat .pool-chat-message-meta time { color: rgba(240, 236, 226, .5); }
+.club-chat .pool-chat-message-meta span { color: var(--cw-gold-lt); }
+.club-chat .pool-chat-message-meta button { color: rgba(240, 236, 226, .55); }
+
+/* The All-Time Table's Record / Other Stats switch sits on its own solid ground, so the room never shows through it. */
+.clubhouse-page .trophy-view-switch { background: rgb(18 40 30); border-color: rgba(201, 164, 95, .6); }
+.clubhouse-page .trophy-view-switch button { color: rgb(240 236 226); }
+.clubhouse-page .trophy-view-switch button + button { border-left-color: rgba(201, 164, 95, .6); }
+.clubhouse-page .trophy-view-switch button.is-active { background: var(--cw-gold); color: rgb(14 14 12); }
