@@ -322,16 +322,6 @@
  .commissioner-tool-eyebrow { color: var(--club-forest-2); font-size: .67rem; font-weight: 700; letter-spacing: .24em; }
 .commissioner-inline-action { align-items: center; background: var(--club-forest); border: 1px solid var(--club-gold-dk); border-radius: 2px; color: var(--sand-93); display: inline-flex; font-size: .76rem; font-weight: 800; gap: .45rem; letter-spacing: .04em; max-width: 100%; padding: .62rem .8rem; transition: background .18s ease, transform .18s ease; white-space: normal; }
 .commissioner-inline-action:hover { background: var(--club-felt-hi); border-color: var(--club-gold); }
-.provider-chart-tooltip { background: var(--club-paper-2); border-radius: 2px; box-shadow: 0 0 0 1px var(--club-line); }
-.provider-chart-axis-label { align-items: center; background: var(--gray-90); border-radius: .25rem; color: var(--gray-46); display: inline-flex; font-size: .58rem; font-weight: 900; height: 1rem; justify-content: center; letter-spacing: .04em; width: 1rem; }
-.provider-efficiency-summary { border-bottom: 1px solid var(--gray-90); border-top: 1px solid var(--gray-90); display: grid; gap: .65rem; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 1.1rem 0 1.2rem; padding: .8rem 0; }
-.provider-performance-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.provider-efficiency-summary > div { display: grid; gap: .15rem; min-width: 0; }
-.provider-efficiency-summary span { color: var(--gray-46); font-size: .62rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
-.provider-efficiency-summary strong { color: #18181b; font-size: 1.2rem; line-height: 1.1; overflow-wrap: anywhere; }
-.provider-efficiency-summary small { color: var(--gray-46); font-size: .68rem; line-height: 1.25; }
-.provider-efficiency-summary .is-good strong { color: #047857; }
-.provider-efficiency-summary .is-warning strong { color: #a16207; }
 
 /* Grading dashboard cards should behave like dashboard tiles, not rigid text
    columns. Keep long labels inside their lanes and give the lower operational
@@ -361,22 +351,6 @@
 [aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) th:nth-child(4),
 [aria-labelledby="grading-dashboard-title"] table:not(.provider-chart-table) td:nth-child(4) { width: 33%; }
 .grading-worker-table { min-width: 0; table-layout: fixed; }
-/* "View chart data" is a plain ledger: one hairline per row, a header that stays
-   put while the list scrolls, and numbers right-aligned so digits line up. */
-.provider-chart-table { border-collapse: collapse; color: var(--themed-text-13); }
-.provider-chart-table thead th {
-  background: var(--themed-bg-10);
-  border-bottom: 1px solid var(--chart-head-rule);
-  color: var(--themed-text-14);
-  font-weight: 700;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-.provider-chart-table tbody tr { border-top: 1px solid var(--chart-row-rule); }
-.provider-chart-table tbody tr:nth-child(even) { background: var(--themed-bg-11); }
-.provider-chart-table th:not(:first-child),
-.provider-chart-table td:not(:first-child) { text-align: right; }
 /* Worker activity. The prefix outranks the dashboard's generic table rules
    (which force one-line cells and a pill on every second column). */
 [aria-labelledby="grading-dashboard-title"] table.grading-worker-table:not(.provider-chart-table) th,
@@ -555,21 +529,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
   .commissioner-panel-tabs { flex-wrap: wrap; overflow-x: visible; }
   .commissioner-panel-tab { flex: 1 1 calc(33.333% - .3rem); font-size: .9rem; min-width: 0; padding: .62rem .4rem; }
 
-  /* Charts are a primary mobile surface: keep the legend compact, give the
-     selected observation a clean reading order, and preserve plot height. */
-  .provider-chart-legend { gap: .15rem .4rem; margin-bottom: .7rem; }
-  .provider-chart-legend-item { font-size: .72rem; gap: .4rem; padding: .28rem .2rem; }
-  .provider-chart-legend-item > span:first-child { height: .42rem; width: 1.1rem; }
-  .provider-chart-tooltip { border-radius: .7rem; padding: .7rem .8rem; }
-  .provider-chart-tooltip > p:first-child { font-size: .68rem; line-height: 1.25; }
-  .provider-chart-tooltip strong { font-size: 1.1rem; }
-  .provider-chart-tooltip > div { column-gap: .8rem; }
-  .provider-chart-tooltip > p:last-child { font-size: .68rem; line-height: 1.35; }
-  .provider-chart-data { margin-top: .5rem; }
-  .provider-efficiency-summary { gap: .55rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .85rem 0 1rem; padding: .7rem 0; }
-  .provider-efficiency-summary strong { font-size: 1.05rem; }
-  .provider-efficiency-summary span { font-size: .57rem; }
-  .provider-efficiency-summary small { font-size: .62rem; }
 }
 
 /* Tighten the commissioner overview as a whole; inputs keep their full target

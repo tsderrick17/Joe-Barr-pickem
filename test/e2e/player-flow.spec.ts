@@ -103,20 +103,31 @@ async function prepareFixture(): Promise<Fixture> {
   await cleanupStaleFixtures(admin);
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const firstName = `E2E ${suffix}`;
-  const pin = String(1000 + Math.floor(Math.random() * 8999));
   // Use the same server-protected Auth credential as the login route so this
   // remains a true browser login without making the PIN the Auth password.
   if (!serviceRoleKey) throw new Error("The isolated service-role key is required.");
-  const email = playerAuthEmail(pin);
-  const password = derivePlayerAuthPassword(pin, serviceRoleKey);
-
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    app_metadata: { pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION },
-  });
-  if (authError || !authData.user) throw new Error(authError?.message ?? "Could not create the isolated test player.");
+  // A PIN no player in the isolated project already has (a random one could land on a seeded or leftover
+  // player's and break the unique PIN rule): drawn from the free ones, and drawn again if its Auth login
+  // happens to exist already.
+  const { data: taken, error: takenError } = await admin.from("players").select("login_pin");
+  if (takenError) throw new Error(takenError.message);
+  const used = new Set((taken ?? []).map((row) => String(row.login_pin)));
+  const free = Array.from({ length: 9000 }, (_, k) => String(1000 + k)).filter((candidate) => !used.has(candidate));
+  let pin = "";
+  let authUserId = "";
+  for (let attempt = 0; attempt < 10 && !authUserId; attempt++) {
+    pin = free.splice(Math.floor(Math.random() * free.length), 1)[0];
+    if (!pin) break;
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email: playerAuthEmail(pin),
+      password: derivePlayerAuthPassword(pin, serviceRoleKey),
+      email_confirm: true,
+      app_metadata: { pickem_credential_version: PLAYER_AUTH_CREDENTIAL_VERSION },
+    });
+    if (authData?.user) authUserId = authData.user.id;
+    else if (!/already|registered|exists/i.test(authError?.message ?? "")) throw new Error(authError?.message ?? "Could not create the isolated test player.");
+  }
+  if (!authUserId) throw new Error("Could not find a free PIN for the isolated test player.");
 
   const { data: season, error: seasonError } = await admin.from("seasons").select("id").eq("year", 2026).single();
   if (seasonError || !season) throw new Error("The isolated test project must have the 2026 seed season before browser tests can run.");
@@ -137,7 +148,7 @@ async function prepareFixture(): Promise<Fixture> {
 
   const { data: player, error: playerError } = await admin
     .from("players")
-    .insert({ first_name: firstName, login_pin: pin, auth_user_id: authData.user.id, active: true, is_commissioner: true })
+    .insert({ first_name: firstName, login_pin: pin, auth_user_id: authUserId, active: true, is_commissioner: true })
     .select("id")
     .single();
   if (playerError || !player) throw new Error(playerError?.message ?? "Could not create the isolated test player.");
@@ -158,7 +169,7 @@ async function prepareFixture(): Promise<Fixture> {
 
   return {
     admin,
-    authUserId: authData.user.id,
+    authUserId,
     playerId: player.id,
     seasonId: season.id,
     periodId: firstPeriod.id,
