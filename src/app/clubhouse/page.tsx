@@ -230,7 +230,7 @@ export default function ClubhousePage() {
       {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}
         {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
-        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} view={view} /> : null}
+        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
         {deck === "survivor" ? <SurvivorPopup home={room.home} /> : null}
         {deck === "bowl" ? <BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
       </Sheet> : null}

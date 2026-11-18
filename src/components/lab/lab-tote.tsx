@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import type { BoardView } from "@/lib/board-view.js";
 import { LAB_VIEWER, LAB_WEEK10_SURVIVOR, labStandard } from "@/lib/lab-clubhouse.js";
@@ -176,6 +176,32 @@ function owedCount(view: BoardView) {
  * The tote board: this week's picks for everyone, and (when there is a way to) the bar that opens your ticket. The Lab and the real
  * clubhouse both draw it from a `BoardView`.
  */
+/**
+ * The week as a button: tapping it opens the phone's own week list (a select laid over the words), and choosing one changes the board.
+ * With `step`, arrows either side go to the week before and after, so the weeks can be flipped through one at a time.
+ */
+function WeekChoice({ view, onWeek, text, step = false }: { view: BoardView; onWeek: (weekId: string) => void; text: string; step?: boolean }) {
+  const at = view.weeks.findIndex((week) => week.id === view.weekId);
+  const before = at > 0 ? view.weeks[at - 1] : null;
+  const after = at >= 0 && at < view.weeks.length - 1 ? view.weeks[at + 1] : null;
+  const label = (
+    <label className="lab-tote-week">
+      <span>{text} <i aria-hidden="true">▾</i></span>
+      <select aria-label="Change week" onChange={(event) => onWeek(event.target.value)} value={view.weekId ?? ""}>
+        {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
+      </select>
+    </label>
+  );
+  if (!step) return label;
+  return (
+    <div className="lab-week-step">
+      <button aria-label={before ? `Back to ${before.name}` : "No earlier week"} disabled={!before} onClick={() => before && onWeek(before.id)} type="button"><i aria-hidden="true" /></button>
+      {label}
+      <button aria-label={after ? `On to ${after.name}` : "No later week"} disabled={!after} onClick={() => after && onWeek(after.id)} type="button"><i aria-hidden="true" /></button>
+    </div>
+  );
+}
+
 export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { view: BoardView; onOpen: () => void; onSurvivor?: () => void; onWeek?: (weekId: string) => void; sent?: boolean }) {
   const owed = owedCount(view);
   const weekText = `${view.week}${view.status ? ` · ${view.status}` : ""}`;
@@ -183,15 +209,7 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { 
     <div className="lab-tote">
       <header>
         <h3>PICK’EM</h3>
-        {onWeek && view.weeks.length > 1 ? (
-          // The week is a button: tapping it opens the phone's own week list (a select laid over the words), and choosing one changes the board.
-          <label className="lab-tote-week">
-            <span>{weekText} <i aria-hidden="true">▾</i></span>
-            <select aria-label="Change week" onChange={(event) => onWeek(event.target.value)} value={view.weekId ?? ""}>
-              {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
-            </select>
-          </label>
-        ) : <span>{weekText}</span>}
+        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} text={weekText} view={view} /> : <span>{weekText}</span>}
       </header>
       {onSurvivor ? (
         <div className="lab-tote-links">
@@ -225,7 +243,7 @@ function coverNote(result: BoardView["games"][number]["results"][string]) {
   return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim(), pickers: result.pickers };
 }
 
-export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void }) {
+export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void }) {
   // The Slate's All games / Pool action: Pool action leaves out a game that has kicked off with nobody's pick in it. Saved the Slate's way when `onPoolAction` is given.
   const [localAction, setLocalAction] = useState(view.poolAction);
   const actionOnly = poolAction ?? localAction;
@@ -282,7 +300,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
   return (
     <div className="lab-bigboard is-tote trace-gilt lab-window">
       <header>
-        <h3>{view.week}</h3>
+        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} step text={view.week} view={view} /> : <h3>{view.week}</h3>}
         <ul aria-label="Your picks" className="lab-lamps">
           {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
         </ul>
@@ -327,7 +345,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
                 <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
                   <span className={`lab-board-line ${game.lineFinal ? "is-final" : ""}`}>{line}</span>
-                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.join(" · ").toUpperCase() : "NO PICKS"}</em></span> : null}
+                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.map((picker, index) => <Fragment key={picker}>{index ? " · " : ""}<u>{picker.toUpperCase()}</u></Fragment>) : "NO PICKS"}</em></span> : null}
                   <span aria-hidden="true" className="lab-board-trace" />
                 </button>
               );
