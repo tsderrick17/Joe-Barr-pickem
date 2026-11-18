@@ -453,7 +453,7 @@ function bowlRead(optedIn = true) {
     optedIn, entryOpen: !optedIn, season: { championship_game_id: "g4" }, entry: optedIn ? { championship_total_guess: null } : null,
     games: [
       { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
-      { id: "g2", bowl_name: "Valero Alamo Bowl", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
+      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
       { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
       { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
     ],
@@ -472,6 +472,7 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.locator(".lab-bowl-due")).toHaveText(/1 TO PICK/);
   await expect(ticket.locator(".lab-bowl-game")).toHaveClass([/is-done/, /is-missed/, /is-owed/, /is-picked/]);
   // A known bowl flies its own logo; one with no logo file its short name.
+  await expect(ticket.locator(".lab-bowl-game").nth(1).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/cfp.webp");   // a first-round game on campus flies the playoff's logo
   await expect(ticket.locator(".lab-bowl-game").nth(0).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/rose.webp");
   await expect(ticket.locator(".lab-bowl-game").nth(2).locator(".lab-bowl-flag-name")).toHaveText("SNOOZEVILLE MATTRESS");
   await expect(ticket.getByRole("button", { name: /^Ohio State -3.5, final 27, covered/ })).toBeDisabled();

@@ -109,7 +109,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                   return (
                     <li className={`lab-bowl-game is-${game.state}`} key={game.id}>
                       <span className="lab-bowl-name">
-                        {flagStyle === "logo" && (game.logo || game.playoff) ? <BowlLogoFlag cloth={game.cloth ?? "rgb(20 36 76)"} hoist={game.hoist ?? "rgb(226 182 70)"} logo={game.logo ?? ""} state={game.state} /> : <BowlFlag flag={game.flag} state={game.state} />}
+                        {flagStyle === "logo" && (game.logo || game.playoff) ? (game.logo ? <BowlLogoFlag cloth={game.cloth} hoist={game.hoist} logo={game.logo} state={game.state} /> : <BowlLogoFlag cloth="rgb(0 0 0)" hoist="rgb(200 158 62)" logo={CFP_LOGO} state={game.state} />) : <BowlFlag flag={game.flag} state={game.state} />}
                         <span><b>{game.bowl}</b><small>{caption(game)}</small></span>
                       </span>
                       {cell(0)}
@@ -175,6 +175,9 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
   );
 }
 
+/** A playoff game with no bowl of its own (a first-round game on campus) flies the College Football Playoff's logo, on black cloth (the logo's own ground). */
+const CFP_LOGO = "cfp";
+
 /**
  * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours
  * with the real logo, in full colour and big, on a cream patch of the same taper so every logo reads, dark or light. The logo may
@@ -186,22 +189,10 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
       <svg focusable="false" viewBox="0 0 154 56">
         <path className="lab-bowl-flag-cloth" d="M10 1L153 13V43L10 55Z" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
-        <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />
-        {logo ? <image height="60" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="132" x="14" y="-2" /> : <PlayoffMark />}
+        {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />}
+        <image height="60" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="132" x="14" y="-2" />
       </svg>
     </span>
-  );
-}
-
-/** For a playoff game with no bowl of its own (a first-round game on campus): a plain football and PLAYOFF lettered beside it, our own mark. */
-function PlayoffMark() {
-  return (
-    <g>
-      <ellipse cx="44" cy="28" fill="rgb(122 62 26)" rx="20" ry="12" transform="rotate(-20 44 28)" />
-      <path d="M33 31L55 24" stroke="rgb(248 243 230)" strokeWidth="1.6" />
-      {[0, 1, 2, 3].map((k) => <path d={`M${39 + k * 4} ${27.5 - k * 1.3}l1.2 3.6`} key={k} stroke="rgb(248 243 230)" strokeWidth="1.4" transform={`translate(${-1.2} ${-1.8})`} />)}
-      <text fill="rgb(20 30 52)" fontFamily="var(--font-graduate), Georgia, serif" fontSize="15" x="70" y="33">PLAYOFF</text>
-    </g>
   );
 }
 
