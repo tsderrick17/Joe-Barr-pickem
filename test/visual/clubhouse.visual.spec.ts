@@ -347,6 +347,19 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
 
+test("Survivor shows only the weeks played so far and the next one, and opens on the latest week, not week 1", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
+  const popup = page.getByRole("dialog", { name: "Survivor" });
+  const scroll = popup.getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").evaluateAll((cells) => cells.slice(2).map((cell) => Number(cell.textContent)));
+  const picked = await scroll.locator("tbody tr").evaluateAll((rows) => Math.max(0, ...rows.map((row) => [...row.querySelectorAll("td")].slice(1).reduce((last, cell, index) => (cell.children.length ? index + 1 : last), 0))));
+  expect(weeks.at(-1)).toBeLessThan(18);
+  expect(weeks.at(-1)).toBe(picked + 1);
+  // Scrolled all the way along, so the latest week is in view.
+  expect(await scroll.evaluate((node) => node.scrollWidth - node.clientWidth - node.scrollLeft)).toBeLessThanOrEqual(1);
+});
+
 test("the ticker keeps each game's spread on its card once the game is over, beside the final score; a game still to play shows just its line", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["complete-survivor"], size: SIZES["desktop-1280"] });
   const cards = page.locator(".lab-room-screen.is-spreads p");

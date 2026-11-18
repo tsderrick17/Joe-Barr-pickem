@@ -159,7 +159,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
 }
 
 /**
- * The bowl's name pennant: a felt pennant with a gold hoist, lettered with the bowl's short name. Gold while a pick is owed, navy once
+ * The bowl's name pennant: a tapered felt pennant with a gold hoist, lettered with the bowl's short name. Gold while a pick is owed, navy once
  * picked, grey when the bowl kicked off without one.
  */
 export function BowlFlag({ flag, state, small = false }: { flag: string; state: BowlRowState; small?: boolean }) {
@@ -167,7 +167,7 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-${state} ${small ? "is-small" : ""}`}>
       <svg focusable="false" viewBox="0 0 120 40">
-        <path className="lab-bowl-flag-cloth" d="M8 1H118V39H8Z" />
+        <path className="lab-bowl-flag-cloth" d="M8 1L118 8V32L8 39Z" />
         <rect className="lab-bowl-flag-hoist" height="40" rx="2" width="9" x="0" y="0" />
         <text className="lab-bowl-flag-name" fontSize={small ? 22 : size} x={small ? 40 : 14} y="21" {...(flag.length > 7 ? { lengthAdjust: "spacingAndGlyphs", textLength: 66 } : {})}>{flag}</text>
       </svg>
@@ -176,17 +176,18 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
 }
 
 /**
- * The bowl's banner: a straight-edged banner in the logo's own colours (its cloth and hoist) with the real logo, in full colour, on a cream
- * patch filling most of it, so every logo reads, dark or light. It hangs still; it greys when the bowl kicked off without a pick.
+ * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours
+ * with the real logo, in full colour and big, on a cream patch of the same taper so every logo reads, dark or light. The logo may
+ * overhang the cloth. It hangs still; it greys when the bowl kicked off without a pick.
  */
 export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; cloth: string | null; hoist: string | null; state: BowlRowState }) {
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-logo is-${state}`} style={{ "--flag-cloth": cloth ?? undefined, "--flag-hoist": hoist ?? undefined } as CSSProperties}>
       <svg focusable="false" viewBox="0 0 154 56">
-        <path className="lab-bowl-flag-cloth" d="M10 1H153V55H10Z" />
+        <path className="lab-bowl-flag-cloth" d="M10 1L153 13V43L10 55Z" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
-        <rect className="lab-bowl-flag-patch" height="46" rx="6" width="132" x="16" y="5" />
-        {logo ? <image height="40" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="124" x="20" y="8" /> : <PlayoffMark />}
+        <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />
+        {logo ? <image height="60" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="132" x="14" y="-2" /> : <PlayoffMark />}
       </svg>
     </span>
   );

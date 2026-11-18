@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import { Logo } from "@/components/lab/lab-tote";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import type { StandingsResponse } from "@/lib/api-contracts";
@@ -8,13 +9,26 @@ import type { StandingsResponse } from "@/lib/api-contracts";
  * The Survivor table in the Big Board's housing (green and gold, black panels, a lit ring round each week's team), with the same two tabs
  * over it. It shows exactly what the Survivor Table does: a row per player, a team for each week they have picked, IN or OUT beside the
  * name, and a hidden pick as three dark lamps until its game kicks off. It scrolls sideways; the status and the name stay put.
+ * Only the weeks played so far and the one after are columns (never the empty rest of the season), and it opens scrolled to the
+ * latest week, not week 1.
  */
 
-const WEEKS = 18;
+/** The columns to show: every week up to the latest anyone has picked, plus the next one, within the season's weeks. */
+export function survivorWeekCount(rows: StandingsResponse["survivorRows"]) {
+  const total = Math.max(0, ...rows.map((row) => row.picks.length));
+  const last = Math.max(-1, ...rows.flatMap((row) => row.picks.map((pick, index) => (pick ? index : -1))));
+  return Math.min(total, Math.max(1, last + 2));
+}
 const mark = (value: string) => (value === "W" ? "W" : value === "L" ? "L" : null);
 
 export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsResponse; onBoard?: () => void }) {
   const rows = home.survivorRows ?? [];
+  const WEEKS = survivorWeekCount(rows);
+  const scroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const node = scroller.current;
+    if (node) node.scrollLeft = node.scrollWidth;   // open on the latest week
+  }, [WEEKS]);
   return (
     <div className="lab-tote lab-survivor-tote">
       <header>
@@ -28,8 +42,8 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
         </div>
       ) : null}
       {!home.survivorAvailable ? <p className="lab-survivor-note">Survivor is not running right now.</p> : (
-        <div aria-label="Survivor Table, scrolls sideways" className="lab-survivor-scroll" role="region" tabIndex={0}>
-          <table>
+        <div aria-label="Survivor Table, scrolls sideways" className="lab-survivor-scroll" ref={scroller} role="region" tabIndex={0}>
+          <table style={{ minWidth: `${10 + WEEKS * 2.6}rem` }}>
             <colgroup><col className="lab-survivor-col-status" /><col className="lab-survivor-col-name" />{Array.from({ length: WEEKS }, (_, index) => <col className="lab-survivor-col-week" key={index} />)}</colgroup>
             <thead>
               <tr>

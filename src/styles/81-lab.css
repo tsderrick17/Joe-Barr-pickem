@@ -394,7 +394,6 @@
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
 /* The Survivor table in the same housing: it scrolls sideways, the status and the name stay put, and each week's team has the lit ring a win or a loss gets on the board. */
 .lab-survivor-scroll { margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 6px; }
-.lab-survivor-scroll table { min-width: 56.8rem; }
 .lab-survivor-col-status { width: 3rem; }
 .lab-survivor-col-name { width: 7rem; }
 .lab-survivor-col-week { width: 2.6rem; }
