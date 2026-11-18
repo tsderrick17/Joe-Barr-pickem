@@ -326,7 +326,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction }: { view:
               return (
                 <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
-                  <span className="lab-board-line">{line}</span>
+                  <span className={`lab-board-line ${game.lineFinal ? "is-final" : ""}`}>{line}</span>
                   {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.join(" · ").toUpperCase() : "NO PICKS"}</em></span> : null}
                   <span aria-hidden="true" className="lab-board-trace" />
                 </button>

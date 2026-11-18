@@ -143,7 +143,9 @@
 .lab-board-cell:disabled { cursor: default; }
 .lab-board-cell:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-board-team { align-items: center; color: var(--cw-cream); display: flex; font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .12em; }
-.lab-board-line { font-size: 1.05rem; font-weight: 700; text-align: right; text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
+/* A line that can still move is white; once it is final (locked) it turns gold. */
+.lab-board-line { color: rgb(246 242 232); font-size: 1.05rem; font-weight: 700; text-align: right; }
+.lab-board-line.is-final { color: rgb(240 180 41); text-shadow: 0 0 6px rgba(240, 180, 41, .5); }
 .lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .12); color: rgba(240, 233, 214, .7); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
 .lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
 .lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
@@ -338,6 +340,8 @@
 .lab-tote header .lab-tote-week span { color: rgb(240 236 226); }
 .lab-tote-week i { color: var(--cw-gold-lt); font-style: normal; }
 .lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; height: 100%; inset: 0; opacity: 0; position: absolute; width: 100%; }
+/* The list the select opens is drawn by the browser: dark rows, light words, so it reads on a desktop too. */
+.lab-tote-week option { background: rgb(22 22 19); color: rgb(240 236 226); }
 .lab-tote-week:focus-within { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-tote table { border-collapse: separate; border-spacing: 0 4px; table-layout: fixed; width: 100%; }
 .lab-tote th, .lab-tote td { font-size: .8rem; padding: 0 4px; text-align: left; vertical-align: middle; }
@@ -383,9 +387,10 @@
 .lab-survivor-scroll th.lab-survivor-name { text-align: left; }
 .lab-survivor-scroll .lab-survivor-status { left: 0; position: sticky; z-index: 1; }
 .lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 3rem; position: sticky; z-index: 1; }
-.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: inset 5px 0 0 rgb(255 196 84), 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
+/* Your row, said quietly: the warm tint and gold name, a hairline YOU, no bar down its edge. */
+.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
 .lab-survivor-scroll tr.is-you > * { background: rgb(44 40 18); }
-.lab-survivor-scroll tr.is-you .lab-survivor-name::after { background: rgb(255 196 84); border-radius: 3px; color: rgb(14 14 12); content: "YOU"; font-size: .56rem; font-weight: 900; letter-spacing: .1em; margin-left: 6px; padding: 1px 4px; vertical-align: 2px; }
+.lab-survivor-scroll tr.is-you .lab-survivor-name::after { border: 1px solid rgba(255, 196, 84, .5); border-radius: 3px; color: rgba(255, 214, 120, .85); content: "YOU"; font-size: .56rem; font-weight: 900; letter-spacing: .1em; margin-left: 6px; padding: 1px 4px; vertical-align: 2px; }
 .lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); text-decoration: line-through; }
 .lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
 .lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
@@ -516,8 +521,20 @@
 .lab-lamp.is-in { background-color: rgb(255 200 40); box-shadow: 0 0 7px rgba(255, 190, 40, .9); }
 .lab-lamp.is-won { background-color: rgb(70 220 120); box-shadow: 0 0 7px rgba(70, 220, 120, .9); }
 .lab-lamp.is-lost { background-color: rgb(240 80 70); box-shadow: 0 0 7px rgba(240, 80, 70, .85); }
-/* Survivor's lamp is a diamond, like a suit on a card: same light, different shape. */
-.lab-lamp.is-survivor { border-radius: 2px; margin: 0 2px; transform: rotate(45deg) scale(.85); }
+/* Survivor's lamp is a spade, like a suit on a card: same light, different shape. The spade is two cut-outs (a dark edge, the light
+   inside it), and the glow is a drop shadow that follows the cut, not the square around it. */
+.lab-lamp.is-survivor { background: none; border: 0; border-radius: 0; box-shadow: none; position: relative; transform: scale(1.2); }
+.lab-lamp.is-survivor::before { background: rgb(8 10 9); content: ""; inset: 0; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 .8C8 3.6 1.6 7.6 1.6 12a4 4 0 0 0 7 2.7L7.2 19.4h5.6l-1.4-4.7a4 4 0 0 0 7-2.7c0-4.4-6.4-8.4-8.4-11.2z'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; }
+.lab-lamp.is-survivor::after { background: rgb(34 30 22); content: ""; inset: 1px; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 .8C8 3.6 1.6 7.6 1.6 12a4 4 0 0 0 7 2.7L7.2 19.4h5.6l-1.4-4.7a4 4 0 0 0 7-2.7c0-4.4-6.4-8.4-8.4-11.2z'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; }
+.lab-lamp.is-survivor.is-picked { filter: drop-shadow(0 0 2px rgba(255, 190, 40, .45)); }
+.lab-lamp.is-survivor.is-picked::before { background: rgb(255 200 60); }
+.lab-lamp.is-survivor.is-picked::after { inset: 3px; }
+.lab-lamp.is-survivor.is-in { filter: drop-shadow(0 0 4px rgba(255, 190, 40, .9)); }
+.lab-lamp.is-survivor.is-in::after { background: rgb(255 200 40); }
+.lab-lamp.is-survivor.is-won { filter: drop-shadow(0 0 4px rgba(70, 220, 120, .9)); }
+.lab-lamp.is-survivor.is-won::after { background: rgb(70 220 120); }
+.lab-lamp.is-survivor.is-lost { filter: drop-shadow(0 0 4px rgba(240, 80, 70, .85)); }
+.lab-lamp.is-survivor.is-lost::after { background: rgb(240 80 70); }
 .lab-lamps { align-items: start; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; list-style: none; margin: 0; max-width: 60%; padding: 0; }
 .lab-bigboard .lab-lamps li { border: 0; display: grid; gap: 4px; grid-template-columns: auto; justify-items: center; padding: 0; }
 .lab-lamps small { color: rgba(240, 180, 41, .8); font-size: .56rem; letter-spacing: .1em; }

@@ -10,7 +10,7 @@
  * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell, out?: boolean, forfeited?: boolean, back?: number | null }} BoardRow   // out / forfeited / back: the playoff race (back: wins behind the leader)
  * @typedef {{ leaders: string[], leaderWins: number, toPlay: number, you: { back: number | null, out: boolean, forfeited: boolean, forfeitAvailable: boolean } }} PlayoffRace   // toPlay: this round's games not yet kicked off
  * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null, pickers: string[] }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final; pickers: who took the team, as the Slate names them once the game has kicked off
- * @typedef {{ id: string, kickoff: string, kickedOff: boolean, action: boolean, away: string, home: string, awayLine: string, homeLine: string, results: Record<string, TeamResult> }} BoardGame   // action: a game to come, or one the pool has picks in (the Slate's Pool action)
+ * @typedef {{ id: string, kickoff: string, kickedOff: boolean, action: boolean, away: string, home: string, awayLine: string, homeLine: string, lineFinal: boolean, results: Record<string, TeamResult> }} BoardGame   // action: a game to come, or one the pool has picks in (the Slate's Pool action); lineFinal: the official line is in (locked), not the preliminary one that can still move
  * @typedef {{ id: string, name: string, status: string }} BoardWeek
  * @typedef {{
  *   week: string, status: string, maxPicks: number, canPick: boolean, weekId: string | null,
@@ -80,6 +80,7 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
       home: game.homeTeamAbbreviation,
       awayLine,
       homeLine,
+      lineFinal: game.officialSpread !== null && game.officialSpread !== undefined,
       results: {
         [game.awayTeamAbbreviation]: { ats: mark(game.awayResult), su: finalWinner(game, "away"), score: away, margin: coverMargin(away, home, awayLine), pickers: game.awayPickers ?? [] },
         [game.homeTeamAbbreviation]: { ats: mark(game.homeResult), su: finalWinner(game, "home"), score: home, margin: coverMargin(home, away, homeLine), pickers: game.homePickers ?? [] },
