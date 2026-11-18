@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const { data: players, error } = await supabaseAdmin
     .from("players")
     .select(
-      "id, first_name, login_pin, active, is_commissioner, created_at, last_active_at, notification_email, email_notifications_enabled, last_device, last_browser, last_via_app, app_seen_at",
+      "id, first_name, login_pin, active, is_commissioner, clubhouse_access, created_at, last_active_at, notification_email, email_notifications_enabled, last_device, last_browser, last_via_app, app_seen_at",
     )
     .order("first_name");
 
@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       loginPin: player.login_pin,
       active: player.active,
       isCommissioner: player.is_commissioner,
+      clubhouseAccess: player.clubhouse_access,
       forfeited: forfeited.has(player.id),
       emailNotificationsEnabled: Boolean(player.email_notifications_enabled && player.notification_email?.trim()),
       createdAt: player.created_at,
@@ -208,4 +209,42 @@ export async function POST(request: NextRequest) {
     },
     { status: 201 },
   );
+}
+
+/**
+ * The clubhouse beta: let one player into the clubhouse (the light switch and /clubhouse), or take them out. The change is recorded in
+ * the audit log; if it cannot be recorded it is put back.
+ */
+export async function PATCH(request: NextRequest) {
+  const commissionerResult = await commissionerAccess(request);
+  if (!commissionerResult.ok) return accessDenied(commissionerResult);
+  const commissioner = commissionerResult.player;
+
+  const input = await readJsonObject(request);
+  const playerId = typeof input?.playerId === "string" ? input.playerId : "";
+  const clubhouseAccess = input?.clubhouseAccess;
+  if (!playerId || typeof clubhouseAccess !== "boolean") {
+    return NextResponse.json({ error: "Choose a player and whether they get the clubhouse." }, { status: 400 });
+  }
+
+  const { data: before, error: readError } = await supabaseAdmin.from("players").select("id, first_name, clubhouse_access").eq("id", playerId).maybeSingle();
+  if (readError) return NextResponse.json({ error: "The player could not be read." }, { status: 500 });
+  if (!before) return NextResponse.json({ error: "That player could not be found." }, { status: 404 });
+  if (before.clubhouse_access === clubhouseAccess) return NextResponse.json({ playerId, clubhouseAccess });
+
+  const { error: updateError } = await supabaseAdmin.from("players").update({ clubhouse_access: clubhouseAccess }).eq("id", playerId);
+  if (updateError) return NextResponse.json({ error: "The clubhouse setting could not be saved." }, { status: 500 });
+
+  const { error: auditError } = await supabaseAdmin.from("audit_logs").insert({
+    actor_player_id: commissioner.id,
+    action: clubhouseAccess ? "clubhouse_access_granted" : "clubhouse_access_removed",
+    entity_type: "player",
+    entity_id: playerId,
+    details: { first_name: before.first_name },
+  });
+  if (auditError) {
+    await supabaseAdmin.from("players").update({ clubhouse_access: before.clubhouse_access }).eq("id", playerId);
+    return NextResponse.json({ error: "The clubhouse setting was not saved because the change could not be recorded." }, { status: 500 });
+  }
+  return NextResponse.json({ playerId, clubhouseAccess });
 }

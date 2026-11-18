@@ -704,6 +704,9 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .club-deck-tabs button { background: transparent; border: 0; border-radius: 999px; color: rgb(240 236 226); cursor: pointer; font: inherit; font-size: .88rem; font-weight: 800; letter-spacing: .02em; min-height: 40px; transition: background-color .2s ease, color .2s ease; }
 .club-deck-tabs button[aria-current="page"] { background: var(--cw-gold); color: rgb(14 14 12); }
 .club-deck-tabs button:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
+/* On a phone the board's sheet is always its full height, so the tabs stay in one place whichever tab is open (a short Big Board no
+   longer drops the tabs halfway down the screen). */
+@media (max-width: 1023px) { .clubhouse-page .cw-sheet:has(.club-deck-tabs) .cw-sheet-body { min-height: 88dvh; } }
 
 /* ---- The clubhouse's pop-ups rise out of the ticket at the foot of the screen: quick, smooth, settling softly; no coloured band on top ---- */
 @keyframes club-rise { from { opacity: .4; transform: translateY(calc(100% + 40px)) scale(.97); } }

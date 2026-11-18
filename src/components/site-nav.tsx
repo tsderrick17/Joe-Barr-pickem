@@ -22,6 +22,7 @@ export default function SiteNav() {
   const [playerName, setPlayerName] = useState("");
   const [isCommissioner, setIsCommissioner] = useState(false);
   const [trophyRoomOpen, setTrophyRoomOpen] = useState(false);
+  const [clubhouseAccess, setClubhouseAccess] = useState(false);   // the Commissioner, and players let into the clubhouse beta
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
 
@@ -49,12 +50,13 @@ export default function SiteNav() {
         const response = await fetchWithSession("/api/profile");
         if (response.status === 401) throw new SessionUnavailableError();
         if (!response.ok) throw new Error("Account navigation could not be loaded.");
-        const player = await response.json() as { firstName?: string; isCommissioner?: boolean; trophyRoomOpen?: boolean };
+        const player = await response.json() as { firstName?: string; isCommissioner?: boolean; trophyRoomOpen?: boolean; clubhouseAccess?: boolean };
 
         if (active) {
           setPlayerName(player.firstName ?? "");
           setIsCommissioner(player.isCommissioner ?? false);
           setTrophyRoomOpen(player.trophyRoomOpen ?? false);
+          setClubhouseAccess(player.clubhouseAccess ?? player.isCommissioner ?? false);
           rememberTabs(Boolean(player.isCommissioner));
         }
       } catch (error) {
@@ -62,6 +64,7 @@ export default function SiteNav() {
           if (active) {
             setPlayerName("");
             setIsCommissioner(false);
+            setClubhouseAccess(false);
             router.replace("/login");
           }
           return;
@@ -125,14 +128,14 @@ export default function SiteNav() {
     };
   }, [pathname]);
 
-  // Commissioner only, for now: a little light switch beside the day/night button swaps between the site as it is (classic, switch
-  // down) and the clubhouse (switch up). It carries no label. Players never see it. The switch is a mode, remembered on this device: with
+  // The Commissioner and the players let into the clubhouse beta: a little light switch beside the day/night button swaps between the
+  // site as it is (classic, switch down) and the clubhouse (switch up). It carries no label. Other players never see it. The switch is a mode, remembered on this device: with
   // it up, opening the app (the Standings address) lands in the clubhouse, until it is put back down.
   const inClubhouse = pathname.startsWith("/clubhouse");
   useEffect(() => {
-    if (isCommissioner && pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
-  }, [isCommissioner, pathname, router]);
-  const viewSwitch = (size: string) => isCommissioner ? (
+    if (clubhouseAccess && pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
+  }, [clubhouseAccess, pathname, router]);
+  const viewSwitch = (size: string) => clubhouseAccess ? (
     <a
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
       className={`view-switch ${size}`}
@@ -171,6 +174,7 @@ export default function SiteNav() {
     } finally {
       setPlayerName("");
       setIsCommissioner(false);
+      setClubhouseAccess(false);
       forgetTabs();
       setIsSigningOut(false);
       router.replace("/login");

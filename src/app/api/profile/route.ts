@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     firstName: player.first_name,
     isCommissioner: player.is_commissioner,
     trophyRoomOpen: trophyRoomOpen(Date.now(), player.is_commissioner),   // the Trophy Room link in the name menu
+    clubhouseAccess: player.is_commissioner || player.clubhouse_access,   // the clubhouse beta: the light switch and /clubhouse
     notificationEmail: player.notification_email ?? "",
     // Brevo can replace a free-address sender with its compliant delivery
     // address. Show recipients the address they will actually see, while the
