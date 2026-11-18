@@ -180,8 +180,8 @@ const CFP_LOGO = "cfp";
 
 /**
  * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours
- * with the real logo, in full colour and big, on a cream patch of the same taper so every logo reads, dark or light. The logo may
- * overhang the cloth. It hangs still; it greys when the bowl kicked off without a pick.
+ * with the real logo, in full colour, on a cream patch of the same taper so every logo reads, dark or light. The logo sits
+ * toward the hoist, where the cloth is tallest, and fits inside it. It hangs still; it greys when the bowl kicked off without a pick.
  */
 export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; cloth: string | null; hoist: string | null; state: BowlRowState }) {
   return (
@@ -190,7 +190,7 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
         <path className="lab-bowl-flag-cloth" d="M10 1L153 13V43L10 55Z" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
         {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />}
-        <image height="60" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="132" x="14" y="-2" />
+        <image height="38" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="96" x="20" y="9" />
       </svg>
     </span>
   );
