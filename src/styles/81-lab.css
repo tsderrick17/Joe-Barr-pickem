@@ -387,9 +387,10 @@
 .lab-survivor-scroll th.lab-survivor-name { text-align: left; }
 .lab-survivor-scroll .lab-survivor-status { left: 0; position: sticky; z-index: 1; }
 .lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 3rem; position: sticky; z-index: 1; }
-.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: inset 5px 0 0 rgb(255 196 84), 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
+/* Your row, said quietly: the warm tint and gold name, a hairline YOU, no bar down its edge. */
+.lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
 .lab-survivor-scroll tr.is-you > * { background: rgb(44 40 18); }
-.lab-survivor-scroll tr.is-you .lab-survivor-name::after { background: rgb(255 196 84); border-radius: 3px; color: rgb(14 14 12); content: "YOU"; font-size: .56rem; font-weight: 900; letter-spacing: .1em; margin-left: 6px; padding: 1px 4px; vertical-align: 2px; }
+.lab-survivor-scroll tr.is-you .lab-survivor-name::after { border: 1px solid rgba(255, 196, 84, .5); border-radius: 3px; color: rgba(255, 214, 120, .85); content: "YOU"; font-size: .56rem; font-weight: 900; letter-spacing: .1em; margin-left: 6px; padding: 1px 4px; vertical-align: 2px; }
 .lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); text-decoration: line-through; }
 .lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
 .lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
