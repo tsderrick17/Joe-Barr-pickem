@@ -132,3 +132,19 @@ test("the Big Board's standings move week over week: places climbed or slipped s
   assert.equal(boardNews(level, "a"), "You share the lead");
   assert.equal(boardNews(level, "z"), "2 lead");
 });
+
+test("the ▲▼ counts ties as shared places: still tied is no move, breaking a tie or joining one moves only as far as the shared place", async () => {
+  const { placedStandings, withMovement } = await import("../src/lib/clubhouse-feed.js");
+  const moves = (now, before) => {
+    const rows = Object.entries(now).map(([id, wins]) => ({ id, firstName: id, wins }));
+    return Object.fromEntries(withMovement(placedStandings(rows), rows, before).map((row) => [row.id, row.move]));
+  };
+  // Tied for 2nd last week and still tied for 2nd: nobody moved, whatever the alphabet puts first.
+  assert.deepEqual(moves({ a: 10, b: 8, c: 8, d: 5 }, { a: 9, b: 7, c: 7, d: 5 }), { a: 0, b: 0, c: 0, d: 0 });
+  // A tie for 2nd broken: the one who pulled ahead stays 2nd (no move), the one left behind slips to 3rd (▼1).
+  assert.deepEqual(moves({ a: 10, b: 9, c: 8, d: 5 }, { a: 9, b: 7, c: 7, d: 5 }), { a: 0, b: 0, c: -1, d: 0 });
+  // Alone in 4th, now level with two others for 2nd: up 2 places (▲2), and the two already 2nd and 3rd neither climb nor fall unfairly.
+  assert.deepEqual(moves({ a: 10, b: 8, c: 8, d: 8 }, { a: 9, b: 8, c: 7, d: 6 }), { a: 0, b: 0, c: 1, d: 2 });
+  // Everyone level (the season's first week): all share 1st, so last week's order does not count as falling.
+  assert.deepEqual(moves({ a: 1, b: 1, c: 1 }, { a: 0, b: 0, c: 0 }), { a: 0, b: 0, c: 0 });
+});
