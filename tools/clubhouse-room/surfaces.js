@@ -202,8 +202,9 @@ export function flame() {
 export function sky(night) {
   const c = canvas(1024, 512), g = c.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 512);
   if (night) { gr.addColorStop(0, "#03060f"); gr.addColorStop(0.72, "#101e44"); gr.addColorStop(0.9, "#2b3566"); gr.addColorStop(1, "#5a4a6a"); }
-  else { gr.addColorStop(0, "#3f95dc"); gr.addColorStop(0.6, "#8cc8f0"); gr.addColorStop(0.88, "#d3ecf8"); gr.addColorStop(1, "#f4f6ec"); }
+  else { gr.addColorStop(0, "#2f8ae0"); gr.addColorStop(0.55, "#7cc4f2"); gr.addColorStop(0.86, "#cdeefa"); gr.addColorStop(1, "#f6f7ea"); }
   g.fillStyle = gr; g.fillRect(0, 0, 1024, 512);
+  if (!night) { const sun = g.createRadialGradient(790, 150, 0, 790, 150, 170); sun.addColorStop(0, "rgba(255, 252, 230, 1)"); sun.addColorStop(0.12, "rgba(255, 246, 210, .95)"); sun.addColorStop(0.35, "rgba(255, 240, 200, .35)"); sun.addColorStop(1, "rgba(255, 240, 200, 0)"); g.fillStyle = sun; g.fillRect(0, 0, 1024, 512); }   // a bright sun high on one side
   if (night) {
     // The stars have a counter of their own, and the shared one is stepped on by exactly the 270 draws the day's nine clouds take, so every
     // surface made after the sky (the fieldstone chimney, the plants) comes out the same at night as by day.
@@ -214,5 +215,59 @@ export function sky(night) {
     const cx = rand() * 1024, cy = 330 + rand() * 110, s = 30 + rand() * 40;
     for (let p = 0; p < 9; p++) { const x = cx + (rand() - 0.5) * s * 3.4, y = cy + (rand() - 0.5) * s * 0.5, r = s * (0.5 + rand() * 0.6), cg = g.createRadialGradient(x, y, 0, x, y, r); cg.addColorStop(0, "rgba(255, 255, 255, .8)"); cg.addColorStop(1, "rgba(255, 255, 255, 0)"); g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r * 2); }
   }
+  return texture(c);
+}
+
+// Walnut veneer as a bar is panelled: boards standing on end about a hand's width apart, each with its own tone, close straight grain
+// running up it, here and there a cathedral (the arches a crown-cut board shows), open pores in dashes along the grain, and a fine dark
+// joint between boards. One tile is a metre square, laid with `tile` so the boards keep their true size on every face.
+export function walnutVeneer(repeat) {
+  return pair(1024, 1024, (g, b) => {
+    const cols = 6, w = 1024 / cols;
+    b.fillStyle = "#8a8a8a"; b.fillRect(0, 0, 1024, 1024);
+    for (let c = 0; c < cols; c++) {
+      const x0 = c * w, t = rand();
+      g.fillStyle = `rgb(${Math.round(84 + t * 30)}, ${Math.round(50 + t * 18)}, ${Math.round(28 + t * 10)})`; g.fillRect(x0, 0, w, 1024);
+      // the board's own slow wash, darker toward one edge
+      const wash = g.createLinearGradient(x0, 0, x0 + w, 0); wash.addColorStop(0, `rgba(30, 14, 4, ${0.1 + rand() * 0.15})`); wash.addColorStop(0.5, "rgba(30, 14, 4, 0)"); wash.addColorStop(1, `rgba(30, 14, 4, ${0.1 + rand() * 0.15})`); g.fillStyle = wash; g.fillRect(x0, 0, w, 1024);
+      // close grain: long wavering lines up the board, dark and light
+      for (let k = 0; k < 46; k++) {
+        const x = x0 + 3 + rand() * (w - 6), sway = 3 + rand() * 7, dark = rand() < 0.7;
+        g.strokeStyle = dark ? `rgba(36, 16, 6, ${0.12 + rand() * 0.22})` : `rgba(190, 130, 80, ${0.06 + rand() * 0.1})`; g.lineWidth = 0.6 + rand() * 1.8;
+        g.beginPath(); g.moveTo(x, -10);
+        for (let y = 0; y <= 1034; y += 64) g.lineTo(x + Math.sin(y / (90 + k * 3) + k) * sway, y);
+        g.stroke();
+        if (dark) { b.strokeStyle = "rgba(40, 40, 40, .35)"; b.lineWidth = 1; b.stroke(); }
+      }
+      // a cathedral now and then: nested arches pointing up the board
+      if (rand() < 0.55) {
+        const cx = x0 + w / 2 + (rand() - 0.5) * w * 0.3, cy = 200 + rand() * 600;
+        for (let r = 0; r < 9; r++) {
+          const half = 14 + r * 7, tall = 60 + r * 34;
+          g.strokeStyle = `rgba(34, 14, 4, ${0.28 - r * 0.022})`; g.lineWidth = 1.4 + rand() * 1.2;
+          g.beginPath(); g.moveTo(cx - half, cy + tall); g.quadraticCurveTo(cx - half * 0.2, cy - tall * 0.15, cx, cy - r * 6); g.quadraticCurveTo(cx + half * 0.2, cy - tall * 0.15, cx + half, cy + tall); g.stroke();
+        }
+      }
+      // pores: short dark dashes along the grain
+      for (let k = 0; k < 520; k++) { const x = x0 + rand() * w, y = rand() * 1024; g.fillStyle = `rgba(24, 10, 2, ${0.15 + rand() * 0.25})`; g.fillRect(x, y, 1, 3 + rand() * 6); b.fillStyle = "rgba(30, 30, 30, .5)"; b.fillRect(x, y, 1, 4); }
+      g.fillStyle = "rgba(20, 8, 2, .7)"; g.fillRect(x0, 0, 2, 1024); b.fillStyle = "#1c1c1c"; b.fillRect(x0 - 1, 0, 3, 1024);
+    }
+  }, repeat);
+}
+
+// Bottle labels, one design to a cell of a 4 x 2 sheet: cream, black, white and kraft papers, each with a band, a crest and lines of
+// small type as a real bottle wears them. Read from a distance they say "a label", which is all a bottle across the bar needs.
+export function bottleLabels() {
+  const c = canvas(1024, 512), g = c.getContext("2d");
+  const designs = [["#efe4c6", "#5a1a14", "#1a1a1a"], ["#151515", "#c9a24a", "#e8dcc0"], ["#f6f3ec", "#1d3557", "#333333"], ["#c8a676", "#2a1a0c", "#2a1a0c"], ["#e9d9a8", "#14402c", "#1a1a1a"], ["#7a1620", "#e8cf8a", "#f2e6c8"], ["#f2ede2", "#0f0f0f", "#444444"], ["#1d3557", "#e9d9a8", "#e9d9a8"]];
+  designs.forEach(([paper, ink, type], i) => {
+    const x = (i % 4) * 256, y = Math.floor(i / 4) * 256;
+    g.fillStyle = paper; g.fillRect(x, y, 256, 256);
+    g.strokeStyle = ink; g.lineWidth = 6; g.strokeRect(x + 14, y + 14, 228, 228); g.lineWidth = 2; g.strokeRect(x + 24, y + 24, 208, 208);
+    g.fillStyle = ink; g.fillRect(x + 24, y + 96, 208, 40);
+    g.beginPath(); g.arc(x + 128, y + 62, 22, 0, Math.PI * 2); g.fill();
+    g.fillStyle = type; for (let k = 0; k < 5; k++) g.fillRect(x + 50 + (k % 2) * 16, y + 152 + k * 16, 156 - (k % 2) * 32, 6);
+    g.fillStyle = paper; g.fillRect(x + 44, y + 110, 168, 10);
+  });
   return texture(c);
 }
