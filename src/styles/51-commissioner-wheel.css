@@ -94,17 +94,18 @@
 .cw-hub small { display: block; font-size: clamp(10px, 2.4vw, 11px); margin-top: 3px; opacity: .7; }
 
 /* Sheets: the browser's own dialog, rising from the bottom on a phone and centred on a computer, with a felt top edge */
-.cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); padding: 0; width: 100%; }
+/* overflow visible: the body scrolls itself, and a body sliding away must not give the dialog a scroll bar of its own for an instant. */
+.cw-sheet { background: transparent; border: 0; color: var(--club-ink); margin: auto auto 0; max-height: 88dvh; max-width: min(560px, 100%); overflow: visible; padding: 0; width: 100%; }
 /* The sheet itself is not a control: when focus lands on it (opening, or coming back from a pop-up put away) no ring is drawn round its edge. */
 .cw-sheet:focus, .cw-sheet:focus-visible, .cw-sheet-body:focus, .cw-sheet-body:focus-visible { outline: none; }
 .cw-sheet::backdrop { background: rgba(8, 16, 12, .55); transition: opacity .24s ease-in; }
 .cw-sheet.is-leaving::backdrop { opacity: 0; }
 .cw-sheet[open] { animation: cw-up .3s ease-out; }
 @keyframes cw-up { from { opacity: 0; transform: translateY(40px); } }
-.cw-sheet-body { background: var(--club-paper); border-radius: 18px 18px 0 0; border-top: 5px solid var(--cw-felt); max-height: 88dvh; overflow: auto; overscroll-behavior: contain; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; }
+.cw-sheet-body { background: var(--club-paper); border-radius: 18px 18px 0 0; border-top: 5px solid var(--cw-felt); max-height: 88dvh; overflow: auto; overscroll-behavior: contain; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); position: relative; scrollbar-color: rgba(120, 96, 50, .5) transparent; scrollbar-width: thin; }
 /* A bare sheet: no paper, only the picture and a handle on top. */
 .cw-sheet.is-bare h2, .cw-sheet.is-untitled h2 { clip: rect(0 0 0 0); height: 1px; margin: 0; overflow: hidden; position: absolute; width: 1px; }
-.cw-sheet.is-bare .cw-sheet-body { background: transparent; border: 0; border-radius: 0; padding: 0 10px calc(14px + env(safe-area-inset-bottom)); }
+.cw-sheet.is-bare .cw-sheet-body { background: transparent; border: 0; border-radius: 0; scrollbar-color: rgba(201, 164, 95, .45) transparent; padding: 0 10px calc(14px + env(safe-area-inset-bottom)); }
 /* The handle at the top of every sheet: slide the sheet down, or tap it, to put the sheet away. There is no X. */
 .cw-handle { background: var(--club-line); border: 0; border-radius: 3px; cursor: pointer; display: block; height: 5px; margin: 0 auto 10px; padding: 0; position: relative; width: 48px; }
 .cw-handle::before { content: ""; inset: -14px -24px; position: absolute; }

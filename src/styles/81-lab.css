@@ -340,6 +340,8 @@
 .lab-tote header .lab-tote-week span { color: rgb(240 236 226); }
 .lab-tote-week i { color: var(--cw-gold-lt); font-style: normal; }
 .lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; height: 100%; inset: 0; opacity: 0; position: absolute; width: 100%; }
+/* The list the select opens is drawn by the browser: dark rows, light words, so it reads on a desktop too. */
+.lab-tote-week option { background: rgb(22 22 19); color: rgb(240 236 226); }
 .lab-tote-week:focus-within { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-tote table { border-collapse: separate; border-spacing: 0 4px; table-layout: fixed; width: 100%; }
 .lab-tote th, .lab-tote td { font-size: .8rem; padding: 0 4px; text-align: left; vertical-align: middle; }
