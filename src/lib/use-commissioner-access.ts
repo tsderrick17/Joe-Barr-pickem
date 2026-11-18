@@ -21,3 +21,20 @@ export function useCommissionerAccess(): CommissionerAccess {
   }, []);
   return access;
 }
+
+/**
+ * Whether the signed-in account may use the clubhouse: the Commissioner, and the players the Commissioner has let into the clubhouse
+ * beta. "allowed" only once the account has answered so.
+ */
+export function useClubhouseAccess(): CommissionerAccess {
+  const [access, setAccess] = useState<CommissionerAccess>("checking");
+  useEffect(() => {
+    let active = true;
+    fetchWithSession("/api/profile")
+      .then((response) => response.ok ? response.json() as Promise<{ clubhouseAccess?: boolean; isCommissioner?: boolean }> : Promise.reject(new Error("The account could not be read.")))
+      .then((player) => { if (active) setAccess(player.clubhouseAccess ?? player.isCommissioner ? "allowed" : "denied"); })
+      .catch(() => { if (active) setAccess("denied"); });
+    return () => { active = false; };
+  }, []);
+  return access;
+}

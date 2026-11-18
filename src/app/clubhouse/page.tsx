@@ -15,7 +15,7 @@ import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { clubhouseFeed } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
-import { useCommissionerAccess } from "@/lib/use-commissioner-access";
+import { useClubhouseAccess } from "@/lib/use-commissioner-access";
 import { useStableCallback } from "@/lib/use-stable-callback";
 
 /**
@@ -72,7 +72,7 @@ async function standingsBefore(board: SlateResponse): Promise<Record<string, num
 }
 
 export default function ClubhousePage() {
-  const access = useCommissionerAccess();
+  const access = useClubhouseAccess();   // the Commissioner and the clubhouse beta's players
   const router = useRouter();
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState("");

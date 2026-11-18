@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { lastSeenLabel, playerTotals, visitsLabel } from "@/lib/player-presence.js";
 
-function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POST") {
+function reportNetworkError(error: Error, endpoint: string, method: "GET" | "POST" | "PATCH") {
   void import("@sentry/nextjs").then((Sentry) => {
     Sentry.withScope((scope) => {
       scope.setTag("app.route", "/admin/players");
@@ -24,6 +24,7 @@ type Player = {
   loginPin: string | null;
   active: boolean;
   isCommissioner: boolean;
+  clubhouseAccess?: boolean;
   forfeited?: boolean;
   emailNotificationsEnabled: boolean;
   createdAt?: string;
@@ -86,6 +87,27 @@ export default function PlayerManagementPage() {
   useEffect(() => {
     window.queueMicrotask(() => void loadPlayers());
   }, [loadPlayers]);
+
+  /** The clubhouse beta: let a player into the clubhouse (the light switch and /clubhouse) or take them out. */
+  async function setClubhouse(player: Player, on: boolean) {
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const response = await fetchWithSession("/api/admin/players", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: player.id, clubhouseAccess: on }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { setErrorMessage(data.error ?? "The clubhouse setting could not be saved."); return; }
+      setSuccessMessage(on ? `${player.firstName} can open the clubhouse now.` : `${player.firstName} is back to the classic pages only.`);
+      await loadPlayers();
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) { setErrorMessage("Please sign in before changing the clubhouse setting."); return; }
+      reportNetworkError(reason instanceof Error ? reason : new Error("Clubhouse setting request failed."), "/api/admin/players", "PATCH");
+      setErrorMessage("The clubhouse setting could not be saved. Check your connection and try again.");
+    }
+  }
 
   /** Reverse a player's Pick'em forfeit. The button asks twice, because the player cannot un-reverse it. */
   async function reinstate(player: Player) {
@@ -327,6 +349,13 @@ export default function PlayerManagementPage() {
                         <div><dt>This week</dt><dd>{visitsLabel(player.visitDays) ?? "Unknown"}</dd></div>
                         <div><dt>Last on</dt><dd>{player.lastSeenOn ?? "Not recorded yet"}</dd></div>
                       </dl>
+
+                      {player.active && !player.isCommissioner ? (
+                        <p className="player-clubhouse">
+                          <span>Clubhouse <small>beta</small></span>
+                          <button aria-label={`Clubhouse for ${player.firstName}`} aria-pressed={Boolean(player.clubhouseAccess)} className="desk-button" onClick={() => void setClubhouse(player, !player.clubhouseAccess)} type="button">{player.clubhouseAccess ? "On" : "Off"}</button>
+                        </p>
+                      ) : null}
 
                       {player.forfeited ? (
                         <p className="player-forfeit">

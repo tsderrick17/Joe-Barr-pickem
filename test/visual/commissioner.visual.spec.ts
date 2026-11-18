@@ -619,3 +619,20 @@ test("either half of the Record / Other Stats switch flips the All-Time Table", 
   await expect(record).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".trophy-table")).toHaveAttribute("data-view", "record");
 });
+
+test("a player's card turns the clubhouse beta on and off for that one player, and the list reads it back", async ({ page }) => {
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  const sent: unknown[] = [];
+  await page.route("**/api/admin/players", async (route) => {
+    if (route.request().method() === "PATCH") { sent.push(route.request().postDataJSON()); return route.fulfill({ json: { playerId: "p4", clubhouseAccess: true } }); }
+    return route.fallback();
+  });
+  await page.goto("/admin/players");
+  await expect(page.getByRole("button", { name: "Clubhouse for Connor" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
+  // Only players get the switch: the Commissioner always has the clubhouse, and an inactive player has no card actions.
+  await expect(page.getByRole("button", { name: "Clubhouse for Gary" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Clubhouse for Al" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Clubhouse for Zac" }).click();
+  await expect.poll(() => sent).toEqual([{ playerId: "p4", clubhouseAccess: true }]);
+});

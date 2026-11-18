@@ -4,6 +4,15 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-18 - The clubhouse beta: chosen players get the switch
+
+The clubhouse opens to a few players before everyone: each player now has `clubhouse_access` (off for all; migration
+20261118010000), set from a Clubhouse On/Off switch on that player's card at `/admin/players` (`PATCH /api/admin/players`, audited as
+`clubhouse_access_granted` / `clubhouse_access_removed`, put back if the audit row cannot be written). `GET /api/profile` answers
+`clubhouseAccess` (the Commissioner always has it); the header's light switch and `/clubhouse` follow it. Nothing the clubhouse reads or
+writes changed: it uses the classic pages' own routes, so a beta player sees exactly what the Standings and the Slate already show them.
+First testers, after Thanksgiving week: Connor and Zac.
+
 ## 2026-11-18 - The clubhouse room's second pass: a real bar, a sunny shore (Commissioner only)
 
 The room picture was rendered again with the owner's notes: the bar's walnut is veneer with true grain; the back-bar bottles hold their

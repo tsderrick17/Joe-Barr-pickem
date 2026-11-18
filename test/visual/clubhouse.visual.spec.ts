@@ -12,7 +12,7 @@ const WEEK_TOTALS = { p0: 21, p1: 18, p2: 15, p3: 12, p4: 9, p5: 6, p6: 3, p7: 0
 
 /** The real clubhouse at /clubhouse: the Standings' and the Slate's own reads, served from their fixtures. */
 const sent: unknown[] = [];
-async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response, bowl = null as Record<string, unknown> | null } = {}) {
+async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-390"] as { width: number; height: number }, commissioner = true, clubhouseAccess = undefined as boolean | undefined, scenarios = ["upcoming-picked"], at = "/clubhouse", homeExtra = {} as Record<string, unknown>, shapeBoard = (response: BoardRead) => response, bowl = null as Record<string, unknown> | null } = {}) {
   sent.length = 0;
   await page.setViewportSize(size);
   await signIn(page, theme);
@@ -25,7 +25,7 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
   await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: shapeBoard(boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)])) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
   await page.route("**/api/board-totals**", (route) => route.fulfill({ json: { weekId: new URL(route.request().url()).searchParams.get("week"), totals: WEEK_TOTALS } }));
-  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false } }));
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false, ...(clubhouseAccess === undefined ? {} : { clubhouseAccess }) } }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
   // A sent pick: every POST is kept so a test can read exactly what the real route would have been asked to save.
   await page.route("**/api/picks", async (route) => { sent.push(route.request().postDataJSON()); await route.fulfill({ json: { message: "saved" } }); });
@@ -184,6 +184,19 @@ test("the switch is a mode: up, opening the app lands in the clubhouse; down, it
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
   await openClubhouse(page, { commissioner: false });
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
+  await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
+});
+
+test("a player the Commissioner has let into the clubhouse beta gets the room and the switch", async ({ page }) => {
+  await openClubhouse(page, { commissioner: false, clubhouseAccess: true });
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/clubhouse$/);
+  await expect(page.getByRole("link", { name: "Classic view" }).first()).toBeVisible();
+});
+
+test("a player the Commissioner has not let in is sent to the Standings, whatever the clubhouse beta says of others", async ({ page }) => {
+  await openClubhouse(page, { commissioner: false, clubhouseAccess: false });
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
   await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
 });
