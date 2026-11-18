@@ -365,6 +365,10 @@
 .lab-tote-col-surv { width: 3.4rem; }
 .lab-tote .lab-tote-wins { color: rgb(255 176 46); font-family: "Courier New", monospace; font-weight: 900; text-align: center; text-shadow: 0 0 3px rgba(255, 160, 40, .45); }
 .lab-tote-name { font-weight: 800; letter-spacing: .06em; overflow: hidden; white-space: nowrap; }
+/* A narrow phone: names tighten rather than cut off. */
+@media (max-width: 380px) { .lab-tote-col-pick { width: 24%; } .lab-tote-name { font-size: .9em; letter-spacing: .02em; } .lab-tote-slip { font-size: .96rem; padding-left: 4px; } }
+/* While a sheet is open the room's name plates step back, so none peeks out behind the board's tabs. */
+.clubhouse-page:has(.cw-sheet[open]) .lab-room-tag { visibility: hidden; }
 /* Team, line, lamp: the lamp slot has one width in every row, so the W and L line up down the column. */
 /* Every pick in a column starts on one left edge: a shown pick's team, and the three dots that stand in for a hidden one. Its
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
@@ -507,7 +511,7 @@
 .lab-rules header h4 { font-family: var(--font-serif); font-size: 1.6rem; margin: 4px 0; }
 .lab-rules header small { color: var(--club-muted); font-size: .8rem; }
 .lab-rules-index { display: grid; gap: 6px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0 4px; }
-.lab-rules-index a { align-items: center; background: rgb(255 255 255 / .6); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); display: flex; font-size: .8rem; font-weight: 700; gap: 8px; min-height: 44px; padding: 0 10px; text-decoration: none; }
+.lab-rules-index a { align-items: center; background: color-mix(in srgb, var(--club-ink) 4%, transparent); border: 1px solid var(--club-line); border-radius: 8px; color: var(--club-ink); display: flex; font-size: .8rem; font-weight: 700; gap: 8px; min-height: 44px; padding: 0 10px; text-decoration: none; }
 .lab-rules-index b { color: var(--club-gold-dk); font-family: var(--font-serif); min-width: 2.1rem; }
 .lab-rules-part h5 { color: var(--club-gold-dk); font-size: .72rem; font-weight: 800; letter-spacing: .18em; margin: 22px 0 6px; text-align: center; }
 .lab-rules-article { border-top: 1px solid var(--club-line); padding: 12px 0 4px; scroll-margin-top: calc(var(--site-nav-height, 0px) + 72px); }

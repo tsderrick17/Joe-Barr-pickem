@@ -134,13 +134,14 @@ export default function ClubhousePage() {
 
   // The open page is part of the address: #slate. Back closes it, a reload reopens it.
   useEffect(() => {
-    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); };
+    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); if (window.location.hash === "#chat") setChatOpen(true); };   // #chat opens the chat
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
     return () => { window.removeEventListener("popstate", sync); window.removeEventListener("hashchange", sync); };
   }, []);
 
+  const closeChat = useCallback(() => { setChatOpen(false); if (window.location.hash === "#chat") window.history.replaceState(null, "", "/clubhouse"); }, []);
   const show = useCallback((next: Pane) => {
     setChatOpen(false);
     if (paneFromHash(window.location.hash)) window.history.replaceState(null, "", `/clubhouse#${next}`);   // page to page: still one step back to the room
@@ -228,7 +229,7 @@ export default function ClubhousePage() {
   return (
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
-      <Sheet onClose={() => setChatOpen(false)} open={chatOpen} title="Pool chat"><PoolChat onHide={() => setChatOpen(false)} /></Sheet>
+      <Sheet onClose={closeChat} open={chatOpen} title="Pool chat"><PoolChat onHide={closeChat} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}
