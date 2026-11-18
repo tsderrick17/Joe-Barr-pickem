@@ -54,6 +54,8 @@ export const BOWL_PENNANTS = [
   { match: /birmingham bowl/i, logo: "birmingham", flag: "BIRMINGHAM", cloth: "rgb(24 96 168)", hoist: "rgb(210 30 40)" },
   { match: /san juan bowl/i, logo: "san-juan", flag: "SAN JUAN", cloth: "rgb(16 40 96)", hoist: "rgb(240 196 40)" },
   { match: /celebration bowl/i, logo: "celebration", flag: "CELEBRATION", cloth: "rgb(20 60 140)", hoist: "rgb(240 110 30)" },
+  { match: /puerto rico bowl/i, logo: "puerto-rico", flag: "PUERTO RICO", cloth: "rgb(20 50 120)", hoist: "rgb(220 40 40)" },
+  { match: /poinsettia bowl/i, logo: "poinsettia", flag: "POINSETTIA", cloth: "rgb(16 40 80)", hoist: "rgb(200 30 40)" },
   { match: /cure bowl/i, logo: "cure", flag: "CURE", cloth: "rgb(222 102 152)", hoist: "rgb(24 24 24)" },
 ];
 

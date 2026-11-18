@@ -190,7 +190,7 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
         <path className="lab-bowl-flag-cloth" d="M10 1L153 13V43L10 55Z" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
         {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />}
-        <image height="38" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="96" x="20" y="9" />
+        <image height="46" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="96" x="12" y="5" />
       </svg>
     </span>
   );
