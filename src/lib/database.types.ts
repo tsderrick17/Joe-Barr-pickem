@@ -1259,6 +1259,7 @@ export type Database = {
           active: boolean
           app_seen_at: string | null
           auth_user_id: string | null
+          clubhouse_access: boolean
           created_at: string
           email_ats_due_enabled: boolean
           email_custom_enabled: boolean
@@ -1307,6 +1308,7 @@ export type Database = {
           active?: boolean
           app_seen_at?: string | null
           auth_user_id?: string | null
+          clubhouse_access?: boolean
           created_at?: string
           email_ats_due_enabled?: boolean
           email_custom_enabled?: boolean
@@ -1355,6 +1357,7 @@ export type Database = {
           active?: boolean
           app_seen_at?: string | null
           auth_user_id?: string | null
+          clubhouse_access?: boolean
           created_at?: string
           email_ats_due_enabled?: boolean
           email_custom_enabled?: boolean
