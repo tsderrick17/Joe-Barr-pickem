@@ -28,7 +28,8 @@ export { coverMargin };
 import { selectAvailableScoringPeriods, selectDefaultScoringPeriod } from "./scoring-period.js";
 
 const mark = (value) => (value === "W" || value === "win" ? "W" : value === "L" || value === "loss" ? "L" : null);
-const STATUS = { upcoming: "UPCOMING", active: "IN PLAY", complete: "FINAL" };
+// The week's word beside its name on the Big Board: none for the week in play (it goes without saying), else upcoming or final.
+const STATUS = { upcoming: "UPCOMING", active: "", complete: "FINAL" };
 
 /**
  * Whether the new board and ticket cover this week: a regular week (one or two picks) or a playoff round (a pick for every game, no

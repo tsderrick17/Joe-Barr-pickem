@@ -754,3 +754,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .clubhouse-page .trophy-view-switch button { color: rgb(240 236 226); }
 .clubhouse-page .trophy-view-switch button + button { border-left-color: rgba(201, 164, 95, .6); }
 .clubhouse-page .trophy-view-switch button.is-active { background: var(--cw-gold); color: rgb(14 14 12); }
+
+/* The Trophy Room in the clubhouse: every panel has the same rounded corners as the clubhouse's switches, and the All-Time Table is dark
+   with light type in day and night alike, with no light edge round it. */
+.clubhouse-page .trophy-display { border-radius: 8px; overflow: hidden; }
+.clubhouse-page .trophy-table-wrap { --club-paper: #13221e; --club-paper-2: #182a25; --club-line: #2c453d; --club-ink: #efe6d2; --club-muted: #a8b4ab; border: 0; border-radius: 8px; color: var(--club-ink); }
