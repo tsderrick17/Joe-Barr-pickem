@@ -357,7 +357,7 @@ test("Survivor shows only the weeks played so far and the next one, and opens on
   expect(weeks.at(-1)).toBeLessThan(18);
   expect(weeks.at(-1)).toBe(picked + 1);
   // Scrolled all the way along, so the latest week is in view.
-  expect(await scroll.evaluate((node) => node.scrollWidth - node.clientWidth - node.scrollLeft)).toBeLessThanOrEqual(1);
+  await expect.poll(() => scroll.evaluate((node) => node.scrollWidth - node.clientWidth - node.scrollLeft)).toBeLessThanOrEqual(1);
 });
 
 test("the ticker keeps each game's spread on its card once the game is over, beside the final score; a game still to play shows just its line", async ({ page }) => {

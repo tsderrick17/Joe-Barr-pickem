@@ -29,11 +29,12 @@ function Chips<T extends string>({ label, options, value, onChange }: { label: s
   );
 }
 
-/** A pick that is in but not shown yet: it reads as made, never as empty, and never says which team. */
-function HiddenPick() {
+/** A pick that is in but not shown yet: one lit lamp, the same as the ticket's lamp for a pick sent in (a spade for Survivor). It reads as
+ * made, never as empty, and never says which team. */
+export function HiddenPick({ survivor = false, label = "Pick in, hidden until kickoff" }: { survivor?: boolean; label?: string }) {
   return (
-    <span aria-label="Pick in, hidden until kickoff" className="lab-tote-cover" role="img">
-      <i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" />
+    <span className="lab-tote-cover">
+      <Lamp label={label} state="in" survivor={survivor} />
     </span>
   );
 }
@@ -68,7 +69,7 @@ const lineOf = (view: BoardView, team: string) => { const game = gameOf(view, te
 
 /**
  * A playoff round's face: a pick for every game, so each game is a column headed by its two teams, and a pick is the team's logo under
- * its game (lit green or red once decided, three dark dots while another player's pick is hidden, PICK where yours is owed). Under each
+ * its game (lit green or red once decided, one lit lamp while another player's pick is hidden, PICK where yours is owed). Under each
  * name, the race: how far back of the leader, or OUT / FORFEITED (the row greyed and struck through).
  */
 function PlayoffFace({ view, open }: { view: BoardView; open: (() => void) | null }) {
@@ -149,7 +150,7 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
                 <td className="lab-tote-surv">
                   {view.champion ? (row.id === view.championId ? <span className="lab-tote-won">WON</span> : <span className="lab-tote-out">OUT</span>)
                     : survivor.kind === "out" ? <span className="lab-tote-out">OUT</span>
-                    : survivor.kind === "hidden" ? <span aria-label="Survivor pick in, hidden until kickoff" className="lab-tote-in" role="img">IN</span>
+                    : survivor.kind === "hidden" ? <HiddenPick label="Survivor pick in, hidden until kickoff" survivor />
                     : survivor.kind === "owed" ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>)
                     : survivor.kind === "none" ? <span aria-label="Survivor: none yet" className="lab-tote-none">—</span>
                     : cell(`Survivor: ${name(survivor.team)}${row.you ? ". Open your ticket" : ""}`, (

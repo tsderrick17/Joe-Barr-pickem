@@ -1,14 +1,14 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { Logo } from "@/components/lab/lab-tote";
+import { HiddenPick, Logo } from "@/components/lab/lab-tote";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import type { StandingsResponse } from "@/lib/api-contracts";
 
 /**
  * The Survivor table in the Big Board's housing (green and gold, black panels, a lit ring round each week's team), with the same two tabs
  * over it. It shows exactly what the Survivor Table does: a row per player, a team for each week they have picked, IN or OUT beside the
- * name, and a hidden pick as three dark lamps until its game kicks off. It scrolls sideways; the status and the name stay put.
+ * name, and a hidden pick as one lit spade lamp until its game kicks off. It scrolls sideways; the status and the name stay put.
  * Only the weeks played so far and the one after are columns (never the empty rest of the season), and it opens scrolled to the
  * latest week, not week 1.
  */
@@ -25,9 +25,21 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
   const rows = home.survivorRows ?? [];
   const WEEKS = survivorWeekCount(rows);
   const scroller = useRef<HTMLDivElement>(null);
+  // Open on the latest week, and stay there while the sheet and its logos settle, until the player scrolls it themselves.
   useLayoutEffect(() => {
     const node = scroller.current;
-    if (node) node.scrollLeft = node.scrollWidth;   // open on the latest week
+    if (!node) return;
+    let touched = false;
+    const toEnd = () => { if (!touched) node.scrollLeft = node.scrollWidth; };
+    const hold = () => { touched = true; };
+    toEnd();
+    const watch = new ResizeObserver(toEnd);
+    watch.observe(node);
+    if (node.firstElementChild) watch.observe(node.firstElementChild);
+    node.addEventListener("pointerdown", hold);
+    node.addEventListener("wheel", hold, { passive: true });
+    node.addEventListener("keydown", hold);
+    return () => { watch.disconnect(); node.removeEventListener("pointerdown", hold); node.removeEventListener("wheel", hold); node.removeEventListener("keydown", hold); };
   }, [WEEKS]);
   return (
     <div className="lab-tote lab-survivor-tote">
@@ -67,7 +79,7 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
                         <td key={index}>
                           {pick?.abbreviation
                             ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><Logo team={pick.abbreviation} /></span>
-                            : pick?.isHidden ? <span aria-label="Selection submitted and hidden until kickoff" className="lab-tote-cover" role="img"><i /><i /><i /></span> : null}
+                            : pick?.isHidden ? <HiddenPick label="Selection submitted and hidden until kickoff" survivor /> : null}
                         </td>
                       );
                     })}

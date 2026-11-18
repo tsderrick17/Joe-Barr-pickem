@@ -113,12 +113,12 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator("tr.is-you").getByRole("img", { name: /hidden/ })).toHaveCount(0);
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Graded" }).click();
   await expect(pad.getByRole("img", { name: /hidden/ })).toHaveCount(0);
-  // Game day has both in a column: every shown pick and every hidden pick's three dots start on one left edge, near the cell's left
+  // Game day has both in a column: every shown pick and every hidden pick's lamp starts on one left edge, near the cell's left
   // side (not centred). A result is in the type (no letter): said aloud as win or loss.
   await page.getByRole("group", { name: "Moment" }).getByRole("button", { name: "Game day", exact: true }).click();
   for (const column of [3, 4]) {
     const lefts = (selector: string) => pad.locator(`tbody td:nth-child(${column}) ${selector}`).evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left - node.closest("td")!.getBoundingClientRect().left)));
-    const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover i:first-child");
+    const shown = await lefts(".lab-tote-slip b"), hidden = await lefts(".lab-tote-cover .lab-lamp");
     expect(shown.length).toBeGreaterThan(0);
     // Pick 2 still has hidden picks on game day; Pick 1's games have all kicked off.
     if (column === 4) expect(hidden.length).toBeGreaterThan(0);
