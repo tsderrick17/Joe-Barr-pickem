@@ -14,6 +14,7 @@ export type BowlTicketData = {
   total: number;
   decided: number;
   owed: number;
+  picked?: number;
   standings: Array<{ id: string; name: string; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
 };
 
@@ -75,7 +76,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
         <div className="lab-bowl-title">
           <p aria-hidden="true">★ ★ ★</p>
           <h3>Bowl Pool</h3>
-          {view.owed ? <span className="lab-bowl-due"><BowlFlag flag="" small state="owed" /> {view.owed} TO PICK</span> : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
+          {view.owed ? <span className="lab-bowl-due"><BowlFlag flag="" small state="owed" /> {view.owed} TO PICK{view.picked ? ` · ${view.picked} PICKED` : ""}</span> : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
         </div>
         <BowlGauge played={view.decided} total={view.total} />
       </header>
@@ -108,7 +109,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                   return (
                     <li className={`lab-bowl-game is-${game.state}`} key={game.id}>
                       <span className="lab-bowl-name">
-                        {flagStyle === "logo" && game.logo ? <BowlLogoFlag cloth={game.cloth} hoist={game.hoist} logo={game.logo} state={game.state} /> : <BowlFlag flag={game.flag} state={game.state} />}
+                        {flagStyle === "logo" && (game.logo || game.playoff) ? <BowlLogoFlag cloth={game.cloth ?? "rgb(20 36 76)"} hoist={game.hoist ?? "rgb(226 182 70)"} logo={game.logo ?? ""} state={game.state} /> : <BowlFlag flag={game.flag} state={game.state} />}
                         <span><b>{game.bowl}</b><small>{caption(game)}</small></span>
                       </span>
                       {cell(0)}
@@ -147,7 +148,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
               <li className={row.you ? "is-you" : ""} key={row.id}>
                 <span>{row.tied ? `T${row.place}` : row.place}</span>
                 <b>{row.name}</b>
-                <em>{row.wins}–{row.losses}</em>
+                <em>{row.wins} {row.wins === 1 ? "WIN" : "WINS"}</em>
               </li>
             ))}
           </ol>
@@ -166,7 +167,7 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-${state} ${small ? "is-small" : ""}`}>
       <svg focusable="false" viewBox="0 0 120 40">
-        <path className="lab-bowl-flag-cloth" d="M8 1L118 20L8 39Z" />
+        <path className="lab-bowl-flag-cloth" d="M8 1H118V39H8Z" />
         <rect className="lab-bowl-flag-hoist" height="40" rx="2" width="9" x="0" y="0" />
         <text className="lab-bowl-flag-name" fontSize={small ? 22 : size} x={small ? 40 : 14} y="21" {...(flag.length > 7 ? { lengthAdjust: "spacingAndGlyphs", textLength: 66 } : {})}>{flag}</text>
       </svg>
@@ -175,18 +176,31 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
 }
 
 /**
- * The bowl's logo pennant: the real logo in full colour, sewn on near the hoist like a patch, on a pennant in the logo's own colours (its
- * cloth and hoist). It waves while a pick is owed and fades to grey when the bowl kicked off without one.
+ * The bowl's banner: a straight-edged banner in the logo's own colours (its cloth and hoist) with the real logo, in full colour, on a cream
+ * patch filling most of it, so every logo reads, dark or light. It hangs still; it greys when the bowl kicked off without a pick.
  */
 export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; cloth: string | null; hoist: string | null; state: BowlRowState }) {
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-logo is-${state}`} style={{ "--flag-cloth": cloth ?? undefined, "--flag-hoist": hoist ?? undefined } as CSSProperties}>
-      <svg focusable="false" viewBox="0 0 140 56">
-        <path className="lab-bowl-flag-cloth" d="M10 1L138 28L10 55Z" />
+      <svg focusable="false" viewBox="0 0 154 56">
+        <path className="lab-bowl-flag-cloth" d="M10 1H153V55H10Z" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
-        <image height="48" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="56" x="14" y="4" />
+        <rect className="lab-bowl-flag-patch" height="46" rx="6" width="132" x="16" y="5" />
+        {logo ? <image height="40" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="124" x="20" y="8" /> : <PlayoffMark />}
       </svg>
     </span>
+  );
+}
+
+/** For a playoff game with no bowl of its own (a first-round game on campus): a plain football and PLAYOFF lettered beside it, our own mark. */
+function PlayoffMark() {
+  return (
+    <g>
+      <ellipse cx="44" cy="28" fill="rgb(122 62 26)" rx="20" ry="12" transform="rotate(-20 44 28)" />
+      <path d="M33 31L55 24" stroke="rgb(248 243 230)" strokeWidth="1.6" />
+      {[0, 1, 2, 3].map((k) => <path d={`M${39 + k * 4} ${27.5 - k * 1.3}l1.2 3.6`} key={k} stroke="rgb(248 243 230)" strokeWidth="1.4" transform={`translate(${-1.2} ${-1.8})`} />)}
+      <text fill="rgb(20 30 52)" fontFamily="var(--font-graduate), Georgia, serif" fontSize="15" x="70" y="33">PLAYOFF</text>
+    </g>
   );
 }
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from "next/navigation";
 import PoolChat from "@/components/pool-chat";
 import { Sheet } from "@/components/commissioner/wheel-parts";
-import { BoardPopup, BowlPopup, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
+import { BoardPopup, BowlPopup, prefetchBowlPool, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
 import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -215,6 +215,9 @@ export default function ClubhousePage() {
   const survivorTab = Boolean(room?.home.survivorAvailable) && !room?.home.isPlayoff;
   const third: Pane | null = shown === "survivor" || shown === "bowl" ? shown : room?.feed.bowl && (room.feed.survivorOver || !survivorTab) ? "bowl" : survivorTab ? "survivor" : room?.feed.bowl ? "bowl" : null;
   const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), ...(third ? [{ pane: third, label: third === "bowl" ? "Bowl Pool" : "Survivor" }] : [])];
+  // The Bowl Pool's read, fetched ahead once its spot is in the room, so its ticket opens already full.
+  const bowlInRoom = Boolean(room?.feed.bowl);
+  useEffect(() => { if (bowlInRoom) void prefetchBowlPool(); }, [bowlInRoom]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // Once Survivor is over, its poker table is the Bowl Pool's.
@@ -234,8 +237,8 @@ export default function ClubhousePage() {
         {deck === "survivor" ? <SurvivorPopup home={room.home} /> : null}
         {deck === "bowl" ? <BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
       </Sheet> : null}
-      {popup("trophies") ? <Sheet onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
-            {popup("rules") ? <Sheet onClose={() => leave("rules")} open title="Constitution" untitled><Constitution /></Sheet> : null}
+      {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
+            {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
       {classic ? <section aria-label="Standings" className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>

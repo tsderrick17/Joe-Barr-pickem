@@ -369,10 +369,10 @@
 /* Every pick in a column starts on one left edge: a shown pick's team, and the three dots that stand in for a hidden one. Its
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
    loss turns red and is struck through. */
-.lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; gap: 3px; padding-left: 6px; white-space: nowrap; }
+.lab-tote-slip { align-items: baseline; color: rgb(255 208 80); display: flex; font-family: "Courier New", monospace; font-size: 1.06rem; gap: 3px; padding-left: 6px; white-space: nowrap; }
 .lab-tote-slip.is-w { color: rgb(128 200 152); text-shadow: 0 0 3px rgba(128, 200, 152, .15); }
 .lab-tote-slip.is-l { color: rgb(220 126 114); }
-.lab-tote-slip small { font-size: .7rem; opacity: .8; }
+.lab-tote-slip small { font-size: .82rem; opacity: .85; }
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; padding-left: 6px; }
 .lab-tote-cover i { background: rgb(40 34 22); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .25); height: .55rem; width: .55rem; }
@@ -624,11 +624,12 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
 .lab-bowl-flag-hoist { fill: var(--bowl-slip-gold); }
 .lab-bowl-flag-name { dominant-baseline: central; fill: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .04em; }
-.lab-bowl-flag.is-logo { width: 8.8rem; }
+.lab-bowl-flag.is-logo { width: 9.6rem; }
+/* the logo sits on a cream patch, so a dark logo reads on any banner */
+.lab-bowl-flag-patch { fill: rgb(248 243 230); stroke: rgba(20, 30, 50, .25); stroke-width: 1; }
 .lab-bowl-flag.is-logo .lab-bowl-flag-cloth { fill: var(--flag-cloth); stroke: rgba(240, 232, 214, .55); }
 .lab-bowl-flag.is-logo .lab-bowl-flag-hoist { fill: var(--flag-hoist); }
 .lab-bowl-flag.is-logo.is-missed { filter: grayscale(1); }
-.lab-bowl-flag.is-owed svg { animation: lab-bowl-flutter 2.8s ease-in-out infinite; transform-origin: 4% 50%; }
 .lab-bowl-flag.is-owed:not(.is-logo) .lab-bowl-flag-cloth { fill: var(--bowl-slip-gold); stroke: var(--bowl-gold-lt); }
 .lab-bowl-flag.is-owed:not(.is-logo) .lab-bowl-flag-hoist { fill: var(--bowl-ink); }
 .lab-bowl-flag.is-owed .lab-bowl-flag-name { fill: rgb(18 28 50); }
@@ -637,13 +638,6 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag.is-missed:not(.is-logo) .lab-bowl-flag-hoist { fill: rgb(120 120 120); }
 .lab-bowl-flag.is-missed .lab-bowl-flag-name { fill: rgba(240, 232, 214, .7); }
 .lab-bowl-flag.is-done { opacity: .75; }
-@keyframes lab-bowl-flutter {
-  0%, 100% { transform: skewY(0) scaleX(1); }
-  50% { transform: skewY(-2deg) scaleX(.97); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lab-bowl-flag.is-owed svg { animation: none; }
-}
 .lab-bowl-tiebreaker { align-items: center; color: var(--bowl-ink); display: flex; font-family: Georgia, serif; font-size: .8rem; gap: 10px; grid-column: 1 / -1; justify-content: space-between; }
 .lab-bowl-tiebreaker input { background: rgb(26 38 64); border: 1px solid var(--bowl-slip-gold); border-radius: 4px; color: var(--bowl-ink); font: inherit; font-size: 1rem; min-height: 2.75rem; text-align: center; width: 4.5rem; }
 .lab-bowl-tiebreaker input:focus-visible { outline: 2px solid var(--bowl-gold-lt); outline-offset: 2px; }
@@ -685,8 +679,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   /* The Big Board and Survivor read at a glance across a room: a narrower sheet, bigger type, taller rows. */
   .clubhouse-page .cw-sheet:has(.lab-tote) { max-width: 760px; }
   .clubhouse-page .lab-tote tbody th, .clubhouse-page .lab-tote tbody td { font-size: .98rem; height: 2.9rem; }
-  .clubhouse-page .lab-tote-slip { font-size: 1.12rem; }
-  .clubhouse-page .lab-tote-slip small { font-size: .85rem; }
+  .clubhouse-page .lab-tote-slip { font-size: 1.25rem; }
+  .clubhouse-page .lab-tote-slip small { font-size: .98rem; }
   .clubhouse-page .lab-tote thead th { font-size: .64rem; }
   /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
   .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
@@ -697,7 +691,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   /* The Trophy Room: the turning table and the plaques use the whole width, three plaques to a row. */
   .clubhouse-page .lab-wall-table { margin-inline: auto; max-width: none; }
   .clubhouse-page .lab-wall-table .trophy-display { margin-inline: auto; max-width: min(720px, calc(100dvh - 240px)); width: 100%; }
-  .clubhouse-page .lab-case-shelf { grid-template-columns: repeat(auto-fit, 15rem); justify-content: center; margin-inline: auto; max-width: 48rem; }
+  .clubhouse-page .lab-case-shelf { display: flex; flex-wrap: wrap; justify-content: center; margin-inline: auto; max-width: 48rem; }
+  .clubhouse-page .lab-case-shelf > .lab-plaque { flex: 0 1 15rem; }
 }
 
 /* ---- The board's switch: Big Board / Ticket / Survivor (or the Bowl Pool), always on top of the board as it scrolls ---- */
@@ -717,7 +712,9 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 }
 /* On a phone the plaques stand side by side too, up to three a row: each a smaller plate, the pool's name over the champion's. */
 @media (max-width: 1023px) {
-  .clubhouse-page .lab-case-shelf { gap: 8px; grid-template-columns: repeat(auto-fit, minmax(5.6rem, 7.5rem)); justify-content: center; }
+  /* three to a row, always: each plaque a third of the row (less the gaps), centred when a row has fewer */
+  .clubhouse-page .lab-case-shelf { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .clubhouse-page .lab-case-shelf > .lab-plaque { flex: 0 1 calc((100% - 16px) / 3); max-width: 7.5rem; min-width: 0; }
   .clubhouse-page .lab-plaque-season { font-size: .92rem; }
   .clubhouse-page .lab-plaque dl div { display: grid; gap: 0; justify-items: center; text-align: center; }
   .clubhouse-page .lab-plaque dt { font-size: .48rem; justify-content: center; }
