@@ -3,9 +3,8 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import PoolChat from "@/components/pool-chat";
 import { Sheet } from "@/components/commissioner/wheel-parts";
-import { BoardPopup, BowlPopup, prefetchBowlPool, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
+import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
 import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -219,6 +218,9 @@ export default function ClubhousePage() {
   // The Bowl Pool's read, fetched ahead once its spot is in the room, so its ticket opens already full.
   const bowlInRoom = Boolean(room?.feed.bowl);
   useEffect(() => { if (bowlInRoom) void prefetchBowlPool(); }, [bowlInRoom]);
+  // The Trophy Room and the chat too, once the room is up.
+  const roomUp = Boolean(room);
+  useEffect(() => { if (roomUp) { void prefetchTrophyRoom(); void prefetchPoolChat(); } }, [roomUp]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // Once Survivor is over, its poker table is the Bowl Pool's.
@@ -229,7 +231,7 @@ export default function ClubhousePage() {
   return (
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
-      <Sheet onClose={closeChat} open={chatOpen} title="Pool chat"><PoolChat onHide={closeChat} /></Sheet>
+      <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}

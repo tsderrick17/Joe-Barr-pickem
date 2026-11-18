@@ -341,10 +341,11 @@
 .lab-survivor-tote header { align-items: center; }
 .lab-tote header span { color: rgba(240, 236, 226, .75); font-size: .66rem; font-weight: 800; letter-spacing: .14em; }
 /* The week is a button: the phone's own week list is a select laid, unseen, over the words. */
-.lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 44px; padding: 0 14px; position: relative; }
+.lab-tote-week { align-items: center; border: 1px solid rgba(201, 164, 95, .55); border-radius: 999px; cursor: pointer; display: inline-flex; min-height: 32px; padding: 0 11px; position: relative; }
 .lab-tote header .lab-tote-week span { color: rgb(240 236 226); }
 .lab-tote-week i { color: var(--cw-gold-lt); font-style: normal; }
-.lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; height: 100%; inset: 0; opacity: 0; position: absolute; width: 100%; }
+/* the pill is short to save room; the menu under it reaches past it, so the finger target is still 44px tall */
+.lab-tote-week select { appearance: none; background: transparent; border: 0; color: transparent; cursor: pointer; font-size: 16px; inset: -6px 0; opacity: 0; position: absolute; }
 /* The Window's week: arrows either side flip a week at a time; the week itself opens the list. */
 .lab-week-step { align-items: center; display: flex; gap: 6px; }
 .lab-week-step > button { align-items: center; background: transparent; border: 1px solid rgba(201, 164, 95, .55); border-radius: 50%; color: var(--cw-gold-lt); cursor: pointer; display: inline-flex; flex: none; height: 44px; justify-content: center; padding: 0; width: 44px; }
@@ -726,3 +727,30 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   .clubhouse-page .lab-plaque dt::after { display: none; }
   .clubhouse-page .lab-plaque dd { font-size: .78rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* The pool chat in the clubhouse wears the Big Board's housing: green and gold, each message a black slat, the names in gold. */
+.club-chat .pool-chat { background: transparent; border: 0; color: rgb(240 236 226); padding: 0 4px; }
+.club-chat .pool-chat-composer { border-color: rgba(201, 164, 95, .35); }
+.club-chat .pool-chat-composer button[aria-expanded] { background: rgb(8 10 9); border-color: rgba(201, 164, 95, .55); }
+.club-chat [aria-label="Emoji picker"] { border-color: rgba(201, 164, 95, .35); }
+.club-chat .pool-chat .pool-chat-input { background: rgb(8 10 9); border-color: rgba(201, 164, 95, .55); border-radius: 4px; color: rgb(240 236 226); }
+.club-chat .pool-chat .pool-chat-input::placeholder { color: rgba(240, 236, 226, .5); }
+.club-chat .pool-chat .pool-chat-input:focus { border-color: var(--cw-gold-lt); }
+.club-chat .pool-chat-composer button[type="submit"] { background: var(--cw-gold); border-radius: 4px; color: rgb(14 14 12); font-family: "Courier New", monospace; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.club-chat .pool-chat-composer button[type="submit"]:disabled { background: rgba(201, 164, 95, .3); color: rgba(14, 14, 12, .6); }
+.club-chat .pool-chat-note, .club-chat .pool-chat-empty { color: rgba(240, 236, 226, .65); }
+.club-chat .pool-chat-hide { color: var(--cw-gold-lt); }
+.club-chat .pool-chat-message { background: rgb(8 10 9); border: 0; border-radius: 3px; margin-bottom: 4px; padding: .5rem .65rem; }
+.club-chat .pool-chat-message.is-moderator { box-shadow: inset 3px 0 0 var(--cw-gold); }
+.club-chat .pool-chat-message.is-deleted .pool-chat-body { color: rgba(240, 236, 226, .45); }
+.club-chat .pool-chat-body { color: rgb(240 236 226); }
+.club-chat .pool-chat-message-meta strong { color: rgb(255 176 46); font-family: "Courier New", monospace; letter-spacing: .06em; text-transform: uppercase; }
+.club-chat .pool-chat-message-meta time { color: rgba(240, 236, 226, .5); }
+.club-chat .pool-chat-message-meta span { color: var(--cw-gold-lt); }
+.club-chat .pool-chat-message-meta button { color: rgba(240, 236, 226, .55); }
+
+/* The All-Time Table's Record / Other Stats switch sits on its own solid ground, so the room never shows through it. */
+.clubhouse-page .trophy-view-switch { background: rgb(18 40 30); border-color: rgba(201, 164, 95, .6); }
+.clubhouse-page .trophy-view-switch button { color: rgb(240 236 226); }
+.clubhouse-page .trophy-view-switch button + button { border-left-color: rgba(201, 164, 95, .6); }
+.clubhouse-page .trophy-view-switch button.is-active { background: var(--cw-gold); color: rgb(14 14 12); }

@@ -564,3 +564,16 @@ test("the board's switch: your ticket is always there to look at, even for a wee
   await expect(ticket.locator(".lab-window header .lab-tote-week span")).toHaveText(/^WEEK 3/);   // the week, which opens the week list (arrows either side flip a week)
   await expect(ticket.locator(".lab-board-cell:not([disabled])")).toHaveCount(0);
 });
+
+test("the pool chat wears the Big Board's housing and opens already full, read ahead while the room was up", async ({ page }) => {
+  await openClubhouse(page);
+  let reads = 0;
+  await page.route("**/api/pool-chat**", (route) => { reads += 1; return route.fulfill({ json: { messages: [{ id: "m1", playerName: "Connor", body: "Bills by a million", createdAt: "2026-11-15T18:00:00Z", isDeleted: false, isModerator: false, canDelete: false }] } }); });
+  await page.reload();
+  await expect.poll(() => reads).toBeGreaterThan(0);   // read ahead, before the chat is opened
+  await page.goto("/clubhouse#chat");
+  const chat = page.getByRole("dialog", { name: "Pool chat" });
+  await expect(chat.locator(".lab-tote.club-chat")).toBeVisible({ timeout: 30_000 });
+  await expect(chat.locator(".pool-chat-message")).toContainText("Bills by a million");
+  await expect(chat.getByText("Opening chat...")).toHaveCount(0);
+});

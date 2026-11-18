@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BowlClaimSeat } from "@/components/bowl-pool-marks";
 import { BowlTicketCard } from "@/components/bowl-ticket";
 import ForfeitPanel from "@/components/forfeit-panel";
+import PoolChat, { type Message as ChatMessage } from "@/components/pool-chat";
 import { RealTrophyRoom } from "@/components/lab/lab-clubhouse";
 import { TicketForm, ToteBoard, type Ticket } from "@/components/lab/lab-tote";
 import SurvivorToteBoard from "@/components/lab/lab-survivor-tote";
@@ -113,8 +114,35 @@ type Season = Parameters<typeof RealTrophyRoom>[0]["trophies"][number];
 type Player = Parameters<typeof RealTrophyRoom>[0]["players"][number];
 
 /** The Trophy Room: the trophies, a plaque for every season, and the all-time records, from the Trophy Room's own read. */
+// The Trophy Room's and the chat's last reads, kept while the clubhouse is open: the room reads them ahead so each sheet opens already
+// full and slides up whole, instead of opening on a line of "Loading" and snapping to its height. Each is read again when it opens.
+let lastTrophyRead: { trophies: Season[]; players: Player[] } | null = null;
+let lastChatRead: ChatMessage[] | null = null;
+export async function prefetchTrophyRoom() {
+  try {
+    const response = await fetchWithSession("/api/trophy-room");
+    if (response.ok) { const body = await response.json() as { trophies?: Season[]; players?: Player[] }; lastTrophyRead = { trophies: body.trophies ?? [], players: body.players ?? [] }; }
+  } catch { /* the Trophy Room reads it again when it opens */ }
+}
+export async function prefetchPoolChat() {
+  try {
+    const response = await fetchWithSession("/api/pool-chat");
+    if (response.ok) lastChatRead = (await response.json() as { messages?: ChatMessage[] }).messages ?? [];
+  } catch { /* the chat reads it again when it opens */ }
+}
+
+/** The pool chat in the clubhouse: the chat itself, in the Big Board's green-and-gold housing. */
+export function ClubChat({ onHide }: { onHide: () => void }) {
+  return (
+    <div className="lab-tote club-chat">
+      <header><h3>POOL CHAT</h3></header>
+      <PoolChat initialMessages={lastChatRead} onHide={onHide} />
+    </div>
+  );
+}
+
 export function TrophyPopup() {
-  const [data, setData] = useState<{ trophies: Season[]; players: Player[] } | null>(null);
+  const [data, setData] = useState<{ trophies: Season[]; players: Player[] } | null>(lastTrophyRead);
   const [message, setMessage] = useState("");
   useEffect(() => {
     let disposed = false;
@@ -124,7 +152,8 @@ export function TrophyPopup() {
         const body = await response.json() as { trophies?: Season[]; players?: Player[]; error?: string };
         if (response.status === 404) { if (!disposed) setMessage("The Trophy Room is not open yet."); return; }
         if (!response.ok) throw new Error(body.error ?? "The Trophy Room could not be loaded.");
-        if (!disposed) setData({ trophies: body.trophies ?? [], players: body.players ?? [] });
+        lastTrophyRead = { trophies: body.trophies ?? [], players: body.players ?? [] };
+        if (!disposed) setData(lastTrophyRead);
       } catch (reason) {
         if (reason instanceof SessionUnavailableError) window.location.replace("/login");
         else if (!disposed) setMessage(reason instanceof Error ? reason.message : "The Trophy Room could not be loaded.");

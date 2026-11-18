@@ -6,7 +6,7 @@ import { dateFormat } from "@/lib/date-format.js";
 import { HapticTap } from "@/components/haptic-tap";
 import { haptic } from "@/lib/haptics-client";
 
-type Message = {
+export type Message = {
   id: string;
   body: string;
   canDelete: boolean;
@@ -45,13 +45,14 @@ function messageDateTime(value: string) {
   }).format(timestamp);
 }
 
-type Props = { onHide?: () => void };
+type Props = { onHide?: () => void; initialMessages?: Message[] | null };
 
-export default function PoolChat({ onHide }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function PoolChat({ onHide, initialMessages = null }: Props) {
+  // Messages read ahead (the clubhouse does) open the chat already full; it still reads them again at once.
+  const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [draft, setDraft] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialMessages);
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -73,7 +74,7 @@ export default function PoolChat({ onHide }: Props) {
   }, []);
 
   useEffect(() => {
-    const initialLoad = window.setTimeout(() => void loadMessages(), 0);
+    const initialLoad = window.setTimeout(() => void loadMessages(Boolean(initialMessages)), 0);
     const refresh = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadMessages(true);
     }, CHAT_REFRESH_MS);
@@ -86,7 +87,7 @@ export default function PoolChat({ onHide }: Props) {
       window.clearInterval(refresh);
       document.removeEventListener("visibilitychange", refreshOnVisibility);
     };
-  }, [loadMessages]);
+  }, [loadMessages]);   // eslint-disable-line react-hooks/exhaustive-deps -- initialMessages only seeds the first read
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
