@@ -461,7 +461,8 @@ section.pickem-ledger.bowl-card-section .bowl-standings-scroll .bowl-standings-p
   background: var(--bowl-paper);
   border: 1px solid var(--bowl-pick-edge);
   border-radius: .35rem;
-  box-shadow: 0 1px 0 rgba(22, 34, 58, .06);
+  /* The school's own colours down the box's edge (primary, then a thin line of its second colour); none for a team without them. */
+  box-shadow: inset 4px 0 0 var(--team-primary, transparent), inset 6px 0 0 var(--team-secondary, transparent), 0 1px 0 rgba(22, 34, 58, .06);
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -474,6 +475,9 @@ section.pickem-ledger.bowl-card-section .bowl-standings-scroll .bowl-standings-p
 .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"] { background: var(--bowl-pick-on); border: 2px solid var(--bowl-gold); padding: calc(.3rem - 1px) calc(.35rem - 1px); }
 .bowl-pool-page #bowl-selections .bowl-pick-box[aria-pressed="true"]:not(:disabled):hover { background: var(--bowl-pick-on-hover); }
 .bowl-pool-page #bowl-selections .bowl-pick-box:disabled { cursor: not-allowed; }
+/* Each bowl's own logo before its name. */
+.bowl-pool-page .bowl-game-logo { flex: none; height: 1.3rem; margin-right: .3rem; max-width: 1.8rem; object-fit: contain; width: auto; }
+@media (min-width: 640px) { .bowl-pool-page .bowl-game-logo { height: 1.7rem; margin-right: .45rem; max-width: 2.4rem; } }
 .bowl-pool-page #bowl-selections .bowl-pick-box .bowl-team-pick { display: block; max-width: 100%; }
 /* Megaphones keep their usual proportions (never stretched to a wide box); a narrow phone box only trims them. */
 .bowl-pool-page #bowl-selections .bowl-pick-box .bowl-megaphone { max-width: 100%; }

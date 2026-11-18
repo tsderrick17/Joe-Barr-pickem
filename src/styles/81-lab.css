@@ -601,7 +601,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-game.is-owed .lab-bowl-name small { color: var(--bowl-gold-lt); font-weight: 700; }
 .lab-bowl-game.is-missed .lab-bowl-name small { color: rgb(236 150 132); }
 .lab-bowl-ticket .lab-board-at { display: none; }
-.lab-bowl-ticket .lab-board-cell { background: rgb(26 38 64); border-color: rgba(240, 232, 214, .08); }
+/* Each school's own colours down its box's edge (primary, then a thin line of its second colour), once the schedule has them. */
+.lab-bowl-ticket .lab-board-cell { background: rgb(26 38 64); border-color: rgba(240, 232, 214, .08); box-shadow: inset 4px 0 0 var(--team-primary, transparent), inset 6px 0 0 var(--team-secondary, transparent); }
 .lab-bowl-ticket .lab-board-team { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .02em; min-width: 0; }
 .lab-bowl-ticket .lab-board-line { color: var(--bowl-gold-lt); text-shadow: none; }
 .lab-bowl-ticket .lab-board-final.is-covered { color: var(--bowl-gold-lt); }
