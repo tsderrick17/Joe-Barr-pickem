@@ -521,9 +521,8 @@
 /* Survivor's lamp is a spade, like a suit on a card: same light, different shape. The spade is two cut-outs (a dark edge, the light
    inside it), and the glow is a drop shadow that follows the cut, not the square around it. */
 .lab-lamp.is-survivor { background: none; border: 0; border-radius: 0; box-shadow: none; position: relative; transform: scale(1.2); }
-.lab-lamp.is-survivor::before, .lab-lamp.is-survivor::after { content: ""; inset: 0; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 .8C8 3.6 1.6 7.6 1.6 12a4 4 0 0 0 7 2.7L7.2 19.4h5.6l-1.4-4.7a4 4 0 0 0 7-2.7c0-4.4-6.4-8.4-8.4-11.2z'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; }
-.lab-lamp.is-survivor::before { background: rgb(8 10 9); }
-.lab-lamp.is-survivor::after { background: rgb(34 30 22); inset: 1px; }
+.lab-lamp.is-survivor::before { background: rgb(8 10 9); content: ""; inset: 0; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 .8C8 3.6 1.6 7.6 1.6 12a4 4 0 0 0 7 2.7L7.2 19.4h5.6l-1.4-4.7a4 4 0 0 0 7-2.7c0-4.4-6.4-8.4-8.4-11.2z'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; }
+.lab-lamp.is-survivor::after { background: rgb(34 30 22); content: ""; inset: 1px; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 .8C8 3.6 1.6 7.6 1.6 12a4 4 0 0 0 7 2.7L7.2 19.4h5.6l-1.4-4.7a4 4 0 0 0 7-2.7c0-4.4-6.4-8.4-8.4-11.2z'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; }
 .lab-lamp.is-survivor.is-picked { filter: drop-shadow(0 0 2px rgba(255, 190, 40, .45)); }
 .lab-lamp.is-survivor.is-picked::before { background: rgb(255 200 60); }
 .lab-lamp.is-survivor.is-picked::after { inset: 3px; }
