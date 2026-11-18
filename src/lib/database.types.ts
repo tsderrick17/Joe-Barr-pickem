@@ -1302,7 +1302,6 @@ export type Database = {
           show_bowl_card: boolean
           show_pool_action: boolean
           show_pool_chat: boolean
-          clubhouse_access: boolean
           show_survivor_standings: boolean
         }
         Insert: {
@@ -1352,7 +1351,6 @@ export type Database = {
           show_bowl_card?: boolean
           show_pool_action?: boolean
           show_pool_chat?: boolean
-          clubhouse_access?: boolean
           show_survivor_standings?: boolean
         }
         Update: {
@@ -1402,7 +1400,6 @@ export type Database = {
           show_bowl_card?: boolean
           show_pool_action?: boolean
           show_pool_chat?: boolean
-          clubhouse_access?: boolean
           show_survivor_standings?: boolean
         }
         Relationships: []
