@@ -4,6 +4,14 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-18 - The clubhouse room's second pass: a real bar, a sunny shore (Commissioner only)
+
+The room picture was rendered again with the owner's notes: the bar's walnut is veneer with true grain; the back-bar bottles hold their
+spirits (amber, clear, green, red, blue) behind labels, caps and corks, lit from their shelves by day and night; the blue night light along
+the bar is five soft low lights, so no plaque catches a hot spot; the glare over the bar moved beside the neon, a brass lamp lighting the
+walnut there; the high shelf's vines hang over its edge instead of through it; a tall bird of paradise stands by the bar. Outside, one side
+is open sea curving to a far, sloping headland, the other jungle (banana plants, undergrowth, coconut palms), under a sunny sky.
+
 ## Where older decisions are
 
 This file holds the most recent entries, newest first (2026-10-05 onward).
