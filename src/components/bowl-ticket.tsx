@@ -97,7 +97,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                     const team = game.cells[index];
                     const picked = picks[game.id] === team.side;
                     return (
-                      <button aria-label={`${team.name} ${team.line}${team.score !== null ? `, final ${team.score}${team.covered ? ", covered" : ""}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${game.locked ? "is-locked" : ""}`} disabled={game.locked} onClick={() => choose(game, team.side)} type="button">
+                      <button aria-label={`${team.name} ${team.line}${team.score !== null ? `, final ${team.score}${team.covered ? ", covered" : ""}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${game.locked ? "is-locked" : ""}`} disabled={game.locked} onClick={() => choose(game, team.side)} style={team.colors ? { "--team-primary": team.colors.primary, "--team-secondary": team.colors.secondary } as CSSProperties : undefined} type="button">
                         <span className="lab-board-team">{team.name}</span>
                         <span className="lab-board-line">{team.line}</span>
                         {team.score !== null ? <span className={`lab-board-final ${team.covered ? "is-covered" : ""}`}><b>{team.score}</b><em>{team.covered ? "COVERED" : ""}</em></span> : null}

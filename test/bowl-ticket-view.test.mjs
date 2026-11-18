@@ -75,3 +75,11 @@ test("every bowl logo file the pennants name exists", async () => {
   const { access } = await import("node:fs/promises");
   for (const entry of BOWL_PENNANTS.filter((item) => item.logo)) await access(new URL(`../public/bowl-logos/${entry.logo}.webp`, import.meta.url));
 });
+
+test("a bowl saved by its short name alone still flies its own logo", () => {
+  assert.equal(bowlPennant("Boca Raton").logo, "boca-raton");
+  assert.equal(bowlPennant("Gasparilla").logo, "gasparilla");
+  assert.equal(bowlPennant("Duke's Mayo").logo, "dukes-mayo");
+  assert.equal(bowlPennant("Frisco Football Classic").logo, "frisco-classic");
+  assert.equal(bowlPennant("CFP First Round 1").logo, null);   // a campus playoff game has no bowl of its own
+});

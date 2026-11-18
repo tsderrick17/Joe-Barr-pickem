@@ -1,5 +1,6 @@
 import { bowlDisruptionLabel, bowlGameNote, bowlTeamName } from "./bowl-pool.js";
 import { bowlPennant } from "./bowl-logos.js";
+import { bowlPennantColors } from "./bowl-pennant.js";
 import { dateFormat } from "./date-format.js";
 
 /**
@@ -10,7 +11,7 @@ import { dateFormat } from "./date-format.js";
  * @typedef {"owed" | "picked" | "missed" | "done" | "off"} BowlRowState
  *   owed: still open and no saved pick; picked: still open, picked; missed: kicked off with no pick (a loss); done: kicked off with a
  *   pick; off: postponed, cancelled or no contest, nothing to pick.
- * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null }} BowlTeamCell
+ * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
  * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
  *   result: "W" | "L" | null, tiebreaker: boolean }} BowlTicketGame
@@ -81,7 +82,8 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
         const spread = Math.abs(Number(game.line.locked_spread));
         covered = side === "favorite" ? score - other > spread : score + spread > other;
       }
-      return { side, teamId: teamId ?? null, name: bowlTeamName(team), line: lineFor(game, side), score: final ? score : null, covered };
+      const colors = team?.primary_color ? (({ primary, secondary }) => ({ primary, secondary }))(bowlPennantColors(team)) : null;
+      return { side, teamId: teamId ?? null, name: bowlTeamName(team), line: lineFor(game, side), score: final ? score : null, covered, colors };
     };
     const mine = saved[game.id] ?? null;
     const result = ownResults.get(game.id) === "win" ? "W" : ownResults.get(game.id) === "loss" ? "L" : null;
