@@ -360,22 +360,33 @@ test("a pop-up has no X: sliding it down, tapping its handle or the space above 
   const handle = sheet.getByRole("button", { name: "Close" });
   await expect(sheet.locator(".cw-close")).toHaveCount(0);
   await expect(handle.locator("svg")).toHaveCount(0);   // the handle is a small bar, not an X
-  // What the sheet is doing the instant after it is told to go: still there, and on its way down.
-  const sliding = () => sheet.evaluate((dialog) => ({ open: (dialog as HTMLDialogElement).open, leaving: dialog.classList.contains("is-leaving"), moved: (dialog.querySelector(".cw-sheet-body") as HTMLElement).style.transform.startsWith("translateY(") }));
+  // What the sheet did once told to go: stayed open while it was marked leaving and its paper was moved down. Watched as it happens (a
+  // slow machine can finish the quarter-second slide before a test could look), then read back once the sheet is gone.
+  const watch = () => sheet.evaluate((dialog) => {
+    const seen = { open: false, leaving: false, moved: false };
+    (window as unknown as { slid: typeof seen }).slid = seen;
+    const body = dialog.querySelector(".cw-sheet-body") as HTMLElement;
+    const look = () => { if ((dialog as HTMLDialogElement).open && dialog.classList.contains("is-leaving") && body.style.transform.startsWith("translateY(")) Object.assign(seen, { open: true, leaving: true, moved: true }); };
+    new MutationObserver(look).observe(dialog, { attributes: true, subtree: true, attributeFilter: ["class", "style"] });
+  });
+  const sliding = async () => { await expect(sheet).toHaveCount(0); return page.evaluate(() => (window as unknown as { slid: unknown }).slid); };
   // A fresh load each time: going to the same page with only a new #hash is not a real load, and could race the sheet just put away.
   const reopen = async () => { await page.goto("/clubhouse#rules"); await page.reload(); await expect(sheet).toBeVisible({ timeout: 30_000 }); };
   // The handle.
+  await watch();
   await handle.evaluate((button) => (button as HTMLButtonElement).click());
   expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
   await expect(sheet).toHaveCount(0);
   await expect(page).toHaveURL(/\/clubhouse$/);
   // The small empty space above the sheet.
   await reopen();
+  await watch();
   await page.mouse.click(195, 6);
   expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
   await expect(sheet).toHaveCount(0);
   // Escape.
   await reopen();
+  await watch();
   await page.keyboard.press("Escape");
   expect(await sliding()).toEqual({ open: true, leaving: true, moved: true });
   await expect(sheet).toHaveCount(0);

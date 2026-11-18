@@ -22,7 +22,7 @@ test("CI blocks high production advisories and documents dev-only exceptions", a
     readFile(new URL("../docs/DEPENDENCY_SECURITY.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
+  assert.match(workflow, /node scripts\/audit-gate\.mjs --omit=dev --level=high/);
   assert.match(workflow, /npm audit --audit-level=critical/);
   // Every listed exception names an advisory and a review date that has not passed.
   const exceptions = policy.split(/\r?\n/).filter((line) => line.startsWith("| `GHSA-"));
