@@ -95,9 +95,9 @@ export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem
 
   return (
     <>
-      <TicketForm key={`${view.weekId ?? ""}-${startOn}`} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} startOn={startOn} view={view} />
-      {/* In the playoffs, Forfeit sits at the very foot of the ticket, as on the Slate: three questions, and only the last one acts. */}
-      {view.playoff?.you.forfeitAvailable ? <ForfeitPanel /> : null}
+      {/* In the playoffs, Forfeit sits at the very foot of the ticket, inside it, as on the Slate: three questions, and only the last one
+          acts. Once it does, the room and the board are read again in place (no reload) and the Big Board shows the FORFEITED row. */}
+      <TicketForm footer={view.playoff?.you.forfeitAvailable ? <ForfeitPanel onForfeited={async () => { await onChanged(); onSent(); }} /> : null} key={`${view.weekId ?? ""}-${startOn}`} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} startOn={startOn} view={view} />
     </>
   );
 }

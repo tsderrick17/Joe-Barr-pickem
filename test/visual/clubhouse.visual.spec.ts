@@ -644,6 +644,29 @@ test("a playoff round opens on the Big Board: a column a game, the race in a lin
   expect((sent[0] as { selections: unknown[] }).selections).toHaveLength(6);
 });
 
+test("Forfeit sits inside the ticket, and forfeiting reads the clubhouse again in place (no reload) and lands on the Big Board", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#slate", homeExtra: homeResponse("playoff-wildcard"), scenarios: ["playoff-upcoming", "playoff-forfeited"] });
+  const forfeits: unknown[] = [];
+  await page.route("**/api/pickem/forfeit", async (route) => { forfeits.push(route.request().postDataJSON()); await route.fulfill({ json: { forfeited: true } }); });
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  const panel = ticket.locator(".lab-window .forfeit-panel");
+  await expect(panel).toBeVisible({ timeout: 30_000 });   // inside the ticket's own housing, not below it
+  await page.evaluate(() => { (window as unknown as { stayed: boolean }).stayed = true; });
+  for (const step of [/^Forfeit\?$/, /Still want to forfeit/, /I understand/]) await panel.getByRole("button", { name: step }).click();
+  await expect.poll(() => forfeits.length).toBe(1);
+  await expect(page).toHaveURL(/\/clubhouse#standings$/);
+  expect(await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed)).toBe(true);   // the same page: no reload
+});
+
+test("forfeited, the room's ticket strip and the ticket say so: your score stands, nothing left to pick", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#slate", homeExtra: homeResponse("playoff-viewer-forfeited"), scenarios: ["playoff-forfeited"] });
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket.locator(".lab-ticket-raceover")).toHaveText("You forfeited · your score stands", { timeout: 30_000 });
+  await expect(ticket.locator(".forfeit-panel")).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator(".clubhouse-page > .lab-room-ticket")).toContainText("You forfeited · your score stands");
+});
+
 test("out of the playoff race, the Big Board says so and there is no ticket", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#standings", homeExtra: homeResponse("playoff-viewer-out"), scenarios: ["playoff-eliminated"] });
   const board = page.getByRole("dialog", { name: "The Big Board" });

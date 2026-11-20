@@ -336,6 +336,12 @@
    shares one centre line. No font or size changes to the data. */
 .lab-tote-room { display: grid; gap: 16px; }
 .lab-tote { background: rgb(18 40 30); border-radius: 6px; box-shadow: inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); color: rgb(240 236 226); margin: 0 auto; max-width: 560px; padding: 12px 10px 10px; width: 100%; }
+/* Forfeit inside the clubhouse ticket: quiet links in the ticket's light type, the last step a red-bordered button. */
+.lab-window .forfeit-panel { border-top: 1px dashed rgba(201, 164, 95, .35); margin: 14px 0 0; max-width: none; padding: 12px 0 0; }
+.lab-window .forfeit-button, .lab-window .forfeit-cancel { color: rgba(240, 236, 226, .7); }
+.lab-window .forfeit-panel[data-step="2"] .forfeit-button { border-color: rgb(220 126 114); border-radius: 999px; color: rgb(236 150 132); }
+.lab-window .forfeit-message { color: rgb(236 150 132); }
+.lab-ticket-raceover { color: rgba(240, 236, 226, .75); font-size: .8rem; letter-spacing: .06em; margin: 0 0 8px; text-align: center; }
 .lab-tote header { align-items: center; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
 .lab-tote h3 { font-family: var(--font-serif); font-size: 1.2rem; letter-spacing: .2em; margin: 0; }
 /* The week, and beside it the way to your Survivor pick: a gold button that opens your ticket on Survivor. */

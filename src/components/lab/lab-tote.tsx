@@ -253,7 +253,7 @@ function coverNote(result: BoardView["games"][number]["results"][string]) {
   return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim(), pickers: result.pickers };
 }
 
-export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, startOn = "pickem" }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor" }) {
+export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, startOn = "pickem", footer = null }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor"; footer?: ReactNode }) {
   // The Slate's All games / Pool action: Pool action leaves out a game that has kicked off with nobody's pick in it. Saved the Slate's way when `onPoolAction` is given.
   const [localAction, setLocalAction] = useState(view.poolAction);
   const actionOnly = poolAction ?? localAction;
@@ -316,6 +316,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
           {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
         </ul>
       </header>
+      {view.playoff?.you.forfeited || view.playoff?.you.out ? <p className="lab-ticket-raceover">{view.playoff.you.forfeited ? "You forfeited · your score stands" : "Out of the race · your score stands"}</p> : null}
 
       <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
         <button aria-pressed={!actionOnly} onClick={() => chooseAction(false)} type="button">All games</button>
@@ -383,6 +384,8 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
         {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
         <p className="lab-board-note">{view.playoff ? "Pick every game against the spread. Send the whole round at once, and change any pick until its game kicks off." : view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
       </section>
+      {/* Below the games and the send button, inside the ticket: Forfeit in the playoffs. */}
+      {footer}
     </div>
   );
 }

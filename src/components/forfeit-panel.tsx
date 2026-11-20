@@ -13,7 +13,7 @@ const STEPS = [
   "I understand this can’t be undone and my Pick’em season would end.",
 ] as const;
 
-export default function ForfeitPanel() {
+export default function ForfeitPanel({ onForfeited }: { onForfeited?: () => Promise<void> | void } = {}) {
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -25,7 +25,7 @@ export default function ForfeitPanel() {
       const response = await fetchWithSession("/api/pickem/forfeit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ understood: true }) });
       const body = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) { setMessage(body.error ?? "Your forfeit could not be saved. Nothing changed."); setBusy(false); return; }
-      window.location.reload();
+      if (onForfeited) { await onForfeited(); setBusy(false); setStep(0); } else window.location.reload();   // the clubhouse reads again in place
     } catch {
       setMessage("Your forfeit could not be saved. Nothing changed; please try again.");
       setBusy(false);
