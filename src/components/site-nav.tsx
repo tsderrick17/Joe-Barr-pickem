@@ -133,9 +133,11 @@ export default function SiteNav() {
   // site as it is (classic, switch down) and the clubhouse (switch up). It carries no label. Other players never see it. The switch is a mode, remembered on this device: with
   // it up, opening the app (the Standings address) lands in the clubhouse, until it is put back down.
   const inClubhouse = pathname.startsWith("/clubhouse");
+  // Straight from the remembered switch, without waiting for the account to be read, so the classic Standings never flash first; the
+  // clubhouse checks access itself and puts the switch down for anyone it sends back.
   useEffect(() => {
-    if (clubhouseAccess && pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
-  }, [clubhouseAccess, pathname, router]);
+    if (pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
+  }, [pathname, router]);
   const viewSwitch = (size: string) => clubhouseAccess ? (
     <a
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
