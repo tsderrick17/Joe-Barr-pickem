@@ -21,7 +21,7 @@ export function survivorWeekCount(rows: StandingsResponse["survivorRows"]) {
 }
 const mark = (value: string) => (value === "W" ? "W" : value === "L" ? "L" : null);
 
-export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsResponse; onBoard?: () => void }) {
+export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: StandingsResponse; onBoard?: () => void; onPick?: () => void }) {
   const rows = home.survivorRows ?? [];
   const WEEKS = survivorWeekCount(rows);
   const scroller = useRef<HTMLDivElement>(null);
@@ -45,7 +45,11 @@ export default function SurvivorToteBoard({ home, onBoard }: { home: StandingsRe
     <div className="lab-tote lab-survivor-tote">
       <header>
         <h3>SURVIVOR</h3>
-        <span>{String(home.week ?? "").toUpperCase()}</span>
+        <span className="lab-survivor-when">
+          <span>{String(home.week ?? "").toUpperCase()}</span>
+          {/* Your Survivor pick is made on your ticket: this opens it on Survivor. */}
+          {onPick ? <button className="lab-survivor-pick" onClick={onPick} type="button">Make pick <span aria-hidden="true">›</span></button> : null}
+        </span>
       </header>
       {onBoard ? (
         <div className="lab-tote-links">

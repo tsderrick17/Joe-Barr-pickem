@@ -216,18 +216,51 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
 });
 
-test("once Survivor is decided the poker table is the Bowl Pool's, in its own colors, and the Big Board still links to Survivor", async ({ page }) => {
-  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt" } });
+test("once Survivor is decided and the bowls are on, the poker table is the Bowl Pool's, in its own colors, and so is the board's third tab", async ({ page }) => {
+  // Crowned three days before the Slate's clock (still called out), and the Bowl Pool's season (from Dec 7) by the Standings' clock.
+  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-10-01T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" } });
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   await expect(room).toBeVisible({ timeout: 30_000 });
   await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
   await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
   await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
   await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: /Survivor/ })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" }).getByRole("button")).toHaveText(["Big Board", "Ticket", "Bowl Pool"], { timeout: 30_000 });
   await page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: "Close" }).click();
   await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
   await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+});
+
+test("between the phases (Survivor decided over a week ago, the Bowl Pool not open until Dec 7) the poker table has no spot and the board no third tab", async ({ page }) => {
+  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
+  await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(0);
+  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+  const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
+  await expect(tabs.getByRole("button")).toHaveText(["Big Board", "Ticket"], { timeout: 30_000 });
+});
+
+test("Notifications is a cloud in the room's glass doors: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
+  await openClubhouse(page);
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("navigation", { name: "Account navigation" }).getByRole("button", { name: /Tyler/ }).click();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Notifications" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await room.getByRole("button", { name: "Notifications", exact: true }).click();
+  await expect(page).toHaveURL(/\/clubhouse#notifications$/);
+  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+});
+
+test("the Survivor table's Make pick opens your ticket on Survivor", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor" });
+  const sheet = page.getByRole("dialog", { name: "Survivor" });
+  await sheet.getByRole("button", { name: /Make pick/ }).click({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/clubhouse#slate$/);
+  await expect(page.getByRole("dialog", { name: "Your ticket" }).getByRole("group", { name: "What to pick" }).getByRole("button", { name: /^Survivor/ })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
 });
 
 test("the Big Board's week is a button: choosing another week shows that week's picks, with no ticket to change", async ({ page }) => {
@@ -543,6 +576,12 @@ test("on a desktop the pop-ups sit under the site's bar, the Big Board reads lar
   const [first, second] = await Promise.all([games.nth(0).boundingBox(), games.nth(1).boundingBox()]);
   expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);   // side by side
   expect(second!.x).toBeGreaterThan(first!.x + first!.width);
+  // Only the board scrolls, so its scroll bar starts at the board's top edge, never up beside the switch.
+  const scroller = await page.getByRole("dialog", { name: "Your ticket" }).evaluate((dialog) => {
+    const scrolling = [...dialog.querySelectorAll<HTMLElement>("*")].filter((node) => node.scrollHeight > node.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(node).overflowY));
+    return scrolling.map((node) => node.className);
+  });
+  expect(scroller).toEqual([expect.stringContaining("lab-bigboard")]);
 });
 
 test("the board's switch: your ticket is always there to look at, even for a week looked back on, and sending it lands back on the Big Board", async ({ page }) => {

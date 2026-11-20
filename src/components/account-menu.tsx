@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * The signed-in player's menu: tap your name for Notifications (and the Commissioner desk on a phone) and Sign out.
- * Sign out asks once before it happens, so a stray tap never logs anyone out.
+ * Sign out asks once before it happens, so a stray tap never logs anyone out. In the clubhouse Notifications is the cloud in the room,
+ * so the menu leaves it out there.
  */
-export default function AccountMenu({ playerName, isCommissioner, showCommissionerLink, showTrophyRoom = false, isSigningOut, onSignOut, compact = false }: {
+export default function AccountMenu({ playerName, isCommissioner, showCommissionerLink, showTrophyRoom = false, showNotifications = true, isSigningOut, onSignOut, compact = false }: {
   playerName: string;
   isCommissioner: boolean;
   showCommissionerLink: boolean;
   showTrophyRoom?: boolean;
+  showNotifications?: boolean;
   isSigningOut: boolean;
   onSignOut: () => void;
   compact?: boolean;
@@ -49,7 +51,7 @@ export default function AccountMenu({ playerName, isCommissioner, showCommission
           ) : (
             <>
               {showTrophyRoom ? <Link className={item} href="/trophy-room" onClick={() => setOpen(false)} role="menuitem">Trophy Room</Link> : null}
-              <Link className={item} href="/profile" onClick={() => setOpen(false)} role="menuitem">Notifications</Link>
+              {showNotifications ? <Link className={item} href="/profile" onClick={() => setOpen(false)} role="menuitem">Notifications</Link> : null}
               {isCommissioner && showCommissionerLink ? <Link className={item} href="/admin" onClick={() => setOpen(false)} role="menuitem">Commissioner</Link> : null}
               <button className={item} onClick={() => setConfirming(true)} role="menuitem" type="button">Sign out</button>
             </>

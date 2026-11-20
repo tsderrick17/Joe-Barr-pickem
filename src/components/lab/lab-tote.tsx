@@ -244,7 +244,7 @@ function coverNote(result: BoardView["games"][number]["results"][string]) {
   return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim(), pickers: result.pickers };
 }
 
-export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void }) {
+export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, startOn = "pickem" }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor" }) {
   // The Slate's All games / Pool action: Pool action leaves out a game that has kicked off with nobody's pick in it. Saved the Slate's way when `onPoolAction` is given.
   const [localAction, setLocalAction] = useState(view.poolAction);
   const actionOnly = poolAction ?? localAction;
@@ -256,7 +256,8 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek }:
   const [problem, setProblem] = useState("");
   const survivor = view.survivor;
   const pickingSurvivor = survivor.playing;
-  const [mode, setMode] = useState<"pickem" | "survivor">("pickem");
+  // The ticket opens on Pick'em, or on Survivor when the Survivor table's Pick button brought the player here.
+  const [mode, setMode] = useState<"pickem" | "survivor">(startOn === "survivor" && pickingSurvivor ? "survivor" : "pickem");
   const name = (team: string) => view.names[team] ?? team;
   const cap = view.maxPicks;
 

@@ -11,7 +11,7 @@ test("a link to a real page opens that page in place; any other link leaves the 
   assert.equal(paneForHref(`${origin}/trophy-room`, origin), "trophies");
   assert.equal(paneForHref("/bowl-pool", origin), "bowl");
   assert.equal(paneForHref("/clubhouse/rules", origin), "rules");
-  assert.equal(paneForHref("/profile", origin), null);
+  assert.equal(paneForHref("/profile", origin), "notifications");   // Notifications opens as the cloud's pop-up
   assert.equal(paneForHref("/admin/stats", origin), null);
   assert.equal(paneForHref("https://example.com/board", origin), null);
   assert.equal(paneForHref("http://[bad", origin), null);

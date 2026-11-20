@@ -89,11 +89,16 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
       {tab === "picks" ? <>
         <section aria-label="Bowl picks" className="lab-window-part">
           {view.games.length === 0 ? <p className="lab-board-note">The bowl schedule is not set yet.</p> : null}
-          {days.map((day) => (
+          {days.map((day) => {
+            // Each game day is its own card, headed by a gold tab for the weekday, the date beside it, and how many bowls that day has.
+            const games = view.games.filter((game) => game.day === day);
+            const [weekday, ...date] = day.split(" ");
+            const dated = date.length > 0 && weekday !== "DATE";
+            return (
             <div className="lab-bowl-day" key={day}>
-              <h4>{day}</h4>
+              <h4>{dated ? <><b>{weekday}</b><span>{date.join(" ")}</span></> : <span>{day}</span>}<small>{games.length} {games.length === 1 ? "BOWL" : "BOWLS"}</small></h4>
               <ol>
-                {view.games.filter((game) => game.day === day).map((game) => {
+                {games.map((game) => {
                   const cell = (index: number) => {
                     const team = game.cells[index];
                     const picked = picks[game.id] === team.side;
@@ -126,7 +131,8 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                 })}
               </ol>
             </div>
-          ))}
+            );
+          })}
         </section>
 
         <section aria-label="Your bowl ticket" className="lab-window-ticket">
@@ -196,34 +202,49 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
   );
 }
 
-/** How much of bowl season is decided: a half-dial marked at a quarter, half and three quarters, the needle at the share decided, and the bowls left. */
+/** The moon at a phase (0 new, 1/2 half, 1 full), waxing: the lit part on the right, its inner edge an ellipse. */
+function moonLight(cx: number, cy: number, r: number, lit: number) {
+  if (lit >= 1) return `M${cx} ${cy - r}A${r} ${r} 0 1 1 ${cx} ${cy + r}A${r} ${r} 0 1 1 ${cx} ${cy - r}Z`;
+  const edge = Math.abs(1 - 2 * lit) * r;
+  return `M${cx} ${cy - r}A${r} ${r} 0 0 1 ${cx} ${cy + r}A${edge.toFixed(2)} ${r} 0 0 ${lit < 0.5 ? 0 : 1} ${cx} ${cy - r}Z`;
+}
+
+const PHASES = [0, 0.25, 0.5, 0.75, 1];
+
+/**
+ * How much of bowl season is decided, as the moon waxing over the night sky: a half-dial from a new moon to a full one, its marks the
+ * moon's phases (new, crescent, half, gibbous, full) in place of fractions; each moon lights as the season passes it, the needle points
+ * at the share decided, and the bowls left are read out beneath.
+ */
 export function BowlGauge({ played, total }: { played: number; total: number }) {
   const share = total ? Math.min(1, played / total) : 0;
   const point = (fraction: number, radius: number) => {
     const angle = Math.PI * (1 - fraction);
-    return { x: 50 + radius * Math.cos(angle), y: 50 - radius * Math.sin(angle) };
+    return { x: 60 + radius * Math.cos(angle), y: 58 - radius * Math.sin(angle) };
   };
-  const end = point(share, 40);
-  const needle = point(share, 33);
+  const end = point(share, 36);
+  const needle = point(share, 29);
   const left = Math.max(0, total - played);
   return (
     <figure aria-label={left ? `${left} of ${total} bowls left` : `All ${total} bowls played`} className="lab-bowl-gauge" role="img">
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 100 58">
-        <path className="lab-bowl-gauge-track" d="M10 50A40 40 0 0 1 90 50" />
-        {share > 0 ? <path className="lab-bowl-gauge-fill" d={`M10 50A40 40 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} /> : null}
-        {[0.25, 0.5, 0.75].map((mark) => {
-          const outer = point(mark, 45), inner = point(mark, 35), label = point(mark, 26);
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 120 66">
+        <g className="lab-bowl-gauge-stars"><circle cx="24" cy="12" r=".9" /><circle cx="97" cy="9" r=".8" /><circle cx="60" cy="3.5" r=".7" /><circle cx="40" cy="30" r=".6" /><circle cx="83" cy="31" r=".6" /></g>
+        <path className="lab-bowl-gauge-track" d="M24 58A36 36 0 0 1 96 58" />
+        {share > 0 ? <path className="lab-bowl-gauge-fill" d={`M24 58A36 36 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} /> : null}
+        {PHASES.map((phase) => {
+          const at = point(phase, 48);
+          const reached = share >= phase - 0.001 && (phase > 0 || share > 0);
           return (
-            <g key={mark}>
-              <line className="lab-bowl-gauge-tick" x1={outer.x} x2={inner.x} y1={outer.y} y2={inner.y} />
-              <text className="lab-bowl-gauge-mark" x={label.x} y={label.y + 3}>{mark === 0.25 ? "¼" : mark === 0.5 ? "½" : "¾"}</text>
+            <g className={`lab-bowl-moon${reached ? " is-reached" : ""}`} key={phase}>
+              <circle className="lab-bowl-moon-dark" cx={at.x} cy={at.y} r="5.4" />
+              {phase > 0 ? <path className="lab-bowl-moon-lit" d={moonLight(at.x, at.y, 5.4, phase)} /> : null}
             </g>
           );
         })}
-        <line className="lab-bowl-gauge-needle" x1="50" x2={needle.x} y1="50" y2={needle.y} />
-        <circle className="lab-bowl-gauge-hub" cx="50" cy="50" r="3.5" />
+        <line className="lab-bowl-gauge-needle" x1="60" x2={needle.x} y1="58" y2={needle.y} />
+        <circle className="lab-bowl-gauge-hub" cx="60" cy="58" r="3.4" />
       </svg>
-      <figcaption>{left ? <><b>{left}</b> LEFT</> : "ALL PLAYED"}</figcaption>
+      <figcaption>{left ? <><b>{left}</b> {left === 1 ? "BOWL" : "BOWLS"} LEFT</> : "ALL PLAYED"}</figcaption>
     </figure>
   );
 }

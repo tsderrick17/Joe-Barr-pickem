@@ -43,6 +43,17 @@ export function placedStandings(rows) {
   });
 }
 
+/**
+ * Whether Survivor still has a place on the screens: while it runs, and for the week after it is decided (8 days from the crowning,
+ * so the winner is called out), never in the playoffs. After that it leaves the Big Board and the clubhouse's poker table.
+ */
+export function survivorStillShown(home, now) {
+  if (!home.survivorAvailable || home.isPlayoff) return false;
+  if (!home.survivorComplete) return true;
+  const crowned = Date.parse(home.survivorCrownedAt ?? "");
+  return Number.isNaN(crowned) || now - crowned < 8 * 86_400_000;
+}
+
 /** Bowl Pool time: from Dec 7 (Eastern) through January, the Bowl Pool's board is wheeled into the room. */
 export function bowlSeason(iso) {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: ET, month: "numeric", day: "numeric" }).formatToParts(new Date(iso));
@@ -155,6 +166,7 @@ export function clubhouseFeed({ home, board, before = null }) {
       mail: false,
       bowl: bowlSeason(home.serverTime ?? board.serverTime ?? new Date().toISOString()),
       survivorOver,
+      survivorShown: survivorStillShown(home, now),
     },
     ticket: games.length && total ? {
       lamps,
