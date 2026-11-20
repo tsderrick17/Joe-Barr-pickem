@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import AllTimeTable, { type AllTimeRow } from "@/components/all-time-table";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
@@ -199,6 +199,38 @@ const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y
   wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
 };
 
+/** The site's day or night, as the header's switch sets it (read straight from the page, before the header has had a turn). */
+function nightNow() {
+  const theme = document.documentElement.dataset.theme;
+  if (theme) return theme === "night";
+  try { return window.localStorage.getItem("pickem-theme") === "night"; } catch { return false; }
+}
+function followTheme(change: () => void) {
+  window.addEventListener("pickem-theme-change", change);
+  const watch = new MutationObserver(change);
+  watch.observe(document.documentElement, { attributeFilter: ["data-theme"] });
+  return () => { window.removeEventListener("pickem-theme-change", change); watch.disconnect(); };
+}
+/** A desktop (900px and wider) gets the wide picture, known on the first render so a desktop never loads the phone's picture first. */
+const WIDE_QUERY = "(min-width: 900px)";
+const wideNow = () => window.matchMedia(WIDE_QUERY).matches;
+function followWide(change: () => void) {
+  const query = window.matchMedia(WIDE_QUERY);
+  query.addEventListener("change", change);
+  return () => query.removeEventListener("change", change);
+}
+
+/**
+ * The real clubhouse's room picture for this screen, as RoomScene draws it: started as soon as the page opens, before the pool's data is
+ * in, so the picture is already on its way when the room appears.
+ */
+export function warmRoomPicture(bowlSeason: boolean) {
+  const image = new window.Image();
+  image.decoding = "async";
+  image.fetchPriority = "high";
+  image.src = `/lab/clubhouse/room-${nightNow() ? "night" : "day"}${bowlSeason ? "-bowl" : ""}${wideNow() ? "-wide" : "-full"}.webp`;
+}
+
 type Season = "regular" | "bowls";
 
 /**
@@ -356,23 +388,15 @@ function labFeed(season: Season, allIn: boolean, mail: boolean): RoomFeed {
  */
 export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomFeed; onSpot?: (spot: string, room: Room, ticket?: boolean) => void; hrefFor?: (spot: string) => string | null; full?: boolean }) {
   // Whether the lights are down, followed from the site's theme, so a lamp's label says what tapping it does.
-  const [night, setNight] = useState(false);
-  useEffect(() => {
-    const follow = () => setNight(document.documentElement.dataset.theme === "night");
-    follow();
-    window.addEventListener("pickem-theme-change", follow);
-    return () => window.removeEventListener("pickem-theme-change", follow);
-  }, []);
+  // Read where it is drawn, so the first render already knows (the picture it loads first is the one on screen).
+  const night = useSyncExternalStore(followTheme, nightNow, () => false);
   // A phone gets the tall picture; a desktop (900px and wider) gets the wide one: the same room through a longer lens, everything in
-  // one view, with its own positions for every label. Decided after the page is on screen, so the first paint is always the tall one.
-  const [wide, setWide] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 900px)");
-    const sync = () => setWide(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
+  // one view, with its own positions for every label.
+  const wide = useSyncExternalStore(followWide, wideNow, () => false);
+  // Only the picture on screen loads at once; the other (day or night) follows once the room has settled, so the lamp switch is still
+  // instant but the first load carries one picture, not two.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => { const timer = window.setTimeout(() => setSettled(true), 2500); return () => window.clearTimeout(timer); }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
   // The Bowl Pool's bulletin board is wheeled in for bowl season (from Dec 7).
   const bulletin = feed.bowl;
@@ -403,8 +427,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   }, []);
   const scene = (
     <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}${full ? " is-full" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}`, ["--room-aspect" as string]: picture.width / picture.height }}>
-      <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" height={picture.height * 2} priority src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} />
-      <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" height={picture.height * 2} priority src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} />
+      {!night || settled ? <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" fetchPriority={night ? "low" : "high"} height={picture.height * 2} loading="eager" priority={!night} src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} /> : null}
+      {night || settled ? <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" fetchPriority={night ? "high" : "low"} height={picture.height * 2} loading="eager" priority={night} src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} /> : null}
       <RoomNews feed={feed} frame={frame} picture={picture} />
       {spots.map(({ spot, room: next, name, tag, label, at: tall, wideAt, fullAt, ticket }) => {
         const free = wide ? wideAt ?? tall : full ? fullAt ?? tall : tall;

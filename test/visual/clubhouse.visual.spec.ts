@@ -397,6 +397,20 @@ test("the Survivor table and the Bowl sheet hold their left columns flush with t
   expect(await heldColumnsFlush(page.getByRole("region", { name: "Bowl sheet, scrolls sideways" }))).toBe(true);
 });
 
+test("opening the clubhouse loads one room picture (the one on screen), never the phone's on a desktop, and reads the Trophy Room only once the room has settled", async ({ page }) => {
+  const asked: Array<{ at: number; path: string }> = [];
+  const start = Date.now();
+  page.on("request", (request) => { const path = new URL(request.url()).pathname; if (path.includes("/lab/clubhouse/room-") || path.startsWith("/api/trophy-room")) asked.push({ at: Date.now() - start, path }); });
+  await openClubhouse(page, { size: SIZES["desktop-1280"], theme: "night" });
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  const shown = Date.now() - start;
+  const early = asked.filter((entry) => entry.at <= shown + 500).map((entry) => entry.path);
+  expect(early.filter((path) => path.includes("/room-"))).toEqual(["/lab/clubhouse/room-night-wide.webp"]);
+  expect(early.some((path) => path.startsWith("/api/trophy-room"))).toBe(false);
+  await expect.poll(() => asked.some((entry) => entry.path.startsWith("/api/trophy-room")), { timeout: 10_000 }).toBe(true);
+  expect(asked.some((entry) => entry.path.endsWith("-full.webp"))).toBe(false);
+});
+
 test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
   const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });

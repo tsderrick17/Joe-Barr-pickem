@@ -5,14 +5,13 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
-import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
+import { Constitution, RoomScene, Ticket, warmRoomPicture, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
-import { NotificationSettings } from "@/components/notification-settings";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
-import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
+import { bowlSeason, bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
@@ -36,6 +35,8 @@ import { useStableCallback } from "@/lib/use-stable-callback";
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications";
 const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications" };
+// Notifications (the app, phone notifications, the email plan) is loaded only when its pop-up is opened.
+const NotificationSettings = dynamic(() => import("@/components/notification-settings").then((module) => module.NotificationSettings));
 // The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
 const DECK: Pane[] = ["standings", "slate", "survivor", "bowl"];
 // The classic pages, loaded the first time they are opened: any week the new board does not cover.
@@ -54,6 +55,8 @@ type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string; surviv
  * the week before (so the arrows show last week's moves until this week's games start to count). Regular season only; any failure just
  * leaves the arrows off.
  */
+/** A finished week's totals never change, so each is read once per visit. */
+const totalsByWeek = new Map<string, Promise<Record<string, number> | null>>();
 async function standingsBefore(board: SlateResponse): Promise<Record<string, number> | null> {
   const weeks = (board.bootstrap?.weeks ?? []).filter((week) => week.period_type === "regular").sort((a, b) => a.display_order - b.display_order);
   const current = selectDefaultScoringPeriod(board.bootstrap?.weeks ?? []);
@@ -62,13 +65,21 @@ async function standingsBefore(board: SlateResponse): Promise<Record<string, num
   const graded = (board.games ?? []).some((game) => game.status === "final");
   const base = weeks[at - (graded ? 1 : 2)];
   if (!base) return null;
-  try {
-    const response = await fetchWithSession(`/api/board-totals?week=${encodeURIComponent(base.id)}`, { cache: "no-store" });
-    if (!response.ok) return null;
-    return ((await response.json()) as { totals?: Record<string, number> }).totals ?? null;
-  } catch {
-    return null;
-  }
+  const known = totalsByWeek.get(base.id);
+  if (known) return known;
+  const read = (async () => {
+    try {
+      const response = await fetchWithSession(`/api/board-totals?week=${encodeURIComponent(base.id)}`, { cache: "no-store" });
+      if (!response.ok) return null;
+      return ((await response.json()) as { totals?: Record<string, number> }).totals ?? null;
+    } catch {
+      return null;
+    }
+  })();
+  totalsByWeek.set(base.id, read);
+  const totals = await read;
+  if (!totals) totalsByWeek.delete(base.id);   // a failed read is tried again next time
+  return totals;
 }
 
 export default function ClubhousePage() {
@@ -83,7 +94,6 @@ export default function ClubhousePage() {
   useEffect(() => { paneRef.current = pane; }, [pane]);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
   const lastRead = useRef(0);
-  const wasOpen = useRef(false);
   const main = useRef<HTMLElement>(null);
   const bar = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ top: 0, bar: 0 });
@@ -106,8 +116,11 @@ export default function ClubhousePage() {
       if (!homeResponse.ok) throw new Error(home.error ?? "The clubhouse could not be loaded.");
       // Without the week's games the room still opens: the standings on the Big Board, the games board dark, no ticket.
       const board = boardResponse.ok ? await boardResponse.json() as SlateResponse : { games: [], myPicks: [], serverTime: home.serverTime } as unknown as SlateResponse;
-      const before = await standingsBefore(board);
       lastRead.current = Date.now();
+      // The room is drawn at once; last week's totals (only the Big Board's ▲▼ use them) follow, and are asked for once a visit.
+      const ready = totalsByWeek.size > 0 ? null : clubhouseFeed({ home, board, before: null });
+      if (ready) setRoom({ ...(ready as Omit<Room, "home" | "board">), home, board });
+      const before = await standingsBefore(board);
       setRoom({ ...(clubhouseFeed({ home, board, before }) as Omit<Room, "home" | "board">), home, board });
       setError("");
     } catch (reason) {
@@ -117,15 +130,15 @@ export default function ClubhousePage() {
     }
   });
 
+  // The room's picture starts down as the page opens, alongside the sign-in check and the pool's reads.
+  useEffect(() => { warmRoomPicture(bowlSeason(new Date().toISOString())); }, []);
   useEffect(() => { if (access === "allowed") void read(true); }, [access, read]);
 
-  // The room is read again when a page is closed (the ticket must show the pick just made), when the app returns to the front after a
-  // while, and every five minutes while the room itself is what is on screen.
+  // The room is read again when the app returns to the front after a while, and every five minutes while the room itself is what is on
+  // screen. (A pick sent from the ticket reads it again straight away; closing a pop-up that changed nothing does not.)
   const paneOpen = pane !== null;
   useEffect(() => {
-    if (access !== "allowed") return;
-    if (paneOpen) { wasOpen.current = true; return; }
-    if (wasOpen.current) { wasOpen.current = false; void read(false); }   // a page was just closed
+    if (access !== "allowed" || paneOpen) return;
     const timer = window.setInterval(() => void read(false), REFRESH_MS);
     const back = () => { if (document.visibilityState === "visible" && Date.now() - lastRead.current > RETURN_GAP_MS) void read(false); };
     document.addEventListener("visibilitychange", back);
@@ -229,7 +242,13 @@ export default function ClubhousePage() {
   }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);
-  useEffect(() => { if (roomUp) { void prefetchTrophyRoom(); void prefetchPoolChat(); } }, [roomUp]);
+  // The chat and the Trophy Room are read ahead once the room has settled (not while it is still loading), so each opens already full;
+  // the Trophy Room's read (the pool's whole history, the heaviest) is also kept by the browser for five minutes.
+  useEffect(() => {
+    if (!roomUp) return;
+    const timer = window.setTimeout(() => { void prefetchPoolChat(); void prefetchTrophyRoom(); }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [roomUp]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // The poker table is the Bowl Pool's in bowl season (once Survivor is no longer being played).
