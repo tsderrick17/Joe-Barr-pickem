@@ -94,6 +94,9 @@ body {
    above and below, so the bar is this tall with or without the name. The row inside is reserved the same way: without the name it would be
    shorter than the name button, and the brand, centered in it, sat a few pixels higher until the name arrived and the row grew. */
 .mobile-account-nav > div { min-height: 3.75rem; }
+/* iPhone Safari (iOS 26) softens whatever sits just under the clock and battery; the header's top line would sit in that band, so on an
+   iPhone the header starts a little lower. (-webkit-touch-callout is iOS only.) */
+@supports (-webkit-touch-callout: none) { .mobile-account-nav > div { padding-top: 14px; } }
 .mobile-account-nav > div > div { min-height: 2.75rem; }
 
 /* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
