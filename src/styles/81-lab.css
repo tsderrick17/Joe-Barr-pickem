@@ -88,6 +88,8 @@
 .lab-room-screen.is-spreads.is-owed { animation: room-owed 2.4s ease-in-out infinite alternate; }
 @keyframes room-owed { from { box-shadow: 0 0 8px 1px rgba(255, 176, 46, .3); } to { box-shadow: 0 0 18px 4px rgba(255, 176, 46, .65); } }
 .lab-room-tag { background: rgb(250 244 226); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
+.lab-room-tag.is-bowl-pool { background: rgb(20 36 76); border-color: rgb(226 182 70); color: rgb(246 218 140); }
+.lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 /* The poker table's plate (Survivor, then the Bowl Pool) sits up in the table's near rail, in the gap between the two chairs, not hanging under it. */

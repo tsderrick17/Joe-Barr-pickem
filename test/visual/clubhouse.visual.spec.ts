@@ -216,22 +216,26 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
 });
 
-for (const [phase, homeExtra] of [
-  ["while Survivor runs", {}],
-  ["with Survivor long decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }],
-  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }],
+for (const [phase, homeExtra, table] of [
+  ["while Survivor runs", {}, "Survivor"],
+  ["with Survivor decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }, null],
+  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }, "Bowl Pool"],
 ] as const) {
-  test(`Survivor and the Bowl Pool are always in the room and on the board's switch, ${phase}`, async ({ page }) => {
+  test(`the poker table shows only the pool being played, and the board's tabs are always all four, ${phase}`, async ({ page }) => {
     await openClubhouse(page, { homeExtra, bowl: bowlRead() });
     const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
     await expect(room).toBeVisible({ timeout: 30_000 });
-    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(1);
-    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
+    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(table === "Survivor" ? 1 : 0);
+    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(table === "Bowl Pool" ? 1 : 0);
+    if (table === "Bowl Pool") {
+      await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
+      await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
+      await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+      await page.getByRole("dialog", { name: "Bowl Pool" }).getByRole("button", { name: "Close" }).click();
+    }
     await room.getByRole("button", { name: "The Big Board", exact: true }).click();
     const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
     await expect(tabs.getByRole("button")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"], { timeout: 30_000 });
-    await tabs.getByRole("button", { name: "Bowl Pool" }).click();
-    await expect(page).toHaveURL(/\/clubhouse#bowl$/);
   });
 }
 

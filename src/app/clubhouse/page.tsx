@@ -232,7 +232,8 @@ export default function ClubhousePage() {
   useEffect(() => { if (roomUp) { void prefetchTrophyRoom(); void prefetchPoolChat(); } }, [roomUp]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
-  const paneOfSpot = (spot: string): Pane | null => SPOT_PANE[spot] ?? null;
+  // The poker table is the Bowl Pool's in bowl season (once Survivor is no longer being played).
+  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room && !room.feed.survivorActive && room.feed.bowl ? "bowl" : SPOT_PANE[spot] ?? null);
 
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;

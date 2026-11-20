@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - The poker table shows only the pool being played
+
+Owner: Survivor and the Bowl Pool are never played at once, so the clubhouse's poker table carries whichever is: Survivor while it runs,
+the Bowl Pool (in its navy and gold) in bowl season from Dec 7, and no plate between the two. Both are always tabs on the board's switch
+(Bowl Pool / Survivor / Ticket / Big Board). This replaces "Survivor and the Bowl Pool are always in the clubhouse" (earlier today) for
+the room; the always-there tabs stand.
+
 ## 2026-11-20 - A season list on the Standings, from the second season
 
 Once the pool has run more than one season, the Standings (Pick'em, Survivor and the Bowl Card) carry a Season list. Choosing a past
