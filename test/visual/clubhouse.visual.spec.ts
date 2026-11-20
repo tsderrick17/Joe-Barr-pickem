@@ -373,6 +373,26 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
 
+/** Scrolled all the way along, every held (sticky) column sits flush with its scroller's left edge: nothing scrolls past to its left. */
+async function heldColumnsFlush(region: import("@playwright/test").Locator) {
+  return region.evaluate((node) => {
+    node.scrollLeft = node.scrollWidth;
+    const edge = node.getBoundingClientRect().left + node.clientLeft;
+    const held = [...node.querySelectorAll<HTMLElement>("th, td")].filter((cell) => getComputedStyle(cell).position === "sticky" && getComputedStyle(cell).left === "0px");
+    return held.length > 0 && held.every((cell) => Math.abs(cell.getBoundingClientRect().left - edge) <= 1);
+  });
+}
+
+test("the Survivor table and the Bowl sheet hold their left columns flush with the edge while they scroll", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", bowl: bowlRead() });
+  const survivor = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(survivor).toBeVisible({ timeout: 30_000 });
+  expect(await heldColumnsFlush(survivor)).toBe(true);
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Bowl Pool" }).click();
+  await page.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  expect(await heldColumnsFlush(page.getByRole("region", { name: "Bowl sheet, scrolls sideways" }))).toBe(true);
+});
+
 test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
   const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
