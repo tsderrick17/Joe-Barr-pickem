@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HapticTap } from "@/components/haptic-tap";
 import { haptic } from "@/lib/haptics-client";
-import { BOARD_PACE, digitPace, nextFlip } from "@/lib/split-flap.js";
+import { BOARD_PACE, digitPace, flipJitter, nextFlip } from "@/lib/split-flap.js";
 
 type Feel = { pace: number; start: number };
 
@@ -67,7 +67,8 @@ function FlapDigit({ target, landing, onLanded, pace, start, minFlips, delay }: 
       if (stopped) return;
       const move = nextFlip({ current, target: targetRef.current, landing: landingRef.current, flipsSinceLanding: sinceLanding, minFlips, pace: feel.pace });
       if (move.stop) { finish(); return; }
-      const { next, duration } = move;
+      const { next } = move;
+      const duration = flipJitter(move.duration, Math.random());   // no two flips quite alike
       const fall = duration * 0.5;
       const land = duration * 0.62;
       text(foldEl, current);
@@ -96,7 +97,7 @@ function FlapDigit({ target, landing, onLanded, pace, start, minFlips, delay }: 
       };
     };
 
-    pending = window.setTimeout(flip, delay ?? Math.random() * feel.pace);
+    pending = window.setTimeout(flip, delay ?? Math.random() * feel.pace * 2.5);   // each motor starts at its own moment
     return () => {
       stopped = true;
       window.clearTimeout(pending);

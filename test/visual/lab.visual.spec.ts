@@ -82,7 +82,7 @@ const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
   ["ticket-game-day", [["Moment", "Game day"]], true],
   ["ticket-out-of-survivor", [["Moment", "Out of Survivor"]], true],
   ["ticket-survivor-decided", [["Moment", "Survivor decided"]], true],
-  // A playoff round: a column a game, the race in a line, the out players struck through; the ticket a pick for every game.
+  // A playoff round: a column a game, the race in a line, the out players dimmed; the ticket a pick for every game.
   ["board-wild-card-game-day", [["Moment", "Wild Card game day"]], false],
   ["board-out-of-the-race", [["Moment", "Out of the race"]], false],
   ["ticket-wild-card", [["Moment", "Wild Card"]], true],
@@ -636,14 +636,14 @@ test("the room's games stand two wide and the board shifts up a row every 7 seco
 test("the Bowl ticket counts the picks owed, fills the gauge and swaps to standings", async ({ page }) => {
   await openLab(page, "bowl");
   const ticket = page.locator(".lab-bowl-ticket");
-  await expect(ticket.getByRole("img", { name: "10 of 16 bowls left" })).toBeVisible();
-  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/6 TO PICK/);
+  await expect(ticket.getByRole("img", { name: "10 of 16 games left" })).toBeVisible();
+  await expect(ticket.locator(".lab-bowl-counts .is-owed dd")).toHaveText("6");
   await expect(ticket.locator(".lab-bowl-game.is-owed")).toHaveCount(6);
   await expect(ticket.locator(".lab-bowl-game.is-missed")).toHaveCount(1);
   // Picking a bowl and saving lowers its pennant: one fewer to pick.
   await ticket.getByRole("button", { name: "Texas Tech +7.5" }).click();
   await ticket.getByRole("button", { name: "Save picks" }).click();
-  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/5 TO PICK/);
+  await expect(ticket.locator(".lab-bowl-counts .is-owed dd")).toHaveText("5");
   await expect(ticket.locator(".lab-bowl-game.is-owed")).toHaveCount(5);
   await ticket.getByRole("button", { name: "Standings", exact: true }).click();
   await expect(ticket.getByRole("region", { name: "Bowl standings" })).toContainText("after 6 of 16 bowls");

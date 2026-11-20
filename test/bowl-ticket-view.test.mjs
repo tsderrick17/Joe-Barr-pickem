@@ -98,6 +98,7 @@ test("the Bowl sheet: each player's school once a bowl kicks off, a lamp before 
   };
   const { sheet } = bowlTicketView(payload, { now: Date.parse("2026-12-31T15:00:00Z"), viewerPlayerId: "me" });
   assert.deepEqual(sheet.games.map((game) => game.name), ["Rose Bowl Game", "Sugar Bowl (SF)"]);
+  assert.deepEqual(sheet.games.map((game) => game.line), ["OSU -3.5", "UGA -2.5"]);   // the favourite and its spread
   const row = (name) => sheet.rows.find((candidate) => candidate.name === name).cells;
   assert.deepEqual(row("Earl"), [{ kind: "pick", team: "OSU", result: "W" }, { kind: "hidden" }]);
   assert.deepEqual(row("Tyler"), [{ kind: "pick", team: "IND", result: "L" }, { kind: "pick", team: "TEX", result: null }]);
@@ -135,4 +136,19 @@ test("a word boundary in the bowl-name rules is a real one (CFP and Sun Bowl nam
   assert.equal(bowlPennant("LA Bowl Hosted by Gronk").logo, "la");
   const view = bowlTicketView({ games: [{ id: "g", bowl_name: "CFP at the Rose Bowl", kickoff_at: "2026-12-31T20:00:00Z" }] }, { now: Date.parse("2026-12-01T12:00:00Z") });
   assert.equal(view.games[0].playoff, true);
+});
+
+test("the tiebreaker sits on the title game even before the season has named it: the game called the National Championship, else the last playoff game", () => {
+  const now = Date.parse("2026-11-20T12:00:00Z");
+  const named = bowlTicketView({ season: { championship_game_id: null }, games: [
+    { id: "s", bowl_name: "Sugar Bowl", kickoff_at: "2027-01-15T00:30:00Z", is_cfp: true },
+    { id: "nc", bowl_name: "College Football Playoff National Championship", kickoff_at: "2027-01-26T00:30:00Z", is_cfp: true },
+  ] }, { now });
+  assert.deepEqual(named.games.map((game) => game.tiebreaker), [false, true]);
+  const unnamed = bowlTicketView({ season: {}, games: [
+    { id: "s", bowl_name: "Sugar Bowl", kickoff_at: "2027-01-15T00:30:00Z", is_cfp: true },
+    { id: "f", bowl_name: "Final", kickoff_at: "2027-01-26T00:30:00Z", is_cfp: true },
+    { id: "b", bowl_name: "Sun Bowl", kickoff_at: "2026-12-31T19:00:00Z", is_cfp: false },
+  ] }, { now });
+  assert.deepEqual(unnamed.games.map((game) => game.tiebreaker), [false, true, false]);
 });
