@@ -178,7 +178,10 @@ export function clubhouseFeed({ home, board, before = null }) {
   const survivorOwed = inSurvivor && !survivor.pick;
   const atsOwed = Math.max(0, maxPicks - myPicks.length);
   const weekOpen = home.weekStatus !== "complete" && games.some((game) => game.status === "scheduled" || game.status === "live");
-  const owedCount = weekOpen ? atsOwed + (survivorOwed ? 1 : 0) : 0;
+  // Out of the playoff race, or forfeited: nothing more to pick, and the strip says so.
+  const forfeited = Boolean(board.pickem?.forfeit?.forfeited);
+  const raceOver = forfeited || Boolean(board.pickem?.playoffEliminated);
+  const owedCount = weekOpen && !raceOver ? atsOwed + (survivorOwed ? 1 : 0) : 0;
   // Whether any pick that is in can still be changed: its game has not kicked off.
   const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
   const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
@@ -239,7 +242,7 @@ export function clubhouseFeed({ home, board, before = null }) {
     ticket: games.length && total ? {
       lamps,
       survivor: inSurvivor,
-      line: !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : anyChangeable ? `All ${total} in · change any until its kickoff` : `All ${total} in · all locked`,
+      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : anyChangeable ? `All ${total} in · change any until its kickoff` : `All ${total} in · all locked`,
     } : null,
   };
 }
