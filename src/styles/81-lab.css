@@ -631,6 +631,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-bowl-game.is-owed { background: linear-gradient(90deg, rgba(179, 139, 77, .14), transparent 60%); border-left-color: var(--bowl-slip-gold); }
 .lab-bowl-name { align-items: center; display: flex; gap: 10px; grid-column: 1 / -1; min-width: 0; }
 .lab-bowl-name > span:last-child { display: grid; min-width: 0; }
+.lab-bowl-round { color: var(--bowl-slip-gold); font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }   /* which playoff round a bowl hosts */
 .lab-bowl-name b { color: var(--bowl-ink); font-size: .82rem; letter-spacing: .06em; }
 .lab-bowl-name small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .04em; }
 .lab-bowl-game.is-owed .lab-bowl-name small { color: var(--bowl-gold-lt); font-weight: 700; }

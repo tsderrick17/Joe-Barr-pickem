@@ -127,7 +127,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                     <li className={`lab-bowl-game is-${game.state}`} key={game.id}>
                       <span className="lab-bowl-name">
                         {flagStyle === "logo" && (game.logo || game.playoff) ? (game.logo ? <BowlLogoFlag cloth={game.cloth} hoist={game.hoist} logo={game.logo} state={game.state} /> : <BowlLogoFlag cloth="rgb(0 0 0)" hoist="rgb(200 158 62)" logo={CFP_LOGO} state={game.state} />) : <BowlFlag flag={game.flag} state={game.state} />}
-                        <span><b>{game.bowl}</b><small>{caption(game)}</small></span>
+                        <span>{game.round === "Quarterfinal" || game.round === "Semifinal" ? <em className="lab-bowl-round">CFP {game.round}</em> : null}<b>{game.bowl}</b><small>{caption(game)}</small></span>
                       </span>
                       {cell(0)}
                       <span aria-hidden="true" className="lab-board-at">vs</span>

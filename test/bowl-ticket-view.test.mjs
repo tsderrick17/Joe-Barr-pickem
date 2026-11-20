@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { bowlPennant } from "../src/lib/bowl-logos.js";
-import { bowlSavedPicks, bowlTicketView } from "../src/lib/bowl-ticket-view.js";
+import { bowlSavedPicks, bowlTicketView, cfpRounds } from "../src/lib/bowl-ticket-view.js";
 
 const team = (id, name) => ({ id, full_name: name, short_name: name });
 const NOW = Date.parse("2026-12-28T17:00:00Z");
@@ -109,4 +109,30 @@ test("a line whose favourite is neither school still gives the two schools diffe
   assert.deepEqual(view.games[0].cells.map((cell) => cell.side), ["favorite", "underdog"]);
   const noTeams = bowlTicketView({ games: [{ id: "g", bowl_name: "Sun Bowl", kickoff_at: "2026-12-31T19:00:00Z", status: "scheduled" }] }, { now: Date.parse("2026-12-20T12:00:00Z") });
   assert.deepEqual(noTeams.games[0].cells.map((cell) => cell.side), ["favorite", "underdog"]);
+});
+
+test("the playoff's rounds come from the schedule: the last two playoff games before the title game are the semifinals, the four before them the quarterfinals, earlier ones the first round", () => {
+  const at = (day) => `2026-12-${String(day).padStart(2, "0")}T20:00:00Z`;
+  const games = [
+    ...[19, 19, 20, 20].map((day, i) => ({ id: `fr${i}`, bowl_name: "CFP First Round", kickoff_at: at(day), is_cfp: true })),
+    ...["Cotton Bowl", "Orange Bowl", "Rose Bowl Game", "Sugar Bowl"].map((bowl_name, i) => ({ id: `qf${i}`, bowl_name, kickoff_at: at(31), is_cfp: true })),
+    { id: "sf0", bowl_name: "Fiesta Bowl", kickoff_at: "2027-01-08T00:30:00Z", is_cfp: true },
+    { id: "sf1", bowl_name: "Peach Bowl", kickoff_at: "2027-01-09T00:30:00Z", is_cfp: true },
+    { id: "nc", bowl_name: "CFP National Championship", kickoff_at: "2027-01-20T00:30:00Z", is_cfp: true },
+    { id: "b", bowl_name: "Sun Bowl", kickoff_at: at(31), is_cfp: false },
+  ];
+  const rounds = cfpRounds(games, "nc");
+  assert.deepEqual(["fr0", "qf2", "sf0", "sf1", "nc"].map((id) => rounds.get(id)), ["First Round", "Quarterfinal", "Semifinal", "Semifinal", "Championship"]);
+  assert.equal(rounds.has("b"), false);
+  const view = bowlTicketView({ season: { championship_game_id: "nc" }, games }, { now: Date.parse("2026-12-01T12:00:00Z") });
+  assert.equal(view.games.find((game) => game.id === "qf2").round, "Quarterfinal");
+  assert.equal(view.sheet.games.find((game) => game.id === "sf0").name, "Fiesta Bowl (SF)");
+  assert.equal(view.sheet.games.find((game) => game.id === "qf2").name, "Rose Bowl Game (QF)");
+});
+
+test("a word boundary in the bowl-name rules is a real one (CFP and Sun Bowl names are recognised)", () => {
+  assert.equal(bowlPennant("Tony the Tiger Sun Bowl").logo, "sun");
+  assert.equal(bowlPennant("LA Bowl Hosted by Gronk").logo, "la");
+  const view = bowlTicketView({ games: [{ id: "g", bowl_name: "CFP at the Rose Bowl", kickoff_at: "2026-12-31T20:00:00Z" }] }, { now: Date.parse("2026-12-01T12:00:00Z") });
+  assert.equal(view.games[0].playoff, true);
 });

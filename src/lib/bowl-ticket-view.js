@@ -14,7 +14,8 @@ import { dateFormat } from "./date-format.js";
  * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
  * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
- *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean }} BowlTicketGame
+ *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean,
+ *   round: "First Round" | "Quarterfinal" | "Semifinal" | "Championship" | null }} BowlTicketGame
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none", result: "W" | "L" | null, missed?: boolean }} BowlSheetCell
  */
 
@@ -72,12 +73,30 @@ export function bowlSavedPicks(payload) {
 }
 
 /**
+ * Each playoff game's round, from the schedule itself (the bowls that host the quarterfinals and semifinals rotate every year, so no
+ * list of names): the games ESPN marks as the College Football Playoff's, less the title game, in kickoff order: the last two are the
+ * semifinals, the four before them the quarterfinals, any earlier the first round; the title game is the Championship.
+ * @param {any[]} games  the Bowl Pool's games
+ * @param {string | null} championshipId
+ * @returns {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">}
+ */
+export function cfpRounds(games, championshipId) {
+  /** @type {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">} */
+  const rounds = new Map();
+  const playoff = games.filter((game) => game.is_cfp && game.id !== championshipId).sort((a, b) => Date.parse(a.kickoff_at ?? "") - Date.parse(b.kickoff_at ?? ""));
+  playoff.forEach((game, index) => rounds.set(game.id, index >= playoff.length - 2 ? "Semifinal" : index >= playoff.length - 6 ? "Quarterfinal" : "First Round"));
+  if (championshipId) rounds.set(championshipId, "Championship");
+  return rounds;
+}
+
+/**
  * @param {any} payload  the Bowl Pool's read
  * @param {{ now?: number, viewerPlayerId?: string | null }} [options]
  */
 export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = null } = {}) {
   const saved = bowlSavedPicks(payload);
   const championshipId = payload?.season?.championship_game_id ?? null;
+  const rounds = cfpRounds(payload?.games ?? [], championshipId);
   const ownResults = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick.result]));
   /** @type {BowlTicketGame[]} */
   const games = (payload?.games ?? []).map((game) => {
@@ -115,7 +134,8 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       mine,
       result: result ?? (state === "missed" && final ? "L" : null),
       tiebreaker: game.id === championshipId,
-      playoff: /cfp|playoff|first round|quarterfinal|semifinal/i.test(game.bowl_name ?? ""),
+      playoff: rounds.has(game.id) || /\bcfp\b|playoff|first round|quarterfinal|semifinal/i.test(game.bowl_name ?? ""),
+      round: rounds.get(game.id) ?? null,
     };
   });
   const decided = games.filter((game) => game.final || game.state === "off").length;
@@ -173,7 +193,11 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   /** @type {(result: string | null | undefined) => "W" | "L" | null} */
   const mark = (result) => (result === "win" ? "W" : result === "loss" ? "L" : null);
   return {
-    games: games.map((game) => ({ id: game.id, name: bowlColumnName(raw.get(game.id) ?? {}), day: game.day, locked: game.locked })),
+    // The Bowl Card's name, its (QF) or (SF) from the schedule's own round.
+    games: games.map((game) => {
+      const name = bowlColumnName(raw.get(game.id) ?? {}), base = name.replace(/\s*\((QF|SF)\)$/, "");
+      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked };
+    }),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({
       id: row.id, name: row.name, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, you: row.id === viewerPlayerId,
