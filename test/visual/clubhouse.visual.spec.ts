@@ -196,9 +196,12 @@ test("a player sent back from the clubhouse has the switch put down, so the Stan
   await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
   await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
   await page.goto("/");
+  // Off to the clubhouse, refused, the switch put down, and back to the Standings to stay.
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode")), { timeout: 30_000 }).toBe("off");
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
-  expect(await page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode"))).toBe("off");
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/\/$/);   // and it stays
 });
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
