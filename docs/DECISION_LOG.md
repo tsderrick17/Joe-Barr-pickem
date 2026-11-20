@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - No end-of-season banner
+
+The navy banner that replaced the ticket once a player was out of the playoff race ("You have been eliminated, thanks for playing. Back
+August 1") or had forfeited ("You forfeited, thanks for playing.") is gone, on the Standings and the Slate (owner: it read badly). The
+player's row already says it (OUT, or the FORFEITED stamp over the final score, and "your score stands" on the board), so the page simply
+shows no ticket and no receipt. Supersedes the banner in the 2026-10 entry on eliminated players; the Workshop's piece for it went too.
+
 ## 2026-11-18 - The clubhouse beta: chosen players get the switch
 
 The clubhouse opens to a few players before everyone: each player now has `clubhouse_access` (off for all; migration

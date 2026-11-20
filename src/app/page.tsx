@@ -12,7 +12,6 @@ import {
   SessionUnavailableError,
 } from "@/lib/auth-session";
 import BowlCard from "@/components/bowl-card";
-import SeasonClosedBanner from "@/components/season-closed-banner";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { comparePickColumns } from "@/lib/pick-column-order.js";
 import type { StandingsResponse as HomeData } from "@/lib/api-contracts";
@@ -343,7 +342,7 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {offSeason ? null : seasonClosedForViewer ? <SeasonClosedBanner forfeited={viewerForfeited} /> : <MyTicket
+        {offSeason || seasonClosedForViewer ? null : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
           picks={ticketPicks}

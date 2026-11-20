@@ -245,7 +245,6 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-pull.pull-chain { left: auto; position: relative; right: auto; top: auto; z-index: auto; }
 /* A trophy banner on its rafters: just the hanging cloth, with the Trophy Room's own cloth colours. */
 .workshop-stage .asset-rafters { border-top: 0; overflow: visible; padding: 0; }
-.asset-banner .season-closed-banner { margin: 0; }
 .asset-knobs { display: grid; gap: .45rem; }
 .asset-knob { align-items: center; display: grid; font-size: .75rem; gap: .4rem; grid-template-columns: 6.4rem minmax(0, 1fr) 3.4rem; }
 .asset-knob input { width: 100%; }
