@@ -96,7 +96,7 @@ body {
 .mobile-account-nav > div { min-height: 3.75rem; }
 /* iPhone Safari (iOS 26) softens whatever sits just under the clock and battery; the header's top line would sit in that band, so on an
    iPhone the header starts a little lower. (-webkit-touch-callout is iOS only.) */
-@supports (-webkit-touch-callout: none) { .mobile-account-nav > div { padding-top: 14px; } }
+@supports (-webkit-touch-callout: none) { .mobile-account-nav > div { padding-top: 20px; } }   /* the room below gives up that much floor */
 .mobile-account-nav > div > div { min-height: 2.75rem; }
 
 /* The account menu: your name opens Notifications and Sign out (which asks first). Large targets for every finger. */
