@@ -15,6 +15,7 @@ import { dateFormat } from "./date-format.js";
  * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
  *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean }} BowlTicketGame
+ * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none", result: "W" | "L" | null, missed?: boolean }} BowlSheetCell
  */
 
 const EASTERN_DAY = dateFormat("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric" });
@@ -114,6 +115,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
   });
   const guess = payload?.entry?.championship_total_guess;
   return {
+    sheet: bowlSheet(payload, games, ranked, now, viewerPlayerId),
     optedIn: Boolean(payload?.optedIn),
     entryOpen: Boolean(payload?.entryOpen),
     games,
@@ -125,5 +127,51 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
     owed: games.filter((game) => game.state === "owed").length,
     picked: games.filter((game) => game.state === "picked").length,   // still to play and already picked: with the picks owed, the bowls left
     standings: ranked,
+  };
+}
+
+/**
+ * The whole Bowl Pool on one sheet, as the Standings page's Bowl Card has it: a row per player in standings order, a column per bowl. A
+ * bowl that has kicked off shows the school each player took, in the result's colour (green won, red lost, amber not yet final); before
+ * kickoff another player's pick is never shown: a lit lamp says one is in, an unlit lamp that there is none yet. Your own row shows your
+ * own picks all along. It reads only what the Bowl Pool's read already gives (picks after kickoff, markers before).
+ * @param {any} payload
+ * @param {BowlTicketGame[]} games
+ * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
+ * @param {number} now
+ * @param {string | null} viewerPlayerId
+ * @returns {{ games: Array<{ id: string, flag: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ */
+function bowlSheet(payload, games, standings, now, viewerPlayerId) {
+  const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
+  const short = (team) => team?.abbreviation || String(team?.short_name ?? team?.display_name ?? "").replace(/[^A-Za-z&]/g, "").slice(0, 4).toUpperCase() || "?";
+  const teamLabel = (gameId, teamId) => {
+    const game = raw.get(gameId);
+    if (!game || !teamId) return "?";
+    return short(teamId === (game.away_team_id ?? game.awayTeam?.id) ? game.awayTeam : game.homeTeam);
+  };
+  const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
+  const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));
+  const automatic = new Map((payload?.automaticResults ?? []).map((result) => [`${result.playerId}:${result.game_id}`, result.result]));
+  const mine = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick]));
+  const today = EASTERN_DAY.format(new Date(now)).toUpperCase().replace(",", "");
+  /** @type {(result: string | null | undefined) => "W" | "L" | null} */
+  const mark = (result) => (result === "win" ? "W" : result === "loss" ? "L" : null);
+  return {
+    games: games.map((game) => ({ id: game.id, flag: game.playoff && game.flag === "BOWL" ? "CFP" : game.flag, day: game.day, locked: game.locked })),
+    todayIndex: games.findIndex((game) => game.day === today),
+    rows: standings.map((row) => ({
+      id: row.id, name: row.name, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, you: row.id === viewerPlayerId,
+      cells: games.map((game) => /** @returns {BowlSheetCell} */ {
+        const key = `${row.id}:${game.id}`;
+        const own = row.id === viewerPlayerId ? mine.get(game.id) : null;
+        const pick = own ? { selected_team_id: own.selected_team_id, result: own.result } : shown.get(key);
+        if (pick) return { kind: "pick", team: teamLabel(game.id, pick.selected_team_id), result: mark(pick.result) };
+        if (automatic.has(key)) return { kind: "none", result: mark(automatic.get(key)) };
+        if (!game.locked && markers.has(key)) return { kind: "hidden" };
+        // kicked off with no pick: a miss (a loss once graded); before kickoff, simply none yet
+        return { kind: "none", result: game.locked && row.id === viewerPlayerId && game.state === "missed" ? "L" : null, missed: game.locked };
+      }),
+    })),
   };
 }
