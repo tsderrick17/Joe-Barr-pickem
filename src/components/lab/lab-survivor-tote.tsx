@@ -13,17 +13,19 @@ import type { StandingsResponse } from "@/lib/api-contracts";
  * latest week, not week 1.
  */
 
-/** The columns to show: every week up to the latest anyone has picked, plus the next one, within the season's weeks. */
-export function survivorWeekCount(rows: StandingsResponse["survivorRows"]) {
+/** The columns to show: every week up to the latest anyone has picked, plus the next one while Survivor is still being played (once it is
+ * decided, or nobody is left in, there is no next week to show). */
+export function survivorWeekCount(rows: StandingsResponse["survivorRows"], decided = false) {
   const total = Math.max(0, ...rows.map((row) => row.picks.length));
   const last = Math.max(-1, ...rows.flatMap((row) => row.picks.map((pick, index) => (pick ? index : -1))));
-  return Math.min(total, Math.max(1, last + 2));
+  const over = decided || (rows.length > 0 && rows.every((row) => row.status !== "active"));
+  return Math.min(total, Math.max(1, last + (over ? 1 : 2)));
 }
 const mark = (value: string) => (value === "W" ? "W" : value === "L" ? "L" : null);
 
 export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: StandingsResponse; onBoard?: () => void; onPick?: () => void }) {
   const rows = home.survivorRows ?? [];
-  const WEEKS = survivorWeekCount(rows);
+  const WEEKS = survivorWeekCount(rows, Boolean(home.survivorComplete));
   const scroller = useRef<HTMLDivElement>(null);
   // Open on the latest week, and stay there while the sheet and its logos settle, until the player scrolls it themselves.
   useLayoutEffect(() => {

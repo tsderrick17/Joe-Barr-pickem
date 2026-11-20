@@ -187,9 +187,9 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
-  // Notifications: a plate like the others, standing in the glass doors at the middle of the room (the real clubhouse only: it opens
+  // Notifications: a plate like the others, up in the thatch at the right where it covers nothing (the real clubhouse only: it opens
   // the player's own settings).
-  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.37, y: 0.437 }, fullAt: { x: 0.37, y: 0.45 }, wideAt: { x: 0.43, y: 0.42 }, realOnly: true },
+  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.8, y: 0.14 }, realOnly: true },
 ];
 
 /** The room's lamps, by picture shape (tall, filling the phone, wide): tapping one turns the lights down for night, or up for day. */
@@ -199,8 +199,8 @@ const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y
   wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
 };
 
-/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): by the lounge's sofa. */
-const BOWL_PLATE = { tall: { x: 0.4, y: 0.568 }, full: { x: 0.4, y: 0.555 }, wide: { x: 0.5, y: 0.58 } };
+/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): low on the open floor at the right, clear of everything. */
+const BOWL_PLATE = { tall: { x: 0.8, y: 0.862 }, full: { x: 0.8, y: 0.79 }, wide: { x: 0.78, y: 0.84 } };
 
 type Season = "regular" | "bowls";
 
