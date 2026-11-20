@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AccountMenu from "@/components/account-menu";
+import { setSiteTheme } from "@/lib/site-theme.js";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -184,8 +185,7 @@ export default function SiteNav() {
   function toggleTheme() {
     haptic("tick");
     const nextNightMode = !isNightMode;
-    document.documentElement.dataset.theme = nextNightMode ? "night" : "day";
-    window.localStorage.setItem("pickem-theme", nextNightMode ? "night" : "day");
+    setSiteTheme(nextNightMode);
     setIsNightMode(nextNightMode);
   }
 

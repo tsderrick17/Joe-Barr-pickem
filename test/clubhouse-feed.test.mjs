@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings, survivorStillShown } from "../src/lib/clubhouse-feed.js";
+import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings, survivorStillShown, bowlTickerGames, mergeTicker } from "../src/lib/clubhouse-feed.js";
 
 const game = (id, away, home, extra = {}) => ({
   id, awayTeamId: away.toLowerCase(), homeTeamId: home.toLowerCase(), awayTeamAbbreviation: away, homeTeamAbbreviation: home,
@@ -156,4 +156,34 @@ test("Survivor stays on the screens while it runs and for 8 days after it is dec
   assert.equal(survivorStillShown({ survivorAvailable: true, survivorComplete: true, survivorCrownedAt: "2026-11-05T12:00:00Z" }, now), false);
   assert.equal(survivorStillShown({ survivorAvailable: true, isPlayoff: true }, now), false);
   assert.equal(survivorStillShown({ survivorAvailable: false }, now), false);
+});
+
+test("the ticker's bowls: three days either side, finals with who covered against the locked line, the viewer's pick lit, cancelled ones left off", () => {
+  const now = Date.parse("2026-12-27T18:00:00Z");
+  const team = (id, abbreviation, short_name) => ({ id, abbreviation, short_name });
+  const payload = {
+    ownPicks: [{ game_id: "b1", selected_team_id: "uga" }],
+    games: [
+      { id: "b1", bowl_name: "Sugar Bowl", kickoff_at: "2026-12-26T01:00:00Z", status: "final", away_team_id: "ind", home_team_id: "uga", awayTeam: team("ind", "IND"), homeTeam: team("uga", "UGA"), away_score: 20, home_score: 24, line: { favorite_team_id: "uga", locked_spread: 3.5 } },
+      { id: "b2", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-12-29T20:00:00Z", status: "scheduled", away_team_id: "d", home_team_id: "a", awayTeam: team("d", null, "Duke"), homeTeam: team("a", "ARIZ"), line: null },
+      { id: "b3", bowl_name: "Rose Bowl Game", kickoff_at: "2027-01-05T21:00:00Z", status: "scheduled", away_team_id: "x", home_team_id: "y", awayTeam: team("x", "X"), homeTeam: team("y", "Y") },
+      { id: "b4", bowl_name: "Gator Bowl", kickoff_at: "2026-12-27T20:00:00Z", status: "cancelled", away_team_id: "p", home_team_id: "q", awayTeam: team("p", "P"), homeTeam: team("q", "Q") },
+    ],
+  };
+  const games = bowlTickerGames(payload, now);
+  assert.deepEqual(games.map((game) => game.id), ["bowl-b1", "bowl-b2"]);
+  assert.deepEqual(games[0].final, { away: { score: 20, covered: false }, home: { score: 24, covered: true } });
+  assert.equal(games[0].picked, "home");
+  assert.equal(games[0].bowl, "SUGAR");
+  assert.equal(games[0].homeLine, "-3.5");
+  assert.equal(games[1].away, "DUKE");
+  assert.equal(games[1].awayLine, "—");
+});
+
+test("the ticker's order: today's NFL games, then today's bowls, then two NFL games to a bowl", () => {
+  const now = Date.parse("2026-12-27T15:00:00Z");   // Sunday morning, Eastern
+  const at = (iso) => Date.parse(iso);
+  const nfl = [{ id: "n-today-1", at: at("2026-12-27T18:00:00Z") }, { id: "n-today-2", at: at("2026-12-27T21:25:00Z") }, { id: "n-mon", at: at("2026-12-29T01:15:00Z") }, { id: "n-sat", at: at("2026-12-26T21:30:00Z") }, { id: "n-thu", at: at("2026-12-25T01:15:00Z") }];
+  const bowls = [{ id: "b-later", at: at("2026-12-29T20:00:00Z") }, { id: "b-today", at: at("2026-12-27T20:00:00Z") }, { id: "b-past", at: at("2026-12-26T01:00:00Z") }];
+  assert.deepEqual(mergeTicker(nfl, bowls, now).map((game) => game.id), ["n-today-1", "n-today-2", "b-today", "n-mon", "n-sat", "b-past", "n-thu", "b-later"]);
 });

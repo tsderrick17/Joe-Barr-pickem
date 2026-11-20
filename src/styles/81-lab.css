@@ -88,8 +88,6 @@
 .lab-room-screen.is-spreads.is-owed { animation: room-owed 2.4s ease-in-out infinite alternate; }
 @keyframes room-owed { from { box-shadow: 0 0 8px 1px rgba(255, 176, 46, .3); } to { box-shadow: 0 0 18px 4px rgba(255, 176, 46, .65); } }
 .lab-room-tag { background: rgb(250 244 226); border: 2px solid rgb(176 134 52); border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); color: rgb(22 44 32); font-size: .7rem; font-weight: 800; left: 50%; line-height: 1.25; padding: 5px 9px; position: absolute; z-index: 2; text-align: center; transform: translateX(-50%); white-space: nowrap; }
-.lab-room-tag.is-bowl-pool { background: rgb(20 36 76); border-color: rgb(226 182 70); color: rgb(246 218 140); }
-.lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
 /* The poker table's plate (Survivor, then the Bowl Pool) sits up in the table's near rail, in the gap between the two chairs, not hanging under it. */
@@ -507,12 +505,10 @@
 .lab-room-bubble { background: transparent; border: 0; cursor: pointer; min-height: 44px; padding: 0; position: absolute; transform: translate(-50%, -50%); z-index: 2; }
 .lab-room-bubble .lab-room-tag { display: block; left: auto; position: relative; transform: none; }
 .lab-room-bubble:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
-/* Notifications: a cloud out in the sky beyond the glass doors. A soft white puff (two round tops over the plate), a bell, the word. */
-.lab-room-tag.is-cloud { background: rgb(252 252 255); border: 0; border-radius: 999px; box-shadow: 0 3px 10px rgba(10, 20, 40, .35), inset 0 -3px 0 rgba(150, 170, 200, .35); color: rgb(28 40 64); isolation: isolate; margin-top: 10px; padding: 6px 13px; }
-.lab-room-tag.is-cloud::before { background: inherit; border-radius: 50%; content: ""; height: 1.7em; left: 16%; position: absolute; top: -.75em; width: 1.7em; z-index: -1; }
-.lab-room-tag.is-cloud::after { background: inherit; border-radius: 50%; content: ""; height: 2.2em; position: absolute; right: 18%; top: -1.05em; width: 2.2em; z-index: -1; }
-.lab-room-tag.is-cloud i { background: rgb(28 40 64); }
-.lab-room-bell { fill: currentColor; flex: none; height: 1.1em; width: 1.1em; }
+/* The room's lamps are switches: an unseen thumb-sized spot over each light turns day to night and back. */
+.lab-room-lamp { background: transparent; border: 0; border-radius: 50%; cursor: pointer; height: 48px; padding: 0; position: absolute; transform: translate(-50%, -50%); width: 48px; z-index: 2; }
+.lab-room-lamp:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: 2px; }
+@media (hover: hover) { .lab-room-lamp:hover { box-shadow: 0 0 18px 6px rgba(255, 220, 150, .35); } }
 /* The constitution, posted in full as a printed rule book: cream paper, a gilt keyline, parts in small capitals, each article a short
    numbered list. A row of the ten articles at the top jumps straight to one. */
 .lab-rules { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 10px; box-shadow: inset 0 0 0 4px var(--club-paper), inset 0 0 0 5px var(--club-gold); color: var(--club-ink); padding: 22px 18px 18px; }
@@ -713,7 +709,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
   .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
   .clubhouse-page .lab-window-part > ol { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .clubhouse-page .lab-window-part > ol > li { grid-template-columns: 1fr 1fr; }
+  .clubhouse-page .lab-window-part > ol > li { align-content: start; grid-template-columns: 1fr 1fr; }   /* a game beside a taller one (a final) starts level with it, at the top */
   .clubhouse-page .lab-window-part .lab-board-time { grid-column: 1 / -1; }
   .clubhouse-page .lab-window-part .lab-board-at { display: none; }
   /* The Trophy Room: the turning table and the plaques use the whole width, three plaques to a row. */

@@ -1,3 +1,4 @@
+import { bowlPennant } from "./bowl-logos.js";
 /**
  * The real clubhouse's room, fed by the pool's own data: the same two reads the classic pages make (the Standings' /api/home and the
  * Slate's /api/board), shaped into what the room shows by itself. Nothing here can show more than those pages do: the standings are
@@ -52,6 +53,70 @@ export function survivorStillShown(home, now) {
   if (!home.survivorComplete) return true;
   const crowned = Date.parse(home.survivorCrownedAt ?? "");
   return Number.isNaN(crowned) || now - crowned < 8 * 86_400_000;
+}
+
+const easternDay = (ms) => new Intl.DateTimeFormat("en-CA", { timeZone: ET, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ms));
+const BOWL_TICKER_DAYS = 3;
+
+/**
+ * The bowls for the room's ticker, from the Bowl Pool's own read: each bowl from three days back to three days ahead (finals with their
+ * score and who covered, the rest with their line), by the schools' short names, the bowl's short name over it, and the viewer's own
+ * pick lit. A postponed or cancelled bowl, or one with no teams yet, is left off.
+ * @param {any} payload  the Bowl Pool's read (/api/bowl-pool)
+ * @param {number} now
+ */
+export function bowlTickerGames(payload, now) {
+  const own = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick.selected_team_id]));
+  const reach = BOWL_TICKER_DAYS * 86_400_000;
+  return (payload?.games ?? []).flatMap((game) => {
+    const at = Date.parse(game.kickoff_at ?? "");
+    // The school's own abbreviation (ESPN's), or the first letters of its short name when it has none.
+    const short = (team) => team?.abbreviation || String(team?.short_name ?? team?.display_name ?? "").replace(/[^A-Za-z&]/g, "").slice(0, 4).toUpperCase() || null;
+    const away = short(game.awayTeam), home = short(game.homeTeam);
+    if (!Number.isFinite(at) || Math.abs(at - now) > reach || !away || !home || ["postponed", "cancelled", "no_contest"].includes(game.status)) return [];
+    const awayId = game.away_team_id ?? game.awayTeam?.id, homeId = game.home_team_id ?? game.homeTeam?.id;
+    const raw = game.line?.locked_spread;
+    const spread = raw === null || raw === undefined || raw === "" ? null : Math.abs(Number(raw));
+    const favorite = game.line?.favorite_team_id ?? null;
+    const lineOf = (teamId) => (spread === null || !Number.isFinite(spread) || !favorite ? "—" : spread === 0 ? "PK" : `${teamId === favorite ? "-" : "+"}${spread}`);
+    const final = game.status === "final" && Number.isInteger(game.away_score) && Number.isInteger(game.home_score);
+    const covered = (teamId, score, other) => (spread === null || !favorite ? score > other : teamId === favorite ? score - other > spread : score + spread > other);
+    const pick = own.get(game.id);
+    return [{
+      id: `bowl-${game.id}`,
+      kickoff: kickoffLabel(game.kickoff_at),
+      at,
+      away,
+      home,
+      awayLine: lineOf(awayId),
+      homeLine: lineOf(homeId),
+      bowl: bowlPennant(game.bowl_name).flag,
+      picked: pick ? (pick === awayId ? "away" : pick === homeId ? "home" : null) : null,
+      ...(final ? { final: { away: { score: game.away_score, covered: covered(awayId, game.away_score, game.home_score) }, home: { score: game.home_score, covered: covered(homeId, game.home_score, game.away_score) } } } : {}),
+    }];
+  });
+}
+
+/**
+ * The ticker's order once the bowls are on: today's NFL games first, then today's bowls, then the rest sprinkled through each other (two
+ * NFL games, then a bowl), each in kickoff order.
+ * @template {{ at?: number }} G
+ * @param {G[]} nfl
+ * @param {G[]} bowls
+ * @param {number} now
+ */
+export function mergeTicker(nfl, bowls, now) {
+  const today = easternDay(now);
+  const isToday = (game) => Number.isFinite(game.at) && easternDay(game.at) === today;
+  const byKickoff = (a, b) => (a.at ?? 0) - (b.at ?? 0);
+  const restNfl = nfl.filter((game) => !isToday(game));
+  const restBowls = bowls.filter((game) => !isToday(game)).sort(byKickoff);
+  const sprinkled = [];
+  for (let index = 0, bowl = 0; index < restNfl.length || bowl < restBowls.length; index++) {
+    if (index < restNfl.length) sprinkled.push(restNfl[index]);
+    if ((index % 2 === 1 || index >= restNfl.length) && bowl < restBowls.length) sprinkled.push(restBowls[bowl++]);
+  }
+  return [...nfl.filter(isToday), ...bowls.filter(isToday).sort(byKickoff), ...sprinkled];
 }
 
 /** Bowl Pool time: from Dec 7 (Eastern) through January, the Bowl Pool's board is wheeled into the room. */
@@ -149,6 +214,7 @@ export function clubhouseFeed({ home, board, before = null }) {
         return {
           id: game.id,
           kickoff: kickoffLabel(game.kickoffAt),
+          at: Date.parse(game.kickoffAt ?? ""),
           away: game.awayTeamAbbreviation,
           home: game.homeTeamAbbreviation,
           awayLine,

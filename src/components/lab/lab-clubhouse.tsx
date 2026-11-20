@@ -11,6 +11,8 @@ import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labKickedOff, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labAtsResult, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
 import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
+import { haptic } from "@/lib/haptics-client";
+import { toggleSiteTheme } from "@/lib/site-theme.js";
 
 /**
  * Lab try-out: the whole pool as one clubhouse, with the sample league only. Built for a phone first.
@@ -185,10 +187,20 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
-  // Notifications float in a cloud in the glass doors at the middle of the room, out in the sky (the real clubhouse only: it opens the
-  // player's own settings).
-  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.36, y: 0.387 }, fullAt: { x: 0.36, y: 0.41 }, wideAt: { x: 0.43, y: 0.3 }, realOnly: true },
+  // Notifications: a plate like the others, standing in the glass doors at the middle of the room (the real clubhouse only: it opens
+  // the player's own settings).
+  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.37, y: 0.437 }, fullAt: { x: 0.37, y: 0.45 }, wideAt: { x: 0.43, y: 0.42 }, realOnly: true },
 ];
+
+/** The room's lamps, by picture shape (tall, filling the phone, wide): tapping one turns the lights down for night, or up for day. */
+const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y: number }>> = {
+  tall: [{ name: "ceiling light", x: 0.53, y: 0.04 }],
+  full: [{ name: "ceiling light", x: 0.53, y: 0.12 }],
+  wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
+};
+
+/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): by the lounge's sofa. */
+const BOWL_PLATE = { tall: { x: 0.4, y: 0.568 }, full: { x: 0.4, y: 0.555 }, wide: { x: 0.5, y: 0.58 } };
 
 type Season = "regular" | "bowls";
 
@@ -223,10 +235,10 @@ const TICKER_MS = 7_000;
 /** One player's line on the Big Board. */
 export type RoomStanding = { name: string; wins: number; place: number | null; tied: boolean; move?: number };
 /** One game on the spreads board: its kickoff as shown, the two teams (abbreviations) and each one's line. */
-export type RoomGame = { id: string; kickoff: string; away: string; home: string; awayLine: string; homeLine: string; final?: { away: { score: number; covered: boolean }; home: { score: number; covered: boolean } } };
+export type RoomGame = { id: string; kickoff: string; at?: number; away: string; home: string; awayLine: string; homeLine: string; final?: { away: { score: number; covered: boolean }; home: { score: number; covered: boolean } }; bowl?: string; picked?: "away" | "home" | null };
 /**
  * Everything the room shows by itself: the standings for the Big Board, the week's games for the spreads board, your own picks (lit
- * there), the line of news on a label, whether a pick is owed, a new chat message, whether the Bowl Pool is wheeled in, and whether Survivor is over (then the poker table is the Bowl Pool's). The Lab
+ * there), the line of news on a label, whether a pick is owed, a new chat message, and whether the Bowl Pool is wheeled in (its bulletin board, from Dec 7). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
 export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean };
@@ -284,12 +296,17 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
                   // A game that is over shows each side's final score instead of its line, the side that covered lit, and says FINAL.
                   // The spread stays on the card once the game is over, small beside the score: it is what the score was measured against. The logo
                   // gives way to make room for it (team, spread and score do not fit beside a logo in half a screen).
-                  const side = (team: string) => {
-                    const done = game.final?.[team === game.away ? "away" : "home"];
-                    const line = team === game.away ? game.awayLine : game.homeLine;
-                    return <span className={`${mine.includes(team) ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}${done ? " is-final" : ""}`}>{done ? null : <Logo eager team={team} />}<b>{team}</b>{done ? <i>{line}</i> : null}<em>{done ? done.score : line}</em></span>;
+                  // A bowl in bowl season reads the same way, by the schools' short names (no NFL logo), its bowl's short name in the corner, and
+                  // your own bowl pick lit.
+                  const side = (where: "away" | "home") => {
+                    const team = game[where];
+                    const done = game.final?.[where];
+                    const line = where === "away" ? game.awayLine : game.homeLine;
+                    const picked = game.bowl ? game.picked === where : mine.includes(team);
+                    return <span className={`${picked ? "is-picked" : ""}${done?.covered ? " is-covered" : ""}${done ? " is-final" : ""}`}>{done || game.bowl ? null : <Logo eager team={team} />}<b>{team}</b>{done ? <i>{line}</i> : null}<em>{done ? done.score : line}</em></span>;
                   };
-                  return <p key={`${game.id}-${index}`}><small>{game.final ? `FINAL · ${game.kickoff.split(" ")[0].toUpperCase()}` : game.kickoff.toUpperCase()}</small>{side(game.away)}{side(game.home)}</p>;
+                  const when = game.final ? `FINAL · ${game.kickoff.split(" ")[0].toUpperCase()}` : game.kickoff.toUpperCase();
+                  return <p className={game.bowl ? "is-bowl" : undefined} key={`${game.id}-${index}`}><small>{game.bowl ? `${game.bowl} · ${when}` : when}</small>{side("away")}{side("home")}</p>;
                 })}
               </div>
             ))}
@@ -341,6 +358,14 @@ function labFeed(season: Season, allIn: boolean, mail: boolean): RoomFeed {
  * `full` lets the picture fill the screen under the site's bar (the real clubhouse); the Lab shows it as a framed picture.
  */
 export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomFeed; onSpot?: (spot: string, room: Room, ticket?: boolean) => void; hrefFor?: (spot: string) => string | null; full?: boolean }) {
+  // Whether the lights are down, followed from the site's theme, so a lamp's label says what tapping it does.
+  const [night, setNight] = useState(false);
+  useEffect(() => {
+    const follow = () => setNight(document.documentElement.dataset.theme === "night");
+    follow();
+    window.addEventListener("pickem-theme-change", follow);
+    return () => window.removeEventListener("pickem-theme-change", follow);
+  }, []);
   // A phone gets the tall picture; a desktop (900px and wider) gets the wide one: the same room through a longer lens, everything in
   // one view, with its own positions for every label. Decided after the page is on screen, so the first paint is always the tall one.
   const [wide, setWide] = useState(false);
@@ -352,19 +377,17 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
     return () => query.removeEventListener("change", sync);
   }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
-  // The Bowl Pool's bulletin board is wheeled in only while Survivor still holds the table; once the table is the Bowl Pool's, the
-  // board stays away (kept for announcements).
-  const bulletin = feed.bowl && !feed.survivorOver;
+  // The Bowl Pool's bulletin board is wheeled in for bowl season (from Dec 7).
+  const bulletin = feed.bowl;
   const key = `${bulletin ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
   const picture = PICTURES[`day${key}`] ?? PICTURES[`day${bulletin ? "-bowl" : ""}`];
   const news = feed.news;
-  // Once Survivor is over (decided, or the playoffs) and the bowls are on, the poker table is where the Bowl Pool sits, in the Bowl Pool's
-  // own navy and gold so it is not mistaken for the old table, and the Bowl Pool's separate spot is not drawn twice. Between the two (Survivor
-  // decided more than a week ago, the Bowl Pool not open until Dec 7) the table has no spot at all.
-  const taken = Boolean(feed.survivorOver && feed.bowl);
-  const survivorGone = feed.survivorShown === false && !taken;
-  const spots = SPOTS.filter(({ spot, at, realOnly }) => (at || picture.spots[spot]) && !(realOnly && !hrefFor) && (!hrefFor || hrefFor(spot) !== null) && !(taken && spot === "bowl") && !(survivorGone && spot === "survivor"))
-    .map((item) => (taken && item.spot === "survivor" ? { ...item, room: "bowl" as Room, name: "Bowl Pool" } : item));
+  // Survivor and the Bowl Pool are always there: the poker table is always Survivor's, and the Bowl Pool's plate is on its bulletin board in
+  // bowl season, by the lounge the rest of the year (the real clubhouse; the Lab shows it only with the board).
+  const spots = SPOTS.flatMap((item) => {
+    if (item.spot === "bowl" && !picture.spots.bowl) return hrefFor ? [{ ...item, label: "free" as const, at: BOWL_PLATE.tall, fullAt: BOWL_PLATE.full, wideAt: BOWL_PLATE.wide }] : [];
+    return item;
+  }).filter(({ spot, at, realOnly }) => (at || picture.spots[spot]) && !(realOnly && !hrefFor) && (!hrefFor || hrefFor(spot) !== null));
   const room = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
   useLayoutEffect(() => {
@@ -394,8 +417,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
           if (spot === "chat") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
         }
         const plate = label === "none" ? null : (
-          <span className={`lab-room-tag is-${label}${spot === "notify" ? " is-cloud" : ""}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
-            <b aria-hidden="true">{spot === "notify" ? <svg className="lab-room-bell" focusable="false" viewBox="0 0 16 16"><path d="M8 1.5a1 1 0 0 1 1 1v.6a4.2 4.2 0 0 1 3.2 4.1v2.6l1.3 1.7H2.5l1.3-1.7V7.2A4.2 4.2 0 0 1 7 3.1v-.6a1 1 0 0 1 1-1ZM6.3 12.8h3.4a1.7 1.7 0 0 1-3.4 0Z" /></svg> : null}{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
+          <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
+            <b aria-hidden="true">{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>
         );
@@ -408,6 +431,10 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
         return <button aria-label={name} className={className} key={spot} onClick={() => onSpot?.(spot, next, ticket)} style={style} type="button">{plate}</button>;
       })}
+      {/* The lamps (the real clubhouse): tap one and the lights go down for night, or up for day, the same switch as the header's. */}
+      {hrefFor ? LAMPS[wide ? "wide" : full ? "full" : "tall"].map((lamp) => (
+        <button aria-label={`Turn the lights ${night ? "up (day)" : "down (night)"}: the ${lamp.name}`} className="lab-room-lamp" key={lamp.name} onClick={() => { haptic("tick"); toggleSiteTheme(); }} style={{ left: `${lamp.x * 100}%`, top: `${lamp.y * 100}%` }} type="button" />
+      )) : null}
     </nav>
   );
   return full ? <RoomStage>{scene}</RoomStage> : scene;
