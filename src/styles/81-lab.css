@@ -677,8 +677,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-sheet thead th { color: var(--bowl-slip-gold); font-size: .62rem; letter-spacing: .1em; vertical-align: bottom; }
 .lab-bowl-sheet thead th span { display: block; font-size: .66rem; margin-inline: auto; max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; }
 .lab-bowl-sheet thead th small { color: rgba(240, 232, 214, .55); display: block; font-family: Georgia, serif; font-size: .6rem; letter-spacing: .04em; }
-.lab-bowl-sheet tr > :nth-child(1) { background: rgb(18 28 50); color: var(--bowl-gold-lt); font-family: "Courier New", monospace; font-weight: 800; left: 0; min-width: 3.2rem; position: sticky; z-index: 1; }
-.lab-bowl-sheet tr > :nth-child(2) { background: rgb(18 28 50); position: sticky; z-index: 1; box-shadow: 4px 0 6px -4px rgba(0, 0, 0, .6); color: var(--bowl-ink); font-family: Georgia, serif; font-size: .95rem; left: 3.2rem; max-width: 7rem; min-width: 5.5rem; overflow: hidden; text-align: left; text-overflow: ellipsis; }
+.lab-bowl-sheet .lab-bowl-sheet-rec { background: rgb(18 28 50); color: var(--bowl-gold-lt); font-family: "Courier New", monospace; font-weight: 800; left: 0; min-width: 3.2rem; position: sticky; z-index: 1; }
+.lab-bowl-sheet .lab-bowl-sheet-name { background: rgb(18 28 50); position: sticky; z-index: 1; box-shadow: 4px 0 6px -4px rgba(0, 0, 0, .6); color: var(--bowl-ink); font-family: Georgia, serif; font-size: .95rem; left: 3.2rem; max-width: 7rem; min-width: 5.5rem; overflow: hidden; text-align: left; text-overflow: ellipsis; }
 .lab-bowl-sheet tbody tr.is-you > * { background: rgb(40 44 58); }
 .lab-bowl-sheet-pick { font-family: "Courier New", monospace; font-size: .92rem; letter-spacing: .04em; }
 .lab-bowl-sheet-pick.is-w { color: rgb(128 200 152); }

@@ -203,16 +203,16 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
         <table>
           <thead>
             <tr>
-              <th scope="col">W–L</th>
-              <th scope="col">Player</th>
+              <th className="lab-bowl-sheet-rec" scope="col">W–L</th>
+              <th className="lab-bowl-sheet-name" scope="col">Player</th>
               {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.flag}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
             </tr>
           </thead>
           <tbody>
             {sheet.rows.map((row) => (
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
-                <td>{row.wins}–{row.losses}</td>
-                <th scope="row">{row.name}</th>
+                <td className="lab-bowl-sheet-rec">{row.wins}–{row.losses}</td>
+                <th className="lab-bowl-sheet-name" scope="row">{row.name}</th>
                 {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].flag)}</td>)}
               </tr>
             ))}
