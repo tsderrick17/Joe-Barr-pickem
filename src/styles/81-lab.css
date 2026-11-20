@@ -398,14 +398,14 @@
 /* Face down: the panel turned over, its back in the Survivor chip's pattern. */
 /* The Survivor table in the same housing: it scrolls sideways, the status and the name stay put, and each week's team has the lit ring a win or a loss gets on the board. */
 .lab-survivor-scroll { margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 6px; }
-.lab-survivor-col-status { width: 3rem; }
-.lab-survivor-col-name { width: 7rem; }
+.lab-survivor-col-status { width: 2.6rem; }
+.lab-survivor-col-name { width: 5.6rem; }   /* narrow enough that five weeks fit on a phone without scrolling */
 .lab-survivor-col-week { width: 2.6rem; }
 .lab-survivor-scroll thead th { background: rgb(18 40 30); text-align: center; }
 .lab-survivor-scroll td { text-align: center; }
 .lab-survivor-scroll th.lab-survivor-name { text-align: left; }
 .lab-survivor-scroll .lab-survivor-status { left: 0; position: sticky; z-index: 1; }
-.lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 3rem; position: sticky; z-index: 1; }
+.lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 2.6rem; overflow: hidden; position: sticky; text-overflow: ellipsis; z-index: 1; }
 /* Your row, said quietly: the warm tint and gold name, a hairline YOU, no bar down its edge. */
 .lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
 .lab-survivor-scroll tr.is-you > * { background: rgb(44 40 18); }

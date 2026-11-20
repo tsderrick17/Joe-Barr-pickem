@@ -373,6 +373,21 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
 
+test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
+  const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").count() - 2;
+  expect(weeks).toBeGreaterThanOrEqual(5);
+  const fits = await scroll.evaluate((node, shown) => {
+    const cells = [...node.querySelectorAll("thead th")];
+    const last = cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect(), box = node.getBoundingClientRect();
+    node.scrollLeft = 0;
+    return cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect().right <= box.right + 1 && last.width > 0;
+  }, 5);
+  expect(fits).toBe(true);
+});
+
 test("once Survivor is decided its table has no week after the last one played", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor", homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-10-01T12:00:00Z" } });
   const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
