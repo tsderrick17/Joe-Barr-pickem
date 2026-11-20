@@ -12,7 +12,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { bowlSeason, bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
-import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
+import { paneForHref, paneFromHash, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
 import { useStableCallback } from "@/lib/use-stable-callback";
@@ -106,7 +106,8 @@ export default function ClubhousePage() {
     return () => { html.style.overflow = before[0]; body.style.overflow = before[1]; };
   }, []);
 
-  useEffect(() => { if (access === "denied") router.replace("/"); }, [access, router]);
+  // Not let in (or the account could not be read): the switch goes down on this device, so the Standings do not send them straight back.
+  useEffect(() => { if (access === "denied") { setClubhouseMode(false); router.replace("/"); } }, [access, router]);
 
   const read = useStableCallback(async (first: boolean) => {
     try {

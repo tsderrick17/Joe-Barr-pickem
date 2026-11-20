@@ -182,6 +182,25 @@ test("the switch is a mode: up, opening the app lands in the clubhouse; down, it
   await expect(page).toHaveURL(/\/$/);
 });
 
+test("with the switch up, opening the app goes straight to the clubhouse without waiting for the account (the Standings never show first)", async ({ page }) => {
+  await openClubhouse(page, { at: "/board" });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  let profileAnsweredAt = 0;
+  await page.route("**/api/profile**", async (route) => { await new Promise((resolve) => setTimeout(resolve, 3000)); profileAnsweredAt = Date.now(); await route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }); });
+  await page.goto("/");
+  await page.waitForURL(/\/clubhouse$/, { timeout: 30_000 });
+  expect(profileAnsweredAt).toBe(0);   // left for the clubhouse before the account was read
+});
+
+test("a player sent back from the clubhouse has the switch put down, so the Standings do not send them straight back", async ({ page }) => {
+  await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
+  expect(await page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode"))).toBe("off");
+});
+
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
   await openClubhouse(page, { commissioner: false });
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
