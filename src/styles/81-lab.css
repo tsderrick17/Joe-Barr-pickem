@@ -607,7 +607,6 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-gauge svg { display: block; overflow: visible; width: 100%; }
 .lab-bowl-gauge figcaption { color: rgba(240, 232, 214, .75); font-size: .62rem; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
 .lab-bowl-gauge figcaption b { color: var(--bowl-ink); font-size: 1rem; }
-.lab-bowl-gauge-stars circle { fill: rgba(240, 232, 214, .55); }
 .lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 5; stroke: rgba(240, 232, 214, .12); }
 .lab-bowl-gauge-fill { fill: none; filter: drop-shadow(0 0 2px rgba(226, 182, 70, .35)); stroke-linecap: round; stroke-width: 5; stroke: var(--bowl-slip-gold); }
 .lab-bowl-moon-dark { fill: rgb(30 42 70); stroke: rgba(240, 232, 214, .28); stroke-width: .8; }
@@ -639,13 +638,13 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-board-team { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .02em; min-width: 0; }
 .lab-bowl-ticket .lab-board-line { color: var(--bowl-gold-lt); text-shadow: none; }
 .lab-bowl-ticket .lab-board-final.is-covered { color: var(--bowl-gold-lt); }
-.lab-bowl-flag { display: inline-block; flex: none; position: relative; width: 6.6rem; }
+.lab-bowl-flag { display: inline-block; flex: none; position: relative; width: 5.95rem; }
 .lab-bowl-flag.is-small { width: 1.6rem; }
 .lab-bowl-flag svg { display: block; overflow: visible; width: 100%; }
 .lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
 .lab-bowl-flag-hoist { fill: var(--bowl-slip-gold); }
 .lab-bowl-flag-name { dominant-baseline: central; fill: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .04em; }
-.lab-bowl-flag.is-logo { width: 10.2rem; }
+.lab-bowl-flag.is-logo { width: 9rem; }
 /* the logo sits on a cream patch, so a dark logo reads on any banner */
 .lab-bowl-flag-patch { fill: rgb(248 243 230); stroke: rgba(20, 30, 50, .18); stroke-width: .8; }
 /* A logo pennant: felt in the bowl's colour with a soft shadow on the ticket, a fine stitch line round its edge, a round pole. */
@@ -775,6 +774,12 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .club-chat .pool-chat-message-meta time { color: rgba(240, 236, 226, .5); }
 .club-chat .pool-chat-message-meta span { color: var(--cw-gold-lt); }
 .club-chat .pool-chat-message-meta button { color: rgba(240, 236, 226, .55); }
+
+/* Notifications opens like every other clubhouse pop-up (a floating panel that rises and slides away), on the page's own ground so its
+   settings read the same as on the Notifications page. */
+.club-notify h3 { font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: .14em; margin: 0 0 4px; text-transform: uppercase; }
+.club-notify .notification-settings > :first-child { margin-top: 0; }
+.club-notify { background: var(--themed-bg-18); border-radius: 8px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--themed-text-18); margin: 0 auto; max-width: 640px; padding: 16px; width: 100%; }
 
 /* The All-Time Table's Record / Other Stats switch sits on its own solid ground, so the room never shows through it. */
 .clubhouse-page .trophy-view-switch { background: rgb(18 40 30); border-color: rgba(201, 164, 95, .6); }

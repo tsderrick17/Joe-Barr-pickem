@@ -373,6 +373,15 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
 });
 
+test("once Survivor is decided its table has no week after the last one played", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-10-01T12:00:00Z" } });
+  const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").evaluateAll((cells) => cells.slice(2).map((cell) => Number(cell.textContent)));
+  const picked = await scroll.locator("tbody tr").evaluateAll((rows) => Math.max(0, ...rows.map((row) => [...row.querySelectorAll("td")].slice(1).reduce((last, cell, index) => (cell.children.length ? index + 1 : last), 0))));
+  expect(weeks.at(-1)).toBe(picked);
+});
+
 test("Survivor shows only the weeks played so far and the next one, and opens on the latest week, not week 1", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
   const popup = page.getByRole("dialog", { name: "Survivor" });

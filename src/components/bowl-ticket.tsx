@@ -172,8 +172,8 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
   const size = flag.length > 7 ? 11 : flag.length > 4 ? 13 : 16;
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-${state} ${small ? "is-small" : ""}`}>
-      <svg focusable="false" viewBox="0 0 120 40">
-        <path className="lab-bowl-flag-cloth" d="M8 1L118 8V32L8 39Z" />
+      <svg focusable="false" viewBox="0 0 108 40">
+        <path className="lab-bowl-flag-cloth" d="M8 1L106 7.2V32.8L8 39Z" />
         <rect className="lab-bowl-flag-hoist" height="40" rx="2" width="9" x="0" y="0" />
         <text className="lab-bowl-flag-name" fontSize={small ? 22 : size} x={small ? 40 : 14} y="21" {...(flag.length > 7 ? { lengthAdjust: "spacingAndGlyphs", textLength: 66 } : {})}>{flag}</text>
       </svg>
@@ -183,6 +183,8 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
 
 /** A playoff game with no bowl of its own (a first-round game on campus) flies the College Football Playoff's logo, on black cloth (the logo's own ground). */
 const CFP_LOGO = "cfp";
+/** Logos drawn in light lines (gold or white on dark) sit straight on their dark cloth: on the cream patch they would wash out. */
+const BARE_LOGOS = new Set([CFP_LOGO, "las-vegas"]);
 
 /**
  * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours
@@ -193,7 +195,7 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
   const medal = `medal-${useId().replace(/:/g, "")}`;
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-logo is-${state}`} style={{ "--flag-cloth": cloth ?? undefined, "--flag-hoist": hoist ?? undefined } as CSSProperties}>
-      <svg focusable="false" viewBox="0 0 154 56">
+      <svg focusable="false" viewBox="0 0 136 56">
         <defs>
           {/* Felt catching the light: a little brighter up by the pole, falling off toward the fly and the lower edge. */}
           <linearGradient id={`${medal}-felt`} x1="0" x2="1" y1="0" y2="1">
@@ -208,13 +210,13 @@ export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; clot
             <stop offset="1" stopColor="rgb(0 0 0)" stopOpacity=".3" />
           </linearGradient>
         </defs>
-        <path className="lab-bowl-flag-cloth" d="M10 1.5L152 13V43L10 54.5Z" strokeLinejoin="round" />
-        <path d="M10 1.5L152 13V43L10 54.5Z" fill={`url(#${medal}-felt)`} />
+        <path className="lab-bowl-flag-cloth" d="M10 1.5L135 11.6V44.4L10 54.5Z" strokeLinejoin="round" />
+        <path d="M10 1.5L135 11.6V44.4L10 54.5Z" fill={`url(#${medal}-felt)`} />
         {/* Stitched round the edge, just inside it. */}
-        <path className="lab-bowl-flag-stitch" d="M13 4.6L149 15.6V40.4L13 51.4Z" strokeLinejoin="round" />
+        <path className="lab-bowl-flag-stitch" d="M13 4.6L132 14.2V41.8L13 51.4Z" strokeLinejoin="round" />
         <rect className="lab-bowl-flag-hoist" height="56" rx="3" width="10" x="1" y="0" />
         <rect fill={`url(#${medal}-pole)`} height="56" rx="3" width="10" x="1" y="0" />
-        {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M17 7L145 17.5V38.5L17 49Z" strokeLinejoin="round" />}
+        {BARE_LOGOS.has(logo) ? null : <path className="lab-bowl-flag-patch" d="M17 7L128 16V40L17 49Z" strokeLinejoin="round" />}
         {/* The logo struck like a silver medallion: a fine bright rim round its outline, a darker silver edge just below it for its
             thickness, and a soft shadow on the cloth. */}
         <filter colorInterpolationFilters="sRGB" height="140%" id={medal} width="140%" x="-20%" y="-20%">
@@ -247,7 +249,7 @@ const PHASES = [0, 0.25, 0.5, 0.75, 1];
 
 /**
  * How much of bowl season is decided, as the moon waxing over the night sky: a half-dial from a new moon to a full one, its marks the
- * moon's phases (new, crescent, half, gibbous, full) in place of fractions; each moon lights as the season passes it, the needle points
+ * moon's phases (new, crescent, half, gibbous, full) in place of fractions (no stars: up close they read as specks); each moon lights as the season passes it, the needle points
  * at the share decided, and the bowls left are read out beneath.
  */
 export function BowlGauge({ played, total }: { played: number; total: number }) {
@@ -262,7 +264,6 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
   return (
     <figure aria-label={left ? `${left} of ${total} bowls left` : `All ${total} bowls played`} className="lab-bowl-gauge" role="img">
       <svg aria-hidden="true" focusable="false" viewBox="0 0 120 66">
-        <g className="lab-bowl-gauge-stars"><circle cx="24" cy="12" r=".9" /><circle cx="97" cy="9" r=".8" /><circle cx="60" cy="3.5" r=".7" /><circle cx="40" cy="30" r=".6" /><circle cx="83" cy="31" r=".6" /></g>
         <path className="lab-bowl-gauge-track" d="M24 58A36 36 0 0 1 96 58" />
         {share > 0 ? <path className="lab-bowl-gauge-fill" d={`M24 58A36 36 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} /> : null}
         {PHASES.map((phase) => {
