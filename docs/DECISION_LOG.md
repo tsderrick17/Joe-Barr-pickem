@@ -4,6 +4,18 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - Clubhouse efficiency pass
+
+Measured on open (phone and desktop): both room pictures (day and night) loaded at top priority, and a desktop loaded the phone's pictures
+before its own (about 340 KB extra on a phone, 760 KB on a desktop); the room waited on a third, chained read (last week's totals, for
+the Big Board's arrows) before it appeared; the Trophy Room (the pool's whole history, the heaviest read) was read the moment the room
+opened; closing any pop-up read the room again. Now: the picture on screen is started as the page opens and is the only one loaded
+first (the other theme follows after 2.5 s, so the lamp switch stays instant; the wide-or-tall choice is known on the first render);
+the room is drawn without waiting for the totals, which are read once per week per visit; the chat and Trophy Room are read ahead
+after 3 s, and the browser keeps the Trophy Room's read for 5 minutes (`Cache-Control: private, max-age=300`); a pop-up closing reads
+nothing (a pick sent from the ticket still reads the room at once); Notifications' settings load only when opened. A behavior test holds
+the picture and Trophy Room order. Team logos are already resized in production; JavaScript is within 5% of the Standings page.
+
 ## 2026-11-20 - The poker table shows only the pool being played
 
 Owner: Survivor and the Bowl Pool are never played at once, so the clubhouse's poker table carries whichever is: Survivor while it runs,

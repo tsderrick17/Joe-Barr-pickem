@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
   if (!access.ok) return accessDenied(access);
   if (!trophyRoomOpen(Date.now(), access.player.is_commissioner)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   try {
-    return NextResponse.json(await readTrophyRoom());
+    // Built from graded weeks only, so it changes at most once a week: the viewer's browser keeps it for five minutes, and the clubhouse's
+    // read-ahead and the room itself share that copy instead of reading the pool's whole history twice.
+    return NextResponse.json(await readTrophyRoom(), { headers: { "Cache-Control": "private, max-age=300" } });
   } catch {
     return NextResponse.json({ error: "The Trophy Room could not be loaded." }, { status: 500 });
   }
