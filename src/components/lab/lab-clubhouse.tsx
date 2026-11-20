@@ -199,9 +199,6 @@ const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y
   wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
 };
 
-/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): low on the open floor at the right, clear of everything. */
-const BOWL_PLATE = { tall: { x: 0.8, y: 0.862 }, full: { x: 0.8, y: 0.79 }, wide: { x: 0.78, y: 0.84 } };
-
 type Season = "regular" | "bowls";
 
 /**
@@ -241,7 +238,7 @@ export type RoomGame = { id: string; kickoff: string; at?: number; away: string;
  * there), the line of news on a label, whether a pick is owed, a new chat message, and whether the Bowl Pool is wheeled in (its bulletin board, from Dec 7). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean };
+export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
 
 function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed }) {
   const rows = feed.standings;
@@ -382,11 +379,16 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   const key = `${bulletin ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
   const picture = PICTURES[`day${key}`] ?? PICTURES[`day${bulletin ? "-bowl" : ""}`];
   const news = feed.news;
-  // Survivor and the Bowl Pool are always there: the poker table is always Survivor's, and the Bowl Pool's plate is on its bulletin board in
-  // bowl season, by the lounge the rest of the year (the real clubhouse; the Lab shows it only with the board).
+  // The poker table is whichever pool is being played: Survivor while it runs, the Bowl Pool in bowl season (in the Bowl Pool's navy and
+  // gold), never both; between the two (Survivor decided, the Bowl Pool not open yet) it has no plate. (Both are always on the board's tabs.)
+  // The real clubhouse has no other Bowl Pool plate; the Lab keeps its bulletin board's.
+  const survivorActive = feed.survivorActive ?? !feed.survivorOver;
+  const table: "survivor" | "bowl" | null = survivorActive ? "survivor" : feed.bowl ? "bowl" : null;
+  const taken = table === "bowl";
   const spots = SPOTS.flatMap((item) => {
-    if (item.spot === "bowl" && !picture.spots.bowl) return hrefFor ? [{ ...item, label: "free" as const, at: BOWL_PLATE.tall, fullAt: BOWL_PLATE.full, wideAt: BOWL_PLATE.wide }] : [];
-    return item;
+    if (item.spot === "bowl" && (hrefFor || !picture.spots.bowl)) return [];
+    if (item.spot === "survivor") return table === null ? [] : taken ? [{ ...item, room: "bowl" as Room, name: "Bowl Pool" }] : [item];
+    return [item];
   }).filter(({ spot, at, realOnly }) => (at || picture.spots[spot]) && !(realOnly && !hrefFor) && (!hrefFor || hrefFor(spot) !== null));
   const room = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
@@ -417,7 +419,7 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
           if (spot === "chat") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
         }
         const plate = label === "none" ? null : (
-          <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
+          <span className={`lab-room-tag is-${label}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${news[spot] ? " has-news" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
             <b aria-hidden="true">{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>

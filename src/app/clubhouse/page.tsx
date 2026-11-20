@@ -212,9 +212,10 @@ export default function ClubhousePage() {
   const shown: Pane | null = pane;
   const popup = (...panes: Pane[]) => Boolean(shown && panes.includes(shown) && (shown === "standings" || shown === "slate" ? newBoard : true));
   const classic: "standings" | "slate" | null = shown === "standings" || shown === "slate" ? (newBoard ? null : shown) : null;
-  // The board's sheet: which pane it shows, and its switch, always all four: Big Board, Ticket, Survivor and the Bowl Pool.
+  // The board's sheet: which pane it shows, and its switch, always all four: the Bowl Pool, Survivor, Ticket and the Big Board.
   const deck: Pane | null = shown && DECK.includes(shown) && popup(shown) && (shown === "survivor" || shown === "bowl" || view) ? shown : null;
-  const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), { pane: "survivor", label: "Survivor" }, { pane: "bowl", label: "Bowl Pool" }];
+  // Bowl Pool, Survivor, Ticket, then the Big Board at the right.
+  const tabs: DeckTab[] = [{ pane: "bowl", label: "Bowl Pool" }, { pane: "survivor", label: "Survivor" }, ...(view ? [{ pane: "slate", label: "Ticket" }, { pane: "standings", label: "Big Board" }] : [])];
   // The Bowl Pool's read, fetched ahead once its spot is in the room, so its ticket opens already full.
   const bowlInRoom = Boolean(room?.feed.bowl);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
@@ -231,7 +232,8 @@ export default function ClubhousePage() {
   useEffect(() => { if (roomUp) { void prefetchTrophyRoom(); void prefetchPoolChat(); } }, [roomUp]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
-  const paneOfSpot = (spot: string): Pane | null => SPOT_PANE[spot] ?? null;
+  // The poker table is the Bowl Pool's in bowl season (once Survivor is no longer being played).
+  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room && !room.feed.survivorActive && room.feed.bowl ? "bowl" : SPOT_PANE[spot] ?? null);
 
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;

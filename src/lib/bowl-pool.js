@@ -106,3 +106,18 @@ export function bowlDisruptionLabel(status) {
 export function bowlGameNote(game, now = new Date()) {
   return bowlDisruptionLabel(game.status) ?? (finalIsOverdue(game, now) ? "Final score pending" : undefined);
 }
+
+/**
+ * A bowl's name as the Bowl Card's column heads it: its full name (less "Football Classic"), with (QF) or (SF) after a playoff
+ * quarterfinal or semifinal. The clubhouse's Bowl sheet uses the same names.
+ * @param {{ bowl_name?: string | null, provider_game_id?: string | null }} game
+ */
+export function bowlColumnName(game) {
+  const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
+  const cleanName = name.replace(/\s*\([^)]*\)$/, "");
+  const qfBowl = /^(fiesta|cotton|peach|rose)(?: bowl)?$/i.test(cleanName);
+  const sfBowl = /^(orange|sugar)(?: bowl)?$/i.test(cleanName);
+  if (/quarterfinal|quarter/i.test(name) || /quarterfinal/i.test(game.provider_game_id ?? "") || qfBowl) return `${cleanName} (QF)`;
+  if (/semifinal|semi/i.test(name) || /semifinal/i.test(game.provider_game_id ?? "") || sfBowl) return `${cleanName} (SF)`;
+  return name;
+}

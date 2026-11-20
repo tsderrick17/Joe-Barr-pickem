@@ -71,7 +71,7 @@ const FILLER = /\b(presented by.*|cfp|college football playoff|quarterfinal|semi
 export function bowlPennant(bowlName) {
   const name = String(bowlName ?? "").trim();
   // The schedule import saves most bowls by their short name alone ("Boca Raton", "Gasparilla"), so a name without "Bowl" is read as one.
-  const probe = /bowl|classic|championship|cfp|playoff|first round/i.test(name) ? name : `${name} Bowl`;
+  const probe = /\bbowl\b|classic|championship|\bcfp\b|playoff|first round/i.test(name) ? name : `${name} Bowl`;
   const known = BOWL_PENNANTS.find((entry) => entry.match.test(probe));
   if (known) return { flag: known.flag, logo: known.logo ?? null, cloth: known.cloth ?? null, hoist: known.hoist ?? null };
   const beforeBowl = (/(.*?)\bbowl\b/i.exec(name)?.[1] ?? name).replace(FILLER, " ").trim().split(/\s+/).filter(Boolean);

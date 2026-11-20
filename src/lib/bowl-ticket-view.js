@@ -1,4 +1,4 @@
-import { bowlDisruptionLabel, bowlGameNote, bowlTeamName } from "./bowl-pool.js";
+import { bowlColumnName, bowlDisruptionLabel, bowlGameNote, bowlMatchupTeamLabels, bowlTeamName } from "./bowl-pool.js";
 import { bowlPennant } from "./bowl-logos.js";
 import { bowlPennantColors } from "./bowl-pennant.js";
 import { dateFormat } from "./date-format.js";
@@ -14,7 +14,8 @@ import { dateFormat } from "./date-format.js";
  * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
  * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
- *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean }} BowlTicketGame
+ *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean,
+ *   round: "First Round" | "Quarterfinal" | "Semifinal" | "Championship" | null }} BowlTicketGame
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none", result: "W" | "L" | null, missed?: boolean }} BowlSheetCell
  */
 
@@ -22,17 +23,28 @@ const EASTERN_DAY = dateFormat("en-US", { timeZone: "America/New_York", weekday:
 const EASTERN_TIME = dateFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
 const OFF = new Set(["postponed", "cancelled", "no_contest"]);
 
-/** The side a team id is, for a game: the favourite is the line's favourite (the away team before there is a line). */
-function sideOf(game, teamId) {
-  const favorite = game.line?.favorite_team_id ?? game.away_team_id ?? game.awayTeam?.id ?? null;
-  return teamId === favorite ? "favorite" : "underdog";
+const awayIdOf = (game) => game.away_team_id ?? game.awayTeam?.id ?? null;
+const homeIdOf = (game) => game.home_team_id ?? game.homeTeam?.id ?? null;
+/** The favourite's team id: the line's favourite when it is one of the two teams, else the away team (before there is a line, or a line
+ * whose favourite is neither school). The two sides are therefore always the two different teams, never both the same side. */
+function favoriteIdOf(game) {
+  const awayId = awayIdOf(game), homeId = homeIdOf(game), lined = game.line?.favorite_team_id ?? null;
+  return lined && (lined === awayId || lined === homeId) ? lined : awayId ?? homeId;
+}
+
+/** The side a team is, for a game (by its place when the team is not known yet: the away team is the favourite unless the home team is). */
+function sideOf(game, teamId, place = null) {
+  const favorite = favoriteIdOf(game);
+  if (teamId) return teamId === favorite ? "favorite" : "underdog";
+  const homeFavored = favorite !== null && favorite === homeIdOf(game);
+  return (place === "home") === homeFavored ? "favorite" : "underdog";
 }
 
 /** The team a side is, for a game. */
 export function bowlTeamForSide(game, side) {
-  const awayId = game.away_team_id ?? game.awayTeam?.id ?? null;
-  const homeId = game.home_team_id ?? game.homeTeam?.id ?? null;
-  const favorite = game.line?.favorite_team_id ?? awayId;
+  const awayId = awayIdOf(game);
+  const homeId = homeIdOf(game);
+  const favorite = favoriteIdOf(game);
   const id = side === "favorite" ? favorite : favorite === awayId ? homeId : awayId;
   return { id, team: id === awayId ? game.awayTeam : game.homeTeam };
 }
@@ -61,12 +73,30 @@ export function bowlSavedPicks(payload) {
 }
 
 /**
+ * Each playoff game's round, from the schedule itself (the bowls that host the quarterfinals and semifinals rotate every year, so no
+ * list of names): the games ESPN marks as the College Football Playoff's, less the title game, in kickoff order: the last two are the
+ * semifinals, the four before them the quarterfinals, any earlier the first round; the title game is the Championship.
+ * @param {any[]} games  the Bowl Pool's games
+ * @param {string | null} championshipId
+ * @returns {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">}
+ */
+export function cfpRounds(games, championshipId) {
+  /** @type {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">} */
+  const rounds = new Map();
+  const playoff = games.filter((game) => game.is_cfp && game.id !== championshipId).sort((a, b) => Date.parse(a.kickoff_at ?? "") - Date.parse(b.kickoff_at ?? ""));
+  playoff.forEach((game, index) => rounds.set(game.id, index >= playoff.length - 2 ? "Semifinal" : index >= playoff.length - 6 ? "Quarterfinal" : "First Round"));
+  if (championshipId) rounds.set(championshipId, "Championship");
+  return rounds;
+}
+
+/**
  * @param {any} payload  the Bowl Pool's read
  * @param {{ now?: number, viewerPlayerId?: string | null }} [options]
  */
 export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = null } = {}) {
   const saved = bowlSavedPicks(payload);
   const championshipId = payload?.season?.championship_game_id ?? null;
+  const rounds = cfpRounds(payload?.games ?? [], championshipId);
   const ownResults = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick.result]));
   /** @type {BowlTicketGame[]} */
   const games = (payload?.games ?? []).map((game) => {
@@ -75,8 +105,8 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
     const locked = off || (Number.isFinite(kickoff) && now >= kickoff);
     const final = game.status === "final" && Number.isInteger(game.away_score) && Number.isInteger(game.home_score);
     const pennant = bowlPennant(game.bowl_name);
-    const cell = (team, teamId, score) => {
-      const side = sideOf(game, teamId);
+    const cell = (team, teamId, score, place) => {
+      const side = sideOf(game, teamId, place);
       let covered = null;
       if (final && game.line?.locked_spread != null && teamId) {
         const other = teamId === game.away_team_id ? game.home_score : game.away_score;
@@ -96,7 +126,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       ...pennant,
       day: Number.isFinite(kickoff) ? EASTERN_DAY.format(new Date(kickoff)).toUpperCase().replace(",", "") : "DATE TBD",
       time: Number.isFinite(kickoff) && game.time_confirmed !== false ? EASTERN_TIME.format(new Date(kickoff)) : "Time TBD",
-      cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score)],
+      cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score, "away"), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score, "home")],
       locked,
       final,
       note: bowlDisruptionLabel(game.status) ?? bowlGameNote(game, new Date(now)) ?? null,
@@ -104,7 +134,8 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       mine,
       result: result ?? (state === "missed" && final ? "L" : null),
       tiebreaker: game.id === championshipId,
-      playoff: /cfp|playoff|first round|quarterfinal|semifinal/i.test(game.bowl_name ?? ""),
+      playoff: rounds.has(game.id) || /\bcfp\b|playoff|first round|quarterfinal|semifinal/i.test(game.bowl_name ?? ""),
+      round: rounds.get(game.id) ?? null,
     };
   });
   const decided = games.filter((game) => game.final || game.state === "off").length;
@@ -140,15 +171,19 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
  * @param {number} now
  * @param {string | null} viewerPlayerId
- * @returns {{ games: Array<{ id: string, flag: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
-  const short = (team) => team?.abbreviation || String(team?.short_name ?? team?.display_name ?? "").replace(/[^A-Za-z&]/g, "").slice(0, 4).toUpperCase() || "?";
+  // Each school by its short abbreviation (ESPN's), or the Bowl Card's name for it when it has none.
   const teamLabel = (gameId, teamId) => {
     const game = raw.get(gameId);
     if (!game || !teamId) return "?";
-    return short(teamId === (game.away_team_id ?? game.awayTeam?.id) ? game.awayTeam : game.homeTeam);
+    const away = teamId === (game.away_team_id ?? game.awayTeam?.id);
+    const team = away ? game.awayTeam : game.homeTeam;
+    if (team?.abbreviation) return team.abbreviation;
+    const [awayLabel, homeLabel] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
+    return away ? awayLabel : homeLabel;
   };
   const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
   const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));
@@ -158,7 +193,11 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   /** @type {(result: string | null | undefined) => "W" | "L" | null} */
   const mark = (result) => (result === "win" ? "W" : result === "loss" ? "L" : null);
   return {
-    games: games.map((game) => ({ id: game.id, flag: game.playoff && game.flag === "BOWL" ? "CFP" : game.flag, day: game.day, locked: game.locked })),
+    // The Bowl Card's name, its (QF) or (SF) from the schedule's own round.
+    games: games.map((game) => {
+      const name = bowlColumnName(raw.get(game.id) ?? {}), base = name.replace(/\s*\((QF|SF)\)$/, "");
+      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked };
+    }),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({
       id: row.id, name: row.name, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, you: row.id === viewerPlayerId,

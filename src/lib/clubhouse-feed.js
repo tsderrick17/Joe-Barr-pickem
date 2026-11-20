@@ -233,6 +233,8 @@ export function clubhouseFeed({ home, board, before = null }) {
       bowl: bowlSeason(home.serverTime ?? board.serverTime ?? new Date().toISOString()),
       survivorOver,
       survivorShown: survivorStillShown(home, now),
+      // Survivor is being played (not decided, not the playoffs): the poker table is Survivor's while it is.
+      survivorActive: Boolean(home.survivorAvailable) && !survivorOver,
     },
     ticket: games.length && total ? {
       lamps,

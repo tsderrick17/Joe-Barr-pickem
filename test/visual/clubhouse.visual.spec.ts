@@ -216,22 +216,26 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
 });
 
-for (const [phase, homeExtra] of [
-  ["while Survivor runs", {}],
-  ["with Survivor long decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }],
-  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }],
+for (const [phase, homeExtra, table] of [
+  ["while Survivor runs", {}, "Survivor"],
+  ["with Survivor decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }, null],
+  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }, "Bowl Pool"],
 ] as const) {
-  test(`Survivor and the Bowl Pool are always in the room and on the board's switch, ${phase}`, async ({ page }) => {
+  test(`the poker table shows only the pool being played, and the board's tabs are always all four, ${phase}`, async ({ page }) => {
     await openClubhouse(page, { homeExtra, bowl: bowlRead() });
     const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
     await expect(room).toBeVisible({ timeout: 30_000 });
-    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(1);
-    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
+    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(table === "Survivor" ? 1 : 0);
+    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(table === "Bowl Pool" ? 1 : 0);
+    if (table === "Bowl Pool") {
+      await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
+      await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
+      await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+      await page.getByRole("dialog", { name: "Bowl Pool" }).getByRole("button", { name: "Close" }).click();
+    }
     await room.getByRole("button", { name: "The Big Board", exact: true }).click();
     const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
-    await expect(tabs.getByRole("button")).toHaveText(["Big Board", "Ticket", "Survivor", "Bowl Pool"], { timeout: 30_000 });
-    await tabs.getByRole("button", { name: "Bowl Pool" }).click();
-    await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+    await expect(tabs.getByRole("button")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"], { timeout: 30_000 });
   });
 }
 
@@ -354,7 +358,7 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(popup.locator(".survivor-ledger")).toHaveCount(0);   // not the classic ledger
   // The board's switch: Survivor is the lit one here, and Big Board and Ticket are the ways across.
   await expect(popup.locator(".club-deck-tabs [aria-current=page]")).toHaveText("Survivor");
-  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Big Board", "Ticket", "Survivor", "Bowl Pool"]);
+  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"]);
   // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
   await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
   expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
@@ -371,6 +375,41 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await popup.locator(".club-deck-tabs").getByRole("button", { name: "Big Board" }).click();
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
+});
+
+/** Scrolled all the way along, every held (sticky) column sits flush with its scroller's left edge: nothing scrolls past to its left. */
+async function heldColumnsFlush(region: import("@playwright/test").Locator) {
+  return region.evaluate((node) => {
+    node.scrollLeft = node.scrollWidth;
+    const edge = node.getBoundingClientRect().left + node.clientLeft;
+    const held = [...node.querySelectorAll<HTMLElement>("th, td")].filter((cell) => getComputedStyle(cell).position === "sticky" && getComputedStyle(cell).left === "0px");
+    return held.length > 0 && held.every((cell) => Math.abs(cell.getBoundingClientRect().left - edge) <= 1);
+  });
+}
+
+test("the Survivor table and the Bowl sheet hold their left columns flush with the edge while they scroll", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", bowl: bowlRead() });
+  const survivor = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(survivor).toBeVisible({ timeout: 30_000 });
+  expect(await heldColumnsFlush(survivor)).toBe(true);
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Bowl Pool" }).click();
+  await page.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  expect(await heldColumnsFlush(page.getByRole("region", { name: "Bowl sheet, scrolls sideways" }))).toBe(true);
+});
+
+test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
+  const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").count() - 2;
+  expect(weeks).toBeGreaterThanOrEqual(5);
+  const fits = await scroll.evaluate((node, shown) => {
+    const cells = [...node.querySelectorAll("thead th")];
+    const last = cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect(), box = node.getBoundingClientRect();
+    node.scrollLeft = 0;
+    return cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect().right <= box.right + 1 && last.width > 0;
+  }, 5);
+  expect(fits).toBe(true);
 });
 
 test("once Survivor is decided its table has no week after the last one played", async ({ page }) => {
@@ -521,9 +560,10 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, championshipTotalGuess: 47, selections: [{ gameId: "g3", teamId: "h3", side: "favorite" }, { gameId: "g4", teamId: "a4", side: "underdog" }] });
-  await ticket.getByRole("button", { name: "Standings", exact: true }).click();
-  await expect(ticket.locator(".lab-bowl-standings li.is-you")).toContainText("Tyler");
-  await expect(ticket.locator(".lab-bowl-standings li").first()).toContainText("T1");
+  // The standings are the Sheet's first column, so there is no separate Standings tab.
+  await expect(ticket.getByRole("button", { name: "Standings", exact: true })).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
+  await expect(ticket.locator(".lab-bowl-sheet tbody tr.is-you")).toContainText("Tyler");
 });
 
 test("in bowl season the room's ticker carries the bowls too, by the schools' short names under the bowl's name", async ({ page }) => {
@@ -549,11 +589,15 @@ test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a
   await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
   const sheet = ticket.getByRole("region", { name: /Bowl sheet/ });
   await expect(sheet.locator("tbody tr")).toHaveCount(2);
-  await expect(sheet.getByLabel(/^Earl, ROSE: \w+, lost$/)).toBeAttached();
+  await expect(sheet.getByLabel(/^Earl, Rose Bowl Game[^:]*: \w+, lost$/)).toBeAttached();   // the Bowl Card's own names for the bowl and the school
   await expect(sheet.getByRole("img", { name: /Earl, .*: pick in, hidden until kickoff/ })).toHaveCount(1);
   await expect(sheet.getByRole("img", { name: /Earl, .*: no pick$/ })).toHaveCount(1);
-  await expect(sheet.getByLabel(/^Tyler, ROSE: \w+, won$/)).toBeAttached();
-  await expect(sheet.getByLabel("Tyler, CFP: no pick, a loss")).toBeAttached();   // a bowl that kicked off without a pick
+  await expect(sheet.getByLabel(/^Tyler, Rose Bowl Game[^:]*: [\w ]+, won$/)).toBeAttached();
+  await expect(sheet.getByLabel("Tyler, CFP First Round: no pick, a loss")).toBeAttached();
+  // Wins only, on the Bowl Card's flip tiles; every bowl column the same width.
+  await expect(sheet.locator("thead th").first()).toHaveText("Wins");
+  const widths = await sheet.locator("col.lab-bowl-sheet-col-game").evaluateAll((cols) => cols.map((col) => Math.round(col.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);   // a bowl that kicked off without a pick
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {

@@ -61,7 +61,7 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
       ) : null}
       {!home.survivorAvailable ? <p className="lab-survivor-note">Survivor is not running right now.</p> : (
         <div aria-label="Survivor Table, scrolls sideways" className="lab-survivor-scroll" ref={scroller} role="region" tabIndex={0}>
-          <table style={{ minWidth: `${10 + WEEKS * 2.6}rem` }}>
+          <table style={{ minWidth: `${8.2 + WEEKS * 2.6}rem` }}>
             <colgroup><col className="lab-survivor-col-status" /><col className="lab-survivor-col-name" />{Array.from({ length: WEEKS }, (_, index) => <col className="lab-survivor-col-week" key={index} />)}</colgroup>
             <thead>
               <tr>
