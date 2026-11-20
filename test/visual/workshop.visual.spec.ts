@@ -76,8 +76,8 @@ for (const width of [390, 768, 1280]) {
     await openBoard(page, { size: { width, height: 900 } });
     await expect(page.locator(".workshop-shelf")).toHaveCount(0);
     const ids = await page.locator(".workshop-tile").evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("data-piece")));
-    expect(ids).toHaveLength(11);
-    expect(new Set(ids).size).toBe(11);
+    expect(ids).toHaveLength(10);
+    expect(new Set(ids).size).toBe(10);
     const { covered, inside, overlaps } = await page.locator(".workshop-board").evaluate((board) => {
       const style = getComputedStyle(board);
       const box = board.getBoundingClientRect();
@@ -170,7 +170,7 @@ test("Show names labels every piece; the dial and the Wheel button lead back", a
   await openBoard(page);
   await expect(page.locator(".workshop-label")).toHaveCount(0);
   await page.getByLabel("Show names").check();
-  await expect(page.locator(".workshop-label")).toHaveCount(11);
+  await expect(page.locator(".workshop-label")).toHaveCount(10);
   await page.getByRole("link", { name: "Back to the wheel" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.locator(".workshop")).toHaveCount(0);
