@@ -483,11 +483,15 @@ export async function buildRoom(q) {
   SHELVES.forEach((y, sIndex) => {
     add(bar, box(0.24, 0.016, BL - 0.4), glass, [WALL + 0.14, y, BZ], { cast: false });
     add(bar, box(0.01, 0.012, BL - 0.4), glow(0xffd9a0, night ? 2.2 : 1.1), [WALL + 0.24, y - 0.014, BZ], { cast: false });              // a lamp strip under the shelf's front edge
-    let z = BZ - BL / 2 + 0.3;
-    for (let i = 0; z < BZ + BL / 2 - 0.3; i++) {
-      const [shape, glassKind, spirit] = kinds[(i * 5 + sIndex * 3) % kinds.length], scale = sIndex === 2 ? 0.9 : 1;
-      if (Math.abs(z - (BZ - BL / 6)) < 0.08 || Math.abs(z - (BZ + BL / 6)) < 0.08) { z += 0.12; continue; }                        // leave the pilasters clear
-      const x = WALL + 0.13 + (i % 2) * 0.03, foot = y + 0.008;
+    // Bottles fill the far two bays only (the near bay is the espresso station), and no two runs look alike: each bottle its own
+    // size, a little forward or back, set close or with a gap, now and then a pair of the same.
+    let z = BZ - BL / 2 + 0.3, last = null;
+    for (let i = 0; z < BZ + BL / 6 - 0.12; i++) {
+      const pick = rand() < 0.18 && last ? last : kinds[Math.floor(rand() * kinds.length)];
+      last = pick;
+      const [shape, glassKind, spirit] = pick, scale = (sIndex === 2 ? 0.9 : 1) * (0.84 + rand() * 0.32);
+      if (Math.abs(z - (BZ - BL / 6)) < 0.08) { z += 0.12; continue; }                                                                  // leave the pilaster clear
+      const x = WALL + 0.12 + rand() * 0.05, foot = y + 0.008;
       let h, labelX, labelY;
       if (shape === "square") {
         add(bar, squareGlass, glasses[glassKind], [x, foot + 0.085 * scale, z], { cast: false, scale });
@@ -502,7 +506,7 @@ export async function buildRoom(q) {
       }
       add(bar, cyl(0.0145, 0.0145, 0.03, 10), caps[(i + sIndex) % caps.length], [x, foot + (h + 0.012) * scale, z], { cast: false });
       add(bar, new THREE.PlaneGeometry(0.052, 0.06 + (i % 3) * 0.012), labels[(i * 3 + sIndex) % labels.length], [labelX, labelY, z], { cast: false, rot: [0, Math.PI / 2, 0] });
-      z += 0.088 + (i % 3) * 0.012;
+      z += (0.074 + rand() * 0.03) * scale + (rand() < 0.12 ? 0.06 + rand() * 0.06 : 0);
     }
     { const l = new THREE.PointLight(0xffc98a, night ? 0.9 : 0.7, 2.2, 1.6); l.position.set(WALL + 0.4, y + 0.2, BZ); bar.add(l); }   // the shelf lamps are on by day too: the back bar is in shade
   });
@@ -510,8 +514,51 @@ export async function buildRoom(q) {
   const crystal = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, transmission: 1, thickness: 0.02, ior: 1.5, clearcoat: 1, envMapIntensity: 1.4, side: THREE.DoubleSide });
   const rocks = new THREE.LatheGeometry([[0, 0], [0.036, 0], [0.04, 0.004], [0.042, 0.085], [0.038, 0.085], [0.034, 0.012], [0, 0.012]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
   const coupe = new THREE.LatheGeometry([[0, 0], [0.032, 0], [0.032, 0.006], [0.005, 0.012], [0.004, 0.09], [0.03, 0.1], [0.055, 0.13], [0.052, 0.132], [0.028, 0.104], [0, 0.098]].map(([r, y]) => new THREE.Vector2(r, y)), 22);
-  add(bar, box(0.3, 0.008, 1.4), std(0x111111, { roughness: 0.9 }), [WALL + 0.3, 0.965, BZ + 1.6], { cast: false });
-  for (let r = 0; r < 2; r++) for (let k = 0; k < 9; k++) add(bar, k % 3 === 2 ? coupe : rocks, crystal, [WALL + 0.22 + r * 0.12, 0.97, BZ + 1.0 + k * 0.14 + r * 0.07], { cast: false });
+  add(bar, box(0.3, 0.008, 1.4), std(0x111111, { roughness: 0.9 }), [WALL + 0.3, 0.965, BZ - 0.2], { cast: false });
+  for (let r = 0; r < 2; r++) for (let k = 0; k < 9; k++) add(bar, k % 3 === 2 ? coupe : rocks, crystal, [WALL + 0.22 + r * 0.12, 0.97, BZ - 0.8 + k * 0.14 + r * 0.07], { cast: false });
+  // ----- the espresso station, in the near third of the back bar: a polished two-group machine on the counter with cups warming on
+  // top, a grinder with its hopper of beans beside it, a knock box and a milk pitcher; on the shelves above, white cups and saucers in
+  // stacks, mugs on hooks and glass jars of beans, all under the same shelf lamps as the bottles.
+  {
+    const steel = new THREE.MeshStandardMaterial({ color: 0xd9dde2, metalness: 1, roughness: 0.16, envMapIntensity: 1.2 });
+    const black = std(0x16120f, { roughness: 0.45 }), china = std(0xf4f1ea, { roughness: 0.35 }), copper = new THREE.MeshStandardMaterial({ color: 0xc27a4a, metalness: 1, roughness: 0.25 });
+    const beans = std(0x3b2216, { roughness: 0.8 }), jarGlass = glassOf(0xffffff);
+    const EZ = BZ + 1.42, TOP = 0.96, FRONT_X = WALL + 0.44;
+    // the machine: a steel body with a copper band, the two group heads at the front, their black-handled portafilters, a drip tray,
+    // a steam wand at each side and a gauge on the face
+    add(bar, rbox(0.34, 0.36, 0.66, 0.03), steel, [WALL + 0.25, TOP + 0.2, EZ]);
+    add(bar, box(0.345, 0.03, 0.665), copper, [WALL + 0.25, TOP + 0.3, EZ], { cast: false });
+    add(bar, box(0.3, 0.025, 0.6), std(0x2a2a2a, { metalness: 0.6, roughness: 0.4 }), [WALL + 0.32, TOP + 0.02, EZ], { cast: false });   // drip tray
+    for (const dz of [-0.15, 0.15]) {
+      add(bar, cyl(0.045, 0.05, 0.06, 20), steel, [FRONT_X - 0.02, TOP + 0.15, EZ + dz]);                                            // group head
+      add(bar, cyl(0.04, 0.04, 0.03, 20), steel, [FRONT_X - 0.01, TOP + 0.105, EZ + dz]);                                            // portafilter basket
+      add(bar, cyl(0.012, 0.016, 0.16, 10), black, [FRONT_X + 0.08, TOP + 0.1, EZ + dz], { rot: [0, 0, Math.PI / 2 - 0.15] });        // its handle
+      add(bar, cyl(0.03, 0.026, 0.06, 16), china, [FRONT_X - 0.02, TOP + 0.06, EZ + dz], { cast: false });                            // a cup waiting under it
+    }
+    for (const dz of [-0.36, 0.36]) add(bar, cyl(0.006, 0.006, 0.2, 8), steel, [FRONT_X - 0.04, TOP + 0.2, EZ + dz], { rot: [0.25 * Math.sign(dz), 0, 0.2] });   // steam wands
+    add(bar, cyl(0.035, 0.035, 0.012, 20), china, [FRONT_X - 0.07, TOP + 0.28, EZ], { rot: [0, 0, Math.PI / 2], cast: false });     // the gauge
+    for (let k = 0; k < 8; k++) add(bar, cyl(0.03, 0.025, 0.055, 14), china, [WALL + 0.2 + (k % 2) * 0.08, TOP + 0.41, EZ - 0.24 + Math.floor(k / 2) * 0.16], { cast: false });   // cups warming on top
+    // the grinder: a black body, a glass hopper of beans
+    const GZ = EZ + 0.55;   // beside it, toward the near end (the pilaster is on its other side)
+    add(bar, rbox(0.18, 0.3, 0.16, 0.02), black, [WALL + 0.26, TOP + 0.15, GZ]);
+    add(bar, cyl(0.075, 0.035, 0.16, 20), jarGlass, [WALL + 0.26, TOP + 0.38, GZ], { cast: false });
+    add(bar, cyl(0.065, 0.034, 0.1, 20), beans, [WALL + 0.26, TOP + 0.35, GZ], { cast: false });
+    add(bar, cyl(0.078, 0.078, 0.015, 20), black, [WALL + 0.26, TOP + 0.465, GZ]);
+    add(bar, rbox(0.1, 0.08, 0.1, 0.01), black, [WALL + 0.36, TOP + 0.04, EZ + 0.8]);                                                // knock box
+    add(bar, cyl(0.03, 0.038, 0.1, 16), steel, [WALL + 0.36, TOP + 0.05, EZ + 0.92]);                                                // milk pitcher
+    // the shelves above: cups and saucers in stacks, jars of beans, mugs
+    SHELVES.forEach((y, sIndex) => {
+      let z = BZ + BL / 6 + 0.2;
+      for (let k = 0; z < BZ + BL / 2 - 0.25; k++) {
+        const kind = (k + sIndex) % 4;
+        if (kind === 0) for (let n = 0; n < 4; n++) add(bar, cyl(0.032, 0.026, 0.05, 14), china, [WALL + 0.13, y + 0.035 + n * 0.048, z], { cast: false });   // a stack of cups
+        else if (kind === 1) for (let n = 0; n < 6; n++) add(bar, cyl(0.06, 0.05, 0.012, 18), china, [WALL + 0.13, y + 0.014 + n * 0.014, z], { cast: false });   // saucers
+        else if (kind === 2) { add(bar, cyl(0.05, 0.05, 0.16, 18), jarGlass, [WALL + 0.13, y + 0.088, z], { cast: false }); add(bar, cyl(0.045, 0.045, 0.11 + (k % 3) * 0.015, 16), beans, [WALL + 0.13, y + 0.065, z], { cast: false }); add(bar, cyl(0.053, 0.053, 0.02, 18), copper, [WALL + 0.13, y + 0.175, z]); }   // a jar of beans
+        else for (let n = 0; n < 2; n++) add(bar, cyl(0.036, 0.034, 0.08, 14), [china, std(0x2f5d4a, { roughness: 0.35 })][n], [WALL + 0.13, y + 0.048, z + n * 0.085], { cast: false });   // mugs
+        z += kind === 3 ? 0.27 : 0.17;
+      }
+    });
+  }
   add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
   // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
@@ -781,18 +828,19 @@ export async function buildRoom(q) {
   };
   const ledgePlants = {
     // a trailing pothos: vines spilling over the front of the ledge and hanging down the wall
-    pothos(z, material) {
+    pothos(z, material, long = 1) {
       const top = smallPot(z, 0.075, 0.13, material);
-      for (let k = 0; k < 6; k++) {
-        const turn = (k / 6) * Math.PI * 2, reach = 0.1 + rand() * 0.1, hang = 0.2 + rand() * 0.3, zz = z + Math.sin(turn) * 0.05;
+      for (let k = 0; k < 8; k++) {
+        const turn = (k / 8) * Math.PI * 2, reach = 0.1 + rand() * 0.1, hang = (0.25 + rand() * 0.45) * long, zz = z + Math.sin(turn) * 0.07;
         // each vine leaves the pot, runs over the ledge's front edge and only then hangs, clear of the ledge (the ledge's lip is at
         // LEDGE_X + 0.11): nothing passes through it
         const LIP = LEDGE_X + 0.14, from = new THREE.Vector3(LEDGE_X + 0.05, top - 0.01, zz), over = new THREE.Vector3(LIP, LEDGE_Y + 0.012, zz);
         const run = add(room, cyl(0.004, 0.004, from.distanceTo(over), 5), leafDeep, [(from.x + over.x) / 2, (from.y + over.y) / 2, zz], { cast: false });
         run.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), over.clone().sub(from).normalize());
         add(room, cyl(0.004, 0.004, hang, 5), leafDeep, [LIP, LEDGE_Y + 0.012 - hang / 2, zz], { cast: false });
-        for (let i = 1; i <= 5; i++) {
-          const t = i / 5, drop = LEDGE_Y - t * hang * 0.95;
+        const leaves = Math.round(5 + hang * 8);
+        for (let i = 1; i <= leaves; i++) {
+          const t = i / leaves, drop = LEDGE_Y - t * hang * 0.95;
           tinyLeaf(LIP + 0.012 + (i % 2 ? 0.01 : 0), drop, zz + (rand() - 0.5) * 0.05, 0.1, Math.PI / 2 + (rand() - 0.5) * 1.2, i % 2 ? leafFresh : leafGreen);
         }
         void reach;
@@ -829,13 +877,38 @@ export async function buildRoom(q) {
       add(room, new THREE.SphereGeometry(0.02, 10, 8), std(0xe05a8c, { roughness: 0.6 }), [LEDGE_X, top + 0.21, z], { cast: false });
     },
     // a baby monstera: three or four split leaves on slim stems
-    monstera(z, material) {
-      const top = smallPot(z, 0.08, 0.13, material);
-      for (let k = 0; k < 4; k++) {
-        const a = (k / 4) * Math.PI * 2 + rand(), reach = 0.07 + rand() * 0.06, high = 0.2 + rand() * 0.14;
+    monstera(z, material, size = 1) {
+      const top = smallPot(z, 0.085, 0.2, material);
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2 + rand(), reach = (0.08 + rand() * 0.08) * size, high = (0.22 + rand() * 0.2) * size;
         add(room, cyl(0.004, 0.006, high, 5), leafDeep, [LEDGE_X + Math.cos(a) * reach * 0.5, top + high / 2, z - Math.sin(a) * reach * 0.5], { cast: false });
-        tinyLeaf(LEDGE_X + Math.cos(a) * reach, top + high, z - Math.sin(a) * reach, 0.28, a, k % 2 ? leafGreen : leafDeep);
+        tinyLeaf(LEDGE_X + Math.cos(a) * reach, top + high, z - Math.sin(a) * reach, 0.34 * size, a, k % 2 ? leafGreen : leafDeep);
       }
+    },
+    // a string of pearls: strands of little green beads spilling over the ledge
+    pearls(z, material) {
+      const top = smallPot(z, 0.07, 0.1, material);
+      const bead = new THREE.SphereGeometry(0.011, 8, 6);
+      for (let k = 0; k < 9; k++) {
+        const zz = z + (rand() - 0.5) * 0.12, LIP = LEDGE_X + 0.14, hang = 0.15 + rand() * 0.5;
+        for (let b = 0; b < 4; b++) add(room, bead, succulent, [LEDGE_X + 0.03 + b * 0.028, top - 0.005 - b * 0.012, zz], { cast: false });
+        for (let b = 0; b * 0.024 < hang; b++) add(room, bead, b % 4 ? succulent : sage, [LIP + 0.01 + Math.sin(b * 0.7 + k) * 0.008, LEDGE_Y - b * 0.024, zz + Math.sin(b * 0.4 + k) * 0.01], { cast: false });
+      }
+    },
+    // a bird's-nest fern: broad, wavy, upright leaves from a tight crown
+    nest(z, material) {
+      const top = smallPot(z, 0.09, 0.16, material);
+      for (let k = 0; k < 9; k++) {
+        const a = (k / 9) * Math.PI * 2 + rand() * 0.3;
+        tinyLeaf(LEDGE_X + Math.cos(a) * 0.03, top + 0.02, z - Math.sin(a) * 0.03, 0.42 + rand() * 0.12, a, k % 3 ? leafFresh : leafGreen);
+      }
+    },
+    // a few things that live on a ledge: two stacked books and a small brass lantern
+    keepsakes(z) {
+      add(room, box(0.15, 0.03, 0.2), std(0x6e2a22, { roughness: 0.7 }), [LEDGE_X, LEDGE_Y + 0.015, z]);
+      add(room, box(0.14, 0.025, 0.18), std(0x23423a, { roughness: 0.7 }), [LEDGE_X, LEDGE_Y + 0.043, z + 0.01], { rot: [0, 0.15, 0] });
+      add(room, rbox(0.07, 0.1, 0.07, 0.01), brass, [LEDGE_X, LEDGE_Y + 0.105, z]);
+      add(room, cyl(0.022, 0.022, 0.07, 12), new THREE.MeshStandardMaterial({ color: 0xfff1cc, emissive: 0xffc070, emissiveIntensity: night ? 1.2 : 0.2 }), [LEDGE_X, LEDGE_Y + 0.105, z], { cast: false });
     },
     // a pot of herbs: a soft mound of small leaves
     herbs(z, material) {
@@ -843,8 +916,14 @@ export async function buildRoom(q) {
       for (let k = 0; k < 16; k++) add(room, new THREE.SphereGeometry(0.03 + rand() * 0.015, 8, 6), k % 3 ? leafFresh : sage, [LEDGE_X + (rand() - 0.5) * 0.11, top + 0.03 + rand() * 0.07, z + (rand() - 0.5) * 0.11], { cast: false });
     },
   };
-  ledgePlants.aloe(-6.2, terracotta); ledgePlants.pothos(-6.8, chalk); ledgePlants.fern(-7.4, terracotta); ledgePlants.snake(-8.0, slate); ledgePlants.cactus(-8.55, chalk);
-  ledgePlants.monstera(-9.1, terracotta); ledgePlants.herbs(-9.65, slate); ledgePlants.pothos(-10.2, terracotta); ledgePlants.fern(-10.75, chalk, 0.17);
+  // set in loose groups, not a row of soldiers: pots of every sort and height, trailing vines and beads, a tall leafy one now and then
+  const glazed = std(0x2f6f6a, { roughness: 0.25, metalness: 0.05 }), basket = std(0xb08a55, { roughness: 0.95 });
+  ledgePlants.fern(-5.95, glazed, 0.28); ledgePlants.pothos(-6.4, basket, 1.3);
+  ledgePlants.aloe(-6.95, terracotta); ledgePlants.herbs(-7.2, slate);
+  ledgePlants.monstera(-7.75, chalk, 1.3); ledgePlants.keepsakes(-8.15);
+  ledgePlants.pearls(-8.5, terracotta); ledgePlants.snake(-8.85, slate);
+  ledgePlants.nest(-9.4, glazed); ledgePlants.cactus(-9.85, chalk);
+  ledgePlants.pothos(-10.3, terracotta, 1.1); ledgePlants.fern(-10.85, basket, 0.24);
   add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
