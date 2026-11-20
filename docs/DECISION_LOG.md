@@ -11,6 +11,7 @@ has a plate all year (its bulletin board from Dec 7, by the lounge before); the 
 Bowl Pool. This supersedes the phase switching of #817 (the table turning into the Bowl Pool's, tabs coming and going). In bowl season
 the room's ticker carries the bowls from the Bowl Pool's own read (three days either side): today's NFL games first, then today's bowls,
 then two NFL games to a bowl. The ceiling light (and the bar lamp on a desktop) switches day and night, the header's switch.
+
 ## 2026-11-20 - No end-of-season banner
 
 The navy banner that replaced the ticket once a player was out of the playoff race ("You have been eliminated, thanks for playing. Back
