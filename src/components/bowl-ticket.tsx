@@ -24,7 +24,7 @@ export type BowlTicketData = {
 
 export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none"; result: "W" | "L" | null; missed?: boolean };
 export type BowlSheetData = {
-  games: Array<{ id: string; name: string; day: string; locked: boolean; line: string }>;
+  games: Array<{ id: string; name: string; day: string; locked: boolean; matchup: Array<{ team: string; line: string }> }>;
   todayIndex: number;
   rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
 };
@@ -213,7 +213,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
             <tr>
               <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
               <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><em className="lab-bowl-sheet-line">{game.line}</em><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><span className="lab-bowl-sheet-matchup">{game.matchup.map((side, index) => <span className="lab-tote-slip" key={index}><b>{side.team}</b><small>{side.line}</small></span>)}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
             </tr>
           </thead>
           <tbody>
