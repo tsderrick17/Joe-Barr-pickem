@@ -6,7 +6,6 @@ import { BowlCrest, BowlMegaphone } from "@/components/bowl-pool-marks";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import FootballLoader from "@/components/football-loader";
 import PullChainScene from "@/components/pull-chain-scene";
-import SeasonClosedBanner from "@/components/season-closed-banner";
 import SurvivorPokerChip, { TOSS_DEFAULTS } from "@/components/survivor-poker-chip";
 import TrophyBanner from "@/components/trophy-banner";
 import { PUFF_AT } from "@/lib/pull-chain.js";
@@ -22,7 +21,7 @@ import { ChoiceChips } from "@/components/commissioner/choice-chips";
 export type Knob = { key: string; label: string; min: number; max: number; step: number; unit: string; live: number };
 
 /** Every piece on the board, in the order they are listed below. */
-const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "eliminated", "pull", "banner"];
+const PIECE_IDS = ["chip", "submit", "highlight", "pennant", "tile", "football", "stamp", "crest", "pull", "banner"];
 
 /** The three trophy banners hang in the pool's colour (red Pick'em, blue Bowl, green Survivor), given here as oklch lightness, chroma and hue. */
 const CLOTH = {
@@ -485,13 +484,6 @@ export const PIECES: Piece[] = [
       <TextField label="Season" maxLength={4} numeric onChange={(season) => update((current) => ({ ...current, crest: { ...current.crest, season } }))} value={crest.season} />
       <TextField label="Ends with" maxLength={12} onChange={(suffix) => update((current) => ({ ...current, crest: { ...current.crest, suffix } }))} value={crest.suffix} />
     </>,
-  },
-  {
-    id: "eliminated",
-    title: "Out of the race banner",
-    zoom: 0.62,
-    note: "What players see once they are out of the playoff race.",
-    draw: () => <div className="asset-banner"><SeasonClosedBanner /></div>,
   },
   {
     id: "pull",

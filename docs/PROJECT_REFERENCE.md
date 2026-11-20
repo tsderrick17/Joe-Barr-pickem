@@ -579,9 +579,8 @@ playoff wins.
   `ats_pick_voided` with reason `forfeited`).
 - From then on `replace_unlocked_picks` refuses the player's saves in the
   database itself, and `/api/picks` answers 403. The Slate and Standings show
-  the same quiet "You forfeited, thanks for playing." banner an eliminated
-  player sees, and the Standings row carries a FORFEITED stamp over the final
-  score.
+  no ticket and no banner (as for an eliminated player): the Standings row
+  carries a FORFEITED stamp over the final score, which says it.
 - Only the Commissioner can reverse a forfeit (Players page: a "Forfeited the
   Pick'em playoffs" tag with a two-step Reinstate). A reversal lets the player
   pick again for games that have not started; picks voided by the forfeit are
@@ -690,8 +689,8 @@ may enrich spreads but cannot override canonical schedule assignments.
   erased) with no hide, "− OUT" or Bowl-hide buttons, and a read-only Slate.
   `/api/picks`, `/api/survivor`, `/api/bowl-pool` and the display fields of
   `/api/profile` answer 409 `season_closed`. A player eliminated from the playoff
-  race gets the same quiet page ("You have been eliminated, thanks for playing.")
-  until August 1. Notification settings, the Pool Action filter, Pool Chat, the
+  race gets the same quiet page (no ticket, no banner: the OUT on their row says
+  it) until August 1. Notification settings, the Pool Action filter, Pool Chat, the
   Season Snapshot and its controls, and every Commissioner tool stay available.
 
 ## Automation safety and efficiency

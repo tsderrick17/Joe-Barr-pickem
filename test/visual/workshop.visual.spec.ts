@@ -321,7 +321,7 @@ test("the board plays itself, one piece at a time, only what is on screen", asyn
   await expect.poll(async () => total(await playCounts(page)), { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
   const counts = await playCounts(page);
   expect(counts.crest, "the first piece in reading order has played").toBeGreaterThan(0);
-  for (const still of ["football", "eliminated"]) expect(counts[still], `${still} sits out`).toBe(0);
+  for (const still of ["football"]) expect(counts[still], `${still} sits out`).toBe(0);
   // Below the fold at 700px tall: the season banners and the bottom row never play until scrolled to.
   for (const below of ["stamp", "tile"]) expect(counts[below], `${below} is off screen`).toBe(0);
   await page.locator('[data-piece="tile"]').scrollIntoViewIfNeeded();

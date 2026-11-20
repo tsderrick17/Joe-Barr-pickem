@@ -19,7 +19,6 @@ import SlateGameRow from "@/components/slate-game-row";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { decidePickChoice, decideRemoval, decideSurvivorChoice, describeSelectedTeams, filterPoolActionDays, groupGamesByDay, picksDiffer } from "@/lib/slate-view";
 import SlateHeader from "@/components/slate-header";
-import SeasonClosedBanner from "@/components/season-closed-banner";
 import SlateReceipt from "@/components/slate-receipt";
 import ForfeitPanel from "@/components/forfeit-panel";
 import type { SlateGame as BoardGame, SlateResponse as BoardResponse, SlateScoringPeriod as ScoringPeriod } from "@/lib/api-contracts";
@@ -602,8 +601,6 @@ export default function BoardPage() {
   return (
     <main className="min-h-screen bg-(color:--themed-bg-14) text-(color:--themed-text-18)">
       <div className={`mx-auto max-w-5xl border-x border-(color:--themed-border-10) bg-(color:--themed-bg-20) px-4 pb-0 sm:px-5 sm:pb-0 md:px-10 ${seasonClosedForViewer ? "pt-5 sm:pt-8" : "pt-0"}`}>
-        {seasonClosedForViewer && !seasonOver ? <div className="mt-5"><SeasonClosedBanner forfeited={forfeited} /></div> : null}
-
         {seasonClosedForViewer ? null : <SlateReceipt
           isLoading={isLoading}
           isSubmitting={isSubmitting}

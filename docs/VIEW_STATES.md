@@ -31,8 +31,8 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff round, six picks | `playoff-six-picks` |
 | Playoff games live | `playoff-live` |
 | Off-season: no receipt and no banner, read-only, no how-to copy | `off-season` |
-| Eliminated from the playoff race mid-playoffs: same banner, no receipt | `playoff-eliminated` |
-| Forfeited the playoffs: "You forfeited, thanks for playing." banner, no receipt | `playoff-forfeited` |
+| Eliminated from the playoff race mid-playoffs: no banner and no receipt (a read-only Slate) | `playoff-eliminated` |
+| Forfeited the playoffs: no banner and no receipt (the FORFEITED stamp on the row says it) | `playoff-forfeited` |
 | Night mode Slate: official (teal) lines and chips are readable on the dark rows; every one is checked to 4.5:1 contrast (behavior test) | `night-upcoming-picked`, `night-live-survivor`, phone 390 and desktop 1280 |
 | "How it works" (every player): a familiar player sees the short rules (PICK'EM 2 picks each week; SURVIVOR one team a week, each once, a loss, tie or missed week ends the run) with the notes folded; the early-game note stays in view | `how-folded-phone-390`, `how-folded-desktop-1280`, night `night-how-folded-*` (`upcoming-unpicked`, `howItWorks: "folded"`) |
 | "How it works" opened by a tap: two groups of three, THE LINES and YOUR PICKS (a push is a loss) | `how-opened-phone-390`, `how-opened-desktop-1280`; playoffs (every playoff game, stay in while you can tie the leader) `how-opened-playoff-phone-390` |
@@ -51,7 +51,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Wild Card, six picks | `playoff-wildcard` |
 | Divisional, four picks | `playoff-divisional` |
 | Off-season: no ticket and no banner (the Pick'em Pad as it is), every table whole (hidden choices suspended), no hide or "− OUT" buttons | `off-season` |
-| Viewer eliminated from the playoff race mid-playoffs: banner instead of the ticket | `playoff-viewer-out` |
+| Viewer eliminated from the playoff race mid-playoffs: no ticket and no banner (OUT on their row says it) | `playoff-viewer-out` |
 | Viewer forfeited the playoffs: banner instead of the ticket, FORFEITED stamp on their row (every playoff state also shows one other player's stamp) | `playoff-viewer-forfeited` |
 | Season Snapshot in the playoffs: a Season / Playoffs switch beside the title (opens on Playoffs); Season shows the 6 Wk / All range | `commissioner-playoff` (flipped, both halves) |
 | Season Snapshot on Wild Card weekend before Saturday's games end, no playoff game day final yet: opens on Playoffs and shows every player as a dot at their final regular-season total with the first game day (SAT, WILD CARD) waiting on the bottom axis, no lines and no note, the key unchanged (behavior test checks which half opens, one dot per shown player, the axis words, and that the lines and any "fills in" note are gone) | `commissioner-playoff` with no round charted (`flipped-wild-card-weekend`, phone-390 and desktop-1280) |
