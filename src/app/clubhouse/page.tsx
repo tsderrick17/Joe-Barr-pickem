@@ -12,7 +12,7 @@ import { NotificationSettings } from "@/components/notification-settings";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
-import { clubhouseFeed } from "@/lib/clubhouse-feed.js";
+import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
@@ -209,32 +209,35 @@ export default function ClubhousePage() {
       if (reason instanceof SessionUnavailableError) window.location.replace("/login");
     }
   });
-  // In the playoffs Survivor is over, so its spot (and an old #survivor address) shows the Big Board with the race.
-  const shown: Pane | null = pane === "survivor" && room?.home.isPlayoff ? "standings" : pane;
+  const shown: Pane | null = pane;
   const popup = (...panes: Pane[]) => Boolean(shown && panes.includes(shown) && (shown === "standings" || shown === "slate" ? newBoard : true));
   const classic: "standings" | "slate" | null = shown === "standings" || shown === "slate" ? (newBoard ? null : shown) : null;
-  // The board's sheet: which pane it shows, and its switch. The third tab is Survivor while it runs, then the Bowl Pool in bowl season
-  // (whichever was asked for, when both are on).
+  // The board's sheet: which pane it shows, and its switch, always all four: Big Board, Ticket, Survivor and the Bowl Pool.
   const deck: Pane | null = shown && DECK.includes(shown) && popup(shown) && (shown === "survivor" || shown === "bowl" || view) ? shown : null;
-  const survivorTab = Boolean(room?.feed.survivorShown);
-  const third: Pane | null = shown === "survivor" || shown === "bowl" ? shown : room?.feed.bowl && (room.feed.survivorOver || !survivorTab) ? "bowl" : survivorTab ? "survivor" : room?.feed.bowl ? "bowl" : null;
-  const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), ...(third ? [{ pane: third, label: third === "bowl" ? "Bowl Pool" : "Survivor" }] : [])];
+  const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), { pane: "survivor", label: "Survivor" }, { pane: "bowl", label: "Bowl Pool" }];
   // The Bowl Pool's read, fetched ahead once its spot is in the room, so its ticket opens already full.
   const bowlInRoom = Boolean(room?.feed.bowl);
-  useEffect(() => { if (bowlInRoom) void prefetchBowlPool(); }, [bowlInRoom]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
+  const [bowlRead, setBowlRead] = useState<any>(null);
+  useEffect(() => { if (bowlInRoom) void prefetchBowlPool().then(setBowlRead); }, [bowlInRoom]);
+  // In bowl season the room's ticker carries the bowls too: today's NFL games, today's bowls, then the rest sprinkled through each other.
+  const roomFeed = useMemo(() => {
+    if (!room || !room.feed.bowl || !bowlRead) return room?.feed ?? null;
+    const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
+    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
+  }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);
   useEffect(() => { if (roomUp) { void prefetchTrophyRoom(); void prefetchPoolChat(); } }, [roomUp]);
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
-  // Once Survivor is over, its poker table is the Bowl Pool's.
-  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room?.feed.survivorOver && room.feed.bowl ? "bowl" : SPOT_PANE[spot] ?? null);
+  const paneOfSpot = (spot: string): Pane | null => SPOT_PANE[spot] ?? null;
 
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
-      <RoomScene feed={room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
+      <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
       {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>

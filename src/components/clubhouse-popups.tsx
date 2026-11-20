@@ -174,11 +174,14 @@ export function TrophyPopup() {
 // sliding up whole instead of opening on a line of "Loading" and snapping to its height. It is read again every time the ticket opens.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
 let lastBowlRead: any = null;
-export async function prefetchBowlPool() {
+// It also feeds the room's ticker its bowls, so it hands the read back.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
+export async function prefetchBowlPool(): Promise<any> {
   try {
     const response = await fetchWithSession("/api/bowl-pool", { cache: "no-store" });
     if (response.ok) lastBowlRead = await response.json();
   } catch { /* the ticket reads it again when it opens */ }
+  return lastBowlRead;
 }
 
 export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null }) {

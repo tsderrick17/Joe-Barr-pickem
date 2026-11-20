@@ -9,7 +9,7 @@ import sharp from "sharp";
 
 const DIR = new URL("../public/bowl-logos/", import.meta.url);
 const BOX = { width: 192, height: 92 };
-const AREA = 7600;   // the area every logo covers on that canvas: about a 87 x 87 square
+const AREA = 8600;   // the area every logo covers on that canvas: about a 93 x 93 square
 
 const names = process.argv.slice(2);
 const files = names.length ? names.map((name) => `${name}.webp`) : readdirSync(DIR).filter((file) => file.endsWith(".webp"));

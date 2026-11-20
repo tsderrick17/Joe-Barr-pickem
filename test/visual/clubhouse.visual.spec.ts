@@ -216,33 +216,26 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
 });
 
-test("once Survivor is decided and the bowls are on, the poker table is the Bowl Pool's, in its own colors, and so is the board's third tab", async ({ page }) => {
-  // Crowned three days before the Slate's clock (still called out), and the Bowl Pool's season (from Dec 7) by the Standings' clock.
-  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-10-01T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" } });
-  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
-  await expect(room).toBeVisible({ timeout: 30_000 });
-  await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
-  await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
-  await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
-  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" }).getByRole("button")).toHaveText(["Big Board", "Ticket", "Bowl Pool"], { timeout: 30_000 });
-  await page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: "Close" }).click();
-  await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
-  await expect(page).toHaveURL(/\/clubhouse#bowl$/);
-});
+for (const [phase, homeExtra] of [
+  ["while Survivor runs", {}],
+  ["with Survivor long decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }],
+  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }],
+] as const) {
+  test(`Survivor and the Bowl Pool are always in the room and on the board's switch, ${phase}`, async ({ page }) => {
+    await openClubhouse(page, { homeExtra, bowl: bowlRead() });
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    await expect(room).toBeVisible({ timeout: 30_000 });
+    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(1);
+    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
+    await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+    const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
+    await expect(tabs.getByRole("button")).toHaveText(["Big Board", "Ticket", "Survivor", "Bowl Pool"], { timeout: 30_000 });
+    await tabs.getByRole("button", { name: "Bowl Pool" }).click();
+    await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+  });
+}
 
-test("between the phases (Survivor decided over a week ago, the Bowl Pool not open until Dec 7) the poker table has no spot and the board no third tab", async ({ page }) => {
-  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" } });
-  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
-  await expect(room).toBeVisible({ timeout: 30_000 });
-  await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
-  await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(0);
-  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
-  await expect(tabs.getByRole("button")).toHaveText(["Big Board", "Ticket"], { timeout: 30_000 });
-});
-
-test("Notifications is a cloud in the room's glass doors: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
+test("Notifications is a plate in the room's glass doors, like the others: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
   await openClubhouse(page);
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   await expect(room).toBeVisible({ timeout: 30_000 });
@@ -274,7 +267,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
-  expect(tabs).toHaveLength(3); expect(tabs[0]).toEqual(tabs[1]); expect(tabs[1]).toEqual(tabs[2]);
+  expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
   await week.selectOption({ label: "Week 3 — Final" });
   await expect(board.locator("header")).toContainText("WEEK 3 · FINAL");
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
@@ -361,7 +354,7 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await expect(popup.locator(".survivor-ledger")).toHaveCount(0);   // not the classic ledger
   // The board's switch: Survivor is the lit one here, and Big Board and Ticket are the ways across.
   await expect(popup.locator(".club-deck-tabs [aria-current=page]")).toHaveText("Survivor");
-  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Big Board", "Ticket", "Survivor"]);
+  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Big Board", "Ticket", "Survivor", "Bowl Pool"]);
   // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
   await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
   expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
@@ -518,6 +511,23 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await ticket.getByRole("button", { name: "Standings", exact: true }).click();
   await expect(ticket.locator(".lab-bowl-standings li.is-you")).toContainText("Tyler");
   await expect(ticket.locator(".lab-bowl-standings li").first()).toContainText("T1");
+});
+
+test("in bowl season the room's ticker carries the bowls too, by the schools' short names under the bowl's name", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const ticker = page.locator(".lab-room-screen.is-spreads");
+  await expect(ticker.locator("p.is-bowl").first()).toBeAttached({ timeout: 30_000 });
+  await expect(ticker.locator("p.is-bowl").first().locator("small")).toContainText("·");
+  await expect(ticker.locator("p:not(.is-bowl)").first()).toBeAttached();   // the NFL games are still there
+});
+
+test("tapping the room's ceiling light turns the lights down for night, and again back up for day", async ({ page }) => {
+  await openClubhouse(page);
+  const lamp = page.getByRole("button", { name: /Turn the lights down \(night\): the ceiling light/ });
+  await lamp.click({ timeout: 30_000 });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.getByRole("button", { name: /Turn the lights up \(day\): the ceiling light/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {

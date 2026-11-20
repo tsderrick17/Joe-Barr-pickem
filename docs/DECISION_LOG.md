@@ -4,6 +4,14 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - Survivor and the Bowl Pool are always in the clubhouse; bowls on the ticker; lamps switch day and night
+
+Owner: Survivor and the Bowl Pool can always be seen. The clubhouse's poker table is always Survivor's (decided or not); the Bowl Pool
+has a plate all year (its bulletin board from Dec 7, by the lounge before); the board's switch always reads Big Board / Ticket / Survivor /
+Bowl Pool. This supersedes the phase switching of #817 (the table turning into the Bowl Pool's, tabs coming and going). In bowl season
+the room's ticker carries the bowls from the Bowl Pool's own read (three days either side): today's NFL games first, then today's bowls,
+then two NFL games to a bowl. The ceiling light (and the bar lamp on a desktop) switches day and night, the header's switch.
+
 ## 2026-11-20 - No end-of-season banner
 
 The navy banner that replaced the ticket once a player was out of the playoff race ("You have been eliminated, thanks for playing. Back
