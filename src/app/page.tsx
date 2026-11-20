@@ -71,6 +71,14 @@ export default function HomePage() {
   }, [hasData]);
   const [bowlPoolMinimized, setBowlPoolMinimized] = useState(false);
   const serverClockOffset = useRef(0);
+  // A past season chosen from the season list: the same Standings with that season's data. Never remembered: a reload is this season.
+  const [viewingSeason, setViewingSeason] = useState<number | null>(null);
+  const viewingSeasonRef = useRef<number | null>(null);
+  const chooseSeason = (year: number | null) => {
+    viewingSeasonRef.current = year;
+    setViewingSeason(year);
+    window.dispatchEvent(new Event("pickem-standings-season"));
+  };
   // A background refresh can finish after a display preference save and carry
   // an older profile snapshot. Keep the user's just-saved choice in front of
   // that stale response until the next refresh confirms it from the server.
@@ -101,7 +109,7 @@ export default function HomePage() {
         // First load only: the Bowl Card's read starts alongside this one (see bowl-prefetch.ts).
         if (!hasLoaded) startBowlPrefetch(() => fetchWithSession("/api/bowl-pool", { cache: "no-store" }));
 
-        const response = await fetchWithSession("/api/home", {
+        const response = await fetchWithSession(viewingSeasonRef.current ? `/api/home?season=${viewingSeasonRef.current}` : "/api/home", {
           signal: request.signal,
         });
 
@@ -198,6 +206,8 @@ export default function HomePage() {
 
     window.addEventListener("focus", refreshOnReturn);
     document.addEventListener("visibilitychange", refreshOnReturn);
+    const loadChosenSeason = () => void loadHome();
+    window.addEventListener("pickem-standings-season", loadChosenSeason);
 
     return () => {
       window.clearInterval(refreshInterval);
@@ -208,6 +218,7 @@ export default function HomePage() {
       activeRequest?.abort();
       window.removeEventListener("focus", refreshOnReturn);
       document.removeEventListener("visibilitychange", refreshOnReturn);
+      window.removeEventListener("pickem-standings-season", loadChosenSeason);
     };
   }, [retryNonce]);
 
@@ -342,6 +353,15 @@ export default function HomePage() {
           </div>
         ) : null}
 
+        {(data.seasons?.length ?? 0) > 1 ? (
+          <label className="standings-season">
+            <span>Season</span>
+            <select onChange={(event) => chooseSeason(Number(event.target.value) === data.seasons![0] ? null : Number(event.target.value))} value={viewingSeason ?? data.seasons![0]}>
+              {data.seasons!.map((year) => <option key={year} value={year}>{year}</option>)}
+            </select>
+          </label>
+        ) : null}
+
         {offSeason || seasonClosedForViewer ? null : <MyTicket
           isPlayoff={data.isPlayoff}
           maxPicks={data.maxPicks}
@@ -448,7 +468,7 @@ export default function HomePage() {
         </section>
         ) : null}
 
-        {!data.isPlayoff ? <SurvivorTable data={shown} displayLocked={offSeason} savingDisplay={false} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
+        {!data.isPlayoff || viewingSeason ? <SurvivorTable data={shown} displayLocked={offSeason} savingDisplay={false} setEliminatedRowsHidden={setEliminatedRowsHidden} setSurvivorDisplay={setSurvivorDisplay} /> : null}
         <BowlCard
           fallbackRows={data.rows}
           isCommissioner={data.isCommissioner}
@@ -458,6 +478,7 @@ export default function HomePage() {
           onReady={markBowlReady}
           onSetDisplay={setBowlCardDisplay}
           savingDisplay={false}
+          seasonYear={viewingSeason}
           viewerPlayerId={data.viewerPlayerId}
         />
       </div>

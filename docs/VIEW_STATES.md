@@ -32,6 +32,7 @@ fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 | Playoff games live | `playoff-live` |
 | Off-season: no receipt and no banner, read-only, no how-to copy | `off-season` |
 | Eliminated from the playoff race mid-playoffs: no banner and no receipt (a read-only Slate) | `playoff-eliminated` |
+| Season list (more than one season): a past season shows that season's Pick'em, Survivor and Bowl Card; a reload is this season; one season shows no list (behavior tests) | `standings.visual.spec.ts` |
 | Forfeited the playoffs: no banner and no receipt (the FORFEITED stamp on the row says it) | `playoff-forfeited` |
 | Night mode Slate: official (teal) lines and chips are readable on the dark rows; every one is checked to 4.5:1 contrast (behavior test) | `night-upcoming-picked`, `night-live-survivor`, phone 390 and desktop 1280 |
 | "How it works" (every player): a familiar player sees the short rules (PICK'EM 2 picks each week; SURVIVOR one team a week, each once, a loss, tie or missed week ends the run) with the notes folded; the early-game note stays in view | `how-folded-phone-390`, `how-folded-desktop-1280`, night `night-how-folded-*` (`upcoming-unpicked`, `howItWorks: "folded"`) |

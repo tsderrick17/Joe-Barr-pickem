@@ -114,6 +114,9 @@ export type StandingsResponse = {
   /** When Survivor was decided (the clubhouse calls the winner out for the week after). */
   survivorCrownedAt?: string | null;
   survivorChampionName: string | null;
+  /** The season shown, and every season the pool has run (newest first): the Standings offer a season list once there is more than one. */
+  seasonYear?: number;
+  seasons?: number[];
   survivorRows: {
     id: string;
     playerId: string;

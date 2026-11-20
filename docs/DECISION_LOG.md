@@ -4,6 +4,12 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - A season list on the Standings, from the second season
+
+Once the pool has run more than one season, the Standings (Pick'em, Survivor and the Bowl Card) carry a Season list. Choosing a past
+season changes only the data: the same page reads `/api/home?season=YEAR` and `/api/bowl-pool?season=YEAR` (that season's roster is its
+Survivor entries; the Bowl Pool's launch gate and the Commissioner's pre-launch list apply only to this season). Nothing is remembered: a
+reload is this season again. With one season (2026) there is no list, so it first appears when the 2027 season starts on August 1.
 ## 2026-11-20 - Survivor and the Bowl Pool are always in the clubhouse; bowls on the ticker; lamps switch day and night
 
 Owner: Survivor and the Bowl Pool can always be seen. The clubhouse's poker table is always Survivor's (decided or not); the Bowl Pool

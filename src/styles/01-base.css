@@ -135,3 +135,7 @@ html:not([data-nav-bowls]) .nav-bowls-tab { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .how-fold, .how-fold.is-open, .how-toggle-chevron { transition: none; }
 }
+
+/* The Standings' season list (once the pool has run more than one season): a small quiet select at the top right. */
+.standings-season { align-items: center; display: flex; font-size: .8rem; font-weight: 700; gap: .5rem; justify-content: flex-end; letter-spacing: .08em; margin: .75rem 0 -.25rem; text-transform: uppercase; }
+.standings-season select { background: var(--themed-bg-26); border: 1px solid var(--themed-border-10); border-radius: 999px; color: inherit; font: inherit; letter-spacing: .04em; min-height: 2.25rem; padding: 0 .9rem; }

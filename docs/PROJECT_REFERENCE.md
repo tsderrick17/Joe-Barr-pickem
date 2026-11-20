@@ -657,7 +657,10 @@ may enrich spreads but cannot override canonical schedule assignments.
 - Games, lines, picks, Survivor entries/picks, grades, scores, championships,
   player season results, and prior audit history are not copied.
 - Old seasons remain queryable for personal records, archives, championships,
-  and dispute resolution.
+  and dispute resolution. Once there is more than one season the Standings
+  offer a Season list: a past season is the same page with that season's data
+  (`/api/home?season=YEAR`, `/api/bowl-pool?season=YEAR`), never remembered, so
+  a reload is the current season.
 - Annual cleanup runs only after the prior season, every scoring period, game,
   pick grade, schedule review, and required championship is certified complete.
   A blocker is recorded and alerted; it never causes automation to guess.

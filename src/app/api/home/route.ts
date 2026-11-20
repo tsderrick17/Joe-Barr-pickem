@@ -45,26 +45,35 @@ export async function GET(request: NextRequest) {
     { status: access.status },
   );
   const viewer = access.player;
+  // A past season, chosen from the Standings' season list: the same Standings, that season's data. Anything else is this season.
+  const asked = Number(new URL(request.url).searchParams.get("season"));
+  const seasonYear = Number.isInteger(asked) && asked >= 2000 && asked < currentSeasonYear() ? asked : currentSeasonYear();
+  const pastSeason = seasonYear !== currentSeasonYear();
 
   // The reads run in as few rounds as their dependencies allow (each round waits on the database once): the season,
   // the players and the championship ledger; then the season's weeks; then everything that needs only the weeks
   // (picks, Survivor, the snapshot's release week, playoff eligibility); then the labels for this week's picks.
   // Failures are still judged in the order the page has always reported them.
-  const [seasonResult, playersResult, championshipsResult] = await Promise.all([
+  const [seasonResult, playersResult, championshipsResult, seasonsResult] = await Promise.all([
     supabaseAdmin
       .from("seasons")
       .select("id, year, state")
-      .eq("year", currentSeasonYear())
+      .eq("year", seasonYear)
       .maybeSingle(),
-    supabaseAdmin
-      .from("players")
-      .select("id, first_name")
-      .eq("active", true)
-      .order("first_name"),
+    // A past season counts everyone who played it, whether or not they still play.
+    pastSeason
+      ? supabaseAdmin.from("players").select("id, first_name").order("first_name")
+      : supabaseAdmin
+        .from("players")
+        .select("id, first_name")
+        .eq("active", true)
+        .order("first_name"),
     supabaseAdmin
       .from("pool_championships")
       .select("player_id, pool, season_year")
       .order("season_year", { ascending: false }),
+    // The pool's first season: every year from it to this one is a season the pool has run (one row, however many seasons there are).
+    supabaseAdmin.from("seasons").select("year").order("year").limit(1).maybeSingle(),
   ]);
 
   if (seasonResult.error) {
@@ -81,7 +90,7 @@ export async function GET(request: NextRequest) {
 
   if (!season) {
     return NextResponse.json(
-      { error: `The ${currentSeasonYear()} season has not been set up.` },
+      { error: `The ${seasonYear} season has not been set up.` },
       { status: 404 },
     );
   }
@@ -121,13 +130,23 @@ export async function GET(request: NextRequest) {
 
   const periodIds = periods.map((period) => period.id);
 
-  const { data: players, error: playersError } = playersResult;
+  const { data: everyone, error: playersError } = playersResult;
 
-  if (playersError || !players) {
+  if (playersError || !everyone) {
     return NextResponse.json(
       { error: "The player list could not be loaded." },
       { status: 500 },
     );
+  }
+
+  // A past season's players are the ones who played it: every player that season had a Survivor entry (the season's turnover makes one
+  // for each active player), so those entries are the roster.
+  let players = everyone;
+  if (pastSeason) {
+    const { data: entrants, error: entrantsError } = await supabaseAdmin.from("survivor_entries").select("player_id").eq("season_id", season.id);
+    if (entrantsError) return NextResponse.json({ error: "The player list could not be loaded." }, { status: 500 });
+    const played = new Set((entrants ?? []).map((entry) => entry.player_id));
+    players = everyone.filter((player) => played.has(player.id));
   }
 
   const playoffWeek = currentWeek.period_type === "playoff";
@@ -283,7 +302,7 @@ export async function GET(request: NextRequest) {
   const pickemTrophyHolderIds = reigningChampionIds(championshipRows ?? [], "pickem");
   // Co-champions (a same-week finish or several survivors) are all named.
   const survivorChampionIds = ((championshipRows ?? []))
-    .filter((row) => row.pool === "survivor" && row.season_year === currentSeasonYear())
+    .filter((row) => row.pool === "survivor" && row.season_year === season.year)
     .map((row) => row.player_id);
   const survivorChampionName = championSeason?.survivor_champion_player_id
     ? championNames((survivorChampionIds.length ? survivorChampionIds : [championSeason.survivor_champion_player_id])
@@ -502,12 +521,14 @@ export async function GET(request: NextRequest) {
       currentTime,
     ) ?? atsNextRevealAt,
     rows,
-    survivorAvailable: currentWeek.period_type === "playoff" ? false : survivorAvailable,
+    survivorAvailable: currentWeek.period_type === "playoff" && !pastSeason ? false : survivorAvailable,
     survivorNotice,
     survivorRows,
     survivorChampionPlayerId,
     survivorComplete,
     survivorCrownedAt: championSeason?.survivor_champion_crowned_at ?? null,
     survivorChampionName,
+    seasonYear: season.year,
+    seasons: Array.from({ length: Math.max(1, currentSeasonYear() - Number(seasonsResult.data?.year ?? currentSeasonYear()) + 1) }, (_, index) => currentSeasonYear() - index),
   } satisfies StandingsResponse);
 }
