@@ -705,7 +705,10 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-sheet .lab-bowl-sheet-rec { background: rgb(18 28 50); box-shadow: -8px 0 0 rgb(18 28 50); color: var(--bowl-gold-lt); font-family: "Courier New", monospace; font-weight: 800; left: 0; min-width: 3.2rem; position: sticky; z-index: 1; }
 .lab-bowl-sheet .lab-bowl-sheet-name { background: rgb(18 28 50); position: sticky; z-index: 1; box-shadow: 4px 0 6px -4px rgba(0, 0, 0, .6); color: var(--bowl-ink); font-family: Georgia, serif; font-size: .95rem; left: 3.2rem; max-width: 7rem; min-width: 5.5rem; overflow: hidden; text-align: left; text-overflow: ellipsis; }
 .lab-bowl-sheet tbody tr.is-you > * { background: rgb(40 44 58); }
-.lab-bowl-sheet-line { color: var(--bowl-ink); display: block; white-space: normal; font-family: "Courier New", monospace; font-size: .7rem; font-style: normal; font-weight: 800; letter-spacing: .04em; margin-top: 2px; }   /* the spread */
+/* The matchup under each bowl's name: the Big Board's pick slip, favourite over underdog, each with its line. */
+.lab-bowl-sheet-matchup { background: rgb(7 10 9); border: 1px solid rgba(201, 164, 95, .25); border-radius: 3px; display: grid; gap: 2px; margin: 5px auto 3px; padding: 3px 6px; width: fit-content; }
+.lab-bowl-sheet-matchup .lab-tote-slip { display: grid; font-size: .78rem; gap: 8px; grid-template-columns: auto auto; justify-content: space-between; padding-left: 0; }
+.lab-bowl-sheet thead .lab-bowl-sheet-matchup small { color: inherit; display: inline; font-family: inherit; font-size: .7rem; letter-spacing: .02em; opacity: .85; }
 .lab-bowl-sheet-pick { display: block; font-family: Georgia, serif; font-size: .82rem; line-height: 1.15; white-space: normal; }   /* the Bowl Card's school names, wrapped to the column */
 .lab-bowl-sheet-pick.is-w { color: rgb(128 200 152); }
 .lab-bowl-sheet-pick.is-l { color: rgb(220 126 114); }   /* a loss: red, not crossed off */

@@ -184,7 +184,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
  * @param {number} now
  * @param {string | null} viewerPlayerId
- * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean, line: string }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean, matchup: Array<{ team: string, line: string }> }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
@@ -198,14 +198,18 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
     const [awayLabel, homeLabel] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
     return away ? awayLabel : homeLabel;
   };
-  // The spread under each bowl's name: the favourite's short name and its number ("OSU -3.5"), "PK" for a pick'em, or no line yet.
-  const favoriteLine = (game) => {
-    const raw = game?.line?.locked_spread;
+  // The matchup under each bowl's name, as the Bowl Card heads its columns and the Big Board writes a pick: the favourite over the
+  // underdog, each school's short name with its own line ("OSU -3.5" over "IND +3.5"; "PK" for a pick'em; "—" before there is a line).
+  const matchup = (game) => {
+    if (!game) return [];
+    const awayId = game.away_team_id ?? game.awayTeam?.id ?? null, homeId = game.home_team_id ?? game.homeTeam?.id ?? null;
+    const raw = game.line?.locked_spread;
     const spread = raw === null || raw === undefined || raw === "" ? null : Math.abs(Number(raw));
-    if (spread === null || !Number.isFinite(spread)) return "No line yet";
-    if (spread === 0) return "PK";
-    const favorite = game.line?.favorite_team_id;
-    return favorite ? `${teamLabel(game.id, favorite)} -${spread}` : `-${spread}`;
+    const lined = game.line?.favorite_team_id;
+    const favorite = lined && (lined === awayId || lined === homeId) ? lined : awayId;
+    const underdog = favorite === awayId ? homeId : awayId;
+    const lineOf = (isFavorite) => (spread === null || !Number.isFinite(spread) ? "—" : spread === 0 ? "PK" : `${isFavorite ? "-" : "+"}${spread}`);
+    return [{ team: favorite ? teamLabel(game.id, favorite) : "TBD", line: lineOf(true) }, { team: underdog ? teamLabel(game.id, underdog) : "TBD", line: lineOf(false) }];
   };
   const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
   const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));
@@ -218,7 +222,7 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
     // The Bowl Card's name, its (QF) or (SF) from the schedule's own round.
     games: games.map((game) => {
       const name = bowlColumnName(raw.get(game.id) ?? {}), base = name.replace(/\s*\((QF|SF)\)$/, "");
-      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked, line: favoriteLine(raw.get(game.id)) };
+      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked, matchup: matchup(raw.get(game.id)) };
     }),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({
