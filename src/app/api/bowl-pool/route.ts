@@ -11,8 +11,8 @@ import { parseBowlSubmission } from "@/lib/selection-submission";
 import { championshipTitle } from "@/lib/championship-title";
 import { reigningChampionIds } from "@/lib/reigning-champions";
 
-async function seasonAndGames() {
-  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", currentSeasonYear()).maybeSingle());
+async function seasonAndGames(seasonYear = currentSeasonYear()) {
+  const { data: season, error: seasonError } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_seasons").select("id, season_year, player_visible_at, first_kickoff_at, championship_game_id").eq("season_year", seasonYear).maybeSingle());
   if (seasonError || !season) return { season: null, games: [], error: seasonError ?? new Error("Bowl Pool season is not configured.") };
   const { data: games, error } = await retrySafeRead(() => supabaseAdmin.from("bowl_pool_games").select("id, provider_game_id, bowl_name, kickoff_at, line_lock_at, order_index, status, is_cfp, away_team_id, home_team_id, away_score, home_score, venue_city, venue_state, time_confirmed").eq("season_id", season.id).order("order_index"));
   if (error) return { season, games: [], error };
@@ -23,10 +23,13 @@ export async function GET(request: NextRequest) {
   const access = await authenticateActivePlayer(request);
   if (!access.ok) return NextResponse.json({ error: playerAccessErrorMessage(access.code), code: access.code }, { status: access.status });
   const { player } = access;
-  const context = await seasonAndGames();
-  if (!context.season) return NextResponse.json({ error: "The Bowl Pool is not configured yet." }, { status: 503 });
+  // A past season, chosen on the Standings: that season's Bowl Pool, read only (its picks were all revealed long ago).
+  const asked = Number(new URL(request.url).searchParams.get("season"));
+  const pastSeason = Number.isInteger(asked) && asked >= 2000 && asked < currentSeasonYear() ? asked : null;
+  const context = await seasonAndGames(pastSeason ?? currentSeasonYear());
+  if (!context.season) return NextResponse.json({ error: pastSeason ? `There was no Bowl Pool in ${pastSeason}.` : "The Bowl Pool is not configured yet." }, { status: pastSeason ? 404 : 503 });
   const now = new Date();
-  if (!player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!pastSeason && !player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const gameIds = context.games.map((game) => game.id);
   const teamIds = [...new Set(context.games.flatMap((game) => [game.away_team_id, game.home_team_id]).filter((id): id is string => Boolean(id)))];
   const reads = await Promise.all([
@@ -68,7 +71,9 @@ export async function GET(request: NextRequest) {
     }
   }
   const playerIds = [...new Set((allEntries ?? []).map((entry) => entry.player_id))];
-  const { data: players, error: playersError } = player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
+  // Before this season's launch the Commissioner sees every active player listed; a past season lists only who played it.
+  const commissionerPreview = !pastSeason && player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()));
+  const { data: players, error: playersError } = commissionerPreview
     ? await supabaseAdmin.from("players").select("id, first_name").eq("active", true).order("first_name")
     : playerIds.length ? await supabaseAdmin.from("players").select("id, first_name").in("id", playerIds) : { data: [], error: null };
   // Without the names every standings row would read "Player".
@@ -103,11 +108,11 @@ export async function GET(request: NextRequest) {
     tiebreakerTotal: entry.championship_total_guess as number | null,
     trophies: trophiesByPlayerId.get(entry.player_id) ?? [],
     holdsTrophy: bowlTrophyHolderIds.has(entry.player_id),
-  })).concat(player.is_commissioner && now < new Date(bowlPoolLaunchAt(currentSeasonYear()))
+  })).concat(commissionerPreview
     ? (players ?? []).filter((candidate) => !(allEntries ?? []).some((entry) => entry.player_id === candidate.id)).map((candidate) => ({ playerId: candidate.id, playerName: candidate.first_name, wins: 0, losses: 0, tiebreakerTotal: null as number | null, trophies: trophiesByPlayerId.get(candidate.id) ?? [], holdsTrophy: bowlTrophyHolderIds.has(candidate.id) }))
     : []).sort((a, b) => compareBowlPoolStandings(a, b, finalCombinedPoints));
   return NextResponse.json({
-    season: { ...context.season, launchAt: bowlPoolLaunchAt(currentSeasonYear()) },
+    season: { ...context.season, launchAt: bowlPoolLaunchAt(context.season.season_year) },
     isCommissioner: Boolean(player.is_commissioner),
     optedIn: ownEntry?.status === "active" || ownEntry?.status === "complete",
     // Seats can be claimed or given up until the first bowl kicks off.

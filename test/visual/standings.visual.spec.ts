@@ -354,3 +354,37 @@ test("the ticket's section headings are plain headings, not links", async ({ pag
   await expect(ticket.locator(".my-ticket-section-link").first()).toBeVisible();
   await expect(ticket.getByRole("link")).toHaveCount(0);
 });
+
+test("with more than one season the Standings offer a season list: a past season shows that season's data, and a reload is this season again", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "day");
+  const asked: string[] = [];
+  const home = homeResponse("regular-in");
+  await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/home**", (route) => {
+    const season = new URL(route.request().url()).searchParams.get("season");
+    asked.push(season ?? "current");
+    return route.fulfill({ json: { ...home, seasons: [2026, 2025], seasonYear: season ? Number(season) : 2026, rows: season ? home.rows.map((row: Record<string, unknown>) => ({ ...row, wins: 1 })) : home.rows } });
+  });
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+  await page.route("**/api/bowl-pool**", (route) => { asked.push(`bowl:${new URL(route.request().url()).searchParams.get("season") ?? "current"}`); return route.fulfill({ json: bowlResponse(undefined) }); });
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("regular-in") }));
+  await page.clock.install({ time: new Date(home.serverTime) });
+  await page.goto("/");
+  const season = page.getByRole("combobox", { name: "Season" });
+  await expect(season).toHaveValue("2026", { timeout: 30_000 });
+  await season.selectOption("2025");
+  await expect.poll(() => asked).toContain("2025");
+  await expect.poll(() => asked).toContain("bowl:2025");
+  await page.reload();
+  await expect(page.getByRole("combobox", { name: "Season" })).toHaveValue("2026", { timeout: 30_000 });
+});
+
+test("with one season there is no season list", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "day");
+  await serve(page, "regular-in");
+  await page.goto("/");
+  await expect(page.locator(".my-ticket, .season-closed-banner, .pickem-scoreboard-ledger").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("combobox", { name: "Season" })).toHaveCount(0);
+});
