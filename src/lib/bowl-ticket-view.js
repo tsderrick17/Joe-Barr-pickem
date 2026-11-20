@@ -73,6 +73,17 @@ export function bowlSavedPicks(payload) {
 }
 
 /**
+ * The title game when the season has not named it yet: the game called the National Championship, or else the last playoff game.
+ * @param {any[]} games
+ */
+export function titleGameId(games) {
+  const named = games.find((game) => /national championship/i.test(game.bowl_name ?? ""));
+  if (named) return named.id;
+  const playoff = games.filter((game) => game.is_cfp).sort((a, b) => Date.parse(b.kickoff_at ?? "") - Date.parse(a.kickoff_at ?? ""));
+  return playoff[0]?.id ?? null;
+}
+
+/**
  * Each playoff game's round, from the schedule itself (the bowls that host the quarterfinals and semifinals rotate every year, so no
  * list of names): the games ESPN marks as the College Football Playoff's, less the title game, in kickoff order: the last two are the
  * semifinals, the four before them the quarterfinals, any earlier the first round; the title game is the Championship.
@@ -95,7 +106,9 @@ export function cfpRounds(games, championshipId) {
  */
 export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = null } = {}) {
   const saved = bowlSavedPicks(payload);
-  const championshipId = payload?.season?.championship_game_id ?? null;
+  // The title game carries the tiebreaker. The season names it once ESPN's feed has called it the National Championship; until then it is
+  // the game named so, or else the last playoff game, so the tiebreaker can always be entered.
+  const championshipId = payload?.season?.championship_game_id ?? titleGameId(payload?.games ?? []);
   const rounds = cfpRounds(payload?.games ?? [], championshipId);
   const ownResults = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick.result]));
   /** @type {BowlTicketGame[]} */
@@ -171,7 +184,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
  * @param {number} now
  * @param {string | null} viewerPlayerId
- * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean, line: string }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
@@ -185,6 +198,15 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
     const [awayLabel, homeLabel] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
     return away ? awayLabel : homeLabel;
   };
+  // The spread under each bowl's name: the favourite's short name and its number ("OSU -3.5"), "PK" for a pick'em, or no line yet.
+  const favoriteLine = (game) => {
+    const raw = game?.line?.locked_spread;
+    const spread = raw === null || raw === undefined || raw === "" ? null : Math.abs(Number(raw));
+    if (spread === null || !Number.isFinite(spread)) return "No line yet";
+    if (spread === 0) return "PK";
+    const favorite = game.line?.favorite_team_id;
+    return favorite ? `${teamLabel(game.id, favorite)} -${spread}` : `-${spread}`;
+  };
   const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
   const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));
   const automatic = new Map((payload?.automaticResults ?? []).map((result) => [`${result.playerId}:${result.game_id}`, result.result]));
@@ -196,7 +218,7 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
     // The Bowl Card's name, its (QF) or (SF) from the schedule's own round.
     games: games.map((game) => {
       const name = bowlColumnName(raw.get(game.id) ?? {}), base = name.replace(/\s*\((QF|SF)\)$/, "");
-      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked };
+      return { id: game.id, name: game.round === "Quarterfinal" ? `${base} (QF)` : game.round === "Semifinal" ? `${base} (SF)` : name, day: game.day, locked: game.locked, line: favoriteLine(raw.get(game.id)) };
     }),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({

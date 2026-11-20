@@ -373,7 +373,7 @@ test("the Survivor pop-up shows the whole table", async ({ page }) => {
   await expect(table).toContainText("GARY");   // a player's own "hide" choices never blank or thin this view (and the board writes names in capitals)
 });
 
-test("the Survivor pop-up wears the Big Board's housing, under the board's switch, a ring round each week's team and the out players struck through", async ({ page }) => {
+test("the Survivor pop-up wears the Big Board's housing, under the board's switch, a ring round each week's team and the out players dimmed, not crossed off", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor" });
   const popup = page.getByRole("dialog", { name: "Survivor" });
   await expect(popup.locator(".lab-tote.lab-survivor-tote")).toBeVisible({ timeout: 30_000 });
@@ -381,9 +381,9 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   // The board's switch: Survivor is the lit one here, and Big Board and Ticket are the ways across.
   await expect(popup.locator(".club-deck-tabs [aria-current=page]")).toHaveText("Survivor");
   await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"]);
-  // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
+  // A player who is out is dimmed (never crossed off), their lost week is the red ring, and the players still in say IN.
   await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
-  expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
+  expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("none");
   await expect(popup.locator(".lab-tote-logo.is-l").first()).toBeVisible();
   await expect(popup.locator("tbody tr:not(.is-out) .lab-tote-in").first()).toHaveText("IN");
   // Your own row is marked, and the names and status stay put while the weeks scroll sideways.
@@ -618,8 +618,8 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
   const ticket = sheet.locator(".lab-bowl-ticket");
   await expect(ticket).toBeVisible({ timeout: 30_000 });
-  await expect(ticket.getByRole("img", { name: "3 of 4 bowls left" })).toBeVisible();
-  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/1 TO PICK/);
+  await expect(ticket.getByRole("img", { name: "3 of 4 games left" })).toBeVisible();
+  await expect(ticket.locator(".lab-bowl-counts .is-owed dd")).toHaveText("1");   // to pick
   await expect(ticket.locator(".lab-bowl-game")).toHaveClass([/is-done/, /is-missed/, /is-owed/, /is-picked/]);
   // A known bowl flies its own logo; one with no logo file its short name.
   await expect(ticket.locator(".lab-bowl-game").nth(1).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/cfp.webp");   // a first-round game on campus flies the playoff's logo
@@ -670,6 +670,19 @@ test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a
   await expect(sheet.locator("thead th").first()).toHaveText("Wins");
   const widths = await sheet.locator("col.lab-bowl-sheet-col-game").evaluateAll((cols) => cols.map((col) => Math.round(col.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);   // a bowl that kicked off without a pick
+});
+
+test("on the Bowl ticket only the team you picked is outlined in gold, and you can switch teams or take the pick back", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const row = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-game").nth(3);   // open, its pick already saved (Miami)
+  const cells = row.locator("button.lab-board-cell");
+  const outlined = () => cells.evaluateAll((all) => all.map((cell) => parseFloat(getComputedStyle(cell.querySelector(".lab-board-trace")!).borderTopWidth) > 0));
+  await expect(cells.first()).toBeVisible({ timeout: 30_000 });
+  await expect.poll(outlined).toEqual([true, false]);
+  await cells.nth(1).click();   // switch teams
+  await expect.poll(outlined).toEqual([false, true]);
+  await cells.nth(1).click();   // tapping the pick again takes it back
+  await expect.poll(outlined).toEqual([false, false]);
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {

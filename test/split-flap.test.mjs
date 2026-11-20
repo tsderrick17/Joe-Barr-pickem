@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BOARD_PACE, digitPace, nextFlip } from "../src/lib/split-flap.js";
+import { BOARD_PACE, digitPace, flipJitter, nextFlip } from "../src/lib/split-flap.js";
 
 /** Flips a digit from `current` until it stops; returns the numbers it showed and each flip's length. */
 function run({ current, target, minFlips = 0, pace = 100 }) {
@@ -18,10 +18,13 @@ function run({ current, target, minFlips = 0, pace = 100 }) {
   }
 }
 
-test("every digit on the board flips at the same speed, give or take 3%", () => {
-  assert.equal(digitPace(BOARD_PACE, 0.5), BOARD_PACE);
-  assert.ok(digitPace(BOARD_PACE, 0) >= BOARD_PACE * 0.97);
-  assert.ok(digitPace(BOARD_PACE, 1) <= BOARD_PACE * 1.03);
+test("each digit runs on its own motor: its own speed within 10% of the board's, and every flip within 10% of that", () => {
+  assert.ok(Math.abs(digitPace(BOARD_PACE, 0.5) - BOARD_PACE) < 1e-9);
+  assert.ok(digitPace(BOARD_PACE, 0) >= BOARD_PACE * 0.9 - 1e-9);
+  assert.ok(digitPace(BOARD_PACE, 1) <= BOARD_PACE * 1.1 + 1e-9);
+  assert.ok(digitPace(BOARD_PACE, 0) < digitPace(BOARD_PACE, 1) * 0.85);   // two digits can differ by well over the old 3%
+  assert.ok(Math.abs(flipJitter(100, 0.5) - 100) < 1e-9);
+  assert.ok(flipJitter(100, 0) >= 90 - 1e-9 && flipJitter(100, 1) <= 110 + 1e-9);
 });
 
 test("a landing digit flips forward only as far as its number", () => {

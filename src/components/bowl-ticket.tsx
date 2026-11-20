@@ -24,7 +24,7 @@ export type BowlTicketData = {
 
 export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none"; result: "W" | "L" | null; missed?: boolean };
 export type BowlSheetData = {
-  games: Array<{ id: string; name: string; day: string; locked: boolean }>;
+  games: Array<{ id: string; name: string; day: string; locked: boolean; line: string }>;
   todayIndex: number;
   rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
 };
@@ -87,7 +87,13 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
         <div className="lab-bowl-title">
           <p aria-hidden="true">★ ★ ★</p>
           <h3>Bowl Pool</h3>
-          {view.owed ? <span className="lab-bowl-due"><BowlFlag flag="" small state="owed" /> {view.owed} TO PICK{view.picked ? ` · ${view.picked} PICKED` : ""}</span> : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
+          {/* Your picks at a glance: how many are still to make (gold while any are) and how many are in. */}
+          {view.owed ? (
+            <dl className="lab-bowl-counts">
+              <div className="is-owed"><dt>To pick</dt><dd>{view.owed}</dd></div>
+              <div><dt>Picked</dt><dd>{view.picked ?? 0}</dd></div>
+            </dl>
+          ) : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
         </div>
         <BowlGauge played={view.decided} total={view.total} />
       </header>
@@ -207,7 +213,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
             <tr>
               <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
               <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><em className="lab-bowl-sheet-line">{game.line}</em><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
             </tr>
           </thead>
           <tbody>
@@ -314,21 +320,44 @@ const PHASES = [0, 0.25, 0.5, 0.75, 1];
  * at the share decided, and the bowls left are read out beneath.
  */
 export function BowlGauge({ played, total }: { played: number; total: number }) {
+  const id = useId().replace(/:/g, "");
   const share = total ? Math.min(1, played / total) : 0;
   const point = (fraction: number, radius: number) => {
     const angle = Math.PI * (1 - fraction);
     return { x: 60 + radius * Math.cos(angle), y: 58 - radius * Math.sin(angle) };
   };
   const end = point(share, 36);
-  const needle = point(share, 29);
   const left = Math.max(0, total - played);
+  // The needle: a tapered blade from the hub to the dial, with a short counterweight behind the hub, as an instrument's has.
+  const angle = Math.PI * (1 - share);
+  const along = (radius: number, side: number) => ({ x: 60 + radius * Math.cos(angle) - side * Math.sin(angle), y: 58 - radius * Math.sin(angle) - side * Math.cos(angle) });
+  const needle = [along(30, 0), along(0, 1.7), along(-7, 1.1), along(-7, -1.1), along(0, -1.7)].map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   return (
-    <figure aria-label={left ? `${left} of ${total} bowls left` : `All ${total} bowls played`} className="lab-bowl-gauge" role="img">
+    <figure aria-label={left ? `${left} of ${total} games left` : `All ${total} games played`} className="lab-bowl-gauge" role="img">
       <svg aria-hidden="true" focusable="false" viewBox="0 0 120 66">
+        <defs>
+          <linearGradient id={`${id}-fill`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stopColor="rgb(150 110 50)" />
+            <stop offset="1" stopColor="rgb(240 200 110)" />
+          </linearGradient>
+          <radialGradient id={`${id}-hub`} cx=".35" cy=".35" r=".8">
+            <stop offset="0" stopColor="rgb(255 236 180)" />
+            <stop offset="1" stopColor="rgb(160 118 52)" />
+          </radialGradient>
+        </defs>
+        {/* the dial's bezel: a fine gold rim outside the track and a fainter one inside it */}
+        <path className="lab-bowl-gauge-bezel" d="M17 58A43 43 0 0 1 103 58" />
+        <path className="lab-bowl-gauge-bezel is-inner" d="M29 58A31 31 0 0 1 91 58" />
+        {/* the scale: a tick every 1/24 of the season, longer at each quarter */}
+        {Array.from({ length: 25 }, (_, index) => {
+          const fraction = index / 24, major = index % 6 === 0;
+          const outer = point(fraction, 41.5), inner = point(fraction, major ? 38.6 : 39.8);
+          return <line className={`lab-bowl-gauge-tick${fraction <= share ? " is-passed" : ""}${major ? " is-major" : ""}`} key={index} x1={outer.x.toFixed(2)} x2={inner.x.toFixed(2)} y1={outer.y.toFixed(2)} y2={inner.y.toFixed(2)} />;
+        })}
         <path className="lab-bowl-gauge-track" d="M24 58A36 36 0 0 1 96 58" />
-        {share > 0 ? <path className="lab-bowl-gauge-fill" d={`M24 58A36 36 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} /> : null}
+        {share > 0 ? <path className="lab-bowl-gauge-fill" d={`M24 58A36 36 0 0 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`} stroke={`url(#${id}-fill)`} /> : null}
         {PHASES.map((phase) => {
-          const at = point(phase, 48);
+          const at = point(phase, 50);
           const reached = share >= phase - 0.001 && (phase > 0 || share > 0);
           return (
             <g className={`lab-bowl-moon${reached ? " is-reached" : ""}`} key={phase}>
@@ -337,10 +366,11 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
             </g>
           );
         })}
-        <line className="lab-bowl-gauge-needle" x1="60" x2={needle.x} y1="58" y2={needle.y} />
-        <circle className="lab-bowl-gauge-hub" cx="60" cy="58" r="3.4" />
+        <polygon className="lab-bowl-gauge-needle" points={needle} />
+        <circle className="lab-bowl-gauge-hub" cx="60" cy="58" fill={`url(#${id}-hub)`} r="3.6" />
+        <circle className="lab-bowl-gauge-pin" cx="60" cy="58" r="1.2" />
       </svg>
-      <figcaption>{left ? <><b>{left}</b> {left === 1 ? "BOWL" : "BOWLS"} LEFT</> : "ALL PLAYED"}</figcaption>
+      <figcaption>{left ? <><b>{left}</b> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>
     </figure>
   );
 }
