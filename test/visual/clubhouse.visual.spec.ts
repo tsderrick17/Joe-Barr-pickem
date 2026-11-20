@@ -495,6 +495,10 @@ function bowlRead(optedIn = true) {
     ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
     ownPreviewSelections: [],
     standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 1 }, { playerId: "p2", playerName: "Tyler", wins: 1, losses: 1 }],
+    // Earl's picks as the Bowl Pool's read gives them: shown once a bowl kicks off, only a marker before (and a missed bowl a loss).
+    publicPicks: [{ playerId: "p1", game_id: "g1", selected_team_id: "a1", result: "loss" }],
+    automaticResults: [{ playerId: "p1", game_id: "g2", result: "loss" }],
+    privatePickMarkers: [{ playerId: "p1", game_id: "g3" }],
   };
 }
 
@@ -537,6 +541,19 @@ test("tapping the room's ceiling light turns the lights down for night, and agai
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
   await page.getByRole("button", { name: /Turn the lights up \(day\): the ceiling light/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
+});
+
+test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a bowl kicks off, a lit lamp for a hidden pick, an unlit one for none", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  const sheet = ticket.getByRole("region", { name: /Bowl sheet/ });
+  await expect(sheet.locator("tbody tr")).toHaveCount(2);
+  await expect(sheet.getByLabel(/^Earl, ROSE: \w+, lost$/)).toBeAttached();
+  await expect(sheet.getByRole("img", { name: /Earl, .*: pick in, hidden until kickoff/ })).toHaveCount(1);
+  await expect(sheet.getByRole("img", { name: /Earl, .*: no pick$/ })).toHaveCount(1);
+  await expect(sheet.getByLabel(/^Tyler, ROSE: \w+, won$/)).toBeAttached();
+  await expect(sheet.getByLabel("Tyler, CFP: no pick, a loss")).toBeAttached();   // a bowl that kicked off without a pick
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {

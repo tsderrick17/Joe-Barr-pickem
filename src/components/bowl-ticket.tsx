@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, type CSSProperties } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Lamp } from "@/components/lab/lab-tote";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
 
@@ -16,6 +17,15 @@ export type BowlTicketData = {
   owed: number;
   picked?: number;
   standings: Array<{ id: string; name: string; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
+  /** Everyone's picks on every bowl (the classic Bowl Card), when the Bowl Pool's read is the real one. */
+  sheet?: BowlSheetData;
+};
+
+export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none"; result: "W" | "L" | null; missed?: boolean };
+export type BowlSheetData = {
+  games: Array<{ id: string; flag: string; day: string; locked: boolean }>;
+  todayIndex: number;
+  rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
 };
 
 /**
@@ -35,7 +45,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
   onOptOut?: () => void;
   flagStyle?: "name" | "logo";
 }) {
-  const [tab, setTab] = useState<"picks" | "standings">("picks");
+  const [tab, setTab] = useState<"picks" | "standings" | "sheet">("picks");
   const [picks, setPicks] = useState<Record<string, BowlSide>>(view.saved);
   const [guess, setGuess] = useState(view.guess);
   const [sending, setSending] = useState(false);
@@ -84,6 +94,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
       <div aria-label="Bowl Pool view" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
         <button aria-pressed={tab === "picks"} onClick={() => setTab("picks")} type="button">Picks</button>
         <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>
+        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : null}
       </div>
 
       {tab === "picks" ? <>
@@ -145,7 +156,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
           {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
           {onOptOut && view.entryOpen ? <button className="lab-bowl-optout" onClick={onOptOut} type="button">Opt out of the Bowl Pool</button> : null}
         </section>
-      </> : (
+      </> : tab === "sheet" && view.sheet ? <BowlSheet sheet={view.sheet} /> : (
         <section aria-label="Bowl standings" className="lab-window-part">
           <h4>STANDINGS<small>{view.decided ? `after ${view.decided} of ${view.total} bowls` : "no bowls played yet"}</small></h4>
           {view.standings.length === 0 ? <p className="lab-board-note">No one has claimed a seat yet.</p> : null}
@@ -161,6 +172,54 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * The whole Bowl Pool on one sheet (the classic Bowl Card), in the ticket's navy: a row per player in standings order with their record,
+ * a column per bowl under its short name and day. It scrolls sideways with the record and name held still, and opens on today's bowls.
+ * A kicked-off bowl shows each player's school in the result's colour; before kickoff a lit lamp means a pick is in, unlit means none
+ * yet (nobody else's pick is shown before kickoff). Your own row always shows your picks.
+ */
+function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
+  const scroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const node = scroller.current;
+    if (!node || sheet.todayIndex < 1) return;
+    const column = node.querySelectorAll<HTMLElement>("thead th")[sheet.todayIndex + 2];
+    const held = node.querySelectorAll<HTMLElement>("thead th")[2];
+    if (column && held) node.scrollLeft = column.offsetLeft - held.offsetLeft;
+  }, [sheet.todayIndex]);
+  const cell = (value: BowlSheetCell, player: string, bowl: string) => {
+    if (value.kind === "hidden") return <Lamp label={`${player}, ${bowl}: pick in, hidden until kickoff`} state="in" />;
+    if (value.kind === "pick") return <b aria-label={`${player}, ${bowl}: ${value.team}${value.result === "W" ? ", won" : value.result === "L" ? ", lost" : ""}`} className={`lab-bowl-sheet-pick is-${value.result ? value.result.toLowerCase() : "open"}`}>{value.team}</b>;
+    if (value.result === "L") return <b aria-label={`${player}, ${bowl}: no pick, a loss`} className="lab-bowl-sheet-pick is-l">—</b>;
+    if (value.missed) return <b aria-label={`${player}, ${bowl}: no pick`} className="lab-bowl-sheet-pick is-missed">—</b>;
+    return <Lamp label={`${player}, ${bowl}: no pick`} state="off" />;
+  };
+  return (
+    <section aria-label="Bowl sheet" className="lab-window-part lab-bowl-sheet">
+      <div aria-label="Bowl sheet, scrolls sideways" className="lab-bowl-sheet-scroll" ref={scroller} role="region" tabIndex={0}>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">W–L</th>
+              <th scope="col">Player</th>
+              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.flag}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {sheet.rows.map((row) => (
+              <tr className={row.you ? "is-you" : undefined} key={row.id}>
+                <td>{row.wins}–{row.losses}</td>
+                <th scope="row">{row.name}</th>
+                {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].flag)}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

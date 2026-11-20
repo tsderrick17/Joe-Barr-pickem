@@ -83,3 +83,23 @@ test("a bowl saved by its short name alone still flies its own logo", () => {
   assert.equal(bowlPennant("Frisco Football Classic").logo, "frisco-classic");
   assert.equal(bowlPennant("CFP First Round 1").logo, null);   // a campus playoff game has no bowl of its own
 });
+
+test("the Bowl sheet: each player's school once a bowl kicks off, a lamp before (lit for a pick in, unlit for none), your own picks always", () => {
+  const team = (id, abbreviation) => ({ id, abbreviation, short_name: abbreviation });
+  const payload = {
+    games: [
+      { id: "g1", bowl_name: "Rose Bowl Game", kickoff_at: "2026-12-30T21:00:00Z", status: "final", away_team_id: "a", home_team_id: "h", awayTeam: team("a", "IND"), homeTeam: team("h", "OSU"), away_score: 20, home_score: 27, line: { favorite_team_id: "h", locked_spread: 3.5 } },
+      { id: "g2", bowl_name: "Sugar Bowl", kickoff_at: "2027-01-01T21:00:00Z", status: "scheduled", away_team_id: "b", home_team_id: "c", awayTeam: team("b", "UGA"), homeTeam: team("c", "TEX"), line: { favorite_team_id: "b", locked_spread: 2.5 } },
+    ],
+    standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 0 }, { playerId: "me", playerName: "Tyler", wins: 0, losses: 1 }, { playerId: "p3", playerName: "Walt", wins: 0, losses: 0 }],
+    publicPicks: [{ playerId: "p1", game_id: "g1", selected_team_id: "h", result: "win" }],
+    privatePickMarkers: [{ playerId: "p1", game_id: "g2" }],
+    ownPicks: [{ game_id: "g1", selected_team_id: "a", result: "loss" }, { game_id: "g2", selected_team_id: "c", result: null }],
+  };
+  const { sheet } = bowlTicketView(payload, { now: Date.parse("2026-12-31T15:00:00Z"), viewerPlayerId: "me" });
+  assert.deepEqual(sheet.games.map((game) => game.flag), ["ROSE", "SUGAR"]);
+  const row = (name) => sheet.rows.find((candidate) => candidate.name === name).cells;
+  assert.deepEqual(row("Earl"), [{ kind: "pick", team: "OSU", result: "W" }, { kind: "hidden" }]);
+  assert.deepEqual(row("Tyler"), [{ kind: "pick", team: "IND", result: "L" }, { kind: "pick", team: "TEX", result: null }]);
+  assert.deepEqual(row("Walt"), [{ kind: "none", result: null, missed: true }, { kind: "none", result: null, missed: false }]);
+});
