@@ -8,6 +8,7 @@ import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, pr
 import { Constitution, RoomScene, Ticket, warmRoomPicture, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
+import { PULL_REFRESH_EVENT } from "@/components/pull-to-refresh";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
@@ -134,6 +135,15 @@ export default function ClubhousePage() {
   // The room's picture starts down as the page opens, alongside the sign-in check and the pool's reads.
   useEffect(() => { warmRoomPicture(bowlSeason(new Date().toISOString())); }, []);
   useEffect(() => { if (access === "allowed") void read(true); }, [access, read]);
+  // Pulling down to refresh reads the room again in place (no reload, no loading screen): the chain stays down until it is in.
+  useEffect(() => {
+    const refresh = (event: Event) => {
+      event.preventDefault();
+      (event as CustomEvent<{ done: Promise<void> | null }>).detail.done = read(false);
+    };
+    window.addEventListener(PULL_REFRESH_EVENT, refresh);
+    return () => window.removeEventListener(PULL_REFRESH_EVENT, refresh);
+  }, [read]);
 
   // The room is read again when the app returns to the front after a while, and every five minutes while the room itself is what is on
   // screen. (A pick sent from the ticket reads it again straight away; closing a pop-up that changed nothing does not.)

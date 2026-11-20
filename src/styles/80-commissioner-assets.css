@@ -37,6 +37,9 @@
   position: relative;
   width: var(--football-w);
 }
+/* Until the spin's frames are decoded the ball shows its first frame as a small still (no grey ghost); the spinning sheet replaces it. */
+.football-loader-ball:not(.is-ready) { background: url("/football-still.webp") 0 0 / 100% 100% no-repeat; }
+.football-loader-ball:not(.is-ready) .football-loader-sheet { visibility: hidden; }
 .football-loader-sheet {
   animation: football-spin var(--football-spin-s, 1.8s) step-end infinite;
   background: url("/football-spin.webp") 0 0 / 100% 100% no-repeat;
