@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useId, useMemo, useState, type CSSProperties } from "react";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
 
@@ -190,13 +190,47 @@ const CFP_LOGO = "cfp";
  * toward the hoist, where the cloth is tallest, and fits inside it. It hangs still; it greys when the bowl kicked off without a pick.
  */
 export function BowlLogoFlag({ logo, cloth, hoist, state }: { logo: string; cloth: string | null; hoist: string | null; state: BowlRowState }) {
+  const medal = `medal-${useId().replace(/:/g, "")}`;
   return (
     <span aria-hidden="true" className={`lab-bowl-flag is-logo is-${state}`} style={{ "--flag-cloth": cloth ?? undefined, "--flag-hoist": hoist ?? undefined } as CSSProperties}>
       <svg focusable="false" viewBox="0 0 154 56">
-        <path className="lab-bowl-flag-cloth" d="M10 1L153 13V43L10 55Z" />
-        <rect className="lab-bowl-flag-hoist" height="56" rx="2" width="11" x="0" y="0" />
-        {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M16 6L146 17V39L16 50Z" strokeLinejoin="round" />}
-        <image height="46" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="96" x="12" y="5" />
+        <defs>
+          {/* Felt catching the light: a little brighter up by the pole, falling off toward the fly and the lower edge. */}
+          <linearGradient id={`${medal}-felt`} x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stopColor="rgb(255 255 255)" stopOpacity=".16" />
+            <stop offset=".45" stopColor="rgb(255 255 255)" stopOpacity="0" />
+            <stop offset="1" stopColor="rgb(0 0 0)" stopOpacity=".22" />
+          </linearGradient>
+          {/* The pole: round, lit down its left side. */}
+          <linearGradient id={`${medal}-pole`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stopColor="rgb(255 255 255)" stopOpacity=".38" />
+            <stop offset=".45" stopColor="rgb(255 255 255)" stopOpacity="0" />
+            <stop offset="1" stopColor="rgb(0 0 0)" stopOpacity=".3" />
+          </linearGradient>
+        </defs>
+        <path className="lab-bowl-flag-cloth" d="M10 1.5L152 13V43L10 54.5Z" strokeLinejoin="round" />
+        <path d="M10 1.5L152 13V43L10 54.5Z" fill={`url(#${medal}-felt)`} />
+        {/* Stitched round the edge, just inside it. */}
+        <path className="lab-bowl-flag-stitch" d="M13 4.6L149 15.6V40.4L13 51.4Z" strokeLinejoin="round" />
+        <rect className="lab-bowl-flag-hoist" height="56" rx="3" width="10" x="1" y="0" />
+        <rect fill={`url(#${medal}-pole)`} height="56" rx="3" width="10" x="1" y="0" />
+        {logo === CFP_LOGO ? null : <path className="lab-bowl-flag-patch" d="M17 7L145 17.5V38.5L17 49Z" strokeLinejoin="round" />}
+        {/* The logo struck like a silver medallion: a fine bright rim round its outline, a darker silver edge just below it for its
+            thickness, and a soft shadow on the cloth. */}
+        <filter colorInterpolationFilters="sRGB" height="140%" id={medal} width="140%" x="-20%" y="-20%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="0.7" result="rim" />
+          <feOffset dy="1.2" in="rim" result="edgeShape" />
+          <feFlood floodColor="rgb(120 128 140)" />
+          <feComposite in2="edgeShape" operator="in" result="edge" />
+          <feFlood floodColor="rgb(226 230 236)" />
+          <feComposite in2="rim" operator="in" result="rimLit" />
+          <feGaussianBlur in="edgeShape" result="blurred" stdDeviation="1.1" />
+          <feOffset dy="1" in="blurred" result="dropShape" />
+          <feFlood floodColor="rgba(0, 0, 0, .35)" />
+          <feComposite in2="dropShape" operator="in" result="drop" />
+          <feMerge><feMergeNode in="drop" /><feMergeNode in="edge" /><feMergeNode in="rimLit" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <image filter={`url(#${medal})`} height="50" href={`/bowl-logos/${logo}.webp`} preserveAspectRatio="xMidYMid meet" width="104" x="9" y="3" />
       </svg>
     </span>
   );

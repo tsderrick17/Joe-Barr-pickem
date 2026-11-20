@@ -650,10 +650,13 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
 .lab-bowl-flag-hoist { fill: var(--bowl-slip-gold); }
 .lab-bowl-flag-name { dominant-baseline: central; fill: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .04em; }
-.lab-bowl-flag.is-logo { width: 9.6rem; }
+.lab-bowl-flag.is-logo { width: 10.2rem; }
 /* the logo sits on a cream patch, so a dark logo reads on any banner */
-.lab-bowl-flag-patch { fill: rgb(248 243 230); stroke: rgba(20, 30, 50, .25); stroke-width: 1; }
-.lab-bowl-flag.is-logo .lab-bowl-flag-cloth { fill: var(--flag-cloth); stroke: rgba(240, 232, 214, .55); }
+.lab-bowl-flag-patch { fill: rgb(248 243 230); stroke: rgba(20, 30, 50, .18); stroke-width: .8; }
+/* A logo pennant: felt in the bowl's colour with a soft shadow on the ticket, a fine stitch line round its edge, a round pole. */
+.lab-bowl-flag.is-logo svg { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); }
+.lab-bowl-flag.is-logo .lab-bowl-flag-cloth { fill: var(--flag-cloth); stroke: rgba(0, 0, 0, .35); stroke-width: .8; }
+.lab-bowl-flag-stitch { fill: none; stroke: rgba(240, 232, 214, .45); stroke-dasharray: 2.2 1.8; stroke-width: .7; }
 .lab-bowl-flag.is-logo .lab-bowl-flag-hoist { fill: var(--flag-hoist); }
 .lab-bowl-flag.is-logo.is-missed { filter: grayscale(1); }
 .lab-bowl-flag.is-owed:not(.is-logo) .lab-bowl-flag-cloth { fill: var(--bowl-slip-gold); stroke: var(--bowl-gold-lt); }
@@ -787,4 +790,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* The Trophy Room in the clubhouse: every panel has the same rounded corners as the clubhouse's switches, and the All-Time Table is dark
    with light type in day and night alike, with no light edge round it. */
 .clubhouse-page .trophy-display { border-radius: 8px; overflow: hidden; }
+/* The records follow the plaques closely: no page-sized space above the switch, and the table just under it. */
+.clubhouse-page .lab-wall-table > section[aria-labelledby="all-time"] { padding-top: 0; }
+.clubhouse-page .lab-wall-table .trophy-table-wrap { margin-top: 8px; }
 .clubhouse-page .trophy-table-wrap { --club-paper: #13221e; --club-paper-2: #182a25; --club-line: #2c453d; --club-ink: #efe6d2; --club-muted: #a8b4ab; border: 0; border-radius: 8px; color: var(--club-ink); }
