@@ -423,7 +423,6 @@
 .lab-window-part h4 small { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin-left: 6px; }
 .lab-window-out { color: var(--cw-cream); font-size: .8rem; margin: 0; }
 .lab-window-problem { color: rgb(255 130 110); font-size: .8rem; font-weight: 700; margin: 6px 0 0; }
-.lab-tote-none { color: rgb(255 255 255 / .35); font-family: "Courier New", monospace; font-size: .8rem; }
 .lab-window-ticket { border-top: 1px dashed rgba(240, 180, 41, .4); display: grid; gap: 10px; padding-top: 10px; }
 .lab-window-ticket dl { display: grid; gap: 4px; margin: 0; }
 .lab-window-ticket dl div { display: flex; gap: 8px; justify-content: space-between; }
@@ -708,8 +707,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   .clubhouse-page .lab-tote thead th { font-size: .64rem; }
   /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
   .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
-  .clubhouse-page .lab-window-part > ol { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .clubhouse-page .lab-window-part > ol > li { align-content: start; grid-template-columns: 1fr 1fr; }   /* a game beside a taller one (a final) starts level with it, at the top */
+  .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* the Bowl Pool standings stay one list */
+  .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) > li { align-content: start; grid-template-columns: 1fr 1fr; }   /* a game beside a taller one (a final) starts level with it, at the top */
   .clubhouse-page .lab-window-part .lab-board-time { grid-column: 1 / -1; }
   .clubhouse-page .lab-window-part .lab-board-at { display: none; }
   /* The Trophy Room: the turning table and the plaques use the whole width, three plaques to a row. */

@@ -39,6 +39,15 @@ export function HiddenPick({ survivor = false, label = "Pick in, hidden until ki
   );
 }
 
+/** No pick (yet): the same lamp in the same place, just not lit, so every row reads the same and a missing pick is plain to see. */
+export function NoPick({ survivor = false, label }: { survivor?: boolean; label: string }) {
+  return (
+    <span className="lab-tote-cover">
+      <Lamp label={label} state="off" survivor={survivor} />
+    </span>
+  );
+}
+
 /**
  * The lamp: one for every pick, 1:1 with Pick 1, Pick 2 and Survivor, at the top of your ticket and on the ticket pinned in the
  * clubhouse. The Big Board shows the same colours in the team names themselves.
@@ -92,7 +101,7 @@ function PlayoffFace({ view, open }: { view: BoardView; open: (() => void) | nul
                 const matchup = `${name(game.away)} at ${name(game.home)}`;
                 return (
                   <td className="lab-tote-surv" key={game.id}>
-                    {slat === null ? (row.you && !game.kickedOff && !row.out && !row.forfeited ? cell(`${matchup}: not picked. Open your ticket`, <span className="lab-tote-owed-ring">PICK</span>) : <span aria-label={`${matchup}: no pick`} className="lab-tote-none">—</span>)
+                    {slat === null ? (row.you && !game.kickedOff && !row.out && !row.forfeited ? cell(`${matchup}: not picked. Open your ticket`, <span className="lab-tote-owed-ring">PICK</span>) : <NoPick label={`${matchup}: no pick`} />)
                       : slat.hidden || !slat.team ? <HiddenPick />
                       : cell(`${matchup}: ${name(slat.team)} ${slat.line ?? ""}${slat.result === "W" ? ", won" : slat.result === "L" ? ", lost" : ""}${row.you ? ". Open your ticket" : ""}`, (
                         <span className={`lab-tote-logo ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`} role="img" aria-label={name(slat.team)}><Logo team={slat.team} /></span>
@@ -136,7 +145,7 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
               <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
               {row.slats.map((slat, index) => (
                 <td className="lab-tote-pick" key={index}>
-                  {slat === null ? (row.you ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>) : <span aria-label={`Pick ${index + 1}: none yet`} className="lab-tote-none">—</span>)
+                  {slat === null ? (row.you ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>) : <NoPick label={`Pick ${index + 1}: none yet`} />)
                     : slat.hidden ? <HiddenPick /> : cell(`Pick ${index + 1}: ${slat.team} ${slat.line}. Open your ticket`, (
                       <span className={`lab-tote-slip ${slat.result ? `is-${slat.result.toLowerCase()}` : ""}`}>
                         <b>{slat.team}</b>
@@ -152,7 +161,7 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
                     : survivor.kind === "out" ? <span className="lab-tote-out">OUT</span>
                     : survivor.kind === "hidden" ? <HiddenPick label="Survivor pick in, hidden until kickoff" survivor />
                     : survivor.kind === "owed" ? cell("Survivor: not picked. Open your ticket", <span className="lab-tote-owed">PICK</span>)
-                    : survivor.kind === "none" ? <span aria-label="Survivor: none yet" className="lab-tote-none">—</span>
+                    : survivor.kind === "none" ? <NoPick label="Survivor: none yet" survivor />
                     : cell(`Survivor: ${name(survivor.team)}${row.you ? ". Open your ticket" : ""}`, (
                       <span aria-label={`${name(survivor.team)}${survivor.result === "W" ? ", Survivor win" : survivor.result === "L" ? ", Survivor loss" : ""}`} className={`lab-tote-logo ${survivor.result ? `is-${survivor.result.toLowerCase()}` : ""}`} role="img"><Logo team={survivor.team} /></span>
                     ))}
