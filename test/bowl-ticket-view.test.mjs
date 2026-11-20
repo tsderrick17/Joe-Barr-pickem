@@ -97,7 +97,7 @@ test("the Bowl sheet: each player's school once a bowl kicks off, a lamp before 
     ownPicks: [{ game_id: "g1", selected_team_id: "a", result: "loss" }, { game_id: "g2", selected_team_id: "c", result: null }],
   };
   const { sheet } = bowlTicketView(payload, { now: Date.parse("2026-12-31T15:00:00Z"), viewerPlayerId: "me" });
-  assert.deepEqual(sheet.games.map((game) => game.flag), ["ROSE", "SUGAR"]);
+  assert.deepEqual(sheet.games.map((game) => game.name), ["Rose Bowl Game", "Sugar Bowl (SF)"]);
   const row = (name) => sheet.rows.find((candidate) => candidate.name === name).cells;
   assert.deepEqual(row("Earl"), [{ kind: "pick", team: "OSU", result: "W" }, { kind: "hidden" }]);
   assert.deepEqual(row("Tyler"), [{ kind: "pick", team: "IND", result: "L" }, { kind: "pick", team: "TEX", result: null }]);

@@ -1,4 +1,4 @@
-import { bowlDisruptionLabel, bowlGameNote, bowlTeamName } from "./bowl-pool.js";
+import { bowlColumnName, bowlDisruptionLabel, bowlGameNote, bowlMatchupTeamLabels, bowlTeamName } from "./bowl-pool.js";
 import { bowlPennant } from "./bowl-logos.js";
 import { bowlPennantColors } from "./bowl-pennant.js";
 import { dateFormat } from "./date-format.js";
@@ -140,15 +140,16 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
  * @param {number} now
  * @param {string | null} viewerPlayerId
- * @returns {{ games: Array<{ id: string, flag: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
-  const short = (team) => team?.abbreviation || String(team?.short_name ?? team?.display_name ?? "").replace(/[^A-Za-z&]/g, "").slice(0, 4).toUpperCase() || "?";
+  // Each school by the name the Bowl Card gives it (told apart from its opponent when the two would read alike).
   const teamLabel = (gameId, teamId) => {
     const game = raw.get(gameId);
     if (!game || !teamId) return "?";
-    return short(teamId === (game.away_team_id ?? game.awayTeam?.id) ? game.awayTeam : game.homeTeam);
+    const [away, home] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
+    return teamId === (game.away_team_id ?? game.awayTeam?.id) ? away : home;
   };
   const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
   const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));
@@ -158,7 +159,7 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   /** @type {(result: string | null | undefined) => "W" | "L" | null} */
   const mark = (result) => (result === "win" ? "W" : result === "loss" ? "L" : null);
   return {
-    games: games.map((game) => ({ id: game.id, flag: game.playoff && game.flag === "BOWL" ? "CFP" : game.flag, day: game.day, locked: game.locked })),
+    games: games.map((game) => ({ id: game.id, name: bowlColumnName(raw.get(game.id) ?? {}), day: game.day, locked: game.locked })),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({
       id: row.id, name: row.name, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, you: row.id === viewerPlayerId,

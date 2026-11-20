@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import BowlScoreTile from "@/components/bowl-score-tile";
 import { Lamp } from "@/components/lab/lab-tote";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
@@ -23,7 +24,7 @@ export type BowlTicketData = {
 
 export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | null } | { kind: "hidden" } | { kind: "none"; result: "W" | "L" | null; missed?: boolean };
 export type BowlSheetData = {
-  games: Array<{ id: string; flag: string; day: string; locked: boolean }>;
+  games: Array<{ id: string; name: string; day: string; locked: boolean }>;
   todayIndex: number;
   rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
 };
@@ -93,8 +94,8 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
 
       <div aria-label="Bowl Pool view" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
         <button aria-pressed={tab === "picks"} onClick={() => setTab("picks")} type="button">Picks</button>
-        <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>
-        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : null}
+        {/* With the sheet (the real Bowl Pool) the standings are its first column, so there is no separate Standings tab. */}
+        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
       </div>
 
       {tab === "picks" ? <>
@@ -200,20 +201,21 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
   return (
     <section aria-label="Bowl sheet" className="lab-window-part lab-bowl-sheet">
       <div aria-label="Bowl sheet, scrolls sideways" className="lab-bowl-sheet-scroll" ref={scroller} role="region" tabIndex={0}>
-        <table>
+        <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem)` }}>
+          <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}</colgroup>
           <thead>
             <tr>
-              <th className="lab-bowl-sheet-rec" scope="col">W–L</th>
+              <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
               <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.flag}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
             </tr>
           </thead>
           <tbody>
             {sheet.rows.map((row) => (
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
-                <td className="lab-bowl-sheet-rec">{row.wins}–{row.losses}</td>
+                <td className="lab-bowl-sheet-rec"><BowlScoreTile animate={false} settled value={row.wins} /></td>
                 <th className="lab-bowl-sheet-name" scope="row">{row.name}</th>
-                {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].flag)}</td>)}
+                {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
               </tr>
             ))}
           </tbody>

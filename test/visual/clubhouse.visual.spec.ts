@@ -556,9 +556,10 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, championshipTotalGuess: 47, selections: [{ gameId: "g3", teamId: "h3", side: "favorite" }, { gameId: "g4", teamId: "a4", side: "underdog" }] });
-  await ticket.getByRole("button", { name: "Standings", exact: true }).click();
-  await expect(ticket.locator(".lab-bowl-standings li.is-you")).toContainText("Tyler");
-  await expect(ticket.locator(".lab-bowl-standings li").first()).toContainText("T1");
+  // The standings are the Sheet's first column, so there is no separate Standings tab.
+  await expect(ticket.getByRole("button", { name: "Standings", exact: true })).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
+  await expect(ticket.locator(".lab-bowl-sheet tbody tr.is-you")).toContainText("Tyler");
 });
 
 test("in bowl season the room's ticker carries the bowls too, by the schools' short names under the bowl's name", async ({ page }) => {
@@ -584,11 +585,15 @@ test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a
   await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
   const sheet = ticket.getByRole("region", { name: /Bowl sheet/ });
   await expect(sheet.locator("tbody tr")).toHaveCount(2);
-  await expect(sheet.getByLabel(/^Earl, ROSE: \w+, lost$/)).toBeAttached();
+  await expect(sheet.getByLabel(/^Earl, Rose Bowl Game[^:]*: Indiana, lost$/)).toBeAttached();   // the Bowl Card's own names for the bowl and the school
   await expect(sheet.getByRole("img", { name: /Earl, .*: pick in, hidden until kickoff/ })).toHaveCount(1);
   await expect(sheet.getByRole("img", { name: /Earl, .*: no pick$/ })).toHaveCount(1);
-  await expect(sheet.getByLabel(/^Tyler, ROSE: \w+, won$/)).toBeAttached();
-  await expect(sheet.getByLabel("Tyler, CFP: no pick, a loss")).toBeAttached();   // a bowl that kicked off without a pick
+  await expect(sheet.getByLabel(/^Tyler, Rose Bowl Game[^:]*: Ohio State, won$/)).toBeAttached();
+  await expect(sheet.getByLabel("Tyler, CFP First Round: no pick, a loss")).toBeAttached();
+  // Wins only, on the Bowl Card's flip tiles; every bowl column the same width.
+  await expect(sheet.locator("thead th").first()).toHaveText("Wins");
+  const widths = await sheet.locator("col.lab-bowl-sheet-col-game").evaluateAll((cols) => cols.map((col) => Math.round(col.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);   // a bowl that kicked off without a pick
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {
