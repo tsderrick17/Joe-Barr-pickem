@@ -8,10 +8,10 @@
 export const MODE_KEY = "pickem-clubhouse-mode";
 
 /** The real page each pane shows, by its path. */
-export const PANE_PATHS = { "/": "standings", "/board": "slate", "/trophy-room": "trophies", "/bowl-pool": "bowl" };
-export const PANES = ["standings", "slate", "survivor", "trophies", "bowl", "rules"];
+export const PANE_PATHS = { "/": "standings", "/board": "slate", "/trophy-room": "trophies", "/bowl-pool": "bowl", "/profile": "notifications" };
+export const PANES = ["standings", "slate", "survivor", "trophies", "bowl", "rules", "notifications"];
 
-/** The pane a link opens in place, or null when it is a link out of the clubhouse (the profile, the Commissioner's pages). */
+/** The pane a link opens in place (Notifications is the cloud's pop-up), or null when it is a link out of the clubhouse (the Commissioner's pages). */
 export function paneForHref(href, origin) {
   if (String(href).startsWith("#")) return null;   // a jump within the open page (the rules' list of articles), never another page
   let url;

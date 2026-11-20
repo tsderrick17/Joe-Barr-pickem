@@ -1,0 +1,197 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { AddToHomeScreen } from "@/components/add-to-home-screen";
+import { HapticTap } from "@/components/haptic-tap";
+import { PhoneNotifications } from "@/components/phone-notifications";
+import { haptic } from "@/lib/haptics-client";
+import { useHapticsKind } from "@/lib/use-haptics";
+import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
+
+type NotificationChoices = {
+  weekly: boolean;
+  finalLines: boolean;
+  sundayFinalLines: boolean;
+  earlyLock: boolean;
+  pickDueSundayEarly: boolean;
+  pickDueSundayAfternoon: boolean;
+  pickDuePrimetime: boolean;
+  sundayEarlyReveal: boolean;
+  sundayLateReveal: boolean;
+  featuredWindowReveal: boolean;
+  weeklyRecap: boolean;
+  playoffDayRecap: boolean;
+  playoffPublicReveal: boolean;
+};
+
+type Profile = {
+  isCommissioner?: boolean;
+  notificationEmail: string;
+  senderEmail: string;
+  emailNotificationsEnabled: boolean;
+  emailWeeklyEnabled: boolean;
+  emailFinalLinesEnabled: boolean;
+  emailSundayFinalLinesEnabled: boolean;
+  emailEarlyLockEnabled: boolean;
+  emailPickDueSundayEarlyEnabled: boolean;
+  emailPickDueSundayAfternoonEnabled: boolean;
+  emailPickDuePrimetimeEnabled: boolean;
+  emailSundayEarlyRevealEnabled: boolean;
+  emailSundayLateRevealEnabled: boolean;
+  emailFeaturedWindowRevealEnabled: boolean;
+  emailWeeklyRecapEnabled: boolean;
+  emailPlayoffDayRecapEnabled: boolean;
+  emailPlayoffPublicRevealEnabled: boolean;
+};
+
+type NotificationPace = "essentials" | "regular" | "full" | "custom";
+type FinalLineChoice = "all" | "sunday" | "none";
+
+const essentials: NotificationChoices = { weekly: false, finalLines: false, sundayFinalLines: false, earlyLock: false, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: false, playoffPublicReveal: false };
+const regular: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: false };
+const full: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: true, sundayLateReveal: true, featuredWindowReveal: true, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: true };
+
+function matches(left: NotificationChoices, right: NotificationChoices) {
+  return (Object.keys(left) as Array<keyof NotificationChoices>).every((key) => left[key] === right[key]);
+}
+
+function paceFor(preferences: NotificationChoices): NotificationPace {
+  if (matches(preferences, essentials)) return "essentials";
+  if (matches(preferences, regular)) return "regular";
+  if (matches(preferences, full)) return "full";
+  return "custom";
+}
+
+/** The page's tick boxes. An iPhone shows them as its own switch, so flipping one gives the system tick; elsewhere they are plain boxes. */
+function TickBox({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  const asSwitch = useHapticsKind() === "iphone";
+  return <input checked={checked} className={`mt-1 ${asSwitch ? "shrink-0" : "size-4 accent-[#007e72]"}`} onChange={(event) => { haptic("tick"); onChange(event.target.checked); }} type="checkbox" {...(asSwitch ? { switch: "" } : {})} />;
+}
+
+function Choice({ checked, note, onChange, title }: { checked: boolean; note: string; onChange: (checked: boolean) => void; title: string }) {
+  return <label className="flex items-start gap-3 px-2 py-3 text-sm transition hover:bg-(color:--themed-bg-16)"><TickBox checked={checked} onChange={onChange} /><span><strong className="block text-(color:--themed-text-18)">{title}</strong><span className="block leading-5 text-slate-600">{note}</span></span></label>;
+}
+
+function PaceCard({ active, detail, onChoose, recommended = false, title }: { active: boolean; detail: string; onChoose: () => void; recommended?: boolean; title: string }) {
+  return <button aria-pressed={active} className={`relative min-h-32 border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007e72] ${active ? "border-2 border-[#007e72] bg-[#e8f4f0] shadow-[inset_6px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={() => { haptic("tick"); onChoose(); }} type="button">{recommended ? <span className="absolute right-3 top-3 rounded-full bg-[#007e72] px-2 py-1 text-[10px] font-black tracking-[.1em] text-white">RECOMMENDED</span> : null}<strong className="block pr-24 text-base">{title}</strong><span className="mt-2 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-3 block text-xs font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "✓ YOUR PLAN" : "CHOOSE THIS PLAN"}</span><HapticTap /></button>;
+}
+
+function FinalLinesChoice({ active, detail, onChoose, title }: { active: boolean; detail: string; onChoose: () => void; title: string }) {
+  return <button aria-pressed={active} className={`relative min-h-24 border px-4 py-3 text-left transition ${active ? "border-[#007e72] bg-[#e8f4f0] shadow-[inset_4px_0_0_#007e72]" : "border-zinc-300 bg-(color:--themed-bg-26) hover:border-[#16877f]"}`} onClick={() => { haptic("tick"); onChoose(); }} type="button"><strong className="block">{title}</strong><span className="mt-1 block text-sm leading-5 text-slate-600">{detail}</span><span className={`mt-2 block text-[10px] font-black tracking-[.12em] ${active ? "text-[#007e72]" : "text-slate-500"}`}>{active ? "SELECTED" : "CHOOSE"}</span><HapticTap /></button>;
+}
+
+/**
+ * A player's notification choices: getting the app, phone notifications, and pool emails with their pace. The Notifications page
+ * shows it; the clubhouse opens the same thing from its cloud, in a pop-up (`inSheet`: no page around it, no page-sized heading).
+ */
+export function NotificationSettings({ inSheet = false }: { inSheet?: boolean }) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [email, setEmail] = useState("");
+  const [enabled, setEnabled] = useState(false);
+  const [preferences, setPreferences] = useState<NotificationChoices>(regular);
+  const [showFineTune, setShowFineTune] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const update = (patch: Partial<NotificationChoices>) => setPreferences((current) => ({ ...current, ...patch }));
+  const pace = paceFor(preferences);
+  const finalLineChoice: FinalLineChoice = preferences.finalLines ? "all" : preferences.sundayFinalLines ? "sunday" : "none";
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const response = await fetchWithSession("/api/profile");
+        const data = await response.json() as Profile & { error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
+        if (!active) return;
+        setProfile(data);
+        setEmail(data.notificationEmail);
+        setEnabled(data.emailNotificationsEnabled);
+        setPreferences({
+          weekly: data.emailWeeklyEnabled,
+          finalLines: data.emailFinalLinesEnabled,
+          sundayFinalLines: data.emailSundayFinalLinesEnabled,
+          earlyLock: data.emailEarlyLockEnabled,
+          pickDueSundayEarly: data.emailPickDueSundayEarlyEnabled,
+          pickDueSundayAfternoon: data.emailPickDueSundayAfternoonEnabled,
+          pickDuePrimetime: data.emailPickDuePrimetimeEnabled,
+          sundayEarlyReveal: data.emailSundayEarlyRevealEnabled,
+          sundayLateReveal: data.emailSundayLateRevealEnabled,
+          featuredWindowReveal: data.emailFeaturedWindowRevealEnabled,
+          weeklyRecap: data.emailWeeklyRecapEnabled,
+          playoffDayRecap: data.emailPlayoffDayRecapEnabled,
+          playoffPublicReveal: data.emailPlayoffPublicRevealEnabled,
+        });
+      } catch (reason) {
+        if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+        else if (active) setError(reason instanceof Error ? reason.message : "Your notification settings could not be loaded.");
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true); setError(""); setMessage("");
+    try {
+      const response = await fetchWithSession("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notificationEmail: email,
+          emailNotificationsEnabled: enabled,
+          emailWeeklyEnabled: preferences.weekly,
+          emailFinalLinesEnabled: preferences.finalLines,
+          emailSundayFinalLinesEnabled: preferences.sundayFinalLines,
+          emailEarlyLockEnabled: preferences.earlyLock,
+          emailPickDueSundayEarlyEnabled: preferences.pickDueSundayEarly,
+          emailPickDueSundayAfternoonEnabled: preferences.pickDueSundayAfternoon,
+          emailPickDuePrimetimeEnabled: preferences.pickDuePrimetime,
+          emailSundayEarlyRevealEnabled: preferences.sundayEarlyReveal,
+          emailSundayLateRevealEnabled: preferences.sundayLateReveal,
+          emailFeaturedWindowRevealEnabled: preferences.featuredWindowReveal,
+          emailWeeklyRecapEnabled: preferences.weeklyRecap,
+          emailPlayoffDayRecapEnabled: preferences.playoffDayRecap,
+          emailPlayoffPublicRevealEnabled: preferences.playoffPublicReveal,
+        }),
+      });
+      const data = await response.json() as { error?: string; message?: string };
+      if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be saved.");
+      setProfile((current) => current ? { ...current, notificationEmail: email.trim(), emailNotificationsEnabled: enabled } : current);
+      setMessage(data.message ?? "Notification settings saved.");
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) window.location.replace("/login");
+      else setError(reason instanceof Error ? reason.message : "Your notification settings could not be saved.");
+    } finally { setSaving(false); }
+  }
+
+  if (!profile && !error) return inSheet ? <p className="notification-settings is-sheet">Loading Notifications…</p> : <main className="min-h-screen bg-(color:--themed-bg-18) p-8 text-(color:--themed-text-18)">Loading Notifications…</main>;
+
+  const body = <>
+    {inSheet ? null : <h1 className="font-serif text-4xl font-bold">Notifications</h1>}
+    <AddToHomeScreen variant="card" />
+    <PhoneNotifications />
+    <form className="mt-8 border-y-2 border-(color:--themed-border-10) py-6" onSubmit={save}>
+      <label className="block text-sm font-bold tracking-wide" htmlFor="notification-email">EMAIL ADDRESS</label>
+      <input autoComplete="email" className="mt-2 min-h-12 w-full border border-zinc-500 bg-(color:--themed-bg-26) px-3 py-2 outline-none focus:border-[#007e72]" id="notification-email" onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" type="email" value={email} />
+      <label className="mt-5 flex items-start gap-3 border-y border-zinc-300 py-5 text-sm"><TickBox checked={enabled} onChange={setEnabled} /><span><strong className="block">Send pool emails to this address</strong>You can change the pace below whenever you like.</span></label>
+      {enabled ? <div className="mt-7 space-y-8">
+        <section><h2 className="text-sm font-black tracking-[.14em]">CHOOSE YOUR EMAIL PLAN</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><PaceCard active={pace === "essentials"} detail="Selection reminders and the Tuesday recap." onChoose={() => setPreferences(essentials)} title="Essentials" /><PaceCard active={pace === "regular"} detail="Essentials, plus the Slate, final lines, Int’l locks, and playoff recaps." onChoose={() => setPreferences(regular)} recommended title="Regular" /><PaceCard active={pace === "full"} detail="Everything in Regular, plus every public pick reveal." onChoose={() => setPreferences(full)} title="Full Card" /></div></section>
+
+        <section className="border-y border-zinc-300 py-5"><button aria-expanded={showFineTune} className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setShowFineTune((current) => !current)} type="button"><strong className="block text-sm tracking-[.12em]">FINE-TUNE THE DETAILS</strong><span className="text-xl text-[#007e72]">{showFineTune ? "−" : "+"}</span></button>{showFineTune ? <div className="mt-5 space-y-7">
+          <section><h3 className="text-xs font-black tracking-[.14em]">FINAL GAMEDAY LINES</h3><p className="mt-1 text-sm text-slate-600">Choose the official-line email pace that fits you.</p><div className="mt-3 grid gap-3 sm:grid-cols-3"><FinalLinesChoice active={finalLineChoice === "none"} detail="No final-line emails." onChoose={() => update({ finalLines: false, sundayFinalLines: false })} title="None" /><FinalLinesChoice active={finalLineChoice === "sunday"} detail="Sent once Sunday’s official lines are ready." onChoose={() => update({ finalLines: false, sundayFinalLines: true })} title="Sundays only" /><FinalLinesChoice active={finalLineChoice === "all"} detail="Sent once that day’s official lines are ready." onChoose={() => update({ finalLines: true, sundayFinalLines: false })} title="All gamedays" /></div></section>
+          <section><h3 className="text-xs font-black tracking-[.14em]">SLATE DELIVERY</h3><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.earlyLock} note="Before an International game locks: official line and kickoff reminder." onChange={(checked) => update({ earlyLock: checked })} title="International lock" /><Choice checked={preferences.weekly} note="Wednesday morning: next week’s full preliminary Slate, before official lines." onChange={(checked) => update({ weekly: checked })} title="Fresh Slate on Wednesday" /></div></section>
+          <section><h3 className="text-xs font-black tracking-[.14em]">SELECTION REMINDERS</h3><p className="mt-1 text-sm text-slate-600">Each one goes only to players who can still make a needed selection.</p><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.pickDueSundayEarly} note="Sunday at 11 AM ET." onChange={(checked) => update({ pickDueSundayEarly: checked })} title="Sunday early" /><Choice checked={preferences.pickDueSundayAfternoon} note="Sunday at 3 PM ET." onChange={(checked) => update({ pickDueSundayAfternoon: checked })} title="Sunday afternoon" /><Choice checked={preferences.pickDuePrimetime} note="Sunday at 6 PM ET and Monday at 5 PM ET." onChange={(checked) => update({ pickDuePrimetime: checked })} title="Sunday & Monday primetime" /></div></section>
+          <section><h3 className="text-xs font-black tracking-[.14em]">PUBLIC PICK REVEALS</h3><p className="mt-1 text-sm text-slate-600">These go out after kickoff only when someone selected a game in that window. Later picks stay private.</p><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.sundayEarlyReveal} note="When the Sunday early window begins." onChange={(checked) => update({ sundayEarlyReveal: checked })} title="Sunday early window" /><Choice checked={preferences.sundayLateReveal} note="When the Sunday late window begins." onChange={(checked) => update({ sundayLateReveal: checked })} title="Sunday late window" /><Choice checked={preferences.featuredWindowReveal} note="At kickoff, only when at least one player picked that primetime or International game." onChange={(checked) => update({ featuredWindowReveal: checked })} title="Primetime and International windows" /></div></section>
+          <section><h3 className="text-xs font-black tracking-[.14em]">RECAPS & PLAYOFFS</h3><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.weeklyRecap} note="Tuesday morning: final Pick’em results and updated standings. Survivor is included only while it remains relevant." onChange={(checked) => update({ weeklyRecap: checked })} title="Weekly recap" /><Choice checked={preferences.playoffDayRecap} note="After every playoff game day is final: results, standings, eliminations, and any newly crowned champion." onChange={(checked) => update({ playoffDayRecap: checked })} title="Daily playoff recap" /><Choice checked={preferences.playoffPublicReveal} note="At every playoff kickoff. Games are combined only when they start at the same time." onChange={(checked) => update({ playoffPublicReveal: checked })} title="All playoff pick reveals" /></div></section>
+        </div> : null}</section>
+      </div> : null}
+      {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}{message ? <p className="mt-4 font-semibold text-green-800">{message}</p> : null}
+      {enabled ? <aside className="mt-4 border-l-4 border-[#007e72] bg-(color:--themed-bg-26) px-4 py-3 text-sm leading-5"><strong className="block">Keep PickemJB out of spam</strong>Add <span className="break-all font-mono font-bold">{profile?.senderEmail || "the PickemJB From address shown in your email"}</span> to your contacts or safe-senders list as <span className="font-bold">PickemJB</span>. This is the address that appears as the sender.</aside> : null}
+      <button className="mt-6 min-h-12 bg-[#007e72] px-5 py-3 font-bold text-white shadow-[0_2px_0_#07564f] transition hover:bg-[#086f66] disabled:opacity-50" disabled={saving} type="submit">{saving ? "Saving…" : "Save notification choices"}</button>
+    </form>
+  </>;
+  if (inSheet) return <div className="notification-settings is-sheet">{body}</div>;
+  return <main className="min-h-screen bg-(color:--themed-bg-18) px-4 py-8 text-(color:--themed-text-18) sm:px-6 sm:py-12"><div className="mx-auto max-w-3xl">{body}</div></main>;
+}

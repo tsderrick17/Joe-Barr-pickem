@@ -615,8 +615,10 @@ flies a plain navy pennant with only its name has no logo yet. For each one, and
 changed:
 
 1. Take the logo from the bowl's Wikipedia article (the infobox image; space requests out, Wikipedia
-   refuses quick repeats), trim the empty edges, shrink it to at most 200 x 160 and save it as
-   `public/bowl-logos/<name>.webp`.
+   refuses quick repeats), cut away any solid box behind it (white or black) so only the logo is left,
+   save it as `public/bowl-logos/<name>.webp`, then run `node scripts/fit-bowl-logos.mjs <name>`: it
+   puts the logo on the standard clear 192 x 92 canvas at the same size as every other bowl's (a test
+   checks every file).
 2. Add or update its row in `src/lib/bowl-logos.js`: a pattern for its name, the logo file, a short name
    for the plain pennant, and a cloth and hoist colour taken from the logo.
 3. `node --test test/bowl-ticket-view.test.mjs` checks every listed logo file exists.

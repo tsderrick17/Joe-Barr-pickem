@@ -8,6 +8,7 @@ import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, pr
 import { Constitution, RoomScene, Ticket, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
+import { NotificationSettings } from "@/components/notification-settings";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
@@ -32,9 +33,9 @@ import { useStableCallback } from "@/lib/use-stable-callback";
  *    or a pick is sent (so a pick shows in the ticket's lamps at once), when the app comes back to the front, and every five minutes.
  * It can never show more than the classic pages do, and a pick sent here is the very same pick (the same POST the Slate makes).
  */
-type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules";
-const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules" };
-const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution" };
+type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications";
+const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications" };
+const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications" };
 // The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
 const DECK: Pane[] = ["standings", "slate", "survivor", "bowl"];
 // The classic pages, loaded the first time they are opened: any week the new board does not cover.
@@ -141,8 +142,11 @@ export default function ClubhousePage() {
   }, []);
 
   const closeChat = useCallback(() => { setChatOpen(false); if (window.location.hash === "#chat") window.history.replaceState(null, "", "/clubhouse"); }, []);
-  const show = useCallback((next: Pane) => {
+  // Which side your ticket opens on: Pick'em, or Survivor when the Survivor table's Pick button opened it (only for that one opening).
+  const [ticketStart, setTicketStart] = useState<"pickem" | "survivor">("pickem");
+  const show = useCallback((next: Pane, start: "pickem" | "survivor" = "pickem") => {
     setChatOpen(false);
+    setTicketStart(start);
     if (paneFromHash(window.location.hash)) window.history.replaceState(null, "", `/clubhouse#${next}`);   // page to page: still one step back to the room
     else { window.history.pushState(null, "", `/clubhouse#${next}`); openedHere.current = true; setLookBack(null); }   // opened from the room: the board starts on this week
     setPane(next);
@@ -212,7 +216,7 @@ export default function ClubhousePage() {
   // The board's sheet: which pane it shows, and its switch. The third tab is Survivor while it runs, then the Bowl Pool in bowl season
   // (whichever was asked for, when both are on).
   const deck: Pane | null = shown && DECK.includes(shown) && popup(shown) && (shown === "survivor" || shown === "bowl" || view) ? shown : null;
-  const survivorTab = Boolean(room?.home.survivorAvailable) && !room?.home.isPlayoff;
+  const survivorTab = Boolean(room?.feed.survivorShown);
   const third: Pane | null = shown === "survivor" || shown === "bowl" ? shown : room?.feed.bowl && (room.feed.survivorOver || !survivorTab) ? "bowl" : survivorTab ? "survivor" : room?.feed.bowl ? "bowl" : null;
   const tabs: DeckTab[] = [...(view ? [{ pane: "standings", label: "Big Board" }, { pane: "slate", label: "Ticket" }] : []), ...(third ? [{ pane: third, label: third === "bowl" ? "Bowl Pool" : "Survivor" }] : [])];
   // The Bowl Pool's read, fetched ahead once its spot is in the room, so its ticket opens already full.
@@ -224,7 +228,7 @@ export default function ClubhousePage() {
   const leave = (...panes: Pane[]) => { if (paneRef.current && panes.includes(paneRef.current)) close(); };
 
   // Once Survivor is over, its poker table is the Bowl Pool's.
-  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room?.feed.survivorOver ? "bowl" : SPOT_PANE[spot] ?? null);
+  const paneOfSpot = (spot: string): Pane | null => (spot === "survivor" && room?.feed.survivorOver && room.feed.bowl ? "bowl" : SPOT_PANE[spot] ?? null);
 
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
@@ -236,12 +240,13 @@ export default function ClubhousePage() {
       {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}
         {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
-        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
-        {deck === "survivor" ? <SurvivorPopup home={room.home} /> : null}
+        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} onWeek={(weekId) => void chooseWeek(weekId)} startOn={ticketStart} view={view} /> : null}
+        {deck === "survivor" ? <SurvivorPopup home={room.home} onPick={view?.survivor.playing ? () => show("slate", "survivor") : undefined} /> : null}
         {deck === "bowl" ? <BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
       </Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
+      {popup("notifications") ? <Sheet onClose={() => leave("notifications")} open title="Notifications"><NotificationSettings inSheet /></Sheet> : null}
       {classic ? <section aria-label="Standings" className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>

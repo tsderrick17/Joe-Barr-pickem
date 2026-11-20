@@ -128,7 +128,7 @@ test("the tote Pad keeps today's columns, hides other players' picks until kicko
   await expect(pad.locator(".lab-tote-slip.is-w").first()).toContainText("win");
   // The names wear the colours of the ticket's lamps: yellow while undecided, green for a win, red for a loss.
   const colour = (selector: string) => pad.locator(selector).first().evaluate((node) => getComputedStyle(node).color);
-  expect(await colour(".lab-tote-slip:not(.is-w):not(.is-l)")).toBe("rgb(255, 208, 80)");
+  expect(await colour(".lab-tote-slip:not(.is-w):not(.is-l)")).toBe("rgb(238, 194, 104)");
   expect(await colour(".lab-tote-slip.is-w")).toBe("rgb(128, 200, 152)");
   expect(await colour(".lab-tote-slip.is-l")).toBe("rgb(220, 126, 114)");
   // Survivor is the team's logo, centred in its column whatever the result.

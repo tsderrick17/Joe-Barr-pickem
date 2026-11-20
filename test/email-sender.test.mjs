@@ -8,7 +8,7 @@ test("email reminders identify PickemJB as the visible sender", async () => {
 });
 
 test("Notifications shows the externally visible safe-sender address only after email opt-in", async () => {
-  const source = await readFile(new URL("../src/app/profile/page.tsx", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/components/notification-settings.tsx", import.meta.url), "utf8");
   const route = await readFile(new URL("../src/app/api/profile/route.ts", import.meta.url), "utf8");
   assert.match(source, /\{enabled \? <aside[^>]*>.*Keep PickemJB out of spam.*senderEmail.*as <span className="font-bold">PickemJB<\/span>.*appears as the sender.*<\/aside> : null\}/s);
   assert.match(route, /BREVO_PUBLIC_SENDER_EMAIL \?\? process\.env\.BREVO_SENDER_EMAIL/);

@@ -174,7 +174,7 @@ type Picture = { width: number; height: number; spots: Record<string, Spot>; scr
 const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 
 /** Each thing in the picture that can be tapped: where it goes, the name on its plate, and where the plate sits. */
-const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; fullAt?: { x: number; y: number }; ticket?: boolean }> = [
+const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; fullAt?: { x: number; y: number }; ticket?: boolean; realOnly?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
@@ -185,6 +185,9 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
+  // Notifications float in a cloud in the glass doors at the middle of the room, out in the sky (the real clubhouse only: it opens the
+  // player's own settings).
+  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.36, y: 0.387 }, fullAt: { x: 0.36, y: 0.41 }, wideAt: { x: 0.43, y: 0.3 }, realOnly: true },
 ];
 
 type Season = "regular" | "bowls";
@@ -226,7 +229,7 @@ export type RoomGame = { id: string; kickoff: string; away: string; home: string
  * there), the line of news on a label, whether a pick is owed, a new chat message, whether the Bowl Pool is wheeled in, and whether Survivor is over (then the poker table is the Bowl Pool's). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean };
+export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean };
 
 function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed }) {
   const rows = feed.standings;
@@ -355,10 +358,12 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   const key = `${bulletin ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
   const picture = PICTURES[`day${key}`] ?? PICTURES[`day${bulletin ? "-bowl" : ""}`];
   const news = feed.news;
-  // Once Survivor is over (decided, or the playoffs), the poker table stops being Survivor's: it is where the Bowl Pool sits, in the
-  // Bowl Pool's own navy and gold so it is not mistaken for the old table, and the Bowl Pool's separate spot is not drawn twice.
-  const taken = Boolean(feed.survivorOver);
-  const spots = SPOTS.filter(({ spot, at }) => (at || picture.spots[spot]) && (!hrefFor || hrefFor(spot) !== null) && !(taken && spot === "bowl"))
+  // Once Survivor is over (decided, or the playoffs) and the bowls are on, the poker table is where the Bowl Pool sits, in the Bowl Pool's
+  // own navy and gold so it is not mistaken for the old table, and the Bowl Pool's separate spot is not drawn twice. Between the two (Survivor
+  // decided more than a week ago, the Bowl Pool not open until Dec 7) the table has no spot at all.
+  const taken = Boolean(feed.survivorOver && feed.bowl);
+  const survivorGone = feed.survivorShown === false && !taken;
+  const spots = SPOTS.filter(({ spot, at, realOnly }) => (at || picture.spots[spot]) && !(realOnly && !hrefFor) && (!hrefFor || hrefFor(spot) !== null) && !(taken && spot === "bowl") && !(survivorGone && spot === "survivor"))
     .map((item) => (taken && item.spot === "survivor" ? { ...item, room: "bowl" as Room, name: "Bowl Pool" } : item));
   const room = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState<{ width: number; height: number } | null>(null);
@@ -389,8 +394,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
           if (spot === "chat") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
         }
         const plate = label === "none" ? null : (
-          <span className={`lab-room-tag is-${label}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
-            <b aria-hidden="true">{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
+          <span className={`lab-room-tag is-${label}${spot === "notify" ? " is-cloud" : ""}${news[spot] ? " has-news" : ""}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>
+            <b aria-hidden="true">{spot === "notify" ? <svg className="lab-room-bell" focusable="false" viewBox="0 0 16 16"><path d="M8 1.5a1 1 0 0 1 1 1v.6a4.2 4.2 0 0 1 3.2 4.1v2.6l1.3 1.7H2.5l1.3-1.7V7.2A4.2 4.2 0 0 1 7 3.1v-.6a1 1 0 0 1 1-1ZM6.3 12.8h3.4a1.7 1.7 0 0 1-3.4 0Z" /></svg> : null}{tag ?? name}<i /></b>{news[spot] ? <small aria-hidden="true">{news[spot]}</small> : null}
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>
         );

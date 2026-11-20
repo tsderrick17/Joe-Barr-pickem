@@ -48,7 +48,7 @@ export function DeckTabs({ tabs, current, onChoose }: { tabs: DeckTab[]; current
  * Your ticket, the middle tab of the clubhouse's board: sends the very same POST the Slate makes. Always there to look at, every week: once
  * every game has kicked off it is the week's ticket as it stands, nothing left to change.
  */
-export function TicketPanel({ view, onSent, onChanged, onWeek }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void>; onWeek?: (weekId: string) => void }) {
+export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem" }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void>; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor" }) {
   // All games / Pool action is the Slate's own choice, saved to the same place (the profile), and kept while the clubhouse is open.
   const [actionOnly, setActionOnly] = useState<boolean | null>(null);
   const poolAction = actionOnly ?? view.poolAction;
@@ -95,7 +95,7 @@ export function TicketPanel({ view, onSent, onChanged, onWeek }: { view: BoardVi
 
   return (
     <>
-      <TicketForm key={view.weekId ?? ""} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} view={view} />
+      <TicketForm key={`${view.weekId ?? ""}-${startOn}`} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} startOn={startOn} view={view} />
       {/* In the playoffs, Forfeit sits at the very foot of the ticket, as on the Slate: three questions, and only the last one acts. */}
       {view.playoff?.you.forfeitAvailable ? <ForfeitPanel /> : null}
     </>
@@ -106,8 +106,8 @@ export function TicketPanel({ view, onSent, onChanged, onWeek }: { view: BoardVi
  * The Survivor table, the Standings' own rows, in the Big Board's housing with the same two tabs. Always the whole table: this view has no
  * show/hide switches, so a player's own display choices never blank it.
  */
-export function SurvivorPopup({ home, onBoard }: { home: StandingsResponse; onBoard?: () => void }) {
-  return <SurvivorToteBoard home={home} onBoard={onBoard} />;
+export function SurvivorPopup({ home, onBoard, onPick }: { home: StandingsResponse; onBoard?: () => void; onPick?: () => void }) {
+  return <SurvivorToteBoard home={home} onBoard={onBoard} onPick={onPick} />;
 }
 
 type Season = Parameters<typeof RealTrophyRoom>[0]["trophies"][number];

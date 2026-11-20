@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings } from "../src/lib/clubhouse-feed.js";
+import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings, survivorStillShown } from "../src/lib/clubhouse-feed.js";
 
 const game = (id, away, home, extra = {}) => ({
   id, awayTeamId: away.toLowerCase(), homeTeamId: home.toLowerCase(), awayTeamAbbreviation: away, homeTeamAbbreviation: home,
@@ -147,4 +147,13 @@ test("the ▲▼ counts ties as shared places: still tied is no move, breaking a
   assert.deepEqual(moves({ a: 10, b: 8, c: 8, d: 8 }, { a: 9, b: 8, c: 7, d: 6 }), { a: 0, b: 0, c: 1, d: 2 });
   // Everyone level (the season's first week): all share 1st, so last week's order does not count as falling.
   assert.deepEqual(moves({ a: 1, b: 1, c: 1 }, { a: 0, b: 0, c: 0 }), { a: 0, b: 0, c: 0 });
+});
+
+test("Survivor stays on the screens while it runs and for 8 days after it is decided, never in the playoffs or once it has gone", () => {
+  const now = Date.parse("2026-11-19T12:00:00Z");
+  assert.equal(survivorStillShown({ survivorAvailable: true }, now), true);
+  assert.equal(survivorStillShown({ survivorAvailable: true, survivorComplete: true, survivorCrownedAt: "2026-11-15T12:00:00Z" }, now), true);
+  assert.equal(survivorStillShown({ survivorAvailable: true, survivorComplete: true, survivorCrownedAt: "2026-11-05T12:00:00Z" }, now), false);
+  assert.equal(survivorStillShown({ survivorAvailable: true, isPlayoff: true }, now), false);
+  assert.equal(survivorStillShown({ survivorAvailable: false }, now), false);
 });
