@@ -199,8 +199,9 @@ const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y
   wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
 };
 
-/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): low on the open floor at the right, clear of everything. */
-const BOWL_PLATE = { tall: { x: 0.8, y: 0.862 }, full: { x: 0.8, y: 0.79 }, wide: { x: 0.78, y: 0.84 } };
+/** The Bowl Pool's plate when its bulletin board is not in the room (before Dec 7): on the floor below the Survivor plate, in line with it,
+ * level with the chairs' feet. */
+const BOWL_PLATE = { tall: { x: 0.235, y: 0.774 }, full: { x: 0.235, y: 0.72 }, wide: { x: 0.35, y: 0.81 } };
 
 type Season = "regular" | "bowls";
 

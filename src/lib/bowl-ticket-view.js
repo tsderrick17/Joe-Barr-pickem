@@ -22,17 +22,28 @@ const EASTERN_DAY = dateFormat("en-US", { timeZone: "America/New_York", weekday:
 const EASTERN_TIME = dateFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
 const OFF = new Set(["postponed", "cancelled", "no_contest"]);
 
-/** The side a team id is, for a game: the favourite is the line's favourite (the away team before there is a line). */
-function sideOf(game, teamId) {
-  const favorite = game.line?.favorite_team_id ?? game.away_team_id ?? game.awayTeam?.id ?? null;
-  return teamId === favorite ? "favorite" : "underdog";
+const awayIdOf = (game) => game.away_team_id ?? game.awayTeam?.id ?? null;
+const homeIdOf = (game) => game.home_team_id ?? game.homeTeam?.id ?? null;
+/** The favourite's team id: the line's favourite when it is one of the two teams, else the away team (before there is a line, or a line
+ * whose favourite is neither school). The two sides are therefore always the two different teams, never both the same side. */
+function favoriteIdOf(game) {
+  const awayId = awayIdOf(game), homeId = homeIdOf(game), lined = game.line?.favorite_team_id ?? null;
+  return lined && (lined === awayId || lined === homeId) ? lined : awayId ?? homeId;
+}
+
+/** The side a team is, for a game (by its place when the team is not known yet: the away team is the favourite unless the home team is). */
+function sideOf(game, teamId, place = null) {
+  const favorite = favoriteIdOf(game);
+  if (teamId) return teamId === favorite ? "favorite" : "underdog";
+  const homeFavored = favorite !== null && favorite === homeIdOf(game);
+  return (place === "home") === homeFavored ? "favorite" : "underdog";
 }
 
 /** The team a side is, for a game. */
 export function bowlTeamForSide(game, side) {
-  const awayId = game.away_team_id ?? game.awayTeam?.id ?? null;
-  const homeId = game.home_team_id ?? game.homeTeam?.id ?? null;
-  const favorite = game.line?.favorite_team_id ?? awayId;
+  const awayId = awayIdOf(game);
+  const homeId = homeIdOf(game);
+  const favorite = favoriteIdOf(game);
   const id = side === "favorite" ? favorite : favorite === awayId ? homeId : awayId;
   return { id, team: id === awayId ? game.awayTeam : game.homeTeam };
 }
@@ -75,8 +86,8 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
     const locked = off || (Number.isFinite(kickoff) && now >= kickoff);
     const final = game.status === "final" && Number.isInteger(game.away_score) && Number.isInteger(game.home_score);
     const pennant = bowlPennant(game.bowl_name);
-    const cell = (team, teamId, score) => {
-      const side = sideOf(game, teamId);
+    const cell = (team, teamId, score, place) => {
+      const side = sideOf(game, teamId, place);
       let covered = null;
       if (final && game.line?.locked_spread != null && teamId) {
         const other = teamId === game.away_team_id ? game.home_score : game.away_score;
@@ -96,7 +107,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       ...pennant,
       day: Number.isFinite(kickoff) ? EASTERN_DAY.format(new Date(kickoff)).toUpperCase().replace(",", "") : "DATE TBD",
       time: Number.isFinite(kickoff) && game.time_confirmed !== false ? EASTERN_TIME.format(new Date(kickoff)) : "Time TBD",
-      cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score)],
+      cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score, "away"), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score, "home")],
       locked,
       final,
       note: bowlDisruptionLabel(game.status) ?? bowlGameNote(game, new Date(now)) ?? null,
@@ -144,12 +155,15 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
-  // Each school by the name the Bowl Card gives it (told apart from its opponent when the two would read alike).
+  // Each school by its short abbreviation (ESPN's), or the Bowl Card's name for it when it has none.
   const teamLabel = (gameId, teamId) => {
     const game = raw.get(gameId);
     if (!game || !teamId) return "?";
-    const [away, home] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
-    return teamId === (game.away_team_id ?? game.awayTeam?.id) ? away : home;
+    const away = teamId === (game.away_team_id ?? game.awayTeam?.id);
+    const team = away ? game.awayTeam : game.homeTeam;
+    if (team?.abbreviation) return team.abbreviation;
+    const [awayLabel, homeLabel] = bowlMatchupTeamLabels(game.awayTeam, game.homeTeam);
+    return away ? awayLabel : homeLabel;
   };
   const shown = new Map((payload?.publicPicks ?? []).map((pick) => [`${pick.playerId}:${pick.game_id}`, pick]));
   const markers = new Set((payload?.privatePickMarkers ?? []).map((pick) => `${pick.playerId}:${pick.game_id}`));

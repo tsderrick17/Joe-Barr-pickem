@@ -102,13 +102,13 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
         <section aria-label="Bowl picks" className="lab-window-part">
           {view.games.length === 0 ? <p className="lab-board-note">The bowl schedule is not set yet.</p> : null}
           {days.map((day) => {
-            // Each game day is its own card, headed by a gold tab for the weekday, the date beside it, and how many bowls that day has.
+            // Each game day is its own card, headed by a gold tab for the weekday, the date beside it, and how many games that day has.
             const games = view.games.filter((game) => game.day === day);
             const [weekday, ...date] = day.split(" ");
             const dated = date.length > 0 && weekday !== "DATE";
             return (
             <div className="lab-bowl-day" key={day}>
-              <h4>{dated ? <><b>{weekday}</b><span>{date.join(" ")}</span></> : <span>{day}</span>}<small>{games.length} {games.length === 1 ? "BOWL" : "BOWLS"}</small></h4>
+              <h4>{dated ? <><b>{weekday}</b><span>{date.join(" ")}</span></> : <span>{day}</span>}<small>{games.length} {games.length === 1 ? "GAME" : "GAMES"}</small></h4>
               <ol>
                 {games.map((game) => {
                   const cell = (index: number) => {

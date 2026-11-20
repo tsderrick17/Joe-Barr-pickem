@@ -103,3 +103,10 @@ test("the Bowl sheet: each player's school once a bowl kicks off, a lamp before 
   assert.deepEqual(row("Tyler"), [{ kind: "pick", team: "IND", result: "L" }, { kind: "pick", team: "TEX", result: null }]);
   assert.deepEqual(row("Walt"), [{ kind: "none", result: null, missed: true }, { kind: "none", result: null, missed: false }]);
 });
+
+test("a line whose favourite is neither school still gives the two schools different sides, so picking one never picks both", () => {
+  const view = bowlTicketView({ games: [{ id: "g", bowl_name: "Sun Bowl", kickoff_at: "2026-12-31T19:00:00Z", status: "scheduled", away_team_id: "a", home_team_id: "h", awayTeam: { id: "a", short_name: "Duke" }, homeTeam: { id: "h", short_name: "Utah" }, line: { favorite_team_id: "someone-else", locked_spread: 3 } }] }, { now: Date.parse("2026-12-20T12:00:00Z") });
+  assert.deepEqual(view.games[0].cells.map((cell) => cell.side), ["favorite", "underdog"]);
+  const noTeams = bowlTicketView({ games: [{ id: "g", bowl_name: "Sun Bowl", kickoff_at: "2026-12-31T19:00:00Z", status: "scheduled" }] }, { now: Date.parse("2026-12-20T12:00:00Z") });
+  assert.deepEqual(noTeams.games[0].cells.map((cell) => cell.side), ["favorite", "underdog"]);
+});
