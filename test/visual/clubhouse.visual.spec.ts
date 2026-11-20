@@ -196,9 +196,12 @@ test("a player sent back from the clubhouse has the switch put down, so the Stan
   await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
   await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
   await page.goto("/");
+  // Off to the clubhouse, refused, the switch put down, and back to the Standings to stay.
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode")), { timeout: 30_000 }).toBe("off");
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
-  expect(await page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode"))).toBe("off");
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/\/$/);   // and it stays
 });
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
@@ -428,6 +431,42 @@ test("opening the clubhouse loads one room picture (the one on screen), never th
   expect(early.some((path) => path.startsWith("/api/trophy-room"))).toBe(false);
   await expect.poll(() => asked.some((entry) => entry.path.startsWith("/api/trophy-room")), { timeout: 10_000 }).toBe(true);
   expect(asked.some((entry) => entry.path.endsWith("-full.webp"))).toBe(false);
+});
+
+test("until the loading football's spin frames are ready it shows the ball itself, still, never a grey ghost of one", async ({ page }) => {
+  await openClubhouse(page);
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  // Open it again with the frames never arriving and the pool's read held, so the loading screen stays up.
+  await page.route("**/football-spin.webp", (route) => route.abort());
+  await page.route("**/api/home**", () => undefined);
+  await page.goto("/clubhouse", { waitUntil: "commit" });
+  const ball = page.locator(".football-loader-ball").first();
+  await expect(ball).toBeVisible({ timeout: 30_000 });
+  await expect(ball).not.toHaveClass(/is-ready/);
+  expect(await ball.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("football-still.webp");
+});
+
+test("pulling down to refresh in the clubhouse reads the room again in place: no reload, no loading screen", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));   // pull to refresh runs in the installed app
+  let homeReads = 0;
+  page.on("request", (request) => { if (new URL(request.url()).pathname === "/api/home") homeReads += 1; });
+  await openClubhouse(page);
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
+  await page.evaluate(() => { (window as unknown as { stayed: boolean }).stayed = true; });
+  const before = homeReads;
+  await page.evaluate(() => {
+    const target = document.body;
+    const touch = (y: number) => new Touch({ identifier: 1, target, clientX: 195, clientY: y });
+    const send = (type: string, y: number | null) => target.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: y === null ? [] : [touch(y)], changedTouches: [touch(y ?? 0)] }));
+    send("touchstart", 100);
+    for (let step = 1; step <= 10; step += 1) send("touchmove", 100 + (160 * step) / 10);
+    send("touchend", null);
+  });
+  await expect.poll(() => homeReads, { timeout: 10_000 }).toBeGreaterThan(before);
+  await expect(page.locator(".pull-refresh-cover")).toHaveCount(0);   // no loading screen over the room
+  await expect(page.locator(".pull-chain")).toHaveCount(0, { timeout: 10_000 });   // the chain goes once the room is read
+  expect(await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed)).toBe(true);   // the same page: no reload
 });
 
 test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {

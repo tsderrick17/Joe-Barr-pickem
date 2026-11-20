@@ -1,6 +1,23 @@
 "use client";
 
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useSyncExternalStore } from "react";
+
+/**
+ * Whether the spin's frames (633 KB) are decoded. Until they are, the ball shows its first frame as a small still picture
+ * (public/football-still.webp, 5 KB), so the screen never shows the blurred shadow alone, a grey ghost of a ball.
+ */
+let sheetReady = false;
+const waiting = new Set<() => void>();
+function watchSheet(change: () => void) {
+  waiting.add(change);
+  if (!sheetReady && waiting.size === 1) {
+    const sheet = new window.Image();
+    sheet.src = "/football-spin.webp";
+    // Frames that never arrive leave the still ball up: a ball that does not turn, never an empty or ghostly one.
+    sheet.decode().then(() => { sheetReady = true; waiting.forEach((notify) => notify()); }, () => undefined);
+  }
+  return () => waiting.delete(change);
+}
 
 /**
  * The loading football: the approved ball (ray-cast in 3D, football-stills/football-v16.html), pre-rendered as 108
@@ -10,9 +27,10 @@ import { useLayoutEffect } from "react";
  * With reduced motion it is a still ball.
  */
 export default function FootballLoader({ label = "Loading" }: { label?: string }) {
+  const ready = useSyncExternalStore(watchSheet, () => sheetReady, () => false);
   return (
     <div aria-live="polite" className="football-loader" role="status">
-      <span aria-hidden="true" className="football-loader-tilt"><span className="football-loader-ball"><span className="football-loader-sheet" /></span></span>
+      <span aria-hidden="true" className="football-loader-tilt"><span className={`football-loader-ball${ready ? " is-ready" : ""}`}><span className="football-loader-sheet" /></span></span>
       <span className="football-loader-label">{label}</span>
     </div>
   );
