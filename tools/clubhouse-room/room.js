@@ -890,7 +890,7 @@ export async function buildRoom(q) {
       const top = smallPot(z, 0.07, 0.1, material);
       const bead = new THREE.SphereGeometry(0.011, 8, 6);
       for (let k = 0; k < 9; k++) {
-        const zz = z + (rand() - 0.5) * 0.12, LIP = LEDGE_X + 0.14, hang = 0.15 + rand() * 0.5;
+        const zz = z + (rand() - 0.5) * 0.12, LIP = LEDGE_X + 0.14, hang = 0.1 + rand() * 0.2;   // short strands: they stop above the neon sign
         for (let b = 0; b < 4; b++) add(room, bead, succulent, [LEDGE_X + 0.03 + b * 0.028, top - 0.005 - b * 0.012, zz], { cast: false });
         for (let b = 0; b * 0.024 < hang; b++) add(room, bead, b % 4 ? succulent : sage, [LIP + 0.01 + Math.sin(b * 0.7 + k) * 0.008, LEDGE_Y - b * 0.024, zz + Math.sin(b * 0.4 + k) * 0.01], { cast: false });
       }
@@ -923,7 +923,7 @@ export async function buildRoom(q) {
   ledgePlants.monstera(-7.75, chalk, 1.3); ledgePlants.keepsakes(-8.15);
   ledgePlants.pearls(-8.5, terracotta); ledgePlants.snake(-8.85, slate);
   ledgePlants.nest(-9.4, glazed); ledgePlants.cactus(-9.85, chalk);
-  ledgePlants.pothos(-10.3, terracotta, 1.1); ledgePlants.fern(-10.85, basket, 0.24);
+  ledgePlants.pothos(-10.3, terracotta, 0.45);   // kept short: it hangs over the neon sign ledgePlants.fern(-10.85, basket, 0.24);
   add(room, rbox(0.08, 2.4, 0.55, 0.04), std(0x3f8fb0, { roughness: 0.35 }), [X1 - 0.2, 1.2, ZB + 1.9], { rot: [0, 0, 0.13] });
   for (const [x, z] of [[-4.6, ZB - 1.2], [-1.6, ZB - 1.4], [1.6, ZB - 1.4], [4.6, ZB - 1.2]]) {
     add(out, cyl(0.03, 0.04, 1.8, 8), std(0x6b4a2a), [x, 0.9, z]);
