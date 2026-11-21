@@ -296,7 +296,7 @@ export default function ClubhousePage() {
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
-      {room.ticket ? <Ticket action={room.ticket.action} corner={room.ticket.corner} lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} saved={Boolean(savedAt && savedAt.weekId === view?.weekId)} slots={room.ticket.slots} survivor={room.ticket.survivor} urgent={room.ticket.urgent} week={room.feed.week} /> : null}
+      {room.ticket ? <Ticket action={room.ticket.action} corner={room.ticket.corner} lamps={room.ticket.lamps} line={room.ticket.line} onOpen={() => show("slate")} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} slots={room.ticket.slots} survivor={room.ticket.survivor} urgent={room.ticket.urgent} week={room.feed.week} /> : null}
       {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => guarded(() => show(next as Pane))} tabs={tabs} /> : null}
         {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} savedAt={savedAt && savedAt.weekId === view.weekId ? savedAt.time : null} view={view} /> : null}

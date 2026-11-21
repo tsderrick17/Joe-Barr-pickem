@@ -195,29 +195,29 @@ export function clubhouseFeed({ home, board, before = null }) {
     ...Array.from({ length: atsOwed }, () => "off"),
     ...(inSurvivor ? [survivor.pick ? "in" : "off"] : []),
   ];
-  // The paper slip: one box a pick, in the same order as the lamps. A pick that is in says its team and line, and under it its
-  // kickoff, LIVE, or how it came out (WON 27–20). A box still to fill says PICK / OPEN; once the week is in, NO PICK. Survivor's pick
-  // shows its team's logo, not its name.
-  const short = (iso) => kickoffLabel(iso).replace(/ (AM|PM)$/, "").toUpperCase();
+  // The ticket: one place a pick, in the same order as the lamps. A pick that is in carries its team (the ticket shows its logo) and line,
+  // and a note: its kickoff, Live, or how it came out (Won 27–20). Survivor's pick is its team's logo under the word Survivor, never the
+  // team's name. A place still to fill is named (Pick 1, Pick 2, Survivor) and says Open; once the week is in, No pick.
+  const short = (iso) => kickoffLabel(iso).replace(/ (AM|PM)$/, "");
   const scoreOf = (game, teamId) => {
     const own = teamId === game.awayTeamId ? game.awayScore : game.homeScore;
     const other = teamId === game.awayTeamId ? game.homeScore : game.awayScore;
     return own === null || own === undefined || other === null || other === undefined ? "" : ` ${own}–${other}`;
   };
-  const note = (game, teamId, result) => (result === "win" ? `WON${scoreOf(game, teamId)}` : result === "loss" ? `LOST${scoreOf(game, teamId)}` : result === "push" ? "PUSH" : game.status === "live" ? "LIVE" : game.status === "final" ? "FINAL" : short(game.kickoffAt));
-  const emptyNote = weekOpen && !raceOver ? "OPEN" : "NO PICK";
+  const note = (game, teamId, result) => (result === "win" ? `Won${scoreOf(game, teamId)}` : result === "loss" ? `Lost${scoreOf(game, teamId)}` : result === "push" ? "Push" : game.status === "live" ? "Live" : game.status === "final" ? "Final" : short(game.kickoffAt));
+  const emptyNote = weekOpen && !raceOver ? "Open" : "No pick";
   const survivorGame = inSurvivor && survivor.pick ? gameById.get(survivor.pick.game_id) : null;
   const slots = [
     ...myPicks.map((pick) => {
       const game = gameById.get(pick.gameId);
       const result = resultOf(game, pick.teamId);
-      return { text: `${abbreviation(game, pick.teamId)} ${lineFor(game, pick.teamId)}`, note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
+      return { team: abbreviation(game, pick.teamId), line: lineFor(game, pick.teamId), label: "", note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
     }),
-    ...Array.from({ length: atsOwed }, () => ({ text: "PICK", note: emptyNote, state: "off" })),
+    ...Array.from({ length: atsOwed }, (_, index) => ({ label: `Pick ${myPicks.length + index + 1}`, note: emptyNote, state: "off" })),
     ...(inSurvivor
       ? [survivorGame
-        ? { text: abbreviation(survivorGame, survivor.pick.selected_team_id), logo: abbreviation(survivorGame, survivor.pick.selected_team_id), note: "SURVIVOR", state: "in", survivor: true }
-        : { text: "SURVIVOR", note: emptyNote, state: "off", survivor: true }]
+        ? { team: abbreviation(survivorGame, survivor.pick.selected_team_id), label: "Survivor", note: note(survivorGame, survivor.pick.selected_team_id, null), state: "in", survivor: true }
+        : { label: "Survivor", note: emptyNote, state: "off", survivor: true }]
       : []),
   ];
   // When the next pick still to make locks: the first game not yet kicked off.
@@ -269,11 +269,11 @@ export function clubhouseFeed({ home, board, before = null }) {
       lamps,
       slots,
       survivor: inSurvivor,
-      // The slip's corner: when the next pick locks, while one is owed. Where a player stands is the Big Board's to say, never the ticket's.
-      corner: owedCount && nextKickoff ? `Locks ${kickoffLabel(nextKickoff.kickoffAt)}` : "",
+      // The ticket's corner: when the next pick locks (its kickoff), while one is owed. Where a player stands is the Big Board's to say, never the ticket's.
+      corner: owedCount && nextKickoff ? kickoffLabel(nextKickoff.kickoffAt) : "",
       urgent: Boolean(owedCount && nextKickoff),
       action: owedCount ? "PICK" : "VIEW",
-      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in" : owedCount ? `${owedCount} ${owedCount === 1 ? "pick" : "picks"} to make` : anyChangeable ? "All in · change until kickoff" : "All in · all locked",
+      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in" : owedCount ? `${owedCount} ${owedCount === 1 ? "pick" : "picks"} to make` : anyChangeable ? "Change any until kickoff" : "All in · all locked",
     } : null,
   };
 }

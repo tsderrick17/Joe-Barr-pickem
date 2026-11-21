@@ -4,16 +4,22 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
-## 2026-11-21 - Clubhouse: your ticket is a paper slip
+## 2026-11-21 - Clubhouse: your ticket is an admission ticket
 
-The ticket pinned at the foot of the clubhouse was the board's own green with amber lettering, so it clashed with the green Big Board
-over it and said little more than lamps and a count. It is now a cream paper slip (the betting slip of the Lab's ticket and receipt):
-notched sides, a dotted tear line, YOUR TICKET and the week over a rule, one box a pick (team and line over its kickoff, LIVE, or
-WON/LOST with the score; Survivor a pill, last; PICK / OPEN while still to make), and a dark PICK or VIEW button. Each box keeps its lamp, set in a brass
-collar in the middle of its top edge (Survivor's spade on a paper disc), and Survivor's pick shows as its team's logo, not its name. The corner says when the next pick locks (red) while one is owed,
-and nothing else: where a player stands is the Big Board's to say, never the ticket's (owner, 2026-11-21). A SAVED stamp shows after picks are saved. On a phone it is fixed
-to the foot of the screen at whatever height its boxes need. The stub under the Big Board is a torn corner of the same paper. By night
-both dim a little. Owner's pick of option A, 2026-11-21. The no-X rule for pop-ups and the house fonts are unchanged.
+The ticket pinned at the foot of the clubhouse was the board’s own green with amber lettering, so it clashed with the green Big Board
+over it and said little more than lamps and a count. It is now an admission ticket on cream card (the Lab ticket-and-receipt family),
+chosen by the owner (option A) and given a second, showcase-quality pass on 2026-11-21:
+- The body: a fine brass frame inside its edge; the week over YOUR TICKET in the Big Board’s own serif lettering; one place a pick,
+  divided by hairlines, each with the team’s logo, its lamp set at the logo’s shoulder (dark, lit, green, red; Survivor’s spade),
+  the team and line, and the kickoff or result. Survivor’s pick is its team’s logo under the word Survivor, never the team’s name.
+  A place still to fill is an empty ring, named (Pick 1, Survivor) and marked Open.
+- Across a perforation notched at its ends, a dark stub is the one thing to press: PICK while a pick is owed (with how many are left),
+  VIEW once all are in.
+- The heading’s right side says one thing: when picks lock (red) while one is owed, when the picks were saved (green), or else the
+  week in a few words. Where a player stands is the Big Board’s to say, never the ticket’s (owner, 2026-11-21).
+- The way to your ticket under the Big Board is a small ticket of the same card, its verb on the same dark stub.
+- On a phone it is fixed to the foot of the screen at whatever height it needs. By night the card is a little warmer and dimmer (theme
+  tokens, not night rules). House fonts only; pop-ups still have no X.
 
 ## 2026-11-20 - A provider blip does not page the Commissioner for an hour
 
