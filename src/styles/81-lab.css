@@ -147,6 +147,9 @@ html[data-theme="night"] .lab-tote-ticket { background-color: rgb(224 212 186); 
 /* Survivor's lamp is its spade, set on a disc of the paper in the same brass collar. */
 .slip-box > .lab-lamp.is-survivor { background: var(--slip-paper); border-radius: 50%; height: 1rem; width: 1rem; }
 .slip-box > .lab-lamp.is-survivor::before { inset: 2px; }
+/* Survivor's pick is its team's logo, the height of a line of the box's lettering. */
+.slip-logo { display: flex; height: 1.05rem; justify-content: center; }
+.slip-logo .lab-room-logo { height: 1.3rem; margin-top: -.12rem; width: 1.3rem; }
 .slip-text, .slip-box small { display: block; overflow: hidden; text-overflow: ellipsis; }
 .slip-box small { color: var(--slip-soft); display: block; font-family: inherit; font-size: .64rem; font-weight: 700; letter-spacing: .06em; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .slip-box:not(.is-off) { background: rgb(255 250 240); border-style: solid; border-color: var(--slip-ink); color: var(--slip-ink); }

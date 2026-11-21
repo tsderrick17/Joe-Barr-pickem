@@ -196,7 +196,8 @@ export function clubhouseFeed({ home, board, before = null }) {
     ...(inSurvivor ? [survivor.pick ? "in" : "off"] : []),
   ];
   // The paper slip: one box a pick, in the same order as the lamps. A pick that is in says its team and line, and under it its
-  // kickoff, LIVE, or how it came out (WON 27–20). A box still to fill says PICK / OPEN; once the week is in, NO PICK.
+  // kickoff, LIVE, or how it came out (WON 27–20). A box still to fill says PICK / OPEN; once the week is in, NO PICK. Survivor's pick
+  // shows its team's logo, not its name.
   const short = (iso) => kickoffLabel(iso).replace(/ (AM|PM)$/, "").toUpperCase();
   const scoreOf = (game, teamId) => {
     const own = teamId === game.awayTeamId ? game.awayScore : game.homeScore;
@@ -215,7 +216,7 @@ export function clubhouseFeed({ home, board, before = null }) {
     ...Array.from({ length: atsOwed }, () => ({ text: "PICK", note: emptyNote, state: "off" })),
     ...(inSurvivor
       ? [survivorGame
-        ? { text: abbreviation(survivorGame, survivor.pick.selected_team_id), note: "SURVIVOR", state: "in", survivor: true }
+        ? { text: abbreviation(survivorGame, survivor.pick.selected_team_id), logo: abbreviation(survivorGame, survivor.pick.selected_team_id), note: "SURVIVOR", state: "in", survivor: true }
         : { text: "SURVIVOR", note: emptyNote, state: "off", survivor: true }]
       : []),
   ];

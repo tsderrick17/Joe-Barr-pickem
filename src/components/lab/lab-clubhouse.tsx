@@ -347,13 +347,13 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
 }
 
 /** One box on the paper slip: a pick's team and line over its kickoff or result, or PICK / OPEN while it is still to make. */
-export type SlipSlot = { text: string; note: string; state: LampState; survivor?: boolean };
+export type SlipSlot = { text: string; note: string; state: LampState; survivor?: boolean; logo?: string };
 
 /**
  * Your ticket, pinned at the bottom of every screen: a cream paper slip (the betting slip the Lab's ticket and receipt are made of),
  * notched at the sides with a dotted tear line along the top. One box a pick, in kickoff order and Survivor's last, filled in ink once
  * the pick is in, green when it won and red when it lost; a dashed box still to fill. Each box wears its lamp, set into the middle of its
- * top edge like a jewelled eyelet: dark until picked, lit once in, green or red once decided (Survivor's is the chip). The corner says
+ * top edge like a jewelled eyelet: dark until picked, lit once in, green or red once decided (Survivor's is the spade, and its pick shows as the team's logo). The corner says
  * when the next pick locks (red) while one is owed; where you stand is the Big Board's to say, never the ticket's. A SAVED stamp shows for a while after picks are saved. It opens the Big Board with
  * the ticket ready.
  */
@@ -367,7 +367,7 @@ export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.lengt
     <span className="slip-top"><b>YOUR TICKET</b>{saved ? <span className="slip-stamp">SAVED</span> : null}<i>{week.toUpperCase()}</i></span>
     <span className="slip-picks">
       <span className="slip-boxes" style={{ ["--boxes" as string]: boxes.length }}>
-        {boxes.map((box, index) => <span className={`slip-box is-${box.state}${box.survivor ? " is-survivor" : ""}`} key={index}><Lamp state={box.state} survivor={box.survivor} /><span className="slip-text">{box.text}</span>{box.note ? <small>{box.note}</small> : null}</span>)}
+        {boxes.map((box, index) => <span className={`slip-box is-${box.state}${box.survivor ? " is-survivor" : ""}`} key={index}><Lamp state={box.state} survivor={box.survivor} />{box.logo ? <span className="slip-logo"><Logo eager team={box.logo} /><span className="sr-only">{box.text}</span></span> : <span className="slip-text">{box.text}</span>}{box.note ? <small>{box.note}</small> : null}</span>)}
       </span>
       <span aria-hidden="true" className="slip-go">{verb} ›</span>
     </span>
@@ -597,7 +597,7 @@ export function LabClubhouse() {
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "constitution" ? <Constitution /> : null}
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
-      <Ticket action={allIn ? "VIEW" : "PICK"} corner={allIn ? "" : "Locks Thu 8:15 PM"} lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "All in · change until kickoff" : "1 pick to make"} onOpen={() => enter("board", true)} slots={[{ text: "PIT -2.5", note: "SUN 1:00", state: "in" }, { text: "IND +3.5", note: "SUN 4:25", state: "in" }, allIn ? { text: "KC", note: "SURVIVOR", state: "in", survivor: true } : { text: "SURVIVOR", note: "OPEN", state: "off", survivor: true }]} urgent={!allIn} week="Week 10" />
+      <Ticket action={allIn ? "VIEW" : "PICK"} corner={allIn ? "" : "Locks Thu 8:15 PM"} lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "All in · change until kickoff" : "1 pick to make"} onOpen={() => enter("board", true)} slots={[{ text: "PIT -2.5", note: "SUN 1:00", state: "in" }, { text: "IND +3.5", note: "SUN 4:25", state: "in" }, allIn ? { text: "KC", logo: "KC", note: "SURVIVOR", state: "in", survivor: true } : { text: "SURVIVOR", note: "OPEN", state: "off", survivor: true }]} urgent={!allIn} week="Week 10" />
     </section>
   );
 }

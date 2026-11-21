@@ -10,7 +10,7 @@ The ticket pinned at the foot of the clubhouse was the board's own green with am
 over it and said little more than lamps and a count. It is now a cream paper slip (the betting slip of the Lab's ticket and receipt):
 notched sides, a dotted tear line, YOUR TICKET and the week over a rule, one box a pick (team and line over its kickoff, LIVE, or
 WON/LOST with the score; Survivor a pill, last; PICK / OPEN while still to make), and a dark PICK or VIEW button. Each box keeps its lamp, set in a brass
-collar in the middle of its top edge (Survivor's spade on a paper disc). The corner says when the next pick locks (red) while one is owed,
+collar in the middle of its top edge (Survivor's spade on a paper disc), and Survivor's pick shows as its team's logo, not its name. The corner says when the next pick locks (red) while one is owed,
 and nothing else: where a player stands is the Big Board's to say, never the ticket's (owner, 2026-11-21). A SAVED stamp shows after picks are saved. On a phone it is fixed
 to the foot of the screen at whatever height its boxes need. The stub under the Big Board is a torn corner of the same paper. By night
 both dim a little. Owner's pick of option A, 2026-11-21. The no-X rule for pop-ups and the house fonts are unchanged.
