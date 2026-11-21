@@ -32,18 +32,22 @@ const SLIDE_MS = 240;
  * and focus goes back to the button that opened it. There is no X: a sheet is put away by sliding it down with a finger, by tapping the
  * handle at its top or the empty space above it, or with Escape, and every one of those slides it closed rather than blinking it out.
  * An untitled sheet keeps its title for screen readers only (the page inside it carries its own heading).
+ * `guard` may hold a sheet open (it answers false: the page asks first, say about picks not sent); `closeSignal` going up slides it away.
  */
-export function Sheet({ open, onClose, title, children, bare = false, untitled = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean; untitled?: boolean }) {
+export function Sheet({ open, onClose, title, children, bare = false, untitled = false, guard, closeSignal = 0 }: { open: boolean; onClose: () => void; title: string; children: ReactNode; bare?: boolean; untitled?: boolean; guard?: () => boolean; closeSignal?: number }) {
   const ref = useRef<HTMLDialogElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ x: number; y: number; dy: number; down: boolean | null } | null>(null);
   const leaving = useRef<number | null>(null);
 
+  // Springs the sheet back to (or follows the finger from) where it rests.
+  const lift = (dy: number, animate: boolean) => { const node = body.current; if (node) { node.style.transition = animate ? "transform .2s ease-out" : "none"; node.style.transform = dy > 0 ? `translateY(${dy}px)` : ""; } };
   // Slides the sheet down off the screen from wherever it is, then closes the dialog (whose close event tells the page).
-  const slideAway = () => {
+  const slideAway = (forced = false) => {
     const dialog = ref.current;
     const node = body.current;
     if (!dialog || !dialog.open || leaving.current !== null) return;
+    if (!forced && guard && !guard()) { lift(0, true); return; }   // held open: the page asks first
     const finish = () => { leaving.current = null; dialog.close(); dialog.classList.remove("is-leaving"); if (node) { node.style.transition = ""; node.style.transform = ""; } };
     if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
     dialog.classList.add("is-leaving");
@@ -65,13 +69,15 @@ export function Sheet({ open, onClose, title, children, bare = false, untitled =
       // A bare sheet opens with focus on the sheet itself, not on its handle, so no focus ring is drawn on the handle for a finger.
       if (bare) dialog.focus({ preventScroll: true });
     }
-    if (!open && dialog.open) slideAway();
+    if (!open && dialog.open) slideAway(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs on open/bare only; slideAway reads refs and the latest guard
   }, [open, bare]);
   useEffect(() => () => { if (leaving.current !== null) window.clearTimeout(leaving.current); }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new signal slides it away
+  useEffect(() => { if (closeSignal > 0) slideAway(true); }, [closeSignal]);
 
   // Sliding it down with a finger puts it away. A pull only counts from the top of the content (otherwise it is the content scrolling) and
   // only when it goes mostly down (a swipe along a chart is the chart's); it follows the finger, and springs back unless it went far enough.
-  const lift = (dy: number, animate: boolean) => { const node = body.current; if (node) { node.style.transition = animate ? "transform .2s ease-out" : "none"; node.style.transform = dy > 0 ? `translateY(${dy}px)` : ""; } };
   return <dialog
     aria-label={title}
     className={`cw-sheet${bare ? " is-bare" : ""}${untitled ? " is-untitled" : ""}`}
@@ -95,7 +101,7 @@ export function Sheet({ open, onClose, title, children, bare = false, untitled =
       onTouchStart={(event) => { drag.current = (body.current?.scrollTop ?? 0) <= 0 && leaving.current === null ? { x: event.touches[0].clientX, y: event.touches[0].clientY, dy: 0, down: null } : null; }}
       ref={body}
     >
-      <button aria-label="Close" className="cw-handle" onClick={slideAway} type="button" />
+      <button aria-label="Close" className="cw-handle" onClick={() => slideAway()} type="button" />
       <h2>{title}</h2>
       {open ? children : null}
     </div>

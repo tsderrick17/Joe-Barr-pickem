@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import type { BoardView } from "@/lib/board-view.js";
 import { LAB_VIEWER, LAB_WEEK10_SURVIVOR, labStandard } from "@/lib/lab-clubhouse.js";
 import { labBoardView } from "@/lib/lab-board-view.js";
 import { labSurvivorChampion, LAB_SURVIVOR_LAST_WEEK } from "@/lib/lab-samples.js";
 import { teamLogoScale } from "@/lib/team-logo-scale.js";
+import { useStableCallback } from "@/lib/use-stable-callback";
 
 /**
  * The tote board family, the owner's pick of the Pad skins, as the clubhouse's main piece. Sample players only.
@@ -212,7 +213,10 @@ function WeekChoice({ view, onWeek, text, step = false }: { view: BoardView; onW
   );
 }
 
-export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { view: BoardView; onOpen: () => void; onSurvivor?: () => void; onWeek?: (weekId: string) => void; sent?: boolean }) {
+/**
+ * `savedAt`: when this player's picks for the week on the board were last saved here ("7:42 PM"), so the bar can say they are safe.
+ */
+export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false, savedAt = null }: { view: BoardView; onOpen: () => void; onSurvivor?: () => void; onWeek?: (weekId: string) => void; sent?: boolean; savedAt?: string | null }) {
   const owed = owedCount(view);
   const weekText = `${view.week}${view.status ? ` · ${view.status}` : ""}`;
   return (
@@ -231,8 +235,8 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false }: { 
       <WeekFace open={view.canPick ? onOpen : null} view={view} />
       {view.canPick ? (
         <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
-          <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} OWED` : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
-          <span>{owed ? "Tap to make your picks" : "Tap to change your picks"} ›</span>
+          <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} TO MAKE` : savedAt ? "PICKS SAVED ✓" : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
+          <span>{savedAt ? `Saved at ${savedAt} · ` : ""}{owed ? "Tap here to pick" : "Tap here to change a pick"} ›</span>
         </button>
       ) : null}
     </div>
@@ -253,7 +257,11 @@ function coverNote(result: BoardView["games"][number]["results"][string]) {
   return { score: result.score, covered, says: covered ? `COVERED BY${size}`.trim() : result.margin === 0 ? "PUSH · A MISS" : `MISSED BY${size}`.trim(), pickers: result.pickers };
 }
 
-export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, startOn = "pickem", footer = null }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor"; footer?: ReactNode }) {
+/**
+ * `onDirty` hears, every time it changes, whether the ticket holds picks not sent yet: a way to send them (it answers whether they were
+ * saved), or null once nothing is waiting. The clubhouse uses it to ask before the ticket is put away with picks still on it.
+ */
+export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, startOn = "pickem", footer = null, onDirty }: { view: BoardView; onSubmit: (ticket: Ticket) => void | string | Promise<void | string>; poolAction?: boolean; onPoolAction?: (on: boolean) => void; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor"; footer?: ReactNode; onDirty?: (send: (() => Promise<boolean>) | null) => void }) {
   // The Slate's All games / Pool action: Pool action leaves out a game that has kicked off with nobody's pick in it. Saved the Slate's way when `onPoolAction` is given.
   const [localAction, setLocalAction] = useState(view.poolAction);
   const actionOnly = poolAction ?? localAction;
@@ -299,14 +307,22 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const hasSent = view.mine.picks.length > 0 || Boolean(view.mine.survivor);
   const changed = ordered.join() !== inOrder(view, view.mine.picks).join() || (pickingSurvivor && chip !== view.mine.survivor);
 
-  async function send() {
+  async function send(): Promise<boolean> {
     setSending(true);
     setProblem("");
     try {
       const answer = await onSubmit({ picks: ordered, survivor: pickingSurvivor ? chip : null });
-      if (typeof answer === "string") setProblem(answer);
+      if (typeof answer === "string") { setProblem(answer); return false; }
+      return true;
     } finally { setSending(false); }
   }
+  // The latest send, for the page that asks before the ticket is put away with picks still on it.
+  const sendNow = useStableCallback(send);
+  useEffect(() => { onDirty?.(changed ? sendNow : null); }, [changed, onDirty, sendNow]);
+  useEffect(() => () => onDirty?.(null), [onDirty]);
+  // Whether any line on the ticket can still move: the key under the games says what the gold means only when it matters.
+  const anyMoving = shownGames.some((game) => !game.kickedOff && !game.lineFinal);
+  const anyLocked = shownGames.some((game) => game.lineFinal);
 
   return (
     <div className="lab-bigboard is-tote trace-gilt lab-window">
@@ -333,6 +349,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
 
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
         {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
+        {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked, it won’t change. <b>White line:</b> can still move until 8 AM on game day.</> : <>Lines can still move until 8 AM on game day. Once a line locks it turns gold.</>}</p> : null}
         <ol>
           {shownGames.map((game) => {
             const locked = game.kickedOff;

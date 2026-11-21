@@ -683,9 +683,14 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag.is-missed:not(.is-logo) .lab-bowl-flag-hoist { fill: rgb(120 120 120); }
 .lab-bowl-flag.is-missed .lab-bowl-flag-name { fill: rgba(240, 232, 214, .7); }
 .lab-bowl-flag.is-done { opacity: .75; }
-.lab-bowl-tiebreaker { align-items: center; color: var(--bowl-ink); display: flex; font-family: Georgia, serif; font-size: .8rem; gap: 10px; grid-column: 1 / -1; justify-content: space-between; }
-.lab-bowl-tiebreaker input { background: rgb(26 38 64); border: 1px solid var(--bowl-slip-gold); border-radius: 4px; color: var(--bowl-ink); font: inherit; font-size: 1rem; min-height: 2.75rem; text-align: center; width: 4.5rem; }
-.lab-bowl-tiebreaker input:focus-visible { outline: 2px solid var(--bowl-gold-lt); outline-offset: 2px; }
+.lab-bowl-tiebreaker-note { color: var(--bowl-gold-lt); font-family: Georgia, serif; font-size: .74rem; grid-column: 1 / -1; letter-spacing: .06em; }
+/* The tiebreaker, in the ticket's own box beside Save: always in sight, gold-edged while it is still blank. */
+.lab-bowl-guess { align-items: center; border: 1px solid rgba(179, 139, 77, .5); border-radius: 6px; color: var(--bowl-ink); display: grid; font-family: Georgia, serif; font-size: .86rem; gap: 12px; grid-template-columns: 1fr auto; line-height: 1.35; padding: 10px 12px; }
+.lab-bowl-guess b { color: var(--bowl-gold-lt); display: block; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
+.lab-bowl-guess.is-empty { border-color: var(--bowl-gold-lt); box-shadow: 0 0 0 1px var(--bowl-gold-lt); }
+.lab-bowl-guess input { background: rgb(26 38 64); border: 1px solid var(--bowl-slip-gold); border-radius: 4px; color: var(--bowl-ink); font: inherit; font-size: 1.15rem; font-weight: 700; min-height: 2.75rem; text-align: center; width: 5rem; }
+.lab-bowl-guess input:focus-visible { outline: 2px solid var(--bowl-gold-lt); outline-offset: 2px; }
+.lab-bowl-guess input::placeholder { color: rgba(240, 232, 214, .4); font-weight: 400; }
 .lab-bowl-ticket .lab-window-ticket { border-top-color: rgba(179, 139, 77, .5); }
 .lab-bowl-ticket .lab-window-ticket dt { color: var(--bowl-gold-lt); font-family: Georgia, serif; }
 .lab-bowl-ticket .lab-window-ticket dd { color: var(--bowl-ink); }
@@ -839,3 +844,19 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .clubhouse-page .lab-wall-table > section[aria-labelledby="all-time"] { padding-top: 0; }
 .clubhouse-page .lab-wall-table .trophy-table-wrap { margin-top: 8px; }
 .clubhouse-page .trophy-table-wrap { --club-paper: #13221e; --club-paper-2: #182a25; --club-line: #2c453d; --club-ink: #efe6d2; --club-muted: #a8b4ab; border: 0; border-radius: 8px; color: var(--club-ink); }
+
+/* What the ticket's line colours mean, while any line can still move. */
+.lab-line-key { color: rgba(246, 242, 232, .82); font-size: .8rem; line-height: 1.4; margin: 0 0 8px; text-align: center; }
+.lab-line-key b { color: rgb(246 242 232); font-weight: 700; }
+.lab-line-key b.is-gold { color: rgb(240 180 41); }
+
+/* Asked before a ticket with picks not sent is put away: three plain choices, the first the one most want. */
+.club-unsent { background: rgb(18 40 30); border: 0; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .7), 0 18px 40px rgba(0, 0, 0, .5); color: rgb(240 236 226); display: grid; gap: 10px; max-width: min(22rem, calc(100vw - 32px)); padding: 22px 20px 18px; text-align: center; }
+.club-unsent:not([open]) { display: none; }
+.club-unsent::backdrop { background: rgba(0, 0, 0, .55); }
+.club-unsent h2 { color: rgb(255 214 120); font-size: 1.15rem; margin: 0; }
+.club-unsent p { color: rgba(240, 236, 226, .85); font-size: .95rem; line-height: 1.4; margin: 0 0 6px; }
+.club-unsent button { background: transparent; border: 1px solid rgba(201, 164, 95, .6); border-radius: 8px; color: rgb(240 236 226); cursor: pointer; font: inherit; font-size: 1rem; font-weight: 700; min-height: 48px; }
+.club-unsent button.is-send { background: rgb(240 180 41); border-color: rgb(240 180 41); color: rgb(18 28 20); }
+.club-unsent button.is-drop { border-color: transparent; color: rgba(240, 236, 226, .7); font-weight: 600; }
+.club-unsent button:disabled { opacity: .6; }
