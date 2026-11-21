@@ -1,4 +1,4 @@
-import webpush from "web-push";
+import { generateVAPIDKeys } from "web-push";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type VapidKeys = { publicKey: string; privateKey: string };
@@ -19,7 +19,7 @@ export async function vapidKeys(): Promise<VapidKeys> {
   if (kept) return kept;
   let keys = await stored();
   if (!keys) {
-    const made = webpush.generateVAPIDKeys();
+    const made = generateVAPIDKeys();
     const { error } = await supabaseAdmin.from("push_vapid_keys").upsert({ id: true, public_key: made.publicKey, private_key: made.privateKey }, { onConflict: "id", ignoreDuplicates: true });
     if (error) throw new Error("The notification keys could not be saved.");
     keys = await stored();

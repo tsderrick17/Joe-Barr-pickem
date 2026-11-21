@@ -43,7 +43,7 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = globalThis.mirrorFixture.database;", shortCircuit: true };
     if (specifier === "@/lib/web-push-keys") return { url: "data:text/javascript,export const vapidKeys = async () => ({ publicKey: 'pub', privateKey: 'priv' });", shortCircuit: true };
-    if (specifier === "web-push") return { url: "data:text/javascript,export default { sendNotification: async (subscription, body) => { globalThis.mirrorFixture.sentPush.push({ endpoint: subscription.endpoint, message: JSON.parse(body) }); return {}; } };", shortCircuit: true };
+    if (specifier === "web-push") return { url: "data:text/javascript,export const sendNotification = async (subscription, body) => { globalThis.mirrorFixture.sentPush.push({ endpoint: subscription.endpoint, message: JSON.parse(body) }); return {}; };", shortCircuit: true };
     return nextResolve(specifier, context);
   },
 });
