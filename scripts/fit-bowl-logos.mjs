@@ -29,15 +29,20 @@ const RENDER = 1600;  // a drawn (svg) logo is rendered with its longer side thi
  *              Servpro roof; LA's swoosh under its sponsor stays).
  *   smoothTop - between these two columns the top edge is redrawn as one smooth curve joining its ends, filling any notch below it
  *              (LA's swoosh was notched to make room for the "Bucked Up" wordmark).
+ *   scale    - the logo is drawn this much smaller than the standard area (a block wordmark that would fill the cream patch
+ *              edge to edge: First Responder).
+ *   lower    - the logo is set this many pixels (of the 138) below centre: its outline is centred, but a long tail at the bottom
+ *              (New Orleans's "B") leaves the body of the logo looking high.
  *   recolor  - colours swapped in the drawing (the playoff's black lettering would vanish on a dark pennant).
  *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line, LA's "Hosted by Gronk".
  */
 const PREP = {
-  "first-responder": { clear: [{ left: 0, top: 0, width: 1600, height: 400 }] },
+  "first-responder": { clear: [{ left: 0, top: 0, width: 1600, height: 400 }], scale: 0.85 },
   cfp: { recolor: [["#130c0e", "#ffffff"]] },
   la: { upscale: 4, crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75], clear: [{ left: 0, top: 0, width: 195, height: 200 }, { left: 190, top: 60, width: 460, height: 80 }], smoothTop: [480, 645], dropLast: true },
   rate: { cutBox: true },
   "las-vegas": { dropLast: true },
+  "new-orleans": { lower: 5 },
   rose: { dropLast: 2 },
 };
 
@@ -75,12 +80,12 @@ for (const file of chosen) {
   const ratio = width / height;
   let fitWidth = Math.sqrt(AREA * ratio);
   let fitHeight = fitWidth / ratio;
-  const shrink = Math.min(1, BOX.width / fitWidth, BOX.height / fitHeight);
+  const shrink = Math.min(1, BOX.width / fitWidth, BOX.height / fitHeight) * (prep.scale ?? 1);
   fitWidth = Math.round(fitWidth * shrink);
   fitHeight = Math.round(fitHeight * shrink);
   const logo = await sharp(trimmed.data).resize(fitWidth, fitHeight, { kernel: "lanczos3" }).png().toBuffer();
   const output = await sharp({ create: { ...BOX, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite([{ input: logo, left: Math.round((BOX.width - fitWidth) / 2), top: Math.round((BOX.height - fitHeight) / 2) }])
+    .composite([{ input: logo, left: Math.round((BOX.width - fitWidth) / 2), top: Math.min(BOX.height - fitHeight, Math.round((BOX.height - fitHeight) / 2) + (prep.lower ?? 0)) }])
     .webp({ quality: 92, alphaQuality: 100, smartSubsample: true, effort: 6 })
     .toBuffer();
   if (!existsSync(OUT)) throw new Error("public/bowl-logos/ is missing");

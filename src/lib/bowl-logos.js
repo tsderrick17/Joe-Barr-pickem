@@ -30,7 +30,7 @@ export const BOWL_PENNANTS = [
   { match: /liberty bowl/i, logo: "liberty", flag: "LIBERTY", cloth: "rgb(0 96 168)", hoist: "rgb(216 168 0)" },
   { match: /texas bowl/i, logo: "texas", flag: "TEXAS", cloth: "rgb(0 20 110)", hoist: "rgb(200 30 40)" },
   { match: /armed forces bowl/i, logo: "armed-forces", flag: "ARMED FORCES", cloth: "rgb(0 60 130)", hoist: "rgb(200 30 45)" },
-  { match: /first responder bowl/i, logo: "first-responder", flag: "FIRST RESPONDER", cloth: "rgb(30 30 30)", hoist: "rgb(240 120 48)" },
+  { match: /first responder bowl/i, logo: "first-responder", flag: "FIRST RESPONDER", cloth: "rgb(26 88 164)", hoist: "rgb(210 32 40)" },
   { match: /military bowl/i, logo: "military", flag: "MILITARY", cloth: "rgb(10 20 60)", hoist: "rgb(190 30 40)" },
   { match: /fenway bowl/i, logo: "fenway", flag: "FENWAY", cloth: "rgb(40 90 70)", hoist: "rgb(170 190 190)" },
   { match: /pop-?tarts bowl/i, logo: "pop-tarts", flag: "POP-TARTS", cloth: "rgb(0 72 168)", hoist: "rgb(240 192 48)" },
