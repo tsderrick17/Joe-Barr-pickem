@@ -4,6 +4,13 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-20 - A provider blip does not page the Commissioner for an hour
+
+The watchdog's daily external check asked the odds provider once with a 10-second limit. One dropped connection at 9 PM Eastern opened
+a critical "Scheduled automation configuration is incomplete" incident, emailed and paged the Commissioner, and the failure stood until
+the hourly retry. Now the zero-credit odds check is tried three times, 2 and 5 seconds apart, before it counts as failed (an answer of any
+kind, even a refusal, is taken at once); its detail says whether it timed out or the connection failed; and a failed daily check runs
+again after 15 minutes, not an hour. All three cost no provider credits. Unit tests hold the retries and the 15-minute recheck.
 ## 2026-11-20 - Clubhouse: a pick is never lost, and the tiebreaker is always in sight
 
 A player could tap teams on the clubhouse ticket and put it away (slide it down, Escape, another tab, another week, the phone's back
