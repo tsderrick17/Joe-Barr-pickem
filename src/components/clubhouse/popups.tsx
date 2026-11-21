@@ -8,7 +8,7 @@ import PoolChat, { type Message as ChatMessage } from "@/components/pool-chat";
 import { ToteBoard, type Ticket } from "@/components/clubhouse/big-board";
 import { TicketForm } from "@/components/clubhouse/ticket-form";
 import { RealTrophyRoom } from "@/components/clubhouse/trophy-room";
-import SurvivorToteBoard from "@/components/lab/lab-survivor-tote";
+import SurvivorToteBoard from "@/components/clubhouse/survivor-board";
 import type { StandingsResponse } from "@/lib/api-contracts";
 import { PICKS_SAVED_EVENT } from "@/lib/app-badge.js";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";

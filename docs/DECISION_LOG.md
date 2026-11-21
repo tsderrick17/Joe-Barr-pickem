@@ -4,6 +4,16 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-21 - Lab try-outs retire once they ship
+
+The Workshop Lab kept sample versions of the Bowl ticket, the Big Board (tote board) and the Clubhouse room after all three went live,
+so every change to the clubhouse had to be made, pictured and tested twice. A try-out now leaves the Lab once it ships: those three are
+gone, with their sample data, styles, pictures and tests. The pieces the live clubhouse borrowed from the Lab moved into it (the Survivor
+board, now `src/components/clubhouse/survivor-board.tsx`; the Big Board's paging, `src/lib/board-pages.js`; the room's picture map,
+`src/lib/clubhouse-room.json`). Behaviour only the Lab's room was tested for now runs on the real clubhouse: tap spots at least 44 px,
+name plates never overlapping on a phone or desktop, the Big Board turning a page every 8 seconds, the games board shifting a row every 7.
+The Lab keeps what has not shipped: the Survivor poker table, Pad skins, the Horse race and the haptics feel test.
+
 ## 2026-11-21 - Tests trimmed to what catches problems
 
 The screenshot suite had grown to 982 runs and 1,436 pictures, mostly from picturing every state at four or five widths in both themes.

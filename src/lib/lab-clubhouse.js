@@ -1,7 +1,7 @@
 // The Lab clubhouse's sample week: the invented league's picks, as each room shows them. Plain data and arithmetic, no React, so the
 // rules the rooms rely on (above all: another player's pick stays hidden until its game kicks off) can be checked on their own.
 
-import { LAB_SLATE, LAB_STANDINGS, LAB_SURVIVOR, labAtsResult, labLineFor } from "./lab-samples.js";
+import { LAB_SLATE, LAB_STANDINGS, labAtsResult, labLineFor } from "./lab-samples.js";
 
 /** The player the Lab is seen as. A player always sees their own picks. */
 export const LAB_VIEWER = "Walt";
@@ -110,37 +110,4 @@ export function labLeaderboard({ round, moment }) {
   }));
 }
 
-/**
- * The Slate board's Survivor side for the viewer: each team on the board is free, used (the week it was used), or locked (its game has
- * kicked off). A player who is out sees the board read only.
- * @param {{ moment: string, viewer?: string }} options
- */
-export function labSurvivorBoard({ moment, viewer = LAB_VIEWER }) {
-  const run = (LAB_SURVIVOR[viewer] ?? []).slice(0, 9);
-  const lostAt = run.findIndex(([, result]) => result === "L");
-  const out = lostAt >= 0;
-  // The week on the board is week 10: every earlier pick is used.
-  const used = new Map(run.map(([team], index) => [team, index + 1]));
-  const teams = LAB_SLATE.flatMap((game) => [game.away, game.home].map((team) => {
-    const locked = labKickedOff(LAB_SLATE, game.id, moment);
-    return { team, gameId: game.id, usedWeek: used.get(team) ?? null, locked, free: !out && !locked && !used.has(team) };
-  }));
-  return { out, outWeek: out ? lostAt + 1 : null, teams };
-}
 
-/**
- * The room's Big Board pages: the leaders (always on the top line), and the rest of the standings split into even pages of at most
- * `size` players. A single leader is not repeated in the pages; level leaders are, since the top line then shows only how many lead.
- * @template {{ name: string, place: number | null, wins: number }} Row
- * @param {Row[]} rows the leaderboard, leader first
- * @param {number} [size]
- * @returns {{ leaders: Row[], pages: Row[][] }}
- */
-export function labBoardPages(rows, size = 4) {
-  const leaders = rows.filter((row) => row.place === 1);
-  const rest = leaders.length === 1 ? rows.slice(1) : rows;
-  const count = Math.max(1, Math.ceil(rest.length / size));
-  // As even as they go: the first pages take one more when the players do not split exactly (ten is 4, 3, 3).
-  const cut = (index) => index * Math.floor(rest.length / count) + Math.min(index, rest.length % count);
-  return { leaders, pages: Array.from({ length: count }, (_, index) => rest.slice(cut(index), cut(index + 1))) };
-}
