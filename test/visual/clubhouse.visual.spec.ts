@@ -807,7 +807,7 @@ test("forfeited, the room's ticket strip and the ticket say so: your score stand
   await expect(ticket.locator(".lab-ticket-raceover")).toHaveText("You forfeited · your score stands", { timeout: 30_000 });
   await expect(ticket.locator(".forfeit-panel")).toHaveCount(0);
   await ticket.getByRole("button", { name: "Close" }).click();
-  await expect(page.locator(".clubhouse-page > .lab-room-ticket")).toContainText("You forfeited · your score stands");
+  await expect(page.locator(".clubhouse-page > .lab-room-ticket")).toContainText("ForfeitedScore stands");
 });
 
 test("out of the playoff race, the Big Board says so and there is no ticket", async ({ page }) => {
@@ -877,13 +877,14 @@ test("the pool chat wears the Big Board's housing and opens already full, read a
   await expect(chat.getByText("Opening chat...")).toHaveCount(0);
 });
 
-// The ticket at the foot of the room, through a regular week and a playoff round: a place a pick (a place a game in the playoffs,
+// The ticket at the foot of the room, through a regular week, playoff rounds and a player out of the race: a place a pick (a place a game in the playoffs,
 // two rows of three in the Wild Card, two by two in the Divisional round), each with its logo and lamp, the dark stub to press, and
 // NEXT GAME with the kickoff of the next game still to pick while one is owed.
 for (const [label, home, scenario, keep] of [
   ["week", null, "upcoming-unpicked", 0],
   ["wild-card", "playoff-wildcard", "playoff-mixed-locks", 0],
   ["divisional", "playoff-divisional", "playoff-upcoming", 4],
+  ["race-over", "playoff-viewer-out", "playoff-eliminated", 4],
 ] as const) {
   test(`your ticket at the foot of the room, ${label}`, async ({ page }) => {
     await openClubhouse(page, { ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario], ...(keep ? { shapeBoard: (response: BoardRead) => ({ ...response, games: response.games.slice(0, keep) }) } : {}) });
@@ -891,9 +892,27 @@ for (const [label, home, scenario, keep] of [
     await expect(ticket).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-    await expect(ticket.locator(".slip-status.is-urgent")).toContainText("Next game");
+    await expect(ticket.locator(".slip-status")).toContainText(label === "race-over" ? "Race over" : "Next game");
     const box = (await ticket.boundingBox())!;
     expect(Math.abs(box.y + box.height - 844)).toBeLessThanOrEqual(1);   // flush with the foot of the screen, however tall
     await expect(ticket).toHaveScreenshot(`clubhouse-ticket-${label}-phone-390.png`, { maxDiffPixels: 40 });
   });
+}
+
+// The ticket never covers a thing in the room: every name plate stays clear of it, through a regular week and the biggest playoff
+// round, on a small phone, a big phone, a laptop and a desktop.
+for (const [label, size] of [["phone-375x667", { width: 375, height: 667 }], ["phone-390", SIZES["phone-390"]], ["laptop-1366x768", { width: 1366, height: 768 }], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  for (const [when, home, scenario] of [["week", null, "upcoming-unpicked"], ["wild-card", "playoff-wildcard", "playoff-upcoming"]] as const) {
+    test(`the ticket covers no name plate in the room, ${when} at ${label}`, async ({ page }) => {
+      await openClubhouse(page, { size, ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario] });
+      await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      const ticket = (await page.locator(".clubhouse-page > .lab-room-ticket").boundingBox())!;
+      const plates = await page.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { name: tag.textContent, left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+      for (const plate of plates) {
+        const clear = plate.bottom <= ticket.y || plate.right <= ticket.x || plate.left >= ticket.x + ticket.width;
+        expect(clear, `${plate.name} is clear of the ticket`).toBe(true);
+      }
+    });
+  }
 }

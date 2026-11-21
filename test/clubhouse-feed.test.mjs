@@ -55,7 +55,7 @@ test("the room lights only your own picks, says what is owed, and the ticket has
   assert.equal(feed.news.survivor, "2 of 3 still in · You’re in");
   assert.equal(feed.owed, true);
   assert.deepEqual(ticket.lamps, ["in", "off", "off"]);
-  assert.equal(ticket.line, "2 picks to make");
+  assert.deepEqual(ticket.status, { label: "Next game", text: "Sun 1:00 PM" });
 });
 
 test("graded picks light green or red; all in says so; a finished week owes nothing", () => {
@@ -66,23 +66,10 @@ test("graded picks light green or red; all in says so; a finished week owes noth
   });
   const live = clubhouseFeed({ home: home(), board: graded });
   assert.deepEqual(live.ticket.lamps, ["won", "lost", "in"]);
-  assert.equal(live.ticket.line, "Change any until kickoff");
+  assert.deepEqual(live.ticket.status, { label: "All in", text: "Change until kickoff" });
   assert.equal(live.feed.news.picks, "All in");
   const done = clubhouseFeed({ home: home({ weekStatus: "complete" }), board: board() });
   assert.equal(done.feed.owed, false);
-});
-
-test("all in with every pick's game kicked off: the ticket says all locked, not that a pick can still change", () => {
-  const started = { status: "live", kickoffAt: "2026-11-15T11:00:00Z" };
-  const locked = board({
-    games: [game("g1", "PIT", "CLE", started), game("g2", "IND", "WAS", started), game("g3", "SF", "DEN"), game("g4", "NYG", "DAL", started)],
-    myPicks: [{ gameId: "g1", teamId: "pit" }, { gameId: "g2", teamId: "ind" }],
-    survivor: { available: true, status: "active", pick: { game_id: "g4", selected_team_id: "nyg" } },
-  });
-  assert.equal(clubhouseFeed({ home: home(), board: locked }).ticket.line, "All in · all locked");
-  // The Survivor team's game still to come: that one can change.
-  const open = { ...locked, survivor: { available: true, status: "active", pick: { game_id: "g3", selected_team_id: "sf" } } };
-  assert.equal(clubhouseFeed({ home: home(), board: open }).ticket.line, "Change any until kickoff");
 });
 
 test("out of Survivor: no Survivor lamp; no games: no ticket and a dark spreads board", () => {
@@ -186,45 +173,4 @@ test("the ticker's order: today's NFL games, then today's bowls, then two NFL ga
   const nfl = [{ id: "n-today-1", at: at("2026-12-27T18:00:00Z") }, { id: "n-today-2", at: at("2026-12-27T21:25:00Z") }, { id: "n-mon", at: at("2026-12-29T01:15:00Z") }, { id: "n-sat", at: at("2026-12-26T21:30:00Z") }, { id: "n-thu", at: at("2026-12-25T01:15:00Z") }];
   const bowls = [{ id: "b-later", at: at("2026-12-29T20:00:00Z") }, { id: "b-today", at: at("2026-12-27T20:00:00Z") }, { id: "b-past", at: at("2026-12-26T01:00:00Z") }];
   assert.deepEqual(mergeTicker(nfl, bowls, now).map((game) => game.id), ["n-today-1", "n-today-2", "b-today", "n-mon", "n-sat", "b-past", "n-thu", "b-later"]);
-});
-
-test("the ticket: a place a pick with its team, line and kickoff, open places named, Survivor last by its logo, and the lock time while picks are owed", () => {
-  const { ticket } = clubhouseFeed({ home: home(), board: board() });
-  assert.deepEqual(ticket.slots.map((slot) => [slot.team ?? null, slot.line ?? null, slot.label, slot.note, slot.state, Boolean(slot.survivor)]), [
-    ["PIT", "+3", "", "Sun 1:00", "in", false], [null, null, "Pick 2", "Open", "off", false], [null, null, "Survivor", "Open", "off", true],
-  ]);
-  assert.equal(ticket.corner, "Sun 1:00 PM");   // when the next game kicks off
-  assert.equal(ticket.urgent, true);
-  assert.equal(ticket.action, "PICK");
-  const done = clubhouseFeed({ home: home(), board: board({
-    games: [game("g1", "PIT", "CLE", { status: "final", awayScore: 27, homeScore: 20, awayResult: "win" }), game("g2", "IND", "WAS", { status: "scheduled", kickoffAt: "2026-11-15T21:25:00Z" })],
-    myPicks: [{ gameId: "g1", teamId: "pit" }, { gameId: "g2", teamId: "ind" }],
-    survivor: { available: true, status: "active", pick: { game_id: "g2", selected_team_id: "was" } },
-  }) }).ticket;
-  assert.deepEqual(done.slots.map((slot) => slot.note), ["Won 27–20", "Sun 4:25", "Sun 4:25"]);
-  assert.deepEqual([done.slots[2].team, done.slots[2].label], ["WAS", "Survivor"]);   // Survivor's pick is its logo, under the word Survivor
-  assert.equal(done.corner, "");   // the ticket never says where you stand: that is the Big Board's
-  assert.equal(done.action, "VIEW");
-});
-
-test("a playoff round's ticket has a place a game in kickoff order: picks by team, the rest by matchup, owed only until kickoff", () => {
-  const round = board({
-    serverTime: "2027-01-10T19:00:00Z",
-    games: [
-      game("w2", "GB", "PHI", { kickoffAt: "2027-01-10T21:30:00Z" }),
-      game("w1", "BUF", "KC", { kickoffAt: "2027-01-10T18:00:00Z", status: "live" }),
-      game("w3", "HOU", "BAL", { kickoffAt: "2027-01-11T01:15:00Z" }),
-      game("w4", "LAR", "DET", { kickoffAt: "2027-01-12T01:15:00Z" }),
-    ],
-    myPicks: [{ gameId: "w2", teamId: "gb" }],
-    survivor: { available: false, status: "complete", pick: null },
-  });
-  const { ticket } = clubhouseFeed({ home: home({ isPlayoff: true, week: "Wild Card", maxPicks: 4, serverTime: "2027-01-10T19:00:00Z", survivorAvailable: false, survivorRows: [] }), board: round });
-  assert.deepEqual(ticket.slots.map((slot) => slot.team ?? slot.label), ["BUF @ KC", "GB", "HOU @ BAL", "LAR @ DET"]);
-  assert.deepEqual(ticket.slots.map((slot) => slot.note), ["No pick", "Sun 4:30", "Open", "Open"]);   // the live game is gone, not owed
-  assert.deepEqual(ticket.lamps, ["off", "in", "off", "off"]);
-  assert.equal(ticket.action, "PICK");
-  assert.equal(ticket.line, "2 picks to make");
-  assert.equal(ticket.survivor, false);
-  assert.equal(ticket.corner, "Sun 8:15 PM");   // the next game still to pick, not the picked one before it
 });

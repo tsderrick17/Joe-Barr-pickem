@@ -5,34 +5,10 @@ import { bowlPennant } from "./bowl-logos.js";
  * wins only, and the only picks lit are the viewer's own (another player's unstarted pick never reaches either read).
  */
 
-const ET = "America/New_York";
+import { ET, coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
+import { roomTicket } from "./clubhouse-ticket.js";
 
-/** "Sun 1:00 PM", Eastern. */
-export function kickoffLabel(iso) {
-  if (!iso) return "TBA";
-  const date = new Date(iso);
-  const day = new Intl.DateTimeFormat("en-US", { timeZone: ET, weekday: "short" }).format(date);
-  const time = new Intl.DateTimeFormat("en-US", { timeZone: ET, hour: "numeric", minute: "2-digit" }).format(date);
-  return `${day} ${time}`;
-}
-
-/** A team's line as its pick reads it: "-3.5" for the favorite, "+3.5" for the other side, "PK" for none, "—" before there is a line. */
-export function lineFor(game, teamId) {
-  const spread = game.officialSpread ?? game.preliminarySpread;
-  if (spread === null || spread === undefined) return "—";
-  const size = Math.abs(Number(spread));
-  if (size === 0 || !game.favoriteTeamId) return "PK";
-  return `${teamId === game.favoriteTeamId ? "-" : "+"}${size}`;
-}
-
-/** A line as a number: "-3.5" is -3.5, "+3" is 3, "PK" is 0, no line yet is null. */
-const spreadOf = (line) => (line === "PK" ? 0 : /^[+-]?\d/.test(line) ? Number(line) : null);
-
-/** How far a team finished past its spread: its margin of victory plus its line. Positive covered it, zero is a push (a loss), negative missed it. */
-export function coverMargin(score, other, line) {
-  const spread = spreadOf(line);
-  return score === null || other === null || spread === null ? null : score - other + spread;
-}
+export { coverMargin, kickoffLabel, lineFor };
 
 /** Standings by wins, most first: each with a place (level players share it) and whether it is shared. */
 export function placedStandings(rows) {
@@ -159,7 +135,7 @@ export function boardNews(standings, viewerId) {
 }
 
 /**
- * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it). `before` is every
+ * The room's feed, and the viewer's ticket (see clubhouse-ticket.js). `before` is every
  * player's wins through an earlier week, for the standings' week-over-week arrows (see withMovement).
  * @param {{ home: import("./api-contracts").StandingsResponse, board: import("./api-contracts").SlateResponse, before?: Record<string, number> | null }} reads
  */
@@ -168,69 +144,12 @@ export function clubhouseFeed({ home, board, before = null }) {
   const games = board.games ?? [];
   const gameById = new Map(games.map((game) => [game.id, game]));
   const abbreviation = (game, teamId) => (teamId === game.awayTeamId ? game.awayTeamAbbreviation : game.homeTeamAbbreviation);
-  const resultOf = (game, teamId) => (teamId === game.awayTeamId ? game.awayResult : game.homeResult);
 
   const mine = (board.myPicks ?? []).map((pick) => gameById.get(pick.gameId)).filter(Boolean);
   const myPicks = (board.myPicks ?? []).filter((pick) => gameById.has(pick.gameId));
-  const maxPicks = Math.max(home.maxPicks ?? 0, myPicks.length);
-  const survivor = board.survivor;
-  const inSurvivor = Boolean(survivor?.available && survivor.status === "active");
-  const survivorOwed = inSurvivor && !survivor.pick;
   const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
-  const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
-  // A playoff round asks for a pick in every game: the ticket has a place a game, in kickoff order, and a pick is owed only for a game
-  // still to kick off (a game that kicked off without one is gone, not owed). A regular week has its set number of picks.
-  const playoff = Boolean(home.isPlayoff);
-  const roundGames = [...games].sort((x, y) => Date.parse(x.kickoffAt ?? "") - Date.parse(y.kickoffAt ?? ""));
-  const pickFor = (game) => myPicks.find((pick) => pick.gameId === game.id);
-  const atsOwed = playoff ? roundGames.filter((game) => !pickFor(game) && notStarted(game.id)).length : Math.max(0, maxPicks - myPicks.length);
-  const weekOpen = home.weekStatus !== "complete" && games.some((game) => game.status === "scheduled" || game.status === "live");
-  // Out of the playoff race, or forfeited: nothing more to pick, and the strip says so.
-  const forfeited = Boolean(board.pickem?.forfeit?.forfeited);
-  const raceOver = forfeited || Boolean(board.pickem?.playoffEliminated);
-  const owedCount = weekOpen && !raceOver ? atsOwed + (survivorOwed ? 1 : 0) : 0;
-  // Whether any pick that is in can still be changed: its game has not kicked off.
-  const anyChangeable = myPicks.some((pick) => notStarted(pick.gameId)) || Boolean(inSurvivor && survivor.pick && notStarted(survivor.pick.game_id));
-
-  const lampOf = (pick) => { const result = resultOf(gameById.get(pick.gameId), pick.teamId); return result === "win" ? "won" : result === "loss" ? "lost" : "in"; };
-  const lamps = playoff
-    ? roundGames.map((game) => (pickFor(game) ? lampOf(pickFor(game)) : "off"))
-    : [...myPicks.map(lampOf), ...Array.from({ length: atsOwed }, () => "off"), ...(inSurvivor ? [survivor.pick ? "in" : "off"] : [])];
-  // The ticket: one place a pick, in the same order as the lamps. A pick that is in carries its team (the ticket shows its logo) and line,
-  // and a note: its kickoff, Live, or how it came out (Won 27–20). Survivor's pick is its team's logo under the word Survivor, never the
-  // team's name. A place still to fill is named (Pick 1, Pick 2, Survivor) and says Open; once the week is in, No pick.
-  const short = (iso) => kickoffLabel(iso).replace(/ (AM|PM)$/, "");
-  const scoreOf = (game, teamId) => {
-    const own = teamId === game.awayTeamId ? game.awayScore : game.homeScore;
-    const other = teamId === game.awayTeamId ? game.homeScore : game.awayScore;
-    return own === null || own === undefined || other === null || other === undefined ? "" : ` ${own}–${other}`;
-  };
-  const note = (game, teamId, result) => (result === "win" ? `Won${scoreOf(game, teamId)}` : result === "loss" ? `Lost${scoreOf(game, teamId)}` : result === "push" ? "Push" : game.status === "live" ? "Live" : game.status === "final" ? "Final" : short(game.kickoffAt));
-  const emptyNote = weekOpen && !raceOver ? "Open" : "No pick";
-  const survivorGame = inSurvivor && survivor.pick ? gameById.get(survivor.pick.game_id) : null;
-  const pickPlace = (pick) => {
-    const game = gameById.get(pick.gameId);
-    const result = resultOf(game, pick.teamId);
-    return { team: abbreviation(game, pick.teamId), line: lineFor(game, pick.teamId), label: "", note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
-  };
-  // A playoff game still to pick is named by its matchup (BUF @ KC); Open until it kicks off, then No pick.
-  const slots = playoff ? roundGames.map((game) => (pickFor(game) ? pickPlace(pickFor(game)) : { label: `${game.awayTeamAbbreviation} @ ${game.homeTeamAbbreviation}`, note: notStarted(game.id) && !raceOver ? "Open" : "No pick", state: "off" })) : [
-    ...myPicks.map((pick) => {
-      const game = gameById.get(pick.gameId);
-      const result = resultOf(game, pick.teamId);
-      return { team: abbreviation(game, pick.teamId), line: lineFor(game, pick.teamId), label: "", note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
-    }),
-    ...Array.from({ length: atsOwed }, (_, index) => ({ label: `Pick ${myPicks.length + index + 1}`, note: emptyNote, state: "off" })),
-    ...(inSurvivor
-      ? [survivorGame
-        ? { team: abbreviation(survivorGame, survivor.pick.selected_team_id), label: "Survivor", note: note(survivorGame, survivor.pick.selected_team_id, null), state: "in", survivor: true }
-        : { label: "Survivor", note: emptyNote, state: "off", survivor: true }]
-      : []),
-  ];
-  // The next game a pick is still owed for: in a playoff round the first game still to kick off that has no pick; in a regular week
-  // (any game will do for a pick) the first game still to kick off.
-  const nextKickoff = roundGames.find((game) => notStarted(game.id) && (!playoff || !pickFor(game)));
-  const total = playoff ? roundGames.length : maxPicks + (inSurvivor ? 1 : 0);
+  const ticket = roomTicket({ home, board });
+  const owedCount = ticket?.owed ?? 0;
 
   // Survivor leaves the room when it leaves the classic pages: once it is decided, and for the playoffs.
   const survivorOver = Boolean(home.isPlayoff || home.survivorComplete);
@@ -273,15 +192,6 @@ export function clubhouseFeed({ home, board, before = null }) {
       // Survivor is being played (not decided, not the playoffs): the poker table is Survivor's while it is.
       survivorActive: Boolean(home.survivorAvailable) && !survivorOver,
     },
-    ticket: games.length && total ? {
-      lamps,
-      slots,
-      survivor: inSurvivor,
-      // The ticket's corner: when the next game kicks off, while a pick is owed. Where a player stands is the Big Board's to say, never the ticket's.
-      corner: owedCount && nextKickoff ? kickoffLabel(nextKickoff.kickoffAt) : "",
-      urgent: Boolean(owedCount && nextKickoff),
-      action: owedCount ? "PICK" : "VIEW",
-      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in" : owedCount ? `${owedCount} ${owedCount === 1 ? "pick" : "picks"} to make` : anyChangeable ? "Change any until kickoff" : "All in · all locked",
-    } : null,
+    ticket,
   };
 }

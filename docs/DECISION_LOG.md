@@ -15,12 +15,22 @@ chosen by the owner (option A) and given a second, showcase-quality pass on 2026
   A place still to fill is an empty ring, named (Pick 1, Survivor) and marked Open.
 - Across a perforation notched at its ends, a dark stub is the one thing to press: PICK while a pick is owed (with how many are left),
   VIEW once all are in.
-- The heading’s right side says one thing: the next game’s kickoff (red, NEXT GAME) while a pick is owed, when the picks were saved (green), or else the
-  week in a few words. It never speaks of picks locking (owner: unclear); the Bowl Pool’s owed bowls likewise show just their game
-  time, not PICK DUE · LOCKS. Where a player stands is the Big Board’s to say, never the ticket’s (owner, 2026-11-21).
+- The heading’s right side is always a small word over a short value, from the first state that holds: FORFEITED or RACE OVER /
+  Score stands; FINAL / the week’s record (1–1); NEXT GAME / the kickoff of the next game a pick is still owed for (red); ALL IN /
+  Change until kickoff; ALL IN / Locked. Saved / the time shows for a while after a save. It never speaks of picks locking (owner:
+  unclear); the Bowl Pool’s owed bowls likewise show just their game time. Where a player stands is the Big Board’s to say, never the
+  ticket’s (owner, 2026-11-21).
+- Every place is open, missed (nothing left to put it on: a fainter ring, No pick, never counted as owed), in (kickoff, Live or
+  Postponed), or won/lost (Pick’em against the spread with a push said as “Push · loss”; Survivor straight up with a tie said as
+  “Tie · loss”). All of it is decided in one place, `src/lib/clubhouse-ticket.js`, with a unit test a state.
 - Built for the playoffs first: a playoff round has a place a game in kickoff order (a game still to pick named by its matchup,
-  BUF @ KC), two rows of three in the Wild Card and two by two in the Divisional round so every row is even; a pick is owed only for a
-  game still to kick off, and NEXT GAME is the next game still to pick. The owner wants all work built for the playoffs (2026-11-21).
+  BUF @ KC); a pick is owed only for a game still to kick off, and NEXT GAME is the next game still to pick. The owner wants all work
+  built for the playoffs (2026-11-21). The ticket is always one row so it never grows over the room: four across tighten their type and
+  show a game still to pick as a ring marked PICK; on a phone five or six show each place as its logo or ring and line alone; on a
+  desktop each place lies on its side and a playoff round widens the ticket. A behavior test holds that no name plate in the room is
+  covered, in a regular week and the Wild Card, on a small phone, a phone, a laptop and a desktop (owner worried the playoff ticket
+  would cover the poker table’s Bowl Pool plate on a desktop; it did, and a 1366×768 laptop clipped the Survivor plate even in a
+  regular week).
 - The way to your ticket under the Big Board is a small ticket of the same card, its verb on the same dark stub.
 - On a phone it is fixed to the foot of the screen at whatever height it needs. By night the card is a little warmer and dimmer (theme
   tokens, not night rules). House fonts only; pop-ups still have no X.

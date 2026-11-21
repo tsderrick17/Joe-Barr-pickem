@@ -6,7 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, typ
 import AllTimeTable, { type AllTimeRow } from "@/components/all-time-table";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
+import { RoomTicket } from "@/components/room-ticket";
+import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
 import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labKickedOff, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labAtsResult, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
@@ -346,60 +347,6 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   );
 }
 
-/** One place on your ticket: a pick that is in (its team, shown by logo, and its line), or a place still to fill, named. */
-export type SlipSlot = { team?: string; line?: string; label: string; note: string; state: LampState; survivor?: boolean };
-
-/** A line as it is printed: a true minus sign. */
-const printed = (line: string) => line.replace(/^-/, "−");
-
-/**
- * Your ticket, pinned at the foot of every clubhouse screen: an admission ticket on cream card. The body names it (YOUR TICKET, in the
- * Big Board's own lettering) and carries one place a pick, divided by hairlines: the team's logo with its lamp set at its shoulder, the
- * team and line, and the kickoff or how it came out. Survivor's place is its team's logo under the word Survivor. A place still to fill
- * is an empty ring, named. Across a perforation the dark stub is the one thing to press: PICK while a pick is owed, VIEW once all are in.
- * The heading's right side says one thing: when the next game kicks off (red) while a pick is owed, that the picks were saved (green), or
- * else the week in a few words. Where a player stands is the Big Board's to say, never the ticket's.
- */
-export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1, slots, corner = "", urgent = false, action, savedAt = null }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean; slots?: SlipSlot[]; corner?: string; urgent?: boolean; action?: "PICK" | "VIEW"; savedAt?: string | null }) {
-  const places: SlipSlot[] = slots ?? lamps.map((state, index) => {
-    const chip = survivor && index === lamps.length - 1;
-    return { label: chip ? "Survivor" : `Pick ${index + 1}`, note: state === "off" ? "Open" : "In", state, survivor: chip };
-  });
-  const owed = places.filter((place) => place.state === "off").length;
-  // Up to three places a row; a playoff round of four sits two by two, of six three by two, so every row is full and even.
-  const cols = places.length === 4 ? 2 : Math.min(places.length, 3) || 1;
-  const verb = action ?? (owed ? "PICK" : "VIEW");
-  // The heading's right side mirrors its left: a small word over what it says.
-  const status = urgent && corner ? <span className="slip-status is-urgent"><i>Next game</i>{corner}</span>
-    : savedAt ? <span className="slip-status is-saved"><i>Saved</i>{savedAt}</span>
-    : <span className="slip-status">{line}</span>;
-  const inside = (
-    <span className="slip">
-      <span className="slip-body">
-        <span className="slip-head"><span className="slip-title"><i>{week}</i><b>YOUR TICKET</b></span>{status}</span>
-        <span className="slip-places" style={{ ["--cols" as string]: cols }}>
-          {places.map((place, index) => (
-            <span className={`slip-place is-${place.state}${place.survivor ? " is-survivor" : ""}${index % cols === 0 ? " is-row-start" : ""}${index >= cols ? " is-next-row" : ""}`} key={index}>
-              <span className="slip-mark">
-                {place.team ? <Logo eager team={place.team} /> : <span aria-hidden="true" className="slip-ring" />}
-                <Lamp state={place.state} survivor={place.survivor} />
-              </span>
-              {place.team && !place.survivor ? <span className="slip-pick"><b>{place.team}</b> {printed(place.line ?? "")}</span> : <span className="slip-pick is-label">{place.label}{place.survivor && place.team ? <span className="sr-only"> {place.team}</span> : null}</span>}
-              <small>{place.note}</small>
-            </span>
-          ))}
-        </span>
-      </span>
-      <span aria-hidden="true" className="slip-stub">
-        <small>{verb === "PICK" && owed ? `${owed} LEFT` : "ALL IN"}</small>
-        <b>{verb}</b>
-        <i />
-      </span>
-    </span>
-  );
-  return href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
-}
-
 /** The sample league's feed for the Lab's room. */
 function labFeed(season: Season, allIn: boolean, mail: boolean): RoomFeed {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
@@ -621,7 +568,10 @@ export function LabClubhouse() {
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "constitution" ? <Constitution /> : null}
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
-      <Ticket action={allIn ? "VIEW" : "PICK"} corner={allIn ? "" : "Thu 8:15 PM"} lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "Change any until kickoff" : "1 pick to make"} onOpen={() => enter("board", true)} slots={[{ team: "PIT", line: "-2.5", label: "", note: "Sun 1:00", state: "in" }, { team: "IND", line: "+3.5", label: "", note: "Sun 4:25", state: "in" }, allIn ? { team: "KC", label: "Survivor", note: "Thu 8:15", state: "in", survivor: true } : { label: "Survivor", note: "Open", state: "off", survivor: true }]} urgent={!allIn} week="Week 10" />
+      <RoomTicket onOpen={() => enter("board", true)} ticket={{
+        places: [{ team: "PIT", line: "-2.5", label: "", note: "Sun 1:00", state: "in" }, { team: "IND", line: "+3.5", label: "", note: "Sun 4:25", state: "in" }, allIn ? { team: "KC", label: "Survivor", note: "Thu 8:15", state: "in", survivor: true } : { label: "Survivor", note: "Open", state: "off", survivor: true }],
+        status: allIn ? { label: "All in", text: "Change until kickoff" } : { label: "Next game", text: "Thu 8:15 PM" }, urgent: !allIn, action: allIn ? "VIEW" : "PICK", stub: allIn ? "ALL IN" : "1 LEFT",
+      }} week="Week 10" />
     </section>
   );
 }

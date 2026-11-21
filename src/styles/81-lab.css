@@ -130,17 +130,19 @@
 .slip-title { display: grid; flex: none; gap: 1px; }
 .slip-title b { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; letter-spacing: .16em; line-height: 1.1; }
 .slip-title i { color: var(--slip-soft); font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-.slip-status { color: var(--slip-soft); display: grid; font-size: .76rem; font-weight: 800; gap: 1px; line-height: 1.2; max-width: 10rem; text-align: right; }
+.slip-status { color: var(--slip-soft); display: grid; font-size: .76rem; font-weight: 800; gap: 1px; line-height: 1.2; min-width: 0; text-align: right; white-space: nowrap; }
+.slip-status > * { overflow: hidden; text-overflow: ellipsis; }
 .slip-status i { font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .slip-status.is-urgent { color: var(--slip-lost); }
 .slip-status.is-saved { color: var(--slip-won); }
 .slip-status.is-saved i::before { content: "\2713\00a0"; }
 .slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }
 .slip-place { display: grid; gap: 3px; justify-items: center; min-width: 0; padding: 0 4px; position: relative; text-align: center; }
-.slip-place:not(.is-row-start)::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
-/* A playoff round's second row sits under a hairline, like the columns' own. */
-.slip-place.is-next-row { border-top: 1px solid var(--slip-hair); margin-top: 8px; padding-top: 10px; }
-.slip-place.is-next-row::before { top: 12px; }
+.slip-place + .slip-place::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
+.slip-words { display: grid; gap: 3px; justify-items: center; max-width: 100%; min-width: 0; }
+/* A place missed (nothing left to put a pick on): a fainter ring and words, so it reads as gone, never as still to do. */
+.slip-place.is-missed .slip-ring { opacity: .55; }
+.slip-place.is-missed .slip-words { opacity: .7; }
 .slip-mark { display: grid; height: 28px; place-items: center; position: relative; width: 28px; }
 .slip-mark .lab-room-logo { height: 26px; width: 26px; }
 .slip-ring { background: rgba(33, 29, 23, .035); border: 1.5px solid var(--slip-hair); border-radius: 50%; height: 24px; width: 24px; }
@@ -156,7 +158,7 @@
 .slip-pick { font-size: .8rem; font-variant-numeric: tabular-nums; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slip-pick b { font-weight: 800; letter-spacing: .02em; }
 .slip-pick.is-label { font-weight: 700; }
-.slip-place.is-off .slip-pick { color: var(--slip-soft); }
+.slip-place.is-off .slip-pick, .slip-place.is-missed .slip-pick { color: var(--slip-soft); }
 .slip-place small { color: var(--slip-soft); font-size: .6rem; font-weight: 700; letter-spacing: .1em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .slip-place.is-won small { color: var(--slip-won); }
 .slip-place.is-lost small { color: var(--slip-lost); }
@@ -166,6 +168,26 @@
 .slip-stub small { color: rgb(224 192 128); font-size: .56rem; font-weight: 800; letter-spacing: .16em; padding-left: .16em; }
 .slip-stub b { font-family: var(--font-serif); font-size: 1.02rem; font-weight: 700; letter-spacing: .14em; padding-left: .14em; }
 .slip-stub i { border-right: 2px solid rgb(224 192 128); border-top: 2px solid rgb(224 192 128); height: 7px; margin-top: 2px; transform: rotate(45deg); width: 7px; }
+/* A playoff round keeps the ticket to one row (so it never grows over the room): four places tighten their type, and on a phone five or six
+   show each place as its logo or ring with the line under it, the matchups and kickoffs left to the Big Board (still read aloud). */
+.slip-places.is-four .slip-pick { font-size: .72rem; }
+.slip-places.is-four .slip-place small { font-size: .56rem; letter-spacing: .06em; }
+@media (max-width: 899px) {
+  .slip-places.is-many .slip-place { padding: 0 2px; }
+  .slip-places.is-many .slip-pick { font-size: .72rem; }
+  /* Four across: a game still to pick is its ring marked PICK over Open, its matchup read aloud only. */
+  .slip-places.is-four .slip-place:not(.is-survivor) .slip-pick.is-label { clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+  .slip-places.is-many .slip-pick b, .slip-places.is-many .slip-pick.is-label, .slip-places.is-many .slip-place small { clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+  .slip-places:is(.is-many, .is-four) .slip-place.is-off .slip-mark::after { color: var(--slip-soft); content: "PICK"; font-size: .5rem; font-weight: 800; inset: 0; letter-spacing: .06em; place-content: center; position: absolute; display: grid; }
+}
+/* On a desktop each place lies on its side (logo, then team and line over the note), so the ticket is shorter still; a playoff round
+   widens the ticket to keep its places this roomy. */
+@media (min-width: 900px) {
+  .slip-place { column-gap: 8px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; padding: 0 8px; text-align: left; }
+  .slip-places.is-many .slip-place small { letter-spacing: .05em; }
+  .slip-words { justify-items: start; }
+  .slip-places.is-four .slip-pick, .slip-places.is-many .slip-pick { font-size: .78rem; }
+}
 .lab-room-ticket:hover .slip-stub { background: linear-gradient(180deg, rgb(60 51 40), rgb(34 29 22)); }
 .lab-room-ticket:active .slip { transform: translateY(1px); }
 .lab-room-ticket:focus-visible { outline: none; }
@@ -656,8 +678,9 @@
 .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: calc(5px + env(safe-area-inset-bottom)); }
 /* On a desktop the ticket sits centred at the foot of the screen, the place every pop-up rises from, notched at both ends. */
 @media (min-width: 900px) {
-  .clubhouse-page > .lab-room-ticket { bottom: 14px; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .34)) drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); left: 50%; max-width: 32rem; right: auto; transform: translateX(-50%); width: calc(100% - 32px); }
+  .clubhouse-page > .lab-room-ticket { bottom: 14px; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .34)) drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); left: 50%; max-width: 34rem; right: auto; transform: translateX(-50%); width: calc(100% - 32px); }
   .clubhouse-page > .lab-room-ticket .slip { border-radius: 12px; -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; }
+  .clubhouse-page > .lab-room-ticket:has(.slip.is-round) { max-width: 58rem; }
   .clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: 12px; }
   .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: 5px; }
 }
