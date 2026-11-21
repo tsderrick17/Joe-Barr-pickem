@@ -26,6 +26,8 @@ guarded recovery tools for a specific observed condition.
 | December 1 (Eastern) | The Bowl Pool window opens: the dispatcher starts calling the Bowl worker | Check Bowl readiness once the schedule is imported |
 | 8 AM Eastern on a Bowl game day | The Bowl line locks (teal) | Act only if health reports a started game missing a locked line |
 | August 1 onward | Create the next blank season, certify the prior season, run guarded annual cleanup once, then import the complete schedule | Review Schedule only if turnover lists a blocker or bootstrap remains incomplete |
+| August, once the schedule is imported | Nothing automatic: NFL team logos are files | Look at the Survivor board; replace any changed team logo ([OPERATIONS.md](OPERATIONS.md#logos-every-year)) |
+| December, once the Bowl schedule is imported | College team colours refresh from ESPN by themselves | Check the Bowl ticket's pennants; add or update any bowl logo ([OPERATIONS.md](OPERATIONS.md#bowl-logos-every-december)) |
 
 ## Choose the right procedure
 
