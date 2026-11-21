@@ -158,21 +158,6 @@ export function boardNews(standings, viewerId) {
   return you ? `${lead} · You: ${you.tied ? "T" : ""}${you.place}, ${leaders[0].wins - you.wins} back${moved}` : lead;
 }
 
-/** Where the viewer stands, in a few words: "You lead by 2", "You share the lead", "You’re tied 2nd, 2 back". Empty when they are not on the board. */
-export function standingLine(standings, viewerId) {
-  const you = standings.find((row) => row.id === viewerId);
-  if (!you) return "";
-  if (you.place === 1) {
-    const tied = standings.filter((row) => row.place === 1).length > 1;
-    if (tied) return "You share the lead";
-    const next = standings.find((row) => row.place > 1);
-    return next ? `You lead by ${you.wins - next.wins}` : "You lead";
-  }
-  const leader = standings[0];
-  const suffix = (n) => (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th");
-  return `You’re ${you.tied ? "tied " : ""}${you.place}${suffix(you.place)}, ${leader.wins - you.wins} back`;
-}
-
 /**
  * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it). `before` is every
  * player's wins through an earlier week, for the standings' week-over-week arrows (see withMovement).
@@ -283,8 +268,8 @@ export function clubhouseFeed({ home, board, before = null }) {
       lamps,
       slots,
       survivor: inSurvivor,
-      // The slip's corner: when the next pick locks while one is owed, otherwise where the viewer stands.
-      corner: owedCount && nextKickoff ? `Locks ${kickoffLabel(nextKickoff.kickoffAt)}` : standingLine(standings, home.viewerPlayerId),
+      // The slip's corner: when the next pick locks, while one is owed. Where a player stands is the Big Board's to say, never the ticket's.
+      corner: owedCount && nextKickoff ? `Locks ${kickoffLabel(nextKickoff.kickoffAt)}` : "",
       urgent: Boolean(owedCount && nextKickoff),
       action: owedCount ? "PICK" : "VIEW",
       line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in" : owedCount ? `${owedCount} ${owedCount === 1 ? "pick" : "picks"} to make` : anyChangeable ? "All in · change until kickoff" : "All in · all locked",

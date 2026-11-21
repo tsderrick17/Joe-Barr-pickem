@@ -203,6 +203,6 @@ test("the paper slip: a box a pick with its line and kickoff, open boxes, Surviv
   }) }).ticket;
   assert.deepEqual(done.slots.map((slot) => slot.note), ["WON 27–20", "SUN 4:25", "SURVIVOR"]);
   assert.equal(done.slots[2].text, "WAS");
-  assert.equal(done.corner, "You’re tied 2nd, 2 back");
+  assert.equal(done.corner, "");   // the ticket never says where you stand: that is the Big Board's
   assert.equal(done.action, "VIEW");
 });

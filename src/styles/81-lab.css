@@ -123,7 +123,8 @@
   mask: radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
 }
 /* By night the slip is paper under lamplight: a touch warmer and dimmer, so it does not glare off the dark room. */
-html[data-theme="night"] .lab-room-ticket, html[data-theme="night"] .lab-tote-ticket { filter: brightness(.88) sepia(.12); }
+html[data-theme="night"] .lab-room-ticket { --slip-paper: rgb(224 212 186); }
+html[data-theme="night"] .lab-tote-ticket { background-color: rgb(224 212 186); }
 .lab-room-ticket::before { border-top: 1.5px dotted var(--slip-rule); content: ""; left: 14px; position: absolute; right: 14px; top: 6px; }
 .lab-room-ticket:focus-visible { outline: 3px solid var(--cw-gold-lt); outline-offset: -6px; }
 .cw-shell.has-dial .lab-room-ticket { bottom: calc(100px + env(safe-area-inset-bottom)); }
@@ -133,9 +134,20 @@ html[data-theme="night"] .lab-room-ticket, html[data-theme="night"] .lab-tote-ti
 /* SAVED: a rubber stamp, a little crooked, for a while after the picks are saved. */
 .slip-stamp { border: 2px solid var(--slip-won); border-radius: 4px; color: var(--slip-won); font-size: .68rem; font-weight: 800; letter-spacing: .14em; line-height: 1; margin-left: auto; opacity: .85; padding: 3px 6px; transform: rotate(-7deg); }
 .slip-stamp + i { margin-left: 0; }
-.slip-picks { align-items: center; display: flex; gap: 8px; margin-top: 10px; }
-.slip-boxes { display: grid; flex: 1; gap: 6px; grid-template-columns: repeat(min(var(--boxes, 3), 3), minmax(0, 1fr)); min-width: 0; }
-.slip-box { background: transparent; border: 1.5px dashed var(--slip-rule); border-radius: 6px; color: rgb(138 127 108); font-family: "Courier New", monospace; font-size: .8rem; font-weight: 700; line-height: 1.2; min-width: 0; overflow: hidden; padding: 6px 2px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.slip-picks { align-items: center; display: flex; gap: 8px; margin-top: 16px; }
+.slip-boxes { display: grid; flex: 1; gap: 14px 6px; grid-template-columns: repeat(min(var(--boxes, 3), 3), minmax(0, 1fr)); min-width: 0; }
+.slip-box { background: transparent; border: 1.5px dashed var(--slip-rule); border-radius: 6px; color: rgb(138 127 108); font-family: "Courier New", monospace; font-size: .8rem; font-weight: 700; line-height: 1.2; min-width: 0; padding: 8px 2px 6px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+/* Each box's lamp sits in the middle of its top edge, set in a small brass collar like an eyelet in the paper, so the ticket keeps its
+   lights without a separate row of them. */
+.slip-box { overflow: visible; position: relative; }
+.slip-box > .lab-lamp, .slip-box > .lab-lamp.is-survivor { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 0 3.5px rgb(179 139 77); height: .8rem; left: 50%; position: absolute; top: 0; transform: translate(-50%, -55%); width: .8rem; }
+.slip-box > .lab-lamp.is-in, .slip-box > .lab-lamp.is-won, .slip-box > .lab-lamp.is-lost { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 0 3.5px rgb(179 139 77), 0 0 8px 2px var(--slip-glow, rgba(255, 190, 60, .55)); }
+.slip-box > .lab-lamp.is-won { --slip-glow: rgba(60, 190, 100, .5); }
+.slip-box > .lab-lamp.is-lost { --slip-glow: rgba(220, 60, 50, .45); }
+/* Survivor's lamp is its spade, set on a disc of the paper in the same brass collar. */
+.slip-box > .lab-lamp.is-survivor { background: var(--slip-paper); border-radius: 50%; height: 1rem; width: 1rem; }
+.slip-box > .lab-lamp.is-survivor::before { inset: 2px; }
+.slip-text, .slip-box small { display: block; overflow: hidden; text-overflow: ellipsis; }
 .slip-box small { color: var(--slip-soft); display: block; font-family: inherit; font-size: .64rem; font-weight: 700; letter-spacing: .06em; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .slip-box:not(.is-off) { background: rgb(255 250 240); border-style: solid; border-color: var(--slip-ink); color: var(--slip-ink); }
 .slip-box.is-won { border-color: var(--slip-won); color: var(--slip-won); }

@@ -246,7 +246,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await expect(board.getByRole("button", { name: /^Survivor: Broncos/ })).toBeVisible();
   // Back in the room, the ticket's third lamp is lit and the picks wall no longer glows.
   await page.getByRole("button", { name: "Back to Clubhouse" }).first().click();
-  await expect(page.locator(".lab-room-ticket .slip-box.is-in")).toHaveCount(3);
+  await expect(page.locator(".lab-room-ticket .lab-lamp.is-in")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
 });
 
@@ -430,10 +430,10 @@ test("your ticket is pinned to every clubhouse screen, lights a lamp per pick, a
   await openLab(page, "clubhouse");
   const ticket = page.locator(".lab-room-ticket");
   await expect(ticket).toBeVisible();
-  await expect(ticket.locator(".slip-box.is-in")).toHaveCount(2);
+  await expect(ticket.locator(".lab-lamp.is-in")).toHaveCount(2);
   await expect(page.locator(".lab-room-spot.is-sportsbook.is-owed")).toHaveCount(1);
   await page.getByRole("group", { name: "Picks" }).getByRole("button", { name: "All in" }).click();
-  await expect(ticket.locator(".slip-box.is-in")).toHaveCount(3);
+  await expect(ticket.locator(".lab-lamp.is-in")).toHaveCount(3);
   await expect(page.locator(".lab-room-spot.is-owed")).toHaveCount(0);
   // It stays on screen inside a room, at the bottom of the window even when the room is long.
   await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
