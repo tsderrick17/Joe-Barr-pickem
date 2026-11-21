@@ -262,7 +262,7 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
 /** A playoff game with no bowl of its own (a first-round game on campus) flies the College Football Playoff's logo, on black cloth (the logo's own ground). */
 const CFP_LOGO = "cfp";
 /** Logos drawn in light lines (gold or white on dark) sit straight on their dark cloth: on the cream patch they would wash out. */
-const BARE_LOGOS = new Set([CFP_LOGO, "las-vegas"]);
+const BARE_LOGOS = new Set([CFP_LOGO, "las-vegas", "la"]);
 
 /**
  * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours
