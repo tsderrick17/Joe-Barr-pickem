@@ -1,4 +1,4 @@
-import webpush from "web-push";
+import { sendNotification } from "web-push";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { vapidKeys } from "@/lib/web-push-keys";
 
@@ -14,13 +14,13 @@ export type PushPayload = {
 };
 
 type Subscription = { id: string; player_id: string; endpoint: string; p256dh: string; auth: string };
-type Send = typeof webpush.sendNotification;
+type Send = typeof sendNotification;
 
 /** Whoever the push services see as the sender: a web address for the pool. */
 const VAPID_SUBJECT = "https://pickemjb.vercel.app";
 
 /** "gone" means the push service no longer knows the device (404 or 410), so the subscription should be deleted. */
-async function sendWebPush(subscription: Subscription, payload: PushPayload, send: Send = webpush.sendNotification.bind(webpush)): Promise<"sent" | "gone" | "failed"> {
+async function sendWebPush(subscription: Subscription, payload: PushPayload, send: Send = sendNotification): Promise<"sent" | "gone" | "failed"> {
   const keys = await vapidKeys();
   try {
     await send(

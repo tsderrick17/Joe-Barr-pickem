@@ -43,7 +43,7 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "@/lib/authenticate-active-player") return { url: "data:text/javascript,export const authenticateActivePlayer = async () => globalThis.pushFixture.access;", shortCircuit: true };
     if (specifier === "@/lib/supabase-admin") return { url: "data:text/javascript,export const supabaseAdmin = globalThis.pushFixture.database;", shortCircuit: true };
-    if (specifier === "web-push") return { url: "data:text/javascript,export default { generateVAPIDKeys: () => { const n = ++globalThis.pushFixture.keysMade; return { publicKey: 'public-' + n, privateKey: 'private-' + n }; }, sendNotification: (...args) => globalThis.pushFixture.send(...args) };", shortCircuit: true };
+    if (specifier === "web-push") return { url: "data:text/javascript,export const generateVAPIDKeys = () => { const n = ++globalThis.pushFixture.keysMade; return { publicKey: 'public-' + n, privateKey: 'private-' + n }; }; export const sendNotification = (...args) => globalThis.pushFixture.send(...args);", shortCircuit: true };
     return nextResolve(specifier, context);
   },
 });
