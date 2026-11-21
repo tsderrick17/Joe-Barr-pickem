@@ -21,6 +21,19 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-21 - Clubhouse: the chalkboard carries the Season Snapshot
+
+The Bowl Pool's bulletin board was only wheeled into the room from Dec 7 and was never the way into the Bowl Pool (the poker table's
+plate is, once Survivor is done). It is gone, and with it the six bowl-season pictures of the room. In its place a chalkboard on a wheeled
+walnut stand stands in the room all season, between the poker table and the bar, clear of the Big Board and the spreads board. Its slate
+is live like the two screens: the page sketches the Season Snapshot on it in chalk (the last six weeks, each player's line in their own
+colour washed pale, the leader along the foot; the playoffs once a playoff game day is final), and a player who cannot see the Season
+Snapshot yet (before Week 6 settles) reads "Opens after Week 6". Tapping it opens the full Season Snapshot (#snapshot). From Dec 7 the
+Bowl Pool has its own chart, a point a bowl day once every bowl that day is decided, built from the Bowl Pool's read the room already
+makes (`bowlSnapshot`); the board turns between the two pools every 10 seconds and the full chart gains a Pick'em | Bowl switch,
+remembered on the device. The chalkboard and its chart share one Season Snapshot read, made again only when a result changes the
+standings. The owner asked for no weekly story line or rival line.
+
 ## 2026-11-21 - Lab try-outs retire once they ship
 
 The Workshop Lab kept sample versions of the Bowl ticket, the Big Board (tote board) and the Clubhouse room after all three went live,

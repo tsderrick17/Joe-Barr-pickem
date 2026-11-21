@@ -98,7 +98,6 @@ function pavers() { const c = canvas(512, 512), g = c.getContext("2d"); g.fillSt
 
 export async function buildRoom(q) {
   const night = q.get("night") === "1";
-  const bowl = q.get("bowl") === "1";
   // The room is built as it was first drawn (the bar on the left, the chimney on the right) and then turned round as a mirror image,
   // so the bar runs down the right and the chimney stands on the left. Everything that carries words (the neon, the constitution, the
   // Bowl Pool's cards and pennant, the live boards) has its picture turned back, so it still reads the right way round. flip=0 draws
@@ -407,7 +406,7 @@ export async function buildRoom(q) {
   // brass. Behind it a back bar of walnut and antique mirror: three glass shelves of real bottles lit from beneath, glassware in rows
   // on the back counter, and the neon over the mirror.
   const bar = group("bar");
-  const BXc = X0 + 0.95, BZ = -8.5, BL = 5.6, FRONT = BXc + 0.375;
+  const BXc = X0 + 0.95, BZ = -8.5, BL = 5.6, FRONT = BXc + 0.375, CHAT_Z = Number(q.get("chatz") ?? BZ + 1.1);   // the chat laptop sits by the second stool, clear of the chalkboard
   add(bar, tile(rbox(0.75, 1.02, BL, 0.02), 1), barWood, [BXc, 0.53, BZ]);
   for (let k = 0; k < Math.floor(BL / 0.075); k++) add(bar, cyl(0.026, 0.026, 0.78, 10, 1), fluteWood, [FRONT, 0.55, BZ - BL / 2 + 0.06 + k * 0.075], { cast: false });   // flutes
   add(bar, box(0.03, 0.12, BL), brass, [FRONT + 0.02, 0.06, BZ]);                                                                      // kick plate
@@ -572,8 +571,8 @@ export async function buildRoom(q) {
     if (night) { const l = new THREE.PointLight(0xffc27a, 1.6, 3, 1.6); l.position.set(BXc + 0.1, 1.6, z); bar.add(l); }
   }
   const chat = group("chat");
-  add(chat, rbox(0.27, 0.02, 0.38, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BXc + 0.05, 1.18, BZ - 0.1]);
-  const lid = new THREE.Group(); lid.position.set(BXc - 0.08, 1.19, BZ - 0.1); lid.rotation.set(0, Math.PI / 2, 0); chat.add(lid);
+  add(chat, rbox(0.27, 0.02, 0.38, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [BXc + 0.05, 1.18, CHAT_Z]);
+  const lid = new THREE.Group(); lid.position.set(BXc - 0.08, 1.19, CHAT_Z); lid.rotation.set(0, Math.PI / 2, 0); chat.add(lid);
   const lidTilt = new THREE.Group(); lidTilt.rotation.x = -0.3; lid.add(lidTilt);
   add(lidTilt, rbox(0.38, 0.26, 0.02, 0.008), std(0xa8adb2, { metalness: 0.7, roughness: 0.3 }), [0, 0.13, 0]);
   add(lidTilt, new THREE.PlaneGeometry(0.34, 0.22), new THREE.MeshStandardMaterial({ map: screenTex(), emissive: 0xffffff, emissiveMap: screenTex(), emissiveIntensity: 0.85 }), [0, 0.13, 0.012], { cast: false });
@@ -750,8 +749,7 @@ export async function buildRoom(q) {
     }
   }
 
-  // ----- plants in baskets and pots, a surfboard against the wall, and from Dec 7 the Bowl Pool's bulletin board on wheels, wheeled in
-  // beside the open doors
+  // ----- plants in baskets and pots, a surfboard against the wall
   const plant = (x, z, s = 1) => {
     add(room, cyl(0.3 * s, 0.24 * s, 0.5 * s, 24), rattan, [x, 0.25 * s, z]);
     add(room, cyl(0.27 * s, 0.27 * s, 0.02, 20), std(0x3a2a1c, { roughness: 1 }), [x, 0.49 * s, z], { cast: false });
@@ -931,26 +929,49 @@ export async function buildRoom(q) {
     add(out, new THREE.ConeGeometry(0.06, 0.22, 10), glow(0xff8a2a, night ? 3 : 1.2), [x, 2.04, z], { cast: false });
     if (night) { const l = new THREE.PointLight(0xff9a40, 2.5, 4, 1.6); l.position.set(x, 2.1, z); out.add(l); }
   }
-  if (bowl) {
-    // From Dec 7 the Bowl Pool's board is wheeled in and stands at the front left of the room, turned a little toward the middle
-    // of the room: a cork board in a walnut frame on a wheeled stand, the BOWL POOL pennant on top and the bowl games pinned up as cards.
-    const b2 = group("bowl");
-    const stand = new THREE.Group(); stand.position.set(-1.25, 0, -2.4); stand.rotation.y = 0.5; stand.scale.setScalar(0.85);
-    const LOW = 0.16;                                                                                                                   // the board hangs a tad lower on its posts than it did
-    b2.add(stand);
-    const cork = (() => { const c = canvas(512, 384), g = c.getContext("2d"); g.fillStyle = "#b98a5a"; g.fillRect(0, 0, 512, 384); for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "90,60,30" : "230,190,140"},${0.08 + rand() * 0.14})`; g.fillRect(rand() * 512, rand() * 384, 1 + rand() * 2, 1 + rand() * 2); } return texture(c); })();
-    add(stand, box(1.5, 1.05, 0.04), new THREE.MeshStandardMaterial({ map: cork, roughness: 1 }), [0, 1.42 - LOW, 0]);
-    for (const y of [0.87 - LOW, 1.97 - LOW]) add(stand, rbox(1.62, 0.07, 0.08, 0.015), m.walnut, [0, y, 0]);
-    for (const x of [-0.78, 0.78]) { add(stand, rbox(0.07, 1.98 - LOW, 0.08, 0.015), m.walnut, [x, (1.98 - LOW) / 2 + 0.01, 0]); add(stand, rbox(0.08, 0.06, 0.6, 0.015), m.walnut, [x, 0.08, 0]); for (const dz of [-0.26, 0.26]) add(stand, cyl(0.045, 0.045, 0.035, 16), std(0x1a1a1a, { roughness: 0.6 }), [x, 0.045, dz], { rot: [0, 0, Math.PI / 2] }); }
-    const card = (lines) => { const c = canvas(256, 200), g = c.getContext("2d"); g.fillStyle = "#f6f1e3"; g.fillRect(0, 0, 256, 200); g.fillStyle = "#1b2a4a"; g.fillRect(0, 0, 256, 44); g.fillStyle = "#e6cf98"; g.font = "700 26px Georgia"; g.textAlign = "center"; g.fillText(lines[0], 128, 31); g.fillStyle = "#1b2a4a"; g.font = "700 30px Arial"; lines.slice(1).forEach((line, i) => g.fillText(line, 128, 92 + i * 46)); return texture(c); };
-    [["ROSE BOWL", "OSU -3.5", "ORE +3.5"], ["SUGAR BOWL", "UGA -6", "TEX +6"], ["ORANGE BOWL", "PSU -2.5", "FSU +2.5"], ["COTTON BOWL", "ND -1", "TCU +1"], ["FIESTA BOWL", "MICH -4", "UTAH +4"], ["PEACH BOWL", "LSU -7", "UCF +7"]].forEach((lines, i) => {
-      const x = -0.48 + (i % 3) * 0.48, y = 1.66 - LOW - Math.floor(i / 3) * 0.47, tilt = [0.04, -0.03, 0.02, -0.04, 0.03, -0.02][i];
-      add(stand, new THREE.PlaneGeometry(0.42, 0.33), new THREE.MeshStandardMaterial({ map: readable(card(lines)), roughness: 0.85 }), [x, y, 0.024], { cast: false, rot: [0, 0, tilt] });
-      add(stand, new THREE.SphereGeometry(0.012, 10, 8), std([0xd4342c, 0x1d3557, 0xf0b429][i % 3], { roughness: 0.3 }), [x, y + 0.14, 0.03], { cast: false });
-    });
-    const pc = canvas(512, 160), pg = pc.getContext("2d"); pg.fillStyle = "#1b2a4a"; pg.beginPath(); pg.moveTo(0, 0); pg.lineTo(512, 80); pg.lineTo(0, 160); pg.fill(); pg.fillStyle = "#e6cf98"; pg.font = "700 52px Georgia"; pg.fillText("BOWL POOL", 26, 98);
-    add(stand, new THREE.PlaneGeometry(0.8, 0.25), new THREE.MeshStandardMaterial({ map: readable(texture(pc)), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }), [-0.32, 2.14 - LOW, 0.0], { cast: false });
-    add(stand, cyl(0.01, 0.01, 0.3, 8), brass, [-0.72, 2.12 - LOW, 0]);
+  {
+    // The chalkboard: a slate in a walnut frame on a wheeled walnut stand, standing in the room all season between the poker table and
+    // the bar, turned toward the door. Its slate is live (like the two screens): the picture leaves it clean but for old chalk dust, and
+    // the page draws the Season Snapshot on it in chalk, so its four corners are recorded. A tray along its foot holds chalk and a felt
+    // eraser. (It took the place of the Bowl Pool's bulletin board, which was only wheeled in for bowl season.)
+    const chalkboard = group("chalkboard");
+    const [CX, CZ, CR, CS] = (q.get("chalk") ?? "-1.2,-5.5,0.3,0.95").split(",").map(Number);
+    const stand = new THREE.Group(); stand.position.set(CX, 0, CZ); stand.rotation.y = CR; stand.scale.setScalar(CS);
+    chalkboard.add(stand);
+    const SW = 1.45, SH = 0.92, SY = 1.0;                                                                                            // the slate, and the height of its middle
+    const slate = (() => {
+      const c = canvas(768, 512), g = c.getContext("2d");
+      g.fillStyle = "#1f2a26"; g.fillRect(0, 0, 768, 512);
+      for (let i = 0; i < 14000; i++) { g.fillStyle = `rgba(${rand() < 0.5 ? "10,16,14" : "70,86,80"},${0.05 + rand() * 0.1})`; g.fillRect(rand() * 768, rand() * 512, 1 + rand() * 2, 1 + rand() * 2); }
+      // old chalk wiped with a felt: broad faint arcs, heavier toward the edges where the eraser never quite reaches
+      for (let i = 0; i < 26; i++) { const x = rand() * 768, y = rand() * 512, r = 60 + rand() * 160; g.strokeStyle = `rgba(220,226,218,${0.025 + rand() * 0.035})`; g.lineWidth = 18 + rand() * 40; g.beginPath(); g.arc(x, y, r, rand() * 6, rand() * 6 + 1.6); g.stroke(); }
+      const edge = g.createRadialGradient(384, 256, 150, 384, 256, 470); edge.addColorStop(0, "rgba(220,226,218,0)"); edge.addColorStop(1, "rgba(220,226,218,0.07)"); g.fillStyle = edge; g.fillRect(0, 0, 768, 512);
+      return texture(c);
+    })();
+    add(stand, box(SW, SH, 0.03), new THREE.MeshStandardMaterial({ map: slate, roughness: 0.95 }), [0, SY, 0]);
+    for (const y of [SY - SH / 2 - 0.035, SY + SH / 2 + 0.035]) add(stand, rbox(SW + 0.14, 0.07, 0.07, 0.015), m.walnut, [0, y, 0]);
+    for (const x of [-(SW / 2 + 0.035), SW / 2 + 0.035]) add(stand, rbox(0.07, SH + 0.14, 0.07, 0.015), m.walnut, [x, SY, 0]);
+    // the stand: two posts on wheeled feet, a stretcher low between them
+    const top = SY + SH / 2 + 0.07;
+    for (const x of [-(SW / 2 + 0.12), SW / 2 + 0.12]) {
+      add(stand, rbox(0.07, top, 0.08, 0.015), m.walnut, [x, top / 2, -0.02]);
+      add(stand, rbox(0.08, 0.06, 0.62, 0.015), m.walnut, [x, 0.08, -0.02]);
+      for (const dz of [-0.28, 0.24]) add(stand, cyl(0.045, 0.045, 0.035, 16), std(0x1a1a1a, { roughness: 0.6 }), [x, 0.045, dz], { rot: [0, 0, Math.PI / 2] });
+      add(stand, cyl(0.03, 0.03, 0.02, 16), brass, [x, top + 0.01, -0.02]);                                                     // brass caps
+    }
+    add(stand, rbox(SW + 0.24, 0.05, 0.05, 0.01), m.walnut, [0, 0.24, -0.02]);
+    for (const x of [-(SW / 2 + 0.085), SW / 2 + 0.085]) add(stand, cyl(0.022, 0.022, 0.06, 12), brass, [x, SY, -0.02], { rot: [0, 0, Math.PI / 2] });   // the pivots
+    // the chalk tray, a few sticks and a felt eraser on it
+    const trayY = SY - SH / 2 - 0.07;
+    add(stand, rbox(SW + 0.04, 0.025, 0.1, 0.008), m.walnut, [0, trayY - 0.01, 0.05]);
+    add(stand, box(SW + 0.04, 0.03, 0.012), m.walnut, [0, trayY + 0.005, 0.1]);
+    const chalkStick = std(0xf3f1ea, { roughness: 1 });
+    for (const [x, len, turn] of [[-0.42, 0.075, 0.2], [-0.33, 0.05, -0.4], [0.18, 0.065, 0.1]]) add(stand, cyl(0.011, 0.011, len, 10), chalkStick, [x, trayY + 0.014, 0.055], { rot: [0, turn, Math.PI / 2], cast: false });
+    add(stand, rbox(0.16, 0.035, 0.06, 0.01), std(0x6b4a2a, { roughness: 0.8 }), [0.48, trayY + 0.02, 0.055]);
+    add(stand, box(0.16, 0.012, 0.06), std(0x3a3a3a, { roughness: 1 }), [0.48, trayY + 0.0, 0.055], { cast: false });
+    // the slate is live: its corners (top left, top right, bottom right, bottom left), just off its face
+    stand.updateMatrixWorld(true);
+    screens.chalkboard = [[-SW / 2, SH / 2], [SW / 2, SH / 2], [SW / 2, -SH / 2], [-SW / 2, -SH / 2]].map(([x, y]) => stand.localToWorld(new THREE.Vector3(x, SY + y, 0.016)));
   }
 
   // ----- light: a bright mid-afternoon, the sun high enough that its patches on the floor are short and its shadows soft-edged and

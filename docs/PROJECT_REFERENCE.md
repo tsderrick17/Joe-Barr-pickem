@@ -388,6 +388,8 @@ measure database requests or end-to-end route time.
 - The clubhouse (`/clubhouse`): the Commissioner and the players let into the clubhouse beta (`players.clubhouse_access`, set per player
   from the Clubhouse On/Off switch on `/admin/players`, audited) see the header's light switch and can open it; everyone else is sent to
   the Standings. It reads and writes only through the classic pages' routes, so it can never show a player more than those pages do.
+  Its chalkboard sketches the Season Snapshot (and from Dec 7 the Bowl Pool's day-by-day chart, `src/lib/chalkboard.js`) and opens the
+  full chart; it shows the Season Snapshot only to those the Standings show it to (the Commissioner, everyone once Week 6 settles).
 - The Commissioner area (`/admin`, Commissioner only): the Wheel, ten spokes each with its own address (`SPOKES` in `src/lib/commissioner-wheel.js`):
   `/admin/gameday`, `/admin/health`, `/admin/reminders` (Messages), `/admin/players`, `/admin/bowl-pool`, `/admin/season`, `/admin/stats`,
   `/admin/odds`, `/admin/limits` and `/admin/workshop` (the Workshop showroom) and `/admin/workshop/lab` (the Workshop's Lab, the same spoke: Showroom and Lab tabs at the top of both; Commissioner-only try-outs on a shelf of chips (`?try=`, remembered on the device): the Clubhouse, the Survivor table (with a Lamp-lit night switch), the Horse race and the haptics Feel test, which moved there from Notifications; sample data in `src/lib/lab-samples.js`; nothing in the Lab reads or changes pool data). One read of `/api/admin/operations-map` for the whole area colours the rings and fills

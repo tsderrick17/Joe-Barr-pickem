@@ -15,7 +15,7 @@ import { toggleSiteTheme } from "@/lib/site-theme.js";
  */
 
 /** Where a spot in the room leads. */
-export type Room = "board" | "trophies" | "survivor" | "bowl" | "chat" | "constitution";
+export type Room = "board" | "trophies" | "survivor" | "bowl" | "chat" | "constitution" | "snapshot";
 
 type Spot = { x: number; y: number; w: number; h: number };
 type Point = number[];
@@ -31,8 +31,11 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
-  { spot: "bowl", room: "bowl", name: "Bowl Pool", label: "below" },
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "below" },
+  // The chat plate stands over the laptop on the bar, clear of the chalkboard in front of it.
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "above" },
+  // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
+  // It needs no plate: its own chalk title says what it is (and a plate under it would sit behind your ticket).
+  { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", label: "none" },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
   // Notifications: a plate like the others, up in the thatch at the right where it covers nothing (the real clubhouse only: it opens
   // the player's own settings).
@@ -71,11 +74,11 @@ function followWide(change: () => void) {
  * The real clubhouse's room picture for this screen, as RoomScene draws it: started as soon as the page opens, before the pool's data is
  * in, so the picture is already on its way when the room appears.
  */
-export function warmRoomPicture(bowlSeason: boolean) {
+export function warmRoomPicture() {
   const image = new window.Image();
   image.decoding = "async";
   image.fetchPriority = "high";
-  image.src = `/lab/clubhouse/room-${nightNow() ? "night" : "day"}${bowlSeason ? "-bowl" : ""}${wideNow() ? "-wide" : "-full"}.webp`;
+  image.src = `/lab/clubhouse/room-${nightNow() ? "night" : "day"}${wideNow() ? "-wide" : "-full"}.webp`;
 }
 
 /**
@@ -112,12 +115,18 @@ export type RoomStanding = { name: string; wins: number; place: number | null; t
 export type RoomGame = { id: string; kickoff: string; at?: number; away: string; home: string; awayLine: string; homeLine: string; final?: { away: { score: number; covered: boolean }; home: { score: number; covered: boolean } }; bowl?: string; picked?: "away" | "home" | null };
 /**
  * Everything the room shows by itself: the standings for the Big Board, the week's games for the spreads board, your own picks (lit
- * there), the line of news on a label, whether a pick is owed, a new chat message, and whether the Bowl Pool is wheeled in (its bulletin board, from Dec 7). The Lab
+ * there), the line of news on a label, whether a pick is owed, a new chat message, and whether it is bowl season (from Dec 7: the Bowl Pool takes the poker table once Survivor is done, and the chalkboard turns between the two pools). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
+/**
+ * One sketch on the chalkboard: what it charts (its title and the weeks or days in view), each player's line in a 252 by 104 box in their
+ * own color, and who leads. With nothing to draw yet it carries a note instead. In bowl season the board turns between the two pools.
+ */
+export type ChalkPage = { title: string; span: string; lines: Array<{ id: string; color: string; points: number[][] }>; leader: string; note?: string };
 
-function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed }) {
+export type RoomFeed = { chalk?: ChalkPage[]; week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
+
+function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed; night: boolean }) {
   const rows = feed.standings;
   const mine = feed.mine;
   // The top line always shows the leader and their wins (or, when level, how many lead and on what), so every page has a sense of
@@ -146,6 +155,7 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   const gameRows = rowCount === 0 ? [] : Array.from({ length: rowCount < 2 ? 1 : rowCount + 1 }, (_, row) => (games.length === 1 ? [games[0]] : [0, 1].map((side) => games[(2 * (row % rowCount) + side) % games.length])));
   return (
     <div aria-hidden="true" className="lab-room-live">
+      <Chalkboard corners={picture.screens?.chalkboard} frame={frame} night={night} pages={feed.chalk ?? []} />
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
         <header><b>PICK’EM</b><span>{feed.week.toUpperCase()} · {page + 1}/{pages}</span></header>
         {leaders.length ? <p className="lab-room-leader"><i>LEAD</i><span>{leaders.length === 1 ? leaders[0].name : `${leaders.length}-WAY TIE`}</span><b>{leaders[0].wins}</b></p> : null}
@@ -191,6 +201,49 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   );
 }
 
+/** The chalkboard turns between its sketches (in bowl season, Pick'em and the Bowl Pool) every 10 seconds. */
+const CHALK_PAGE_MS = 10_000;
+
+/**
+ * The chalkboard's slate, drawn as chalk: the title and what is in view along the top, each player's line in their own color washed
+ * pale the way colored chalk is, the leader named at the end of the top line, all through a rough, grainy edge. The picture's own light
+ * is on it, so at night the chalk is a little dimmer.
+ */
+function Chalkboard({ corners, frame, pages, night }: { corners: Point[] | undefined; frame: { width: number; height: number } | null; pages: ChalkPage[]; night: boolean }) {
+  const [at, setAt] = useState(0);
+  useEffect(() => {
+    if (pages.length < 2) return;
+    const timer = window.setInterval(() => setAt((page) => (page + 1) % pages.length), CHALK_PAGE_MS);
+    return () => window.clearInterval(timer);
+  }, [pages.length]);
+  const page = pages[at % Math.max(1, pages.length)];
+  if (!page) return null;
+  return (
+    <Screen box={frame} className={`is-chalk${night ? " is-night" : ""}`} corners={corners} h={190} w={300}>
+      <svg viewBox="0 0 300 190">
+        <defs>
+          <filter id="chalk-grain" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence baseFrequency="0.85" numOctaves="2" result="noise" seed="4" type="fractalNoise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="2.4" />
+            <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.35" />
+            <feComposite in="rough" in2="grain" operator="in" />
+          </filter>
+        </defs>
+        <g filter="url(#chalk-grain)" key={page.title}>
+          <text className="chalk-title" x="16" y="30">{page.title}</text>
+          <text className="chalk-span" textAnchor="end" x="286" y="182">{page.span}</text>
+          <path className="chalk-rule" d="M16 40 Q150 37 286 41" />
+          {page.note ? <text className="chalk-note" textAnchor="middle" x="150" y="112">{page.note}</text> : <>
+            <path className="chalk-axis" d="M18 50 L17 161 L278 160" />
+            {page.lines.map((line) => <polyline className="chalk-line" key={line.id} points={line.points.map(([x, y]) => `${x + 20},${y + 52}`).join(" ")} style={{ stroke: `color-mix(in srgb, ${line.color} 62%, #f4f1e8)` }} />)}
+            <text className="chalk-leader" x="16" y="182">{page.leader}</text>
+          </>}
+        </g>
+      </svg>
+    </Screen>
+  );
+}
+
 /**
  * The room itself: the picture by day and at night, the two live boards, and a tap spot over each thing in it with its name plate.
  * In the Lab a tap opens one of the Lab's rooms (`onSpot`); in the real clubhouse every spot is a link to the real page (`hrefFor`).
@@ -208,19 +261,15 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   const [settled, setSettled] = useState(false);
   useEffect(() => { const timer = window.setTimeout(() => setSettled(true), 2500); return () => window.clearTimeout(timer); }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
-  // The Bowl Pool's bulletin board is wheeled in for bowl season (from Dec 7).
-  const bulletin = feed.bowl;
-  const key = `${bulletin ? "-bowl" : ""}${wide ? "-wide" : full ? "-full" : ""}`;
-  const picture = PICTURES[`day${key}`] ?? PICTURES[`day${bulletin ? "-bowl" : ""}`];
+  const key = wide ? "-wide" : full ? "-full" : "";
+  const picture = PICTURES[`day${key}`] ?? PICTURES.day;
   const news = feed.news;
   // The poker table is whichever pool is being played: Survivor while it runs, the Bowl Pool in bowl season (in the Bowl Pool's navy and
   // gold), never both; between the two (Survivor decided, the Bowl Pool not open yet) it has no plate. (Both are always on the board's tabs.)
-  // The real clubhouse has no other Bowl Pool plate; the Lab keeps its bulletin board's.
   const survivorActive = feed.survivorActive ?? !feed.survivorOver;
   const table: "survivor" | "bowl" | null = survivorActive ? "survivor" : feed.bowl ? "bowl" : null;
   const taken = table === "bowl";
   const spots = SPOTS.flatMap((item) => {
-    if (item.spot === "bowl" && (hrefFor || !picture.spots.bowl)) return [];
     if (item.spot === "survivor") return table === null ? [] : taken ? [{ ...item, room: "bowl" as Room, name: "Bowl Pool" }] : [item];
     return [item];
   }).filter(({ spot, at, realOnly }) => (at || picture.spots[spot]) && !(realOnly && !hrefFor) && (!hrefFor || hrefFor(spot) !== null));
@@ -239,7 +288,7 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
     <nav aria-label="Clubhouse rooms" className={`lab-room${wide ? " is-wide" : ""}${full ? " is-full" : ""}`} ref={room} style={{ aspectRatio: `${picture.width} / ${picture.height}`, ["--room-aspect" as string]: picture.width / picture.height }}>
       {!night || settled ? <Image alt="The clubhouse: a bright lounge with glass doors onto a pool patio" className="lab-room-picture is-day" fetchPriority={night ? "low" : "high"} height={picture.height * 2} loading="eager" priority={!night} src={`/lab/clubhouse/room-day${key}.webp`} unoptimized width={picture.width * 2} /> : null}
       {night || settled ? <Image alt="The clubhouse at night, the pool lit outside" className="lab-room-picture is-night" fetchPriority={night ? "high" : "low"} height={picture.height * 2} loading="eager" priority={night} src={`/lab/clubhouse/room-night${key}.webp`} unoptimized width={picture.width * 2} /> : null}
-      <RoomNews feed={feed} frame={frame} picture={picture} />
+      <RoomNews feed={feed} frame={frame} night={night} picture={picture} />
       {spots.map(({ spot, room: next, name, tag, label, at: tall, wideAt, fullAt, ticket }) => {
         const free = wide ? wideAt ?? tall : full ? fullAt ?? tall : tall;
         // Filling the screen crops the picture a little at its sides; a plate that would be cut off there is drawn in from the edge: the

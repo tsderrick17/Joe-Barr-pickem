@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
-import { homeResponse } from "./standings-fixtures.mjs";
+import { homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 import { boardResponse } from "./slate-fixtures.mjs";
 
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
@@ -21,9 +21,11 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   const board = boardResponse(scenarios[0]);
   let reads = 0;
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
-  await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), ...homeExtra } }));
+  await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), seasonSnapshotReleased: true, ...homeExtra } }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
   await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: shapeBoard(boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)])) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
+  // The Season Snapshot (nine weeks), for the chalkboard's sketch and its full chart.
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("", 9) }));
   await page.route("**/api/board-totals**", (route) => route.fulfill({ json: { weekId: new URL(route.request().url()).searchParams.get("week"), totals: WEEK_TOTALS } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false, ...(clubhouseAccess === undefined ? {} : { clubhouseAccess }) } }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
@@ -961,4 +963,50 @@ test("the room's games board stands two games wide and shifts up a row every 7 s
   expect(await step()).toBe("0");   // not yet: a row stays up most of the 7 seconds
   await page.clock.runFor(1_700);
   await expect.poll(step).toBe("1");
+});
+
+/** The Bowl Pool two bowl days in: both of the first two bowls final, Earl and Tyler a win each. */
+function bowlReadPlayed() {
+  const read = bowlRead();
+  read.games[1] = { ...read.games[1], status: "final", away_score: 31, home_score: 20 };
+  read.publicPicks = [
+    { playerId: "p1", game_id: "g1", selected_team_id: "a1", result: "loss" }, { playerId: "p2", game_id: "g1", selected_team_id: "h1", result: "win" },
+    { playerId: "p1", game_id: "g2", selected_team_id: "a2", result: "win" }, { playerId: "p2", game_id: "g2", selected_team_id: "h2", result: "loss" },
+  ];
+  read.automaticResults = [];
+  return read;
+}
+
+test("the chalkboard sketches the Season Snapshot in chalk and opens the full chart; in bowl season it turns between the two pools and the chart has a Pick'em | Bowl switch", async ({ page }) => {
+  await openClubhouse(page);
+  const chalk = page.locator(".lab-room-screen.is-chalk");
+  await expect(chalk.locator(".chalk-title")).toHaveText("SEASON SNAPSHOT", { timeout: 30_000 });
+  await expect(chalk.locator(".chalk-span")).toHaveText("WEEKS 4–9");
+  await expect(chalk.locator(".chalk-line")).toHaveCount(8);
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
+  await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
+  await expect(sheet.getByRole("group", { name: "Pool shown" })).toHaveCount(0);   // no Bowl side before bowl season
+  await expect(page).toHaveURL(/#snapshot$/);
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-snapshot-phone-390.png", { maxDiffPixels: 40 });
+});
+
+test("in bowl season the chalkboard's chart switches to the Bowl Pool, a point a bowl day", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const chalk = page.locator(".lab-room-screen.is-chalk");
+  await expect(chalk.locator(".chalk-title")).toHaveText("SEASON SNAPSHOT", { timeout: 30_000 });
+  await page.clock.runFor(10_000);
+  await expect(chalk.locator(".chalk-title")).toHaveText("BOWL POOL");
+  await expect(chalk.locator(".chalk-leader")).toHaveText("2 TIED AT 1");
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
+  await sheet.getByRole("button", { name: "Bowl", exact: true }).click();
+  await expect(sheet.locator(".season-snapshot-key-row")).toHaveText([/Earls*1/, /Tylers*1/]);
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-snapshot-bowl-phone-390.png", { maxDiffPixels: 40 });
+  // The choice is remembered on this device.
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await expect(page.getByRole("dialog", { name: "Season Snapshot" }).getByRole("button", { name: "Bowl", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
