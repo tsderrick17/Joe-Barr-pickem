@@ -1,5 +1,6 @@
 // Makes every bowl logo the Bowl ticket's pennants fly (public/bowl-logos/<name>.webp) from its full-size original
-// (assets/bowl-logos/<name>.svg|png|webp, as downloaded from the bowl's Wikipedia article), at one standard size, the way every NFL
+// (assets/bowl-logos/<name>.svg|png|webp|jpg, as downloaded from the bowl's Wikipedia article, or for LA, whose Wikipedia copy is
+// tiny, SoFi Stadium's game-day poster), at one standard size, the way every NFL
 // team's logo reads the same size on the Survivor board: each logo is trimmed to its own edges, then scaled so it covers the same area
 // as every other (a tall shield and a wide wordmark look equally big), never past the pennant's logo box, and centred on a clear canvas
 // the shape of that box (288 x 138, three times the 96 x 46 the pennant draws it at, so it stays sharp on a phone). Always made from the
@@ -17,20 +18,22 @@ const RENDER = 1600;  // a drawn (svg) logo is rendered with its longer side thi
 
 /**
  * What a few originals need before fitting:
+ *   crop     - only this part of the original is the logo (a poster).
  *   cutBox   - the logo sits on a solid white box: the white joined to the image's edge is cleared.
+ *   cutDark  - the logo sits on this dark colour (a poster's navy): it is cleared, and the logo's soft edges un-blended from it.
  *   recolor  - colours swapped in the drawing (the playoff's black lettering would vanish on a dark pennant).
  *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line.
  */
 const PREP = {
   cfp: { recolor: [["#130c0e", "#ffffff"]] },
-  la: { cutBox: true },
+  la: { crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75] },
   rate: { cutBox: true },
   "las-vegas": { dropLast: true },
   rose: { dropLast: 2 },
 };
 
 const names = process.argv.slice(2);
-const sources = readdirSync(SOURCE).filter((file) => /\.(svg|png|webp)$/.test(file));
+const sources = readdirSync(SOURCE).filter((file) => /\.(svg|png|webp|jpg)$/.test(file));
 const chosen = names.length ? sources.filter((file) => names.includes(file.replace(/\.\w+$/, ""))) : sources;
 
 for (const file of chosen) {
@@ -45,7 +48,10 @@ for (const file of chosen) {
     const { width, height } = await sharp(input, { density: 72 }).metadata();
     options = { density: Math.min(2400, (72 * RENDER) / Math.max(width, height)) };
   }
-  const raw = await sharp(input, options).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let image = sharp(input, options);
+  if (prep.crop) image = sharp(await image.extract(prep.crop).png().toBuffer());
+  const raw = await image.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  if (prep.cutDark) cutDark(raw, prep.cutDark);
   if (prep.cutBox) cutBox(raw);
   for (let piece = 0; piece < Number(prep.dropLast ?? 0); piece++) dropLast(raw);
   const trimmed = await sharp(raw.data, { raw: raw.info }).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 1 }).png().toBuffer({ resolveWithObject: true });
@@ -87,6 +93,16 @@ function cutBox({ data, info }) {
     if (x < width - 1) stack.push(p + 1);
     if (p >= width) stack.push(p - width);
     if (p < width * (height - 1)) stack.push(p + width);
+  }
+}
+
+/** Clears the poster's dark ground (and anything near its colour, such as faint palms printed on it), keeping the bright logo. */
+function cutDark({ data }, ground) {
+  for (let i = 0; i < data.length; i += 4) {
+    const off = Math.hypot(data[i] - ground[0], data[i + 1] - ground[1], data[i + 2] - ground[2]);
+    const alpha = Math.max(0, Math.min(1, (off - 40) / 90));
+    data[i + 3] = Math.round(alpha * 255);
+    if (alpha > 0 && alpha < 1) for (let c = 0; c < 3; c++) data[i + c] = Math.max(0, Math.min(255, Math.round((data[i + c] - (1 - alpha) * ground[c]) / alpha)));
   }
 }
 
