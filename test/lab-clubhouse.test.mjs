@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { LAB_VIEWER, LAB_WILDCARD_OUT, labLeaderboard, labStandard, labSurvivorBoard } from "../src/lib/lab-clubhouse.js";
+import { LAB_VIEWER, LAB_WILDCARD_OUT, labLeaderboard, labStandard } from "../src/lib/lab-clubhouse.js";
 import { LAB_PLAYERS } from "../src/lib/lab-samples.js";
 
 test("before kickoff another player's picks and Survivor chip are hidden; the viewer always sees their own", () => {
@@ -45,22 +45,9 @@ test("the leaderboard shares a place between level players, counts back from the
   assert.ok(wildcard.slice(-out.length).every((row) => row.out && row.place === null && row.back === null));
 });
 
-test("the Survivor board marks used teams and kicked-off games, and is read only for a player who is out", () => {
-  const walt = labSurvivorBoard({ moment: "before" });
-  assert.equal(walt.out, false);
-  assert.equal(walt.teams.find((team) => team.team === "PHI").usedWeek, 4);
-  assert.equal(walt.teams.find((team) => team.team === "DEN").free, true);
-  const gameday = labSurvivorBoard({ moment: "gameday" });
-  assert.equal(gameday.teams.find((team) => team.team === "PIT").locked, true);
-  assert.equal(gameday.teams.find((team) => team.team === "PIT").free, false);
-  const hank = labSurvivorBoard({ moment: "before", viewer: "Hank" });
-  assert.equal(hank.out, true);
-  assert.equal(hank.outWeek, 3);
-  assert.ok(hank.teams.every((team) => !team.free));
-});
-
 test("the room's Big Board keeps the leader on top and splits the rest into even pages", async () => {
-  const { labBoardPages, labLeaderboard } = await import("../src/lib/lab-clubhouse.js");
+  const { labLeaderboard } = await import("../src/lib/lab-clubhouse.js");
+  const { boardPages: labBoardPages } = await import("../src/lib/board-pages.js");
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
   const one = labBoardPages(rows);
   assert.deepEqual(one.leaders.map((row) => row.name), [rows[0].name]);

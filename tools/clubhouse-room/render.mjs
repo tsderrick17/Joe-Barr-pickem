@@ -1,6 +1,6 @@
 // Renders the clubhouse room pictures with headless Chromium's software WebGL.
 // Usage: node render.mjs [out-folder]      (default: ../../public/lab/clubhouse)
-// Writes room-{day,night}[-bowl][-wide|-full].webp and the tap spots (where each thing sits in the picture) to src/lib/lab-clubhouse-room.json.
+// Writes room-{day,night}[-bowl][-wide|-full].webp and the tap spots (where each thing sits in the picture) to src/lib/clubhouse-room.json.
 // ONLY=day-full,night-full renders just those pictures and keeps every other picture's spots as they are.
 import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,7 +14,7 @@ const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--use
 const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
 page.on("console", (message) => { if (["error", "warning"].includes(message.type())) console.log("[page]", message.text().slice(0, 300)); });
 page.on("pageerror", (error) => console.log("[pageerror]", error.message.slice(0, 400)));
-const spotsFile = fileURLToPath(new URL("../../src/lib/lab-clubhouse-room.json", import.meta.url));
+const spotsFile = fileURLToPath(new URL("../../src/lib/clubhouse-room.json", import.meta.url));
 const spots = existsSync(spotsFile) ? JSON.parse(readFileSync(spotsFile, "utf8")) : {};
 const only = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 // The tall pictures are for a phone. The wide ones are the desktop's: the same room from the same spot through a longer lens, the whole
@@ -39,5 +39,5 @@ for (const [name, base] of [...views, ...views.map(([name, query]) => [`${name}-
   spots[name] = await page.evaluate(() => window.__spots);
   console.log("rendered", name, `${Math.round((Date.now() - started) / 1000)}s`);
 }
-writeFileSync(fileURLToPath(new URL("../../src/lib/lab-clubhouse-room.json", import.meta.url)), `${JSON.stringify(spots, null, 2)}\n`);
+writeFileSync(fileURLToPath(new URL("../../src/lib/clubhouse-room.json", import.meta.url)), `${JSON.stringify(spots, null, 2)}\n`);
 await browser.close(); server.close();

@@ -37,6 +37,9 @@
   position: relative;
   width: var(--football-w);
 }
+/* Until the spin's frames are decoded the ball shows its first frame as a small still (no grey ghost); the spinning sheet replaces it. */
+.football-loader-ball:not(.is-ready) { background: url("/football-still.webp") 0 0 / 100% 100% no-repeat; }
+.football-loader-ball:not(.is-ready) .football-loader-sheet { visibility: hidden; }
 .football-loader-sheet {
   animation: football-spin var(--football-spin-s, 1.8s) step-end infinite;
   background: url("/football-spin.webp") 0 0 / 100% 100% no-repeat;
@@ -245,7 +248,6 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-pull.pull-chain { left: auto; position: relative; right: auto; top: auto; z-index: auto; }
 /* A trophy banner on its rafters: just the hanging cloth, with the Trophy Room's own cloth colours. */
 .workshop-stage .asset-rafters { border-top: 0; overflow: visible; padding: 0; }
-.asset-banner .season-closed-banner { margin: 0; }
 .asset-knobs { display: grid; gap: .45rem; }
 .asset-knob { align-items: center; display: grid; font-size: .75rem; gap: .4rem; grid-template-columns: 6.4rem minmax(0, 1fr) 3.4rem; }
 .asset-knob input { width: 100%; }
@@ -253,7 +255,8 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .asset-choice { align-items: center; display: grid; font-size: .75rem; gap: .4rem; grid-template-columns: 6.4rem minmax(0, 1fr); }
 .asset-choice > div { display: flex; flex-wrap: wrap; gap: .25rem; }
-.asset-choice button { border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); font-size: .7rem; padding: .25rem .6rem; }
+/* Each choice's name sits in the middle of its button, however tall the row makes it. */
+.asset-choice button { align-items: center; border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); display: inline-flex; font-size: .7rem; justify-content: center; padding: .25rem .6rem; text-align: center; }
 .asset-choice button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-gold-dk); color: var(--sand-93); }
 .asset-select, .asset-text { border: 1px solid; border-radius: 2px; font: inherit; font-size: .8rem; min-width: 0; padding: .3rem .45rem; width: 100%; }
 input.asset-text { background: var(--field-bg, var(--club-paper)); border-color: var(--field-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); }

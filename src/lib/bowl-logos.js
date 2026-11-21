@@ -1,5 +1,5 @@
 /**
- * The bowls' own pennants: each known bowl's real logo (public/bowl-logos/, small webp files made from the logos on the bowls' Wikipedia
+ * The bowls' own pennants: each known bowl's real logo (public/bowl-logos/, webp files made from the full-size logos on the bowls' Wikipedia
  * articles) on a pennant whose cloth and hoist are taken from that logo's colours. A bowl is recognised by its name as the schedule import
  * saves it, whatever sponsor is in front ("Valero Alamo Bowl", "CFP Semifinal at the Goodyear Cotton Bowl Classic"). A bowl not listed here
  * flies a navy pennant lettered with its short name instead, so a new bowl never breaks the ticket; adding its logo is one row below.
@@ -7,7 +7,7 @@
  * Checked against the playoff names before the bowls': a quarterfinal or semifinal is named for the bowl that hosts it.
  *
  * Updated every December, once the schedule is imported (see docs/OPERATIONS.md, "Bowl logos"): a bowl that is new or renamed gets its logo
- * (trimmed, at most 200 x 160, saved as webp) and a row here; its cloth and hoist are picked from the logo's own colours.
+ * (its full-size original in assets/bowl-logos/, fitted by scripts/fit-bowl-logos.mjs) and a row here; its cloth and hoist are picked from the logo's own colours.
  */
 export const BOWL_PENNANTS = [
   { match: /national championship/i, logo: "championship", flag: "TITLE GAME", cloth: "rgb(246 241 230)", hoist: "rgb(192 122 26)" },
@@ -30,7 +30,7 @@ export const BOWL_PENNANTS = [
   { match: /liberty bowl/i, logo: "liberty", flag: "LIBERTY", cloth: "rgb(0 96 168)", hoist: "rgb(216 168 0)" },
   { match: /texas bowl/i, logo: "texas", flag: "TEXAS", cloth: "rgb(0 20 110)", hoist: "rgb(200 30 40)" },
   { match: /armed forces bowl/i, logo: "armed-forces", flag: "ARMED FORCES", cloth: "rgb(0 60 130)", hoist: "rgb(200 30 45)" },
-  { match: /first responder bowl/i, logo: "first-responder", flag: "FIRST RESPONDER", cloth: "rgb(30 30 30)", hoist: "rgb(240 120 48)" },
+  { match: /first responder bowl/i, logo: "first-responder", flag: "FIRST RESPONDER", cloth: "rgb(26 88 164)", hoist: "rgb(210 32 40)" },
   { match: /military bowl/i, logo: "military", flag: "MILITARY", cloth: "rgb(10 20 60)", hoist: "rgb(190 30 40)" },
   { match: /fenway bowl/i, logo: "fenway", flag: "FENWAY", cloth: "rgb(40 90 70)", hoist: "rgb(170 190 190)" },
   { match: /pop-?tarts bowl/i, logo: "pop-tarts", flag: "POP-TARTS", cloth: "rgb(0 72 168)", hoist: "rgb(240 192 48)" },
@@ -54,6 +54,8 @@ export const BOWL_PENNANTS = [
   { match: /birmingham bowl/i, logo: "birmingham", flag: "BIRMINGHAM", cloth: "rgb(24 96 168)", hoist: "rgb(210 30 40)" },
   { match: /san juan bowl/i, logo: "san-juan", flag: "SAN JUAN", cloth: "rgb(16 40 96)", hoist: "rgb(240 196 40)" },
   { match: /celebration bowl/i, logo: "celebration", flag: "CELEBRATION", cloth: "rgb(20 60 140)", hoist: "rgb(240 110 30)" },
+  { match: /puerto rico bowl/i, logo: "puerto-rico", flag: "PUERTO RICO", cloth: "rgb(20 50 120)", hoist: "rgb(220 40 40)" },
+  { match: /poinsettia bowl/i, logo: "poinsettia", flag: "POINSETTIA", cloth: "rgb(16 40 80)", hoist: "rgb(200 30 40)" },
   { match: /cure bowl/i, logo: "cure", flag: "CURE", cloth: "rgb(222 102 152)", hoist: "rgb(24 24 24)" },
 ];
 
@@ -69,7 +71,7 @@ const FILLER = /\b(presented by.*|cfp|college football playoff|quarterfinal|semi
 export function bowlPennant(bowlName) {
   const name = String(bowlName ?? "").trim();
   // The schedule import saves most bowls by their short name alone ("Boca Raton", "Gasparilla"), so a name without "Bowl" is read as one.
-  const probe = /bowl|classic|championship|cfp|playoff|first round/i.test(name) ? name : `${name} Bowl`;
+  const probe = /\bbowl\b|classic|championship|\bcfp\b|playoff|first round/i.test(name) ? name : `${name} Bowl`;
   const known = BOWL_PENNANTS.find((entry) => entry.match.test(probe));
   if (known) return { flag: known.flag, logo: known.logo ?? null, cloth: known.cloth ?? null, hoist: known.hoist ?? null };
   const beforeBowl = (/(.*?)\bbowl\b/i.exec(name)?.[1] ?? name).replace(FILLER, " ").trim().split(/\s+/).filter(Boolean);

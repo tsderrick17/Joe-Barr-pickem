@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Constitution } from "@/components/lab/lab-clubhouse";
+import { Constitution } from "@/components/clubhouse/constitution";
 import { useCommissionerAccess } from "@/lib/use-commissioner-access";
 
 /** The constitution on the clubhouse wall, posted in full (the Handbook's own text), with one way back to the room. */

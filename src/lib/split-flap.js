@@ -1,6 +1,7 @@
 /**
- * How one split-flap digit on the Bowl Card moves, like a stadium board: every flap on the board is driven by the
- * same motor, so they all flip at one speed (each digit wears a hair differently, within 3%). Until results arrive the
+ * How one split-flap digit on the Bowl Card moves, like a stadium board: each module has its own motor, so no two flip in
+ * step: each digit runs at its own speed (within 10% of the board's), starts at its own moment, and every single flip catches
+ * a little early or late (within 10%). Until results arrive the
  * digits flip on. Once told to land, each digit flips forward only as far as its number and stops there, the last
  * few flips slowing as the drum catches, so a digit with farther to go finishes later and the board settles raggedly.
  */
@@ -8,9 +9,14 @@
 /** The board's flip speed in milliseconds per flip, when no speed is given. */
 export const BOARD_PACE = 140;
 
-/** One digit's speed: the board's, give or take its own 3% of wear (`wear` is a random number from 0 to 1). */
+/** One digit's speed: the board's, give or take its own motor's 10% (`wear` is a random number from 0 to 1). */
 export function digitPace(pace, wear) {
-  return pace * (0.97 + wear * 0.06);
+  return pace * (0.9 + wear * 0.2);
+}
+
+/** One flip's length: the digit's pace, each flip catching a little early or late, within 10% (`hitch` is random from 0 to 1). */
+export function flipJitter(duration, hitch) {
+  return duration * (0.9 + hitch * 0.2);
 }
 
 /**

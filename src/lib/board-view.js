@@ -22,13 +22,15 @@
  *   playoff?: PlayoffRace | null,   // a playoff round: a pick for every game, one column a game, and the race to catch the leader
  * }} BoardView
  */
-import { coverMargin, kickoffLabel, lineFor } from "./clubhouse-feed.js";
+import { coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
+import { survivorStillShown } from "./clubhouse-feed.js";
 
 export { coverMargin };
 import { selectAvailableScoringPeriods, selectDefaultScoringPeriod } from "./scoring-period.js";
 
 const mark = (value) => (value === "W" || value === "win" ? "W" : value === "L" || value === "loss" ? "L" : null);
-const STATUS = { upcoming: "UPCOMING", active: "IN PLAY", complete: "FINAL" };
+// The week's word beside its name on the Big Board: none for the week in play (it goes without saying), else upcoming or final.
+const STATUS = { upcoming: "UPCOMING", active: "", complete: "FINAL" };
 
 /**
  * Whether the new board and ticket cover this week: a regular week (one or two picks) or a playoff round (a pick for every game, no
@@ -116,9 +118,8 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
   };
   const survivor = board.survivor;
   // The winner is called out for the week after Survivor is decided (8 days from the crowning), then the column goes; the link stays.
-  const crowned = home.survivorComplete ? Date.parse(home.survivorCrownedAt ?? "") : Number.NaN;
-  const fresh = Boolean(home.survivorComplete) && (Number.isNaN(crowned) || now - crowned < 8 * 86_400_000);
-  const survivorShown = !lookBack && Boolean(home.survivorAvailable) && !home.isPlayoff && (!home.survivorComplete || fresh);
+  const fresh = Boolean(home.survivorComplete) && survivorStillShown(home, now);
+  const survivorShown = !lookBack && survivorStillShown(home, now);
   const survivorRows = new Map((home.survivorRows ?? []).map((row) => [row.playerId, row]));
   const championId = fresh ? home.survivorChampionPlayerId ?? null : null;
   const mySurvivorGame = survivor?.pick ? gameById.get(survivor.pick.game_id) : null;

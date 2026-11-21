@@ -1,5 +1,6 @@
 import { chromium, expect, test, type Page } from "@playwright/test";
 import { settleNetwork, signIn } from "./session";
+import { shots } from "./coverage";
 import { BOWL_BY_SCENARIO, bowlResponse, homeResponse, SCENARIOS, seasonSnapshotResponse, withElevenPlayers } from "./standings-fixtures.mjs";
 
 // The Season Snapshot chart draws and re-measures after a toggle. Wait for every running animation and two
@@ -12,7 +13,8 @@ async function settled(page: Page) {
 }
 
 const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
-// Night mode is checked on the states that exercise the most styles.
+// Night mode is checked on the states that exercise the most styles (see coverage.ts); the narrow phone and tablet on the most crowded.
+const CROWDED = new Set(["regular-in", "playoff-wildcard", "bowl-results", "commissioner-playoff"]);
 const NIGHT = new Set(["regular-in", "playoff-wildcard", "commissioner", "bowl-results", "bowl-claim-open", "off-season", "skin-halloween", "skin-thanksgiving", "skin-christmas"]);
 
 async function serve(page: Page, scenario: string) {
@@ -63,31 +65,28 @@ async function settle(page: Page) {
 // run on the same code), so their pictures are masked: each logo's position and size are still checked, only the
 // artwork inside the box is not.
 for (const scenario of Object.keys(SCENARIOS)) {
-  for (const theme of ["day", "night"]) {
-    if (theme === "night" && !NIGHT.has(scenario)) continue;
-    for (const [label, width] of Object.entries(WIDTHS)) {
-      test(`Standings ${scenario} ${theme} at ${label}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 900 });
-        await signIn(page, theme);
-        await serve(page, scenario);
-        await settle(page);
-        await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
-        if (scenario === "commissioner" || scenario === "commissioner-playoff") {
-          // The back of the pad: the Season Snapshot.
-          await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
-          await page.waitForTimeout(1200);
+  for (const { theme, label, width } of shots({ crowded: CROWDED.has(scenario), night: NIGHT.has(scenario) })) {
+    test(`Standings ${scenario} ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, scenario);
+      await settle(page);
+      await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+      if (scenario === "commissioner" || scenario === "commissioner-playoff") {
+        // The back of the pad: the Season Snapshot.
+        await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+        await page.waitForTimeout(1200);
+        await settled(page);
+        await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
+        if (scenario === "commissioner-playoff") {
+          // The other half: the regular season, with its 6 Wk / All range.
+          await page.getByRole("button", { name: "Season", exact: true }).click();
+          await page.waitForTimeout(1500);
           await settled(page);
-          await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
-          if (scenario === "commissioner-playoff") {
-            // The other half: the regular season, with its 6 Wk / All range.
-            await page.getByRole("button", { name: "Season", exact: true }).click();
-            await page.waitForTimeout(1500);
-            await settled(page);
-            await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
-          }
+          await expect(page).toHaveScreenshot(`standings-${scenario}-${theme}-flipped-regular-${label}.png`, { fullPage: true, mask: [page.locator(".survivor-standings-scroll img")] });
         }
-      });
-    }
+      }
+    });
   }
 }
 
@@ -95,32 +94,30 @@ for (const scenario of Object.keys(SCENARIOS)) {
 // axis fits the weeks in view and starts above zero. The position rail lies
 // in the strip above the axis's numbered top line, in the pad's own colors; the screenshot guards both. Headless Chromium hides scroll bars
 // everywhere else, so this is the one place the browser is launched with them drawn: a scroll bar returning would show.
-for (const theme of ["day", "night"]) {
-  for (const label of ["phone-390", "desktop-1280"] as const) {
-    test(`Season Snapshot 6 Wk ${theme} at ${label}`, async ({ baseURL }) => {
-      const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
-      try {
-        const page = await (await browser.newContext({ baseURL })).newPage();
-        await page.setViewportSize({ width: WIDTHS[label], height: 900 });
-        await signIn(page, theme);
-        await serve(page, "commissioner-playoff");
-        await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 14) }));
-        await settle(page);
-        await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
-        await page.getByRole("button", { name: "Season", exact: true }).click();
-        await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
-        await page.waitForTimeout(1500);
-        await settled(page);
-        // Nothing of the plot sits beneath a scroll bar: the browser's own is hidden and the page's rail takes its place.
-        const plot = page.locator(".season-snapshot-plot-scroll");
-        expect(await plot.evaluate((element) => (element as HTMLElement).offsetHeight - element.clientHeight), "no scroll bar eats into the plot").toBe(0);
-        expect(await plot.evaluate((element) => element.scrollHeight - element.clientHeight), "the week numbers are all inside the plot").toBeLessThanOrEqual(0);
-        await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-${theme}-flipped-sixweek-${label}.png`);
-      } finally {
-        await browser.close();
-      }
-    });
-  }
+for (const { theme, label, width } of shots({ night: true })) {
+  test(`Season Snapshot 6 Wk ${theme} at ${label}`, async ({ baseURL }) => {
+    const browser = await chromium.launch({ ignoreDefaultArgs: ["--hide-scrollbars"] });
+    try {
+      const page = await (await browser.newContext({ baseURL })).newPage();
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, "commissioner-playoff");
+      await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("commissioner-playoff", 14) }));
+      await settle(page);
+      await page.getByRole("button", { name: "Show the Season Snapshot" }).click();
+      await page.getByRole("button", { name: "Season", exact: true }).click();
+      await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
+      await page.waitForTimeout(1500);
+      await settled(page);
+      // Nothing of the plot sits beneath a scroll bar: the browser's own is hidden and the page's rail takes its place.
+      const plot = page.locator(".season-snapshot-plot-scroll");
+      expect(await plot.evaluate((element) => (element as HTMLElement).offsetHeight - element.clientHeight), "no scroll bar eats into the plot").toBe(0);
+      expect(await plot.evaluate((element) => element.scrollHeight - element.clientHeight), "the week numbers are all inside the plot").toBeLessThanOrEqual(0);
+      await expect(page.locator(".season-snapshot-chart")).toHaveScreenshot(`standings-commissioner-playoff-${theme}-flipped-sixweek-${label}.png`);
+    } finally {
+      await browser.close();
+    }
+  });
 }
 
 // The Season Snapshot's player key with the whole pool, eleven names: the rows come out even (six and five across on a wide screen, four, four and
@@ -353,4 +350,38 @@ test("the ticket's section headings are plain headings, not links", async ({ pag
   const ticket = page.locator(".my-ticket");
   await expect(ticket.locator(".my-ticket-section-link").first()).toBeVisible();
   await expect(ticket.getByRole("link")).toHaveCount(0);
+});
+
+test("with more than one season the Standings offer a season list: a past season shows that season's data, and a reload is this season again", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "day");
+  const asked: string[] = [];
+  const home = homeResponse("regular-in");
+  await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+  await page.route("**/api/home**", (route) => {
+    const season = new URL(route.request().url()).searchParams.get("season");
+    asked.push(season ?? "current");
+    return route.fulfill({ json: { ...home, seasons: [2026, 2025], seasonYear: season ? Number(season) : 2026, rows: season ? home.rows.map((row: Record<string, unknown>) => ({ ...row, wins: 1 })) : home.rows } });
+  });
+  await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+  await page.route("**/api/bowl-pool**", (route) => { asked.push(`bowl:${new URL(route.request().url()).searchParams.get("season") ?? "current"}`); return route.fulfill({ json: bowlResponse(undefined) }); });
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("regular-in") }));
+  await page.clock.install({ time: new Date(home.serverTime) });
+  await page.goto("/");
+  const season = page.getByRole("combobox", { name: "Season" });
+  await expect(season).toHaveValue("2026", { timeout: 30_000 });
+  await season.selectOption("2025");
+  await expect.poll(() => asked).toContain("2025");
+  await expect.poll(() => asked).toContain("bowl:2025");
+  await page.reload();
+  await expect(page.getByRole("combobox", { name: "Season" })).toHaveValue("2026", { timeout: 30_000 });
+});
+
+test("with one season there is no season list", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "day");
+  await serve(page, "regular-in");
+  await page.goto("/");
+  await expect(page.locator(".my-ticket, .season-closed-banner, .pickem-scoreboard-ledger").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("combobox", { name: "Season" })).toHaveCount(0);
 });

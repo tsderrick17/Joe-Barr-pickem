@@ -52,7 +52,9 @@ function headerHeight() {
   return Math.round(Math.min(96, Math.max(44, bottom)));
 }
 
-type Phase = "pulling" | "planted" | "refreshing";
+type Phase = "pulling" | "planted" | "refreshing" | "refreshing-in-place";
+/** The event a page takes (preventDefault, and a promise in detail.done) to be refreshed in place instead of reloaded. */
+export const PULL_REFRESH_EVENT = "pickem-pull-refresh";
 
 export default function PullToRefresh() {
   const [pull, setPull] = useState(0);
@@ -123,6 +125,14 @@ export default function PullToRefresh() {
       if (state.active && state.phase === "planted") {
         state.active = false;
         state.phase = "refreshing";
+        // A page that can refresh itself in place (the clubhouse) says so by taking the event: its data is read again under the
+        // chain, with no reload and no loading screen, and the chain goes when it is done. Any other page reloads behind the football.
+        const inPlace = new CustomEvent<{ done: Promise<void> | null }>(PULL_REFRESH_EVENT, { cancelable: true, detail: { done: null } });
+        if (!window.dispatchEvent(inPlace)) {
+          setPhase("refreshing-in-place");
+          void Promise.resolve(inPlace.detail.done).finally(() => window.setTimeout(reset, 250));
+          return;
+        }
         setPhase("refreshing");
         window.setTimeout(() => window.location.reload(), 120);   // the football is up on the next frame; the page reloads right behind it
         window.setTimeout(() => { if (document.visibilityState === "visible") reset(); }, 6000);   // a reload that never came must not leave the football up
@@ -156,10 +166,10 @@ export default function PullToRefresh() {
     return () => cancelAnimationFrame(frame);
   }, [landedAt, stretchedAt]);
 
-  if (pull <= 0 && phase !== "refreshing") return null;
+  if (pull <= 0 && phase !== "refreshing" && phase !== "refreshing-in-place") return null;
   const calm = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const since = landedAt === null || calm ? 0 : Math.max(0, now - landedAt);   // ms since the foot landed
-  const label = phase === "refreshing" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
+  const label = phase === "refreshing" || phase === "refreshing-in-place" ? "Refreshing" : phase === "planted" ? "Release to refresh" : "Pull to refresh";
   return (
     <>
       {phase === "refreshing" ? (

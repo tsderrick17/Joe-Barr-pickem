@@ -136,7 +136,7 @@ test("the open pop-up has its own address: back closes it, a reload reopens it, 
 test("a pick sent from the ticket is the real pick: the same POST the Slate makes, and the room's ticket shows it at once", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
   const ticket = page.getByRole("button", { name: /YOUR TICKET/ });
-  await expect(ticket).toContainText("0 of", { timeout: 30_000 });
+  await expect(ticket).toContainText("3 LEFT", { timeout: 30_000 });   // nothing picked: three places open
   await ticket.click();
   const form = page.getByRole("dialog", { name: "Your ticket" });
   await expect(form).toBeVisible();
@@ -154,7 +154,7 @@ test("a pick sent from the ticket is the real pick: the same POST the Slate make
   expect(body.scoringPeriodId).toBe("week-5");
   expect(body.selections).toHaveLength(2);
   expect(body.selections.every((pick) => pick.gameId && pick.teamId)).toBe(true);
-  await expect(page.getByRole("button", { name: /YOUR TICKET/ })).not.toContainText("0 of");
+  await expect(page.getByRole("button", { name: /YOUR TICKET/ })).toContainText("LAR −3");   // the picks show on the ticket at once
 });
 
 test("a pick the server refuses says so on the ticket and stays open", async ({ page }) => {
@@ -166,6 +166,53 @@ test("a pick the server refuses says so on the ticket and stays open", async ({ 
   await form.getByRole("button", { name: /Submit picks/ }).click();
   await expect(form.getByRole("alert")).toContainText("already kicked off");
   await expect(form).toBeVisible();
+});
+
+test("putting the ticket away with picks not sent asks first: go back keeps them, leave drops them, send sends them", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
+  await page.getByRole("button", { name: /YOUR TICKET/ }).click({ timeout: 30_000 });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  await form.locator(".lab-window-part .lab-board-cell:not([disabled])").nth(0).click();
+  const ask = page.getByRole("dialog", { name: "Your picks aren’t sent yet" });
+  // Closing asks, and going back leaves the ticket as it was, the pick still on it.
+  await page.keyboard.press("Escape");
+  await expect(ask).toBeVisible();
+  await ask.getByRole("button", { name: "Go back to my ticket" }).click();
+  await expect(ask).toHaveCount(0);
+  await expect(form).toBeVisible();
+  await expect(form.getByRole("button", { name: /Submit picks/ })).toBeEnabled();
+  // Another tab asks too; leaving without sending sends nothing.
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Big Board" }).click();
+  await ask.getByRole("button", { name: "Leave without sending" }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
+  expect(sent).toHaveLength(0);
+  // The phone's back gesture asks too; Send my picks sends them and carries on, and the Big Board says when they were saved.
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Ticket" }).click();
+  const again = page.getByRole("dialog", { name: "Your ticket" });
+  const cells = again.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  await cells.nth(2).click();
+  await page.goBack();
+  await expect(ask).toBeVisible();
+  await ask.getByRole("button", { name: "Send my picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(ask).toHaveCount(0);
+});
+
+test("a ticket sent says so on the Big Board's bar, with the time it was saved", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
+  await page.getByRole("button", { name: /YOUR TICKET/ }).click({ timeout: 30_000 });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  await cells.nth(2).click();
+  await form.getByRole("button", { name: /Submit picks/ }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED ✓.*Saved at \d{1,2}:\d{2} [AP]M/);
+});
+
+test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  await expect(page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key")).toContainText("8 AM on game day", { timeout: 30_000 });
 });
 
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
@@ -180,6 +227,28 @@ test("the switch is a mode: up, opening the app lands in the clubhouse; down, it
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
   await expect(page).toHaveURL(/\/$/);
+});
+
+test("with the switch up, opening the app goes straight to the clubhouse without waiting for the account (the Standings never show first)", async ({ page }) => {
+  await openClubhouse(page, { at: "/board" });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  let profileAnsweredAt = 0;
+  await page.route("**/api/profile**", async (route) => { await new Promise((resolve) => setTimeout(resolve, 3000)); profileAnsweredAt = Date.now(); await route.fulfill({ json: { firstName: "Tyler", isCommissioner: true, showPoolChat: false } }); });
+  await page.goto("/");
+  await page.waitForURL(/\/clubhouse$/, { timeout: 30_000 });
+  expect(profileAnsweredAt).toBe(0);   // left for the clubhouse before the account was read
+});
+
+test("a player sent back from the clubhouse has the switch put down, so the Standings do not send them straight back", async ({ page }) => {
+  await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  await page.goto("/");
+  // Off to the clubhouse, refused, the switch put down, and back to the Standings to stay.
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("pickem-clubhouse-mode")), { timeout: 30_000 }).toBe("off");
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Standings", level: 1 })).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/\/$/);   // and it stays
 });
 
 test("a player who is not the Commissioner is sent to the Standings and has no switch", async ({ page }) => {
@@ -216,18 +285,48 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
 });
 
-test("once Survivor is decided the poker table is the Bowl Pool's, in its own colors, and the Big Board still links to Survivor", async ({ page }) => {
-  await openClubhouse(page, { homeExtra: { survivorComplete: true, survivorChampionName: "Walt" } });
+for (const [phase, homeExtra, table] of [
+  ["while Survivor runs", {}, "Survivor"],
+  ["with Survivor decided and the Bowl Pool not yet open", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z" }, null],
+  ["in bowl season with Survivor decided", { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" }, "Bowl Pool"],
+] as const) {
+  test(`the poker table shows only the pool being played, and the board's tabs are always all four, ${phase}`, async ({ page }) => {
+    await openClubhouse(page, { homeExtra, bowl: bowlRead() });
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    await expect(room).toBeVisible({ timeout: 30_000 });
+    await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(table === "Survivor" ? 1 : 0);
+    await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(table === "Bowl Pool" ? 1 : 0);
+    if (table === "Bowl Pool") {
+      await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
+      await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
+      await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+      await page.getByRole("dialog", { name: "Bowl Pool" }).getByRole("button", { name: "Close" }).click();
+    }
+    await room.getByRole("button", { name: "The Big Board", exact: true }).click();
+    const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
+    await expect(tabs.getByRole("button")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"], { timeout: 30_000 });
+  });
+}
+
+test("Notifications is a plate in the room's glass doors, like the others: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
+  await openClubhouse(page);
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
   await expect(room).toBeVisible({ timeout: 30_000 });
-  await expect(room.getByRole("button", { name: "Survivor", exact: true })).toHaveCount(0);
-  await expect(room.getByRole("button", { name: "Bowl Pool", exact: true })).toHaveCount(1);
-  await expect(room.locator(".lab-room-tag.is-bowl-pool")).toHaveCount(1);
-  await room.getByRole("button", { name: "The Big Board", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: /Survivor/ })).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: "Close" }).click();
-  await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
-  await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+  await page.getByRole("navigation", { name: "Account navigation" }).getByRole("button", { name: /Tyler/ }).click();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Notifications" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await room.getByRole("button", { name: "Notifications", exact: true }).click();
+  await expect(page).toHaveURL(/\/clubhouse#notifications$/);
+  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+});
+
+test("the Survivor table's Make pick opens your ticket on Survivor", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor" });
+  const sheet = page.getByRole("dialog", { name: "Survivor" });
+  await sheet.getByRole("button", { name: /Make pick/ }).click({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/clubhouse#slate$/);
+  await expect(page.getByRole("dialog", { name: "Your ticket" }).getByRole("group", { name: "What to pick" }).getByRole("button", { name: /^Survivor/ })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
 });
 
 test("the Big Board's week is a button: choosing another week shows that week's picks, with no ticket to change", async ({ page }) => {
@@ -238,10 +337,10 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const board = page.getByRole("dialog", { name: "The Big Board" });
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
-  await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /Tap here to (pick|change a pick)/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
-  expect(tabs).toHaveLength(3); expect(tabs[0]).toEqual(tabs[1]); expect(tabs[1]).toEqual(tabs[2]);
+  expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
   await week.selectOption({ label: "Week 3 — Final" });
   await expect(board.locator("header")).toContainText("WEEK 3 · FINAL");
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);   // a week looked back on cannot be picked in
@@ -321,17 +420,17 @@ test("the Survivor pop-up shows the whole table", async ({ page }) => {
   await expect(table).toContainText("GARY");   // a player's own "hide" choices never blank or thin this view (and the board writes names in capitals)
 });
 
-test("the Survivor pop-up wears the Big Board's housing, under the board's switch, a ring round each week's team and the out players struck through", async ({ page }) => {
+test("the Survivor pop-up wears the Big Board's housing, under the board's switch, a ring round each week's team and the out players dimmed, not crossed off", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#survivor" });
   const popup = page.getByRole("dialog", { name: "Survivor" });
   await expect(popup.locator(".lab-tote.lab-survivor-tote")).toBeVisible({ timeout: 30_000 });
   await expect(popup.locator(".survivor-ledger")).toHaveCount(0);   // not the classic ledger
   // The board's switch: Survivor is the lit one here, and Big Board and Ticket are the ways across.
   await expect(popup.locator(".club-deck-tabs [aria-current=page]")).toHaveText("Survivor");
-  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Big Board", "Ticket", "Survivor"]);
-  // A player who is out is struck through, their lost week is the red ring, and the players still in say IN.
+  await expect(popup.locator(".club-deck-tabs > *")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"]);
+  // A player who is out is dimmed (never crossed off), their lost week is the red ring, and the players still in say IN.
   await expect(popup.locator("tbody tr.is-out").first()).toBeVisible();
-  expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("line-through");
+  expect(await popup.locator("tbody tr.is-out").first().locator("th").evaluate((cell) => getComputedStyle(cell).textDecorationLine)).toBe("none");
   await expect(popup.locator(".lab-tote-logo.is-l").first()).toBeVisible();
   await expect(popup.locator("tbody tr:not(.is-out) .lab-tote-in").first()).toHaveText("IN");
   // Your own row is marked, and the names and status stay put while the weeks scroll sideways.
@@ -345,6 +444,100 @@ test("the Survivor pop-up wears the Big Board's housing, under the board's switc
   await popup.locator(".club-deck-tabs").getByRole("button", { name: "Big Board" }).click();
   await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
   await expect(page).toHaveURL(/\/clubhouse#standings$/);
+});
+
+/** Scrolled all the way along, every held (sticky) column sits flush with its scroller's left edge: nothing scrolls past to its left. */
+async function heldColumnsFlush(region: import("@playwright/test").Locator) {
+  return region.evaluate((node) => {
+    node.scrollLeft = node.scrollWidth;
+    const edge = node.getBoundingClientRect().left + node.clientLeft;
+    const held = [...node.querySelectorAll<HTMLElement>("th, td")].filter((cell) => getComputedStyle(cell).position === "sticky" && getComputedStyle(cell).left === "0px");
+    return held.length > 0 && held.every((cell) => Math.abs(cell.getBoundingClientRect().left - edge) <= 1);
+  });
+}
+
+test("the Survivor table and the Bowl sheet hold their left columns flush with the edge while they scroll", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", bowl: bowlRead() });
+  const survivor = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(survivor).toBeVisible({ timeout: 30_000 });
+  expect(await heldColumnsFlush(survivor)).toBe(true);
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Bowl Pool" }).click();
+  await page.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  expect(await heldColumnsFlush(page.getByRole("region", { name: "Bowl sheet, scrolls sideways" }))).toBe(true);
+});
+
+test("opening the clubhouse loads one room picture (the one on screen), never the phone's on a desktop, and reads the Trophy Room only once the room has settled", async ({ page }) => {
+  const asked: Array<{ at: number; path: string }> = [];
+  const start = Date.now();
+  page.on("request", (request) => { const path = new URL(request.url()).pathname; if (path.includes("/lab/clubhouse/room-") || path.startsWith("/api/trophy-room")) asked.push({ at: Date.now() - start, path }); });
+  await openClubhouse(page, { size: SIZES["desktop-1280"], theme: "night" });
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  const shown = Date.now() - start;
+  const early = asked.filter((entry) => entry.at <= shown + 500).map((entry) => entry.path);
+  expect(early.filter((path) => path.includes("/room-"))).toEqual(["/lab/clubhouse/room-night-wide.webp"]);
+  expect(early.some((path) => path.startsWith("/api/trophy-room"))).toBe(false);
+  await expect.poll(() => asked.some((entry) => entry.path.startsWith("/api/trophy-room")), { timeout: 10_000 }).toBe(true);
+  expect(asked.some((entry) => entry.path.endsWith("-full.webp"))).toBe(false);
+});
+
+test("until the loading football's spin frames are ready it shows the ball itself, still, never a grey ghost of one", async ({ page }) => {
+  await openClubhouse(page);
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  // Open it again with the frames never arriving and the pool's read held, so the loading screen stays up.
+  await page.route("**/football-spin.webp", (route) => route.abort());
+  await page.route("**/api/home**", () => undefined);
+  await page.goto("/clubhouse", { waitUntil: "commit" });
+  const ball = page.locator(".football-loader-ball").first();
+  await expect(ball).toBeVisible({ timeout: 30_000 });
+  await expect(ball).not.toHaveClass(/is-ready/);
+  expect(await ball.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("football-still.webp");
+});
+
+test("pulling down to refresh in the clubhouse reads the room again in place: no reload, no loading screen", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));   // pull to refresh runs in the installed app
+  let homeReads = 0;
+  page.on("request", (request) => { if (new URL(request.url()).pathname === "/api/home") homeReads += 1; });
+  await openClubhouse(page);
+  await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("html")).toHaveClass(/has-pull-refresh/);
+  await page.evaluate(() => { (window as unknown as { stayed: boolean }).stayed = true; });
+  const before = homeReads;
+  await page.evaluate(() => {
+    const target = document.body;
+    const touch = (y: number) => new Touch({ identifier: 1, target, clientX: 195, clientY: y });
+    const send = (type: string, y: number | null) => target.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: y === null ? [] : [touch(y)], changedTouches: [touch(y ?? 0)] }));
+    send("touchstart", 100);
+    for (let step = 1; step <= 10; step += 1) send("touchmove", 100 + (160 * step) / 10);
+    send("touchend", null);
+  });
+  await expect.poll(() => homeReads, { timeout: 10_000 }).toBeGreaterThan(before);
+  await expect(page.locator(".pull-refresh-cover")).toHaveCount(0);   // no loading screen over the room
+  await expect(page.locator(".pull-chain")).toHaveCount(0, { timeout: 10_000 });   // the chain goes once the room is read
+  expect(await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed)).toBe(true);   // the same page: no reload
+});
+
+test("on a phone the Survivor table shows five weeks without scrolling", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", size: SIZES["phone-390"] });
+  const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").count() - 2;
+  expect(weeks).toBeGreaterThanOrEqual(5);
+  const fits = await scroll.evaluate((node, shown) => {
+    const cells = [...node.querySelectorAll("thead th")];
+    const last = cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect(), box = node.getBoundingClientRect();
+    node.scrollLeft = 0;
+    return cells[Math.min(cells.length - 1, 1 + shown)].getBoundingClientRect().right <= box.right + 1 && last.width > 0;
+  }, 5);
+  expect(fits).toBe(true);
+});
+
+test("once Survivor is decided its table has no week after the last one played", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#survivor", homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-10-01T12:00:00Z" } });
+  const scroll = page.getByRole("dialog", { name: "Survivor" }).getByRole("region", { name: /Survivor Table/ });
+  await expect(scroll).toBeVisible({ timeout: 30_000 });
+  const weeks = await scroll.locator("thead th").evaluateAll((cells) => cells.slice(2).map((cell) => Number(cell.textContent)));
+  const picked = await scroll.locator("tbody tr").evaluateAll((rows) => Math.max(0, ...rows.map((row) => [...row.querySelectorAll("td")].slice(1).reduce((last, cell, index) => (cell.children.length ? index + 1 : last), 0))));
+  expect(weeks.at(-1)).toBe(picked);
 });
 
 test("Survivor shows only the weeks played so far and the next one, and opens on the latest week, not week 1", async ({ page }) => {
@@ -460,6 +653,10 @@ function bowlRead(optedIn = true) {
     ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
     ownPreviewSelections: [],
     standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 1 }, { playerId: "p2", playerName: "Tyler", wins: 1, losses: 1 }],
+    // Earl's picks as the Bowl Pool's read gives them: shown once a bowl kicks off, only a marker before (and a missed bowl a loss).
+    publicPicks: [{ playerId: "p1", game_id: "g1", selected_team_id: "a1", result: "loss" }],
+    automaticResults: [{ playerId: "p1", game_id: "g2", result: "loss" }],
+    privatePickMarkers: [{ playerId: "p1", game_id: "g3" }],
   };
 }
 
@@ -468,8 +665,8 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
   const ticket = sheet.locator(".lab-bowl-ticket");
   await expect(ticket).toBeVisible({ timeout: 30_000 });
-  await expect(ticket.getByRole("img", { name: "3 of 4 bowls left" })).toBeVisible();
-  await expect(ticket.locator(".lab-bowl-due")).toHaveText(/1 TO PICK/);
+  await expect(ticket.getByRole("img", { name: "3 of 4 games left" })).toBeVisible();
+  await expect(ticket.locator(".lab-bowl-counts .is-owed dd")).toHaveText("1");   // to pick
   await expect(ticket.locator(".lab-bowl-game")).toHaveClass([/is-done/, /is-missed/, /is-owed/, /is-picked/]);
   // A known bowl flies its own logo; one with no logo file its short name.
   await expect(ticket.locator(".lab-bowl-game").nth(1).locator(".lab-bowl-flag.is-logo image")).toHaveAttribute("href", "/bowl-logos/cfp.webp");   // a first-round game on campus flies the playoff's logo
@@ -478,13 +675,86 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.getByRole("button", { name: /^Ohio State -3.5, final 27, covered/ })).toBeDisabled();
   // Pick the open bowl, set the tiebreaker, save: only open bowls are sent, as the classic page sends them.
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
-  await ticket.locator(".lab-bowl-tiebreaker input").fill("47");
+  await ticket.getByRole("textbox", { name: /Tiebreaker/ }).fill("47");
   await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, championshipTotalGuess: 47, selections: [{ gameId: "g3", teamId: "h3", side: "favorite" }, { gameId: "g4", teamId: "a4", side: "underdog" }] });
-  await ticket.getByRole("button", { name: "Standings", exact: true }).click();
-  await expect(ticket.locator(".lab-bowl-standings li.is-you")).toContainText("Tyler");
-  await expect(ticket.locator(".lab-bowl-standings li").first()).toContainText("T1");
+  // The standings are the Sheet's first column, so there is no separate Standings tab.
+  await expect(ticket.getByRole("button", { name: "Standings", exact: true })).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
+  await expect(ticket.locator(".lab-bowl-sheet tbody tr.is-you")).toContainText("Tyler");
+});
+
+test("the Bowl tiebreaker is in the ticket's own box beside Save, the title game is marked, and saving without it reminds you", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  const box = ticket.locator(".lab-window-ticket");
+  await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
+  await expect(box).toContainText("CFP National Championship");
+  await expect(ticket.locator(".lab-bowl-game").nth(3)).toContainText("TIEBREAKER GAME · ENTER YOUR GUESS BELOW");
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
+  await box.getByRole("button", { name: "Save picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(box.getByRole("status")).toContainText("Don’t forget your tiebreaker");
+  await expect(box.getByRole("button", { name: /Saved at/ })).toBeVisible();
+});
+
+test("closing the Bowl ticket with picks not saved asks first", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click({ timeout: 30_000 });
+  await page.keyboard.press("Escape");
+  const ask = page.getByRole("dialog", { name: "Your bowl picks aren’t saved yet" });
+  await ask.getByRole("button", { name: "Save my picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(page.getByRole("dialog", { name: "Bowl Pool" })).toHaveCount(0);
+});
+
+test("in bowl season the room's ticker carries the bowls too, by the schools' short names under the bowl's name", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const ticker = page.locator(".lab-room-screen.is-spreads");
+  await expect(ticker.locator("p.is-bowl").first()).toBeAttached({ timeout: 30_000 });
+  await expect(ticker.locator("p.is-bowl").first().locator("small")).toContainText("·");
+  await expect(ticker.locator("p:not(.is-bowl)").first()).toBeAttached();   // the NFL games are still there
+});
+
+test("tapping the room's ceiling light turns the lights down for night, and again back up for day", async ({ page }) => {
+  await openClubhouse(page);
+  const lamp = page.getByRole("button", { name: /Turn the lights down \(night\): the ceiling light/ });
+  await lamp.click({ timeout: 30_000 });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.getByRole("button", { name: /Turn the lights up \(day\): the ceiling light/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
+});
+
+test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a bowl kicks off, a lit lamp for a hidden pick, an unlit one for none", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  const sheet = ticket.getByRole("region", { name: /Bowl sheet/ });
+  await expect(sheet.locator("tbody tr")).toHaveCount(2);
+  await expect(sheet.getByLabel(/^Earl, Rose Bowl Game[^:]*: \w+, lost$/)).toBeAttached();   // the Bowl Card's own names for the bowl and the school
+  await expect(sheet.getByRole("img", { name: /Earl, .*: pick in, hidden until kickoff/ })).toHaveCount(1);
+  await expect(sheet.getByRole("img", { name: /Earl, .*: no pick$/ })).toHaveCount(1);
+  await expect(sheet.getByLabel(/^Tyler, Rose Bowl Game[^:]*: [\w ]+, won$/)).toBeAttached();
+  await expect(sheet.getByLabel("Tyler, CFP First Round: no pick, a loss")).toBeAttached();
+  // Wins only, on the Bowl Card's flip tiles; every bowl column the same width.
+  await expect(sheet.locator("thead th").first()).toHaveText("Wins");
+  const widths = await sheet.locator("col.lab-bowl-sheet-col-game").evaluateAll((cols) => cols.map((col) => Math.round(col.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);   // a bowl that kicked off without a pick
+});
+
+test("on the Bowl ticket only the team you picked is outlined in gold, and you can switch teams or take the pick back", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const row = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-game").nth(3);   // open, its pick already saved (Miami)
+  const cells = row.locator("button.lab-board-cell");
+  const outlined = () => cells.evaluateAll((all) => all.map((cell) => parseFloat(getComputedStyle(cell.querySelector(".lab-board-trace")!).borderTopWidth) > 0));
+  await expect(cells.first()).toBeVisible({ timeout: 30_000 });
+  await expect.poll(outlined).toEqual([true, false]);
+  await cells.nth(1).click();   // switch teams
+  await expect.poll(outlined).toEqual([false, true]);
+  await cells.nth(1).click();   // tapping the pick again takes it back
+  await expect.poll(outlined).toEqual([false, false]);
 });
 
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {
@@ -505,7 +775,7 @@ test("a playoff round opens on the Big Board: a column a game, the race in a lin
   await expect(board.locator("tr.is-out")).toHaveCount(3);
   await expect(board.locator("tr.is-out small").filter({ hasText: "FORFEITED" })).toHaveCount(1);
   await expect(board.locator("tr.is-you .lab-tote-owed-ring")).toHaveCount(4);
-  await board.getByRole("button", { name: /4 PICKS OWED/ }).click();
+  await board.getByRole("button", { name: /4 PICKS TO MAKE/ }).click();
   const ticket = page.getByRole("dialog", { name: "Your ticket" });
   await expect(ticket.getByRole("img", { name: /P6/ })).toHaveCount(0);
   await expect(ticket.getByRole("region", { name: "Forfeit the Pick’em season" })).toBeVisible();
@@ -515,6 +785,29 @@ test("a playoff round opens on the Big Board: a column a game, the race in a lin
   await ticket.getByRole("button", { name: /Submit/ }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect((sent[0] as { selections: unknown[] }).selections).toHaveLength(6);
+});
+
+test("Forfeit sits inside the ticket, and forfeiting reads the clubhouse again in place (no reload) and lands on the Big Board", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#slate", homeExtra: homeResponse("playoff-wildcard"), scenarios: ["playoff-upcoming", "playoff-forfeited"] });
+  const forfeits: unknown[] = [];
+  await page.route("**/api/pickem/forfeit", async (route) => { forfeits.push(route.request().postDataJSON()); await route.fulfill({ json: { forfeited: true } }); });
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  const panel = ticket.locator(".lab-window .forfeit-panel");
+  await expect(panel).toBeVisible({ timeout: 30_000 });   // inside the ticket's own housing, not below it
+  await page.evaluate(() => { (window as unknown as { stayed: boolean }).stayed = true; });
+  for (const step of [/^Forfeit\?$/, /Still want to forfeit/, /I understand/]) await panel.getByRole("button", { name: step }).click();
+  await expect.poll(() => forfeits.length).toBe(1);
+  await expect(page).toHaveURL(/\/clubhouse#standings$/);
+  expect(await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed)).toBe(true);   // the same page: no reload
+});
+
+test("forfeited, the room's ticket strip and the ticket say so: your score stands, nothing left to pick", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#slate", homeExtra: homeResponse("playoff-viewer-forfeited"), scenarios: ["playoff-forfeited"] });
+  const ticket = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(ticket.locator(".lab-ticket-raceover")).toHaveText("You forfeited · your score stands", { timeout: 30_000 });
+  await expect(ticket.locator(".forfeit-panel")).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator(".clubhouse-page > .lab-room-ticket")).toContainText("ForfeitedScore stands");
 });
 
 test("out of the playoff race, the Big Board says so and there is no ticket", async ({ page }) => {
@@ -543,6 +836,12 @@ test("on a desktop the pop-ups sit under the site's bar, the Big Board reads lar
   const [first, second] = await Promise.all([games.nth(0).boundingBox(), games.nth(1).boundingBox()]);
   expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);   // side by side
   expect(second!.x).toBeGreaterThan(first!.x + first!.width);
+  // Only the board scrolls, so its scroll bar starts at the board's top edge, never up beside the switch.
+  const scroller = await page.getByRole("dialog", { name: "Your ticket" }).evaluate((dialog) => {
+    const scrolling = [...dialog.querySelectorAll<HTMLElement>("*")].filter((node) => node.scrollHeight > node.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(node).overflowY));
+    return scrolling.map((node) => node.className);
+  });
+  expect(scroller).toEqual([expect.stringContaining("lab-bigboard")]);
 });
 
 test("the board's switch: your ticket is always there to look at, even for a week looked back on, and sending it lands back on the Big Board", async ({ page }) => {
@@ -576,4 +875,90 @@ test("the pool chat wears the Big Board's housing and opens already full, read a
   await expect(chat.locator(".lab-tote.club-chat")).toBeVisible({ timeout: 30_000 });
   await expect(chat.locator(".pool-chat-message")).toContainText("Bills by a million");
   await expect(chat.getByText("Opening chat...")).toHaveCount(0);
+});
+
+// The ticket at the foot of the room, through a regular week, playoff rounds and a player out of the race: a place a pick (a place a game in the playoffs,
+// always one row), each with its logo and lamp, and the dark stub to press.
+for (const [label, home, scenario, keep] of [
+  ["week", null, "upcoming-unpicked", 0],
+  ["wild-card", "playoff-wildcard", "playoff-mixed-locks", 0],
+  ["divisional", "playoff-divisional", "playoff-upcoming", 4],
+  ["race-over", "playoff-viewer-out", "playoff-eliminated", 4],
+] as const) {
+  test(`your ticket at the foot of the room, ${label}`, async ({ page }) => {
+    await openClubhouse(page, { ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario], ...(keep ? { shapeBoard: (response: BoardRead) => ({ ...response, games: response.games.slice(0, keep) }) } : {}) });
+    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+    if (label === "race-over") await expect(ticket.locator(".slip-status")).toContainText("Race over");
+    const box = (await ticket.boundingBox())!;
+    expect(Math.abs(box.y + box.height - 844)).toBeLessThanOrEqual(1);   // flush with the foot of the screen, however tall
+    await expect(ticket).toHaveScreenshot(`clubhouse-ticket-${label}-phone-390.png`, { maxDiffPixels: 40 });
+  });
+}
+
+// The ticket never covers a thing in the room: every name plate stays clear of it, through a regular week and the biggest playoff
+// round, on a small phone, a big phone, a laptop and a desktop.
+for (const [label, size] of [["phone-375x667", { width: 375, height: 667 }], ["phone-390", SIZES["phone-390"]], ["laptop-1366x768", { width: 1366, height: 768 }], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  for (const [when, home, scenario] of [["week", null, "upcoming-unpicked"], ["wild-card", "playoff-wildcard", "playoff-upcoming"]] as const) {
+    test(`the ticket covers no name plate in the room, ${when} at ${label}`, async ({ page }) => {
+      await openClubhouse(page, { size, ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario] });
+      await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      const ticket = (await page.locator(".clubhouse-page > .lab-room-ticket").boundingBox())!;
+      const plates = await page.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { name: tag.textContent, left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+      for (const plate of plates) {
+        const clear = plate.bottom <= ticket.y || plate.right <= ticket.x || plate.left >= ticket.x + ticket.width;
+        expect(clear, `${plate.name} is clear of the ticket`).toBe(true);
+      }
+    });
+  }
+}
+
+// The room on a phone and a desktop: every tap spot is thumb-sized however small its thing looks, and no two name plates overlap or leave the
+// picture. (These held the Lab's sample room until the room went live; the real room is the same RoomScene.)
+for (const [label, size] of Object.entries(SIZES)) {
+  test(`the room's tap spots are thumb-sized and its name plates never overlap, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size });
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    await expect(room).toBeVisible({ timeout: 30_000 });
+    for (const spot of await room.locator(".lab-room-spot").all()) {
+      const box = (await spot.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
+    const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    expect(plates.length).toBeGreaterThanOrEqual(5);
+    for (const [index, plate] of plates.entries()) {
+      for (const other of plates.slice(index + 1)) expect(plate.right <= other.left || other.right <= plate.left || plate.bottom <= other.top || other.bottom <= plate.top, "plates do not overlap").toBe(true);
+    }
+  });
+}
+
+test("the room's Big Board keeps the leader on its top line and turns a page of standings every 8 seconds", async ({ page }) => {
+  await openClubhouse(page);
+  const board = page.locator(".lab-room-screen.is-board");
+  await expect(board.locator("header")).toContainText("1/2", { timeout: 30_000 });
+  const leader = await board.locator(".lab-room-leader").textContent();
+  await page.clock.runFor(7_000);
+  await expect(board.locator("header")).toContainText("1/2");   // not yet: a page stays up the full 8 seconds
+  await page.clock.runFor(1_000);
+  await expect(board.locator("header")).toContainText("2/2");
+  await expect(board.locator(".lab-room-leader")).toHaveText(leader!);
+  await page.clock.runFor(8_000);
+  await expect(board.locator("header")).toContainText("1/2");
+});
+
+test("the room's games board stands two games wide and shifts up a row every 7 seconds", async ({ page }) => {
+  await openClubhouse(page);
+  const ticker = page.locator(".lab-ticker");
+  await expect(ticker.locator("p").first()).toBeVisible({ timeout: 30_000 });
+  await expect(ticker.locator("> div").first().locator("p")).toHaveCount(2);   // two games a row
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const step = () => ticker.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--step"));
+  expect(await step()).toBe("0");
+  await page.clock.runFor(5_500);
+  expect(await step()).toBe("0");   // not yet: a row stays up most of the 7 seconds
+  await page.clock.runFor(1_700);
+  await expect.poll(step).toBe("1");
 });

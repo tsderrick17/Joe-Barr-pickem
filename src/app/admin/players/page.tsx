@@ -337,10 +337,11 @@ export default function PlayerManagementPage() {
                       </div>
 
                       <ul className="player-flags" aria-label={`What ${player.firstName} has turned on`}>
-                        <li className={`player-flag${player.emailNotificationsEnabled ? " is-on" : ""}`}>Emails {player.emailNotificationsEnabled ? "on" : "off"}</li>
-                        <li className={`player-flag${player.hasApp ? " is-on" : ""}`}>App {player.hasApp ? "installed" : "not yet"}</li>
+                        {/* A tick or a cross says on or off, so each tag is one word and the three sit on one line, even on a phone. */}
+                        <li className={`player-flag${player.emailNotificationsEnabled ? " is-on" : ""}`}>Emails<span className="sr-only"> {player.emailNotificationsEnabled ? "on" : "off"}</span></li>
+                        <li className={`player-flag${player.hasApp ? " is-on" : ""}`}>App<span className="sr-only"> {player.hasApp ? "installed" : "not yet"}</span></li>
                         {player.notificationsOn === null ? null : (
-                          <li className={`player-flag${player.notificationsOn ? " is-on" : ""}`}>Notifications {player.notificationsOn ? "on" : "off"}</li>
+                          <li className={`player-flag${player.notificationsOn ? " is-on" : ""}`}>Notifications<span className="sr-only"> {player.notificationsOn ? "on" : "off"}</span></li>
                         )}
                       </ul>
 

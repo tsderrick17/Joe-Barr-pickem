@@ -82,7 +82,7 @@ export function deviceSummary({ device, browser, viaApp }) {
  * @param {number} now
  */
 export function lastSeenLabel(at, now) {
-  if (!at) return "Not yet signed in";
+  if (!at) return "Never";
   const minutes = Math.max(0, Math.floor((now - new Date(at).getTime()) / 60_000));
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes}m ago`;

@@ -60,7 +60,7 @@ export default function AutomationWatchdog() {
       </div>
       {error ? <p className="mt-4 font-semibold text-red-700">{error}</p> : null}
       {status ? <div className={`mt-4 border p-4 ${status.openAlerts.length ? "border-(color:--themed-border-24) bg-(color:--themed-bg-24)" : "border-(color:--themed-border-21) bg-(color:--themed-bg-23)"}`}>
-        <p className="font-bold">{status.openAlerts.length ? `${status.openAlerts.length} incident${status.openAlerts.length === 1 ? "" : "s"} need attention` : "No actionable incidents"}</p>
+        <p className="font-bold">{status.openAlerts.length ? `${status.openAlerts.length} incident${status.openAlerts.length === 1 ? " needs" : "s need"} attention` : "No actionable incidents"}</p>
         {status.openAlerts.map((alert) => <article className="mt-3 border-t border-current pt-3" key={alert.id}><p className="font-bold">{alert.title}</p><p className="mt-1 text-sm">{alert.detail}</p><p className="mt-1 text-xs">Opened {new Date(alert.detected_at).toLocaleString()} · {alert.notified_at ? "commissioner notified" : alert.notification_error ? `email retry pending: ${alert.notification_error}` : "notification pending"}</p></article>)}
         <p className="mt-3 text-xs text-(color:--themed-text-28)">Last check: {status.lastRun?.completed_at ? new Date(status.lastRun.completed_at).toLocaleString() : "not run yet"}</p>
       </div> : null}

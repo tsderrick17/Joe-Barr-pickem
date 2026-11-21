@@ -109,7 +109,7 @@ test("a day is an Eastern day, and the week counted is today and the six days be
 test("the last-seen, week and total wording", () => {
   const now = Date.parse("2026-10-30T12:00:00Z");
   const ago = (minutes) => new Date(now - minutes * 60_000).toISOString();
-  assert.equal(lastSeenLabel(null, now), "Not yet signed in");
+  assert.equal(lastSeenLabel(null, now), "Never");
   assert.equal(lastSeenLabel(ago(0), now), "Just now");
   assert.equal(lastSeenLabel(ago(12), now), "12m ago");
   assert.equal(lastSeenLabel(ago(150), now), "2h ago");

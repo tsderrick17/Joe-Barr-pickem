@@ -7,7 +7,7 @@ import BowlScoreTile from "@/components/bowl-score-tile";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import { takeBowlPrefetch } from "@/lib/bowl-prefetch";
 import { fetchWithSession } from "@/lib/auth-session";
-import { bowlGameNote, bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
+import { bowlColumnName, bowlGameNote, bowlMatchupTeamLabels, bowlTeamDisplayLabel } from "@/lib/bowl-pool.js";
 import { currentSeasonYear } from "@/lib/season";
 import { dateFormat } from "@/lib/date-format.js";
 
@@ -58,6 +58,8 @@ type Props = {
   onError: (message: string) => void;
   /** Called once the card's first load has finished (even if it failed), so the page can reveal everything together. */
   onReady?: () => void;
+  /** A past season chosen on the Standings: the card shows that season's Bowl Pool (null: this season). */
+  seasonYear?: number | null;
 };
 
 /**
@@ -71,7 +73,7 @@ export function bowlSpreadLabel(spread: number | string | null | undefined) {
   return String(spread).replace(/^[-−]\s*/, "");
 }
 
-export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, displayLocked = false, savingDisplay, onSetDisplay, onError, onReady }: Props) {
+export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows, minimized, displayLocked = false, savingDisplay, onSetDisplay, onError, onReady, seasonYear = null }: Props) {
   const [bowlStandings, setBowlStandings] = useState<BowlStandingsData | null>(null);
   const [claiming, setClaiming] = useState(false);
   const bowlScrollRef = useRef<HTMLDivElement | null>(null);
@@ -83,14 +85,14 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   const [bowlScoresSettled, setBowlScoresSettled] = useState(false);
 
   useEffect(() => {
-    const loadBowlStandings = () => void (takeBowlPrefetch() ?? fetchWithSession("/api/bowl-pool", { cache: "no-store" })).then(async (response) => {
+    const loadBowlStandings = () => void ((seasonYear ? null : takeBowlPrefetch()) ?? fetchWithSession(seasonYear ? `/api/bowl-pool?season=${seasonYear}` : "/api/bowl-pool", { cache: "no-store" })).then(async (response) => {
       if (response.ok) setBowlStandings(await response.json() as BowlStandingsData);
     }).catch(() => undefined).finally(() => onReady?.());
     loadBowlStandings();
     const refreshFromHistory = (event: PageTransitionEvent) => { if (event.persisted) loadBowlStandings(); };
     window.addEventListener("pageshow", refreshFromHistory);
     return () => window.removeEventListener("pageshow", refreshFromHistory);
-  }, [isCommissioner, onReady]);
+  }, [isCommissioner, onReady, seasonYear]);
 
 
   const bowlGames: BowlMatrixGame[] = bowlStandings?.games ?? BOWL_MATRIX_GAMES.map((bowlName, index) => ({ id: `placeholder-${index}`, bowl_name: bowlName }));
@@ -98,15 +100,7 @@ export default function BowlCard({ viewerPlayerId, isCommissioner, fallbackRows,
   const bowlRows = [...(bowlStandings?.standings ?? fallbackRows.map((row) => ({ playerId: row.id, playerName: row.firstName, wins: 0, losses: 0, tiebreakerTotal: null, trophies: [], holdsTrophy: false })) ?? [])].sort((first, second) => second.wins - first.wins || first.losses - second.losses || first.playerName.localeCompare(second.playerName));
   const bowlChampion = bowlStandings?.championships?.find((championship) => championship.seasonYear === bowlStandings.season?.season_year);
   const bowlGradedGames = bowlStandings?.games ? bowlStandings.games.filter((game) => ["final", "cancelled", "no_contest"].includes(game.status ?? "")).length : 0;
-  const bowlName = (game: (typeof bowlGames)[number]) => {
-    const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
-    const cleanName = name.replace(/\s*\([^)]*\)$/, "");
-    const qfBowl = /^(fiesta|cotton|peach|rose)(?: bowl)?$/i.test(cleanName);
-    const sfBowl = /^(orange|sugar)(?: bowl)?$/i.test(cleanName);
-    if (/quarterfinal|quarter/i.test(name) || /quarterfinal/i.test(game.provider_game_id ?? "") || qfBowl) return `${cleanName} (QF)`;
-    if (/semifinal|semi/i.test(name) || /semifinal/i.test(game.provider_game_id ?? "") || sfBowl) return `${cleanName} (SF)`;
-    return name;
-  };
+  const bowlName = (game: (typeof bowlGames)[number]) => bowlColumnName(game);
   const bowlTeamLabel = (team: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null | undefined, otherTeam?: { id?: string; full_name: string; short_name?: string | null; abbreviation?: string | null } | null) => {
     if (otherTeam) {
       const [teamLabel, otherLabel] = bowlMatchupTeamLabels(team, otherTeam);

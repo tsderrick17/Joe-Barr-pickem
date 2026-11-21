@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { settleNetwork, signIn } from "./session";
+import { shots } from "./coverage";
 import { bowlResponse } from "./standings-fixtures.mjs";
 
-const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 // Mid-December: the bowl season is about to start. Scenarios that need games
 // under way set their own clock.
 const NOW = "2026-12-12T15:00:00Z";
@@ -29,38 +29,35 @@ const SCENARIOS: Record<string, Scenario> = {
 };
 
 for (const [scenario, { build, now, click }] of Object.entries(SCENARIOS)) {
-  for (const theme of ["day", "night"]) {
-    for (const [label, width] of Object.entries(WIDTHS)) {
-      if (theme === "night" && width !== 390 && width !== 1280) continue;
-      test(`Bowl picks ${scenario} ${theme} at ${label}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 900 });
-        await signIn(page, theme);
-        await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
-        await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: build() }));
-        await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
-        await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
-        await page.route("https://placeholder.invalid/**", (route) => route.abort());
-        await page.clock.install({ time: new Date(now ?? NOW) });
-        await page.goto("/bowl-pool");
-        await expect(page.locator(".bowl-pool-page h2, .bowl-claim h3, :text('Bowl Pool entry is closed')").first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        await page.reload();
-        await expect(page.locator(".bowl-pool-page h2, .bowl-claim h3, :text('Bowl Pool entry is closed')").first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        // Lazy images below the fold load only when scrolled near; make them all load now.
-        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
-        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await settleNetwork(page);
-        await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-        if (click) {
-          // Choose the first game's favorite, then let the megaphone finish its swing.
-          await page.locator("#bowl-selections button[aria-label^='Select favorite team']").first().click();
-          await page.waitForTimeout(900);
-        }
-        await expect(page).toHaveScreenshot(`bowl-${scenario}-${theme}-${label}.png`, { fullPage: true });
-      });
-    }
+  for (const { theme, label, width } of shots({ crowded: scenario === "games-started", night: scenario === "picked" || scenario === "games-started" })) {
+    test(`Bowl picks ${scenario} ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
+      await page.route("**/api/bowl-pool**", (route) => route.fulfill({ json: build() }));
+      await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: false, showPoolChat: false } }));
+      await page.route("**/api/pool-chat**", (route) => route.fulfill({ json: { messages: [] } }));
+      await page.route("https://placeholder.invalid/**", (route) => route.abort());
+      await page.clock.install({ time: new Date(now ?? NOW) });
+      await page.goto("/bowl-pool");
+      await expect(page.locator(".bowl-pool-page h2, .bowl-claim h3, :text('Bowl Pool entry is closed')").first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.reload();
+      await expect(page.locator(".bowl-pool-page h2, .bowl-claim h3, :text('Bowl Pool entry is closed')").first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      // Lazy images below the fold load only when scrolled near; make them all load now.
+      await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
+      await settleNetwork(page);
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      if (click) {
+        // Choose the first game's favorite, then let the megaphone finish its swing.
+        await page.locator("#bowl-selections button[aria-label^='Select favorite team']").first().click();
+        await page.waitForTimeout(900);
+      }
+      await expect(page).toHaveScreenshot(`bowl-${scenario}-${theme}-${label}.png`, { fullPage: true });
+    });
   }
 }
 

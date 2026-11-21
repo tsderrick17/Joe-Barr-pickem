@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AccountMenu from "@/components/account-menu";
+import { setSiteTheme } from "@/lib/site-theme.js";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -132,9 +133,11 @@ export default function SiteNav() {
   // site as it is (classic, switch down) and the clubhouse (switch up). It carries no label. Other players never see it. The switch is a mode, remembered on this device: with
   // it up, opening the app (the Standings address) lands in the clubhouse, until it is put back down.
   const inClubhouse = pathname.startsWith("/clubhouse");
+  // Straight from the remembered switch, without waiting for the account to be read, so the classic Standings never flash first; the
+  // clubhouse checks access itself and puts the switch down for anyone it sends back.
   useEffect(() => {
-    if (clubhouseAccess && pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
-  }, [clubhouseAccess, pathname, router]);
+    if (pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
+  }, [pathname, router]);
   const viewSwitch = (size: string) => clubhouseAccess ? (
     <a
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
@@ -184,8 +187,7 @@ export default function SiteNav() {
   function toggleTheme() {
     haptic("tick");
     const nextNightMode = !isNightMode;
-    document.documentElement.dataset.theme = nextNightMode ? "night" : "day";
-    window.localStorage.setItem("pickem-theme", nextNightMode ? "night" : "day");
+    setSiteTheme(nextNightMode);
     setIsNightMode(nextNightMode);
   }
 
@@ -236,7 +238,7 @@ export default function SiteNav() {
           </button>
           {viewSwitch("is-large")}
 
-          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /></div> : null}
+          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen} /></div> : null}
         </div>
       </div>
     </nav>
@@ -261,7 +263,7 @@ export default function SiteNav() {
             <HapticTap />
           </button>
           {viewSwitch("is-small")}
-          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showTrophyRoom={trophyRoomOpen} /> : null}
+          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen} /> : null}
           </div>
         </div>
       </div>
