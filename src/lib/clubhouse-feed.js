@@ -176,25 +176,26 @@ export function clubhouseFeed({ home, board, before = null }) {
   const survivor = board.survivor;
   const inSurvivor = Boolean(survivor?.available && survivor.status === "active");
   const survivorOwed = inSurvivor && !survivor.pick;
-  const atsOwed = Math.max(0, maxPicks - myPicks.length);
+  const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
+  const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
+  // A playoff round asks for a pick in every game: the ticket has a place a game, in kickoff order, and a pick is owed only for a game
+  // still to kick off (a game that kicked off without one is gone, not owed). A regular week has its set number of picks.
+  const playoff = Boolean(home.isPlayoff);
+  const roundGames = [...games].sort((x, y) => Date.parse(x.kickoffAt ?? "") - Date.parse(y.kickoffAt ?? ""));
+  const pickFor = (game) => myPicks.find((pick) => pick.gameId === game.id);
+  const atsOwed = playoff ? roundGames.filter((game) => !pickFor(game) && notStarted(game.id)).length : Math.max(0, maxPicks - myPicks.length);
   const weekOpen = home.weekStatus !== "complete" && games.some((game) => game.status === "scheduled" || game.status === "live");
   // Out of the playoff race, or forfeited: nothing more to pick, and the strip says so.
   const forfeited = Boolean(board.pickem?.forfeit?.forfeited);
   const raceOver = forfeited || Boolean(board.pickem?.playoffEliminated);
   const owedCount = weekOpen && !raceOver ? atsOwed + (survivorOwed ? 1 : 0) : 0;
   // Whether any pick that is in can still be changed: its game has not kicked off.
-  const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
-  const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
   const anyChangeable = myPicks.some((pick) => notStarted(pick.gameId)) || Boolean(inSurvivor && survivor.pick && notStarted(survivor.pick.game_id));
 
-  const lamps = [
-    ...myPicks.map((pick) => {
-      const result = resultOf(gameById.get(pick.gameId), pick.teamId);
-      return result === "win" ? "won" : result === "loss" ? "lost" : "in";
-    }),
-    ...Array.from({ length: atsOwed }, () => "off"),
-    ...(inSurvivor ? [survivor.pick ? "in" : "off"] : []),
-  ];
+  const lampOf = (pick) => { const result = resultOf(gameById.get(pick.gameId), pick.teamId); return result === "win" ? "won" : result === "loss" ? "lost" : "in"; };
+  const lamps = playoff
+    ? roundGames.map((game) => (pickFor(game) ? lampOf(pickFor(game)) : "off"))
+    : [...myPicks.map(lampOf), ...Array.from({ length: atsOwed }, () => "off"), ...(inSurvivor ? [survivor.pick ? "in" : "off"] : [])];
   // The ticket: one place a pick, in the same order as the lamps. A pick that is in carries its team (the ticket shows its logo) and line,
   // and a note: its kickoff, Live, or how it came out (Won 27–20). Survivor's pick is its team's logo under the word Survivor, never the
   // team's name. A place still to fill is named (Pick 1, Pick 2, Survivor) and says Open; once the week is in, No pick.
@@ -207,7 +208,13 @@ export function clubhouseFeed({ home, board, before = null }) {
   const note = (game, teamId, result) => (result === "win" ? `Won${scoreOf(game, teamId)}` : result === "loss" ? `Lost${scoreOf(game, teamId)}` : result === "push" ? "Push" : game.status === "live" ? "Live" : game.status === "final" ? "Final" : short(game.kickoffAt));
   const emptyNote = weekOpen && !raceOver ? "Open" : "No pick";
   const survivorGame = inSurvivor && survivor.pick ? gameById.get(survivor.pick.game_id) : null;
-  const slots = [
+  const pickPlace = (pick) => {
+    const game = gameById.get(pick.gameId);
+    const result = resultOf(game, pick.teamId);
+    return { team: abbreviation(game, pick.teamId), line: lineFor(game, pick.teamId), label: "", note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
+  };
+  // A playoff game still to pick is named by its matchup (BUF @ KC); Open until it kicks off, then No pick.
+  const slots = playoff ? roundGames.map((game) => (pickFor(game) ? pickPlace(pickFor(game)) : { label: `${game.awayTeamAbbreviation} @ ${game.homeTeamAbbreviation}`, note: notStarted(game.id) && !raceOver ? "Open" : "No pick", state: "off" })) : [
     ...myPicks.map((pick) => {
       const game = gameById.get(pick.gameId);
       const result = resultOf(game, pick.teamId);
@@ -220,9 +227,10 @@ export function clubhouseFeed({ home, board, before = null }) {
         : { label: "Survivor", note: emptyNote, state: "off", survivor: true }]
       : []),
   ];
-  // When the next pick still to make locks: the first game not yet kicked off.
-  const nextKickoff = games.filter((game) => game.status === "scheduled" && Date.parse(game.kickoffAt) > now).sort((a, b) => Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt))[0];
-  const total = maxPicks + (inSurvivor ? 1 : 0);
+  // The next game a pick is still owed for: in a playoff round the first game still to kick off that has no pick; in a regular week
+  // (any game will do for a pick) the first game still to kick off.
+  const nextKickoff = roundGames.find((game) => notStarted(game.id) && (!playoff || !pickFor(game)));
+  const total = playoff ? roundGames.length : maxPicks + (inSurvivor ? 1 : 0);
 
   // Survivor leaves the room when it leaves the classic pages: once it is decided, and for the playoffs.
   const survivorOver = Boolean(home.isPlayoff || home.survivorComplete);

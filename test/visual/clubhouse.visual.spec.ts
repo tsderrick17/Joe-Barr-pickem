@@ -876,3 +876,24 @@ test("the pool chat wears the Big Board's housing and opens already full, read a
   await expect(chat.locator(".pool-chat-message")).toContainText("Bills by a million");
   await expect(chat.getByText("Opening chat...")).toHaveCount(0);
 });
+
+// The ticket at the foot of the room, through a regular week and a playoff round: a place a pick (a place a game in the playoffs,
+// two rows of three in the Wild Card, two by two in the Divisional round), each with its logo and lamp, the dark stub to press, and
+// NEXT GAME with the kickoff of the next game still to pick while one is owed.
+for (const [label, home, scenario, keep] of [
+  ["week", null, "upcoming-unpicked", 0],
+  ["wild-card", "playoff-wildcard", "playoff-mixed-locks", 0],
+  ["divisional", "playoff-divisional", "playoff-upcoming", 4],
+] as const) {
+  test(`your ticket at the foot of the room, ${label}`, async ({ page }) => {
+    await openClubhouse(page, { ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario], ...(keep ? { shapeBoard: (response: BoardRead) => ({ ...response, games: response.games.slice(0, keep) }) } : {}) });
+    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+    await expect(ticket.locator(".slip-status.is-urgent")).toContainText("Next game");
+    const box = (await ticket.boundingBox())!;
+    expect(Math.abs(box.y + box.height - 844)).toBeLessThanOrEqual(1);   // flush with the foot of the screen, however tall
+    await expect(ticket).toHaveScreenshot(`clubhouse-ticket-${label}-phone-390.png`, { maxDiffPixels: 40 });
+  });
+}

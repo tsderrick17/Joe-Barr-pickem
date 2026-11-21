@@ -135,9 +135,12 @@
 .slip-status.is-urgent { color: var(--slip-lost); }
 .slip-status.is-saved { color: var(--slip-won); }
 .slip-status.is-saved i::before { content: "\2713\00a0"; }
-.slip-places { display: grid; grid-template-columns: repeat(min(var(--places, 3), 3), minmax(0, 1fr)); margin-top: 10px; row-gap: 10px; }
+.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }
 .slip-place { display: grid; gap: 3px; justify-items: center; min-width: 0; padding: 0 4px; position: relative; text-align: center; }
-.slip-place:not(:nth-child(3n + 1))::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
+.slip-place:not(.is-row-start)::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
+/* A playoff round's second row sits under a hairline, like the columns' own. */
+.slip-place.is-next-row { border-top: 1px solid var(--slip-hair); margin-top: 8px; padding-top: 10px; }
+.slip-place.is-next-row::before { top: 12px; }
 .slip-mark { display: grid; height: 28px; place-items: center; position: relative; width: 28px; }
 .slip-mark .lab-room-logo { height: 26px; width: 26px; }
 .slip-ring { background: rgba(33, 29, 23, .035); border: 1.5px solid var(--slip-hair); border-radius: 50%; height: 24px; width: 24px; }

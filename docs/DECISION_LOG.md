@@ -18,6 +18,9 @@ chosen by the owner (option A) and given a second, showcase-quality pass on 2026
 - The heading’s right side says one thing: the next game’s kickoff (red, NEXT GAME) while a pick is owed, when the picks were saved (green), or else the
   week in a few words. It never speaks of picks locking (owner: unclear); the Bowl Pool’s owed bowls likewise show just their game
   time, not PICK DUE · LOCKS. Where a player stands is the Big Board’s to say, never the ticket’s (owner, 2026-11-21).
+- Built for the playoffs first: a playoff round has a place a game in kickoff order (a game still to pick named by its matchup,
+  BUF @ KC), two rows of three in the Wild Card and two by two in the Divisional round so every row is even; a pick is owed only for a
+  game still to kick off, and NEXT GAME is the next game still to pick. The owner wants all work built for the playoffs (2026-11-21).
 - The way to your ticket under the Big Board is a small ticket of the same card, its verb on the same dark stub.
 - On a phone it is fixed to the foot of the screen at whatever height it needs. By night the card is a little warmer and dimmer (theme
   tokens, not night rules). House fonts only; pop-ups still have no X.

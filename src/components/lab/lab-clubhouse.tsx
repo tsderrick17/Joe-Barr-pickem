@@ -366,6 +366,8 @@ export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.lengt
     return { label: chip ? "Survivor" : `Pick ${index + 1}`, note: state === "off" ? "Open" : "In", state, survivor: chip };
   });
   const owed = places.filter((place) => place.state === "off").length;
+  // Up to three places a row; a playoff round of four sits two by two, of six three by two, so every row is full and even.
+  const cols = places.length === 4 ? 2 : Math.min(places.length, 3) || 1;
   const verb = action ?? (owed ? "PICK" : "VIEW");
   // The heading's right side mirrors its left: a small word over what it says.
   const status = urgent && corner ? <span className="slip-status is-urgent"><i>Next game</i>{corner}</span>
@@ -375,9 +377,9 @@ export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.lengt
     <span className="slip">
       <span className="slip-body">
         <span className="slip-head"><span className="slip-title"><i>{week}</i><b>YOUR TICKET</b></span>{status}</span>
-        <span className="slip-places" style={{ ["--places" as string]: places.length }}>
+        <span className="slip-places" style={{ ["--cols" as string]: cols }}>
           {places.map((place, index) => (
-            <span className={`slip-place is-${place.state}${place.survivor ? " is-survivor" : ""}`} key={index}>
+            <span className={`slip-place is-${place.state}${place.survivor ? " is-survivor" : ""}${index % cols === 0 ? " is-row-start" : ""}${index >= cols ? " is-next-row" : ""}`} key={index}>
               <span className="slip-mark">
                 {place.team ? <Logo eager team={place.team} /> : <span aria-hidden="true" className="slip-ring" />}
                 <Lamp state={place.state} survivor={place.survivor} />
