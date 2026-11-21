@@ -4,6 +4,17 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-21 - Tests trimmed to what catches problems
+
+The screenshot suite had grown to 982 runs and 1,436 pictures, mostly from picturing every state at four or five widths in both themes.
+It now follows one rule (`test/visual/coverage.ts`): every state by day on a phone and a desktop, night on a phone only for the states
+with the most styles, the narrow phone and tablet only for each page's most crowded states; a Lab try-out live in the clubhouse keeps
+one picture a state; width sweeps that only check things fit run at the narrowest phone and the tablet. 715 runs. The baseline workflow
+gained a prune switch that records every picture afresh and leaves out stale ones. Unit tests that only pattern-matched a component's
+source (against this repository's own rule) were removed; the slowest checks sample less (a year, not two, with every daylight-saving
+switch and midnight still covered; 800 seeded playoff scenarios, not 5,000); twenty-one one- and two-test files became four area files
+(bowl, email, player, Survivor rules) with no test lost. Owner's choice of the standard set, 2026-11-21.
+
 ## 2026-11-21 - Clubhouse code lives in its own folder
 
 The clubhouse went live from the Workshop Lab, so its real pieces were still in `src/components/lab/` beside the Lab's samples. They

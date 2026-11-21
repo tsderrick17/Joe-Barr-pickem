@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { settleNetwork, signIn } from "./session";
+import { shots } from "./coverage";
 import { boardResponse, SCENARIOS } from "./slate-fixtures.mjs";
 
-const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-900": 900, "desktop-1280": 1280 } as const;
 
 async function serve(page: Page, scenario: string, extra: Record<string, unknown> = {}) {
   const board = { ...boardResponse(scenario), ...extra };
@@ -46,8 +46,10 @@ async function captureSlate(page: Page, scenario: string, width: number, theme: 
   await expect(page).toHaveScreenshot(name, { fullPage: true });
 }
 
+// By day at the standard widths (coverage.ts); the narrow phone, tablet and small desktop only for the most crowded weeks.
+const CROWDED = new Set(["live-mixed-locks-survivor", "playoff-six-picks", "complete-survivor"]);
 for (const scenario of Object.keys(SCENARIOS)) {
-  for (const [label, width] of Object.entries(WIDTHS)) {
+  for (const { label, width } of shots({ crowded: CROWDED.has(scenario), extra: { "desktop-900": 900 } })) {
     test(`Slate ${scenario} at ${label}`, async ({ page }) => {
       await captureSlate(page, scenario, width, "day", `${scenario}-${label}.png`);
     });
@@ -90,7 +92,7 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
 
 // An early-lock note is one line under the spread: the spread stays level with the team names, and the note stays inside its row
 // and clear of the poker chips, at every width.
-for (const width of [360, 390, 700, 1280]) {
+for (const width of [360, 700, 1280]) {   // the narrowest phone, the tablet and the desktop: 390 sits between and adds nothing
   for (const scenario of ["upcoming-unpicked", "upcoming-no-survivor"]) {
     test(`Slate early-lock note keeps the line level and tidy (${scenario}, ${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -176,7 +178,7 @@ for (const [scenario, shown] of [["upcoming-unpicked", true], ["upcoming-no-surv
 // The Pick'em line at the foot of the ticket ("1/2 · CHANGED · 1 DUE") stays on one line, and it and every pick chip stay inside the
 // ticket at every width, in the longest states: one team picked and unsaved, a live week with locked picks, and one pick sealed with
 // the other still open (which once pushed the second chip and the line past the ticket's edge on a phone).
-for (const width of [360, 390, 700]) {
+for (const width of [360, 700]) {   // the narrowest phone and the tablet: 390 sits between and adds nothing
   for (const [scenario, pick] of [["upcoming-unpicked", true], ["upcoming-picked", false], ["live-survivor", false], ["live-no-survivor", false], ["live-mixed-locks", false], ["playoff-live", false]] as const) {
     test(`Slate ticket status line is one line (${scenario}${pick ? ", one team picked" : ""}, ${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -242,7 +244,7 @@ const SWEEP: Array<{ name: string; base: string; picks: string[][]; edit?: "remo
   { name: "playoffs: six of six, one open pick taken off", base: "playoff-live", picks: [["g0", "buf"], ["g1", "gb"], ["g2", "kc"], ["g3", "lar"], ["g4", "bal"], ["g5", "sf"]], edit: "remove" },
 ];
 
-for (const width of [360, 390, 700]) {
+for (const width of [360, 700]) {   // the narrowest phone and the tablet: 390 sits between and adds nothing
   for (const item of SWEEP) {
     test(`Slate receipt fits the ticket: ${item.name} (${width})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });

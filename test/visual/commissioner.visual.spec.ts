@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { settleNetwork, signIn } from "./session";
+import { shots } from "./coverage";
 import { BOWL_OPENING_PREVIEW, commissionerApi, NOW, PLAYERS, REMINDERS, TROPHY_ROOM } from "./commissioner-fixtures.mjs";
 
 // The desk is one person's tool, used on a phone and a desktop: those two widths, day and night. (It was also shot at 360 and 700 wide by day, which
 // added about 22 images of 1 MB each and caught nothing the 390 and 1280 shots did not.)
-const WIDTHS = { "phone-390": 390, "desktop-1280": 1280 } as const;
 
 /** Every call the desk makes is answered from fixtures; anything else is an empty 204, and no write ever reaches a server. */
 async function serve(page: Page, state: string) {
@@ -58,80 +58,75 @@ const PAGES: Array<{ id: string; path: string; ready: string; states: string[] }
 
 for (const view of PAGES) {
   for (const state of view.states) {
-    for (const theme of ["day", "night"]) {
-      for (const [label, width] of Object.entries(WIDTHS)) {
-        test(`Commissioner ${view.id} ${state} ${theme} at ${label}`, async ({ page }) => {
-          await page.setViewportSize({ width, height: 900 });
-          await signIn(page, theme);
-          await serve(page, state);
-          await settle(page, view.ready, view.path);
-          // Game day's tool sections and Season's readiness checks load at their own pace, so the page shot leaves them out (Game day's tools have shots of their own).
-          if (view.id === "gameday" || view.id === "season") await page.addStyleTag({ content: ".cw-section { display: none !important; }" });
-          await page.waitForTimeout(600);
-          await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
-          await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-          await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-          await settleNetwork(page);
-          await expect(page).toHaveScreenshot(`commissioner-${view.id}-${state}-${theme}-${label}.png`, { fullPage: true });
-        });
-      }
+    // Night on a phone for each page's first state (coverage.ts).
+    for (const { theme, label, width } of shots({ night: state === view.states[0] })) {
+      test(`Commissioner ${view.id} ${state} ${theme} at ${label}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        await signIn(page, theme);
+        await serve(page, state);
+        await settle(page, view.ready, view.path);
+        // Game day's tool sections and Season's readiness checks load at their own pace, so the page shot leaves them out (Game day's tools have shots of their own).
+        if (view.id === "gameday" || view.id === "season") await page.addStyleTag({ content: ".cw-section { display: none !important; }" });
+        await page.waitForTimeout(600);
+        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
+        await settleNetwork(page);
+        await expect(page).toHaveScreenshot(`commissioner-${view.id}-${state}-${theme}-${label}.png`, { fullPage: true });
+      });
     }
   }
 }
 
 // The Players, Email center (reminders) and Trophy room pages.
 for (const [name, path, ready] of [["players", "/admin/players", "h1, h2"], ["reminders", "/admin/reminders", "h1, h2"], ["trophy-room", "/trophy-room", "table"]] as const) {
-  for (const theme of ["day", "night"]) {
-    for (const [label, width] of Object.entries(WIDTHS)) {
-      test(`Commissioner ${name} ${theme} at ${label}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 900 });
-        await signIn(page, theme);
-        await serve(page, "healthy");
-        await page.goto(path);
-        await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        await page.reload();
-        await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        if (path.startsWith("/admin")) await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
-        await page.waitForTimeout(1600);   // the dial settles
-        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
-        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await settleNetwork(page);
-        await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-        await expect(page).toHaveScreenshot(`commissioner-${name}-${theme}-${label}.png`, { fullPage: true });
-      });
-    }
+  for (const { theme, label, width } of shots({ night: true })) {
+    test(`Commissioner ${name} ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, theme);
+      await serve(page, "healthy");
+      await page.goto(path);
+      await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.reload();
+      await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      if (path.startsWith("/admin")) await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+      await page.waitForTimeout(1600);   // the dial settles
+      await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
+      await settleNetwork(page);
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      await expect(page).toHaveScreenshot(`commissioner-${name}-${theme}-${label}.png`, { fullPage: true });
+    });
   }
 }
 
 // The Email center with the email image studio open on the Bowl Pool opening announcement: its subject and phone message are shown as fixed words (not edit boxes),
 // beside the "Send this to my email and phone" button and the email itself.
-for (const theme of ["day", "night"]) {
-  for (const [label, width] of Object.entries(WIDTHS)) {
-    test(`Commissioner reminders Bowl announcement preview ${theme} at ${label}`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await signIn(page, theme);
-      await serve(page, "healthy");
-      await page.route("**/api/admin/reminder-templates", (route) => route.fulfill({ json: { templates: [] } }));
-      await page.route("**/api/admin/reminders/preview", async (route) => {
-        const { templateId } = route.request().postDataJSON();
-        return route.fulfill({ json: templateId === "bowl_pool_open" ? BOWL_OPENING_PREVIEW : { html: "<p>Sample</p>", images: [], source: "Sample", warning: "", templateId } });
-      });
-      await page.goto("/admin/reminders");
-      await expect(page.getByRole("heading", { name: "Email image studio" })).toBeVisible({ timeout: 30_000 });
-      await page.evaluate(() => document.fonts.ready);
-      await page.getByRole("button", { name: "Open email image studio" }).click();
-      await page.getByRole("group", { name: "Email type" }).getByRole("button", { name: /Bowl Pool opening announcement/ }).click();
-      await expect(page.getByText("Phone notification")).toBeVisible({ timeout: 30_000 });
-      await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
-      await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
-      await page.waitForTimeout(1600);   // the dial settles (a 1.4 s swing)
-      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-      await expect(page).toHaveScreenshot(`commissioner-reminders-bowl-message-${theme}-${label}.png`, { fullPage: true });
+for (const { theme, label, width } of shots()) {
+  test(`Commissioner reminders Bowl announcement preview ${theme} at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, theme);
+    await serve(page, "healthy");
+    await page.route("**/api/admin/reminder-templates", (route) => route.fulfill({ json: { templates: [] } }));
+    await page.route("**/api/admin/reminders/preview", async (route) => {
+      const { templateId } = route.request().postDataJSON();
+      return route.fulfill({ json: templateId === "bowl_pool_open" ? BOWL_OPENING_PREVIEW : { html: "<p>Sample</p>", images: [], source: "Sample", warning: "", templateId } });
     });
-  }
+    await page.goto("/admin/reminders");
+    await expect(page.getByRole("heading", { name: "Email image studio" })).toBeVisible({ timeout: 30_000 });
+    await page.evaluate(() => document.fonts.ready);
+    await page.getByRole("button", { name: "Open email image studio" }).click();
+    await page.getByRole("group", { name: "Email type" }).getByRole("button", { name: /Bowl Pool opening announcement/ }).click();
+    await expect(page.getByText("Phone notification")).toBeVisible({ timeout: 30_000 });
+    await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(".cw-shell[data-status=ready]")).toBeAttached({ timeout: 30_000 });
+    await page.waitForTimeout(1600);   // the dial settles (a 1.4 s swing)
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await expect(page).toHaveScreenshot(`commissioner-reminders-bowl-message-${theme}-${label}.png`, { fullPage: true });
+  });
 }
 
 // The score-polling chart (Odds credits page): the first nine windows in percentages, with the emergency windows as one count.
@@ -213,18 +208,16 @@ async function openLastResortFinal(page: Page) {
   return block;
 }
 
-for (const theme of ["day", "night"] as const) {
-  for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
-    test(`Commissioner last-resort final entry ${theme} at ${label}`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await signIn(page, theme);
-      await serve(page, "healthy");
-      const block = await openLastResortFinal(page);
-      await expect(block.getByRole("button", { name: "Save verified final" })).toBeEnabled();
-      await page.waitForTimeout(600);
-      await expect(block).toHaveScreenshot(`commissioner-last-resort-final-${theme}-${label}.png`);
-    });
-  }
+for (const { theme, label, width } of shots()) {
+  test(`Commissioner last-resort final entry ${theme} at ${label}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page, theme);
+    await serve(page, "healthy");
+    const block = await openLastResortFinal(page);
+    await expect(block.getByRole("button", { name: "Save verified final" })).toBeEnabled();
+    await page.waitForTimeout(600);
+    await expect(block).toHaveScreenshot(`commissioner-last-resort-final-${theme}-${label}.png`);
+  });
 }
 
 test("Commissioner last-resort final asks first, then sends the scores and the note, and says what was graded", async ({ page }) => {

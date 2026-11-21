@@ -41,15 +41,15 @@ const old = {
   },
 };
 
-/** Two full years every 113 minutes (an odd step, so every minute-of-hour is covered), plus every minute around each daylight-saving switch. */
+/** A year every 557 minutes (an odd step, so the minutes of the hour vary), every 5 minutes around each daylight-saving switch, and the minute either side of every Eastern midnight one week apart. */
 function instants() {
   const list = [];
-  for (let at = Date.UTC(2026, 0, 1); at < Date.UTC(2028, 0, 1); at += 113 * 60_000) list.push(new Date(at));
+  for (let at = Date.UTC(2026, 0, 1); at < Date.UTC(2027, 0, 1); at += 557 * 60_000) list.push(new Date(at));
   for (const switchAt of [Date.UTC(2026, 2, 8, 7), Date.UTC(2026, 10, 1, 6), Date.UTC(2027, 2, 14, 7), Date.UTC(2027, 10, 7, 6)]) {
-    for (let at = switchAt - 4 * 3_600_000; at <= switchAt + 4 * 3_600_000; at += 60_000) list.push(new Date(at));
+    for (let at = switchAt - 2 * 3_600_000; at <= switchAt + 2 * 3_600_000; at += 5 * 60_000) list.push(new Date(at));
   }
   // Eastern midnights and the minute either side, all year.
-  for (let day = 0; day < 366; day += 1) {
+  for (let day = 0; day < 366; day += 7) {
     const midnight = old.toUtc(2026, 1, 1 + day, 0);
     for (const delta of [-60_000, 0, 60_000]) list.push(new Date(midnight.getTime() + delta));
   }
@@ -70,8 +70,10 @@ test("every Eastern part, date key, hour, and weekday matches the old helpers ex
 });
 
 test("Eastern wall-clock to UTC matches the old helpers, including the skipped and repeated hours", () => {
-  for (let day = 0; day < 731; day += 1) {
+  // Every day of a year runs through both daylight-saving switches; the days either side of each switch are what matter.
+  for (let day = 0; day < 365; day += 1) {
     const date = new Date(Date.UTC(2026, 0, 1 + day));
+    if (day % 7 && ![65, 66, 67, 303, 304, 305].includes(day)) continue;   // a day a week, and every day around Mar 8 and Nov 1
     const [year, month, dayOfMonth] = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()];
     for (let hour = 0; hour < 24; hour += 1) {
       for (const minute of [0, 30]) {

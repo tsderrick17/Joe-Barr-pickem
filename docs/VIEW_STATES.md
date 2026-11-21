@@ -6,8 +6,8 @@ with its fixture scenario and screenshots in the same pull request, and a row in
 this file.** Only the Linux screenshots (`-linux`, recorded and checked in CI; see "Refreshing
 baselines" below) are committed. Local runs use personal, untracked baselines.
 
-Widths: phone 360, phone 390, tablet 700, desktop 1280 (the Slate also 900). The Commissioner area is shot at phone 390 and desktop 1280 only, day and night; its tablet-width layout is held by the "tables fit their cards" behavior tests.
-Themes: day at every width; night at 390 and 1280 only. Fixed sample data,
+Widths and themes follow one rule, `test/visual/coverage.ts` (owner, 2026-11-21): every state by day on a phone (390) and a desktop (1280);
+by night on a phone only, for the states that carry the most styles; the narrow phone (360) and tablet (700) (the Slate also 900) only for each page's most crowded states. A Lab try-out that is live in the clubhouse keeps one picture a state. Fixed sample data,
 fictional names, a frozen clock, and every `/api/*` call answered from fixtures.
 
 ## Slate (`/board`) — `test/visual/slate.visual.spec.ts`, fixtures `slate-fixtures.mjs`
@@ -186,7 +186,9 @@ pixel for pixel with `test/email-artwork-baselines/<platform>/`.
 2. Record Linux: `gh workflow run visual-baselines.yml --ref <branch>`, wait for
    it, `gh run download <id> -n linux-baselines`, and commit the `*-linux.png`
    files and `test/email-artwork-baselines/linux/`.
-3. Never re-record to make an unexpected diff go away.
+3. After removing or renaming screenshot tests, run it with `-f prune=true`: it records every picture afresh and leaves out any no test
+   uses; replace each `test/visual/*-snapshots` folder with the artifact's so no stale picture is kept.
+4. Never re-record to make an unexpected diff go away.
 
 ## Pull down to refresh (the app on a home screen) — `pull-to-refresh.visual.spec.ts`
 

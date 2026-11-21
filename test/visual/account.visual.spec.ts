@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { settleNetwork, signIn } from "./session";
+import { shots } from "./coverage";
 
-const WIDTHS = { "phone-360": 360, "phone-390": 390, "tablet-700": 700, "desktop-1280": 1280 } as const;
 const NOW = "2026-10-04T18:30:00Z";
 
 async function signedOut(page: Page, theme: string) {
@@ -47,29 +47,26 @@ const CASES: Case[] = [
 ];
 
 for (const { name, path, ready, auth, profile, commissioner, periods, after } of CASES) {
-  for (const theme of ["day", "night"]) {
-    for (const [label, width] of Object.entries(WIDTHS)) {
-      if (theme === "night" && width !== 390 && width !== 1280) continue;
-      test(`Account ${name} ${theme} at ${label}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 900 });
-        if (auth) await signIn(page, theme); else await signedOut(page, theme);
-        await serve(page, { profile: profile === undefined && !commissioner ? undefined : PROFILE(profile ?? false, commissioner), periods });
-        await page.goto(path);
-        await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        await page.reload();
-        await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
-        await page.evaluate(() => document.fonts.ready);
-        await page.waitForTimeout(600);
-        await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
-        await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-        await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
-        await settleNetwork(page);
-        await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-        if (after) await after(page);
-        await expect(page).toHaveScreenshot(`account-${name}-${theme}-${label}.png`, { fullPage: true });
-      });
-    }
+  for (const { theme, label, width } of shots({ night: name === "login" || name === "profile-custom" || name === "archive" })) {
+    test(`Account ${name} ${theme} at ${label}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      if (auth) await signIn(page, theme); else await signedOut(page, theme);
+      await serve(page, { profile: profile === undefined && !commissioner ? undefined : PROFILE(profile ?? false, commissioner), periods });
+      await page.goto(path);
+      await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.reload();
+      await expect(page.locator(ready).first()).toBeVisible({ timeout: 30_000 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(600);
+      await page.evaluate(() => document.querySelectorAll("img[loading=lazy]").forEach((image) => { (image as HTMLImageElement).loading = "eager"; }));
+      await page.waitForFunction(() => [...document.images].every((image) => image.complete));
+      await page.evaluate(() => Promise.all([...document.images].map((image) => image.decode().catch(() => undefined))));
+      await settleNetwork(page);
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+      if (after) await after(page);
+      await expect(page).toHaveScreenshot(`account-${name}-${theme}-${label}.png`, { fullPage: true });
+    });
   }
 }
 

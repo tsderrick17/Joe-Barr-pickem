@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   isSurvivorSlateEditable,
@@ -18,12 +17,6 @@ test("allows a player to switch back after reconsidering an unsaved replacement"
 test("blocks teams used in prior Survivor weeks", () => {
   assert.equal(isSurvivorTeamUsed({ teamId: "bills", usedTeamIds: ["bills", "rams"], selectedTeamId: null, savedTeamId: "rams" }), true);
   assert.equal(isSurvivorTeamUsed({ teamId: "jets", usedTeamIds: ["bills"], selectedTeamId: null, savedTeamId: null }), false);
-});
-
-test("the Slate uses the shared rule, and a started game is locked rather than unavailable", async () => {
-  const row = await readFile(new URL("../src/components/slate-game-row.tsx", import.meta.url), "utf8");
-  assert.match(row, /const survivorUsed = isSurvivorTeamUsed\(\{ teamId: team\.id, usedTeamIds: survivor\.usedTeamIds, selectedTeamId: survivor\.selectedTeamId, savedTeamId: survivor\.savedTeamId \}\);/);
-  assert.match(row, /const survivorLocked = hasStarted \|\| !survivor\.interactive;/);
 });
 
 test("exposes Slate Survivor chips for an editable upcoming or active regular-season entry", () => {
