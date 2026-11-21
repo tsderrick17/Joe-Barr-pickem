@@ -193,7 +193,7 @@ test("the ticket: a place a pick with its team, line and kickoff, open places na
   assert.deepEqual(ticket.slots.map((slot) => [slot.team ?? null, slot.line ?? null, slot.label, slot.note, slot.state, Boolean(slot.survivor)]), [
     ["PIT", "+3", "", "Sun 1:00", "in", false], [null, null, "Pick 2", "Open", "off", false], [null, null, "Survivor", "Open", "off", true],
   ]);
-  assert.equal(ticket.corner, "Sun 1:00 PM");   // when the next pick locks
+  assert.equal(ticket.corner, "Sun 1:00 PM");   // when the next game kicks off
   assert.equal(ticket.urgent, true);
   assert.equal(ticket.action, "PICK");
   const done = clubhouseFeed({ home: home(), board: board({

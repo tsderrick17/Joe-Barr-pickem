@@ -15,8 +15,9 @@ chosen by the owner (option A) and given a second, showcase-quality pass on 2026
   A place still to fill is an empty ring, named (Pick 1, Survivor) and marked Open.
 - Across a perforation notched at its ends, a dark stub is the one thing to press: PICK while a pick is owed (with how many are left),
   VIEW once all are in.
-- The heading’s right side says one thing: when picks lock (red) while one is owed, when the picks were saved (green), or else the
-  week in a few words. Where a player stands is the Big Board’s to say, never the ticket’s (owner, 2026-11-21).
+- The heading’s right side says one thing: the next game’s kickoff (red, NEXT GAME) while a pick is owed, when the picks were saved (green), or else the
+  week in a few words. It never speaks of picks locking (owner: unclear); the Bowl Pool’s owed bowls likewise show just their game
+  time, not PICK DUE · LOCKS. Where a player stands is the Big Board’s to say, never the ticket’s (owner, 2026-11-21).
 - The way to your ticket under the Big Board is a small ticket of the same card, its verb on the same dark stub.
 - On a phone it is fixed to the foot of the screen at whatever height it needs. By night the card is a little warmer and dimmer (theme
   tokens, not night rules). House fonts only; pop-ups still have no X.

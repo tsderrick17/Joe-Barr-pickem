@@ -37,7 +37,7 @@ export type BowlSheetData = {
  *  - The header's gauge shows how much of bowl season is decided, marked at a quarter, half and three quarters, with the bowls left under it.
  *  - Every bowl flies its own pennant: its real logo, in full colour, on a pennant in the logo's own colours (a bowl without a logo file
  *    flies a navy pennant lettered with its short name). A bowl you still owe a pick waves its pennant, its row carries a gold edge and
- *    PICK DUE with the lock time, and the header counts them ("3 TO PICK"); once picked the pennant hangs still. A bowl that kicked off
+ *    its game time like any other, and the header counts them ("3 TO PICK"); once picked the pennant hangs still. A bowl that kicked off
  *    without your pick fades its pennant to grey and says MISSED (a loss). This is not the Pick'em ticket's lamps.
  * Save sends every open pick and the tiebreaker at once; a game that has kicked off is never sent. The tiebreaker (total points in the
  * title game) is entered in the ticket's own box beside Save, where it is always in sight, and Save reminds a player who left it blank.
@@ -86,7 +86,6 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
   const caption = (game: BowlTicketGame) => {
     if (game.note) return game.note.toUpperCase();
     if (game.state === "missed") return "MISSED · COUNTS AS A LOSS";
-    if (game.state === "owed") return `PICK DUE · LOCKS ${game.time}`;
     if (game.final) return "FINAL";
     if (game.locked) return "KICKED OFF";
     return game.time;

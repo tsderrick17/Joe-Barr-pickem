@@ -357,7 +357,7 @@ const printed = (line: string) => line.replace(/^-/, "−");
  * Big Board's own lettering) and carries one place a pick, divided by hairlines: the team's logo with its lamp set at its shoulder, the
  * team and line, and the kickoff or how it came out. Survivor's place is its team's logo under the word Survivor. A place still to fill
  * is an empty ring, named. Across a perforation the dark stub is the one thing to press: PICK while a pick is owed, VIEW once all are in.
- * The heading's right side says one thing: when the next pick locks (red) while one is owed, that the picks were saved (green), or
+ * The heading's right side says one thing: when the next game kicks off (red) while a pick is owed, that the picks were saved (green), or
  * else the week in a few words. Where a player stands is the Big Board's to say, never the ticket's.
  */
 export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1, slots, corner = "", urgent = false, action, savedAt = null }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean; slots?: SlipSlot[]; corner?: string; urgent?: boolean; action?: "PICK" | "VIEW"; savedAt?: string | null }) {
@@ -368,7 +368,7 @@ export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.lengt
   const owed = places.filter((place) => place.state === "off").length;
   const verb = action ?? (owed ? "PICK" : "VIEW");
   // The heading's right side mirrors its left: a small word over what it says.
-  const status = urgent && corner ? <span className="slip-status is-urgent"><i>Picks lock</i>{corner}</span>
+  const status = urgent && corner ? <span className="slip-status is-urgent"><i>Next game</i>{corner}</span>
     : savedAt ? <span className="slip-status is-saved"><i>Saved</i>{savedAt}</span>
     : <span className="slip-status">{line}</span>;
   const inside = (

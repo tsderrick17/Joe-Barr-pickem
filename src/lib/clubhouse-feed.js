@@ -269,7 +269,7 @@ export function clubhouseFeed({ home, board, before = null }) {
       lamps,
       slots,
       survivor: inSurvivor,
-      // The ticket's corner: when the next pick locks (its kickoff), while one is owed. Where a player stands is the Big Board's to say, never the ticket's.
+      // The ticket's corner: when the next game kicks off, while a pick is owed. Where a player stands is the Big Board's to say, never the ticket's.
       corner: owedCount && nextKickoff ? kickoffLabel(nextKickoff.kickoffAt) : "",
       urgent: Boolean(owedCount && nextKickoff),
       action: owedCount ? "PICK" : "VIEW",
