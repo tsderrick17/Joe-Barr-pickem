@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/commissioner/wheel-parts";
-import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, SurvivorPopup, TicketPanel, TrophyPopup, type DeckTab } from "@/components/clubhouse-popups";
+import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, savedTime, SurvivorPopup, TicketPanel, TrophyPopup, UnsentPicks, type DeckTab } from "@/components/clubhouse-popups";
 import { Constitution, RoomScene, Ticket, warmRoomPicture, type RoomFeed } from "@/components/lab/lab-clubhouse";
 import type { LampState } from "@/components/lab/lab-tote";
 import { FootballLoadingScreen } from "@/components/football-loader";
@@ -93,6 +93,20 @@ export default function ClubhousePage() {
   const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
   const [lookBack, setLookBack] = useState<{ weekId: string; board: SlateResponse; totals: Record<string, number> } | null>(null);   // another week on the Big Board: that week's Slate, and every player's wins added up through it
   useEffect(() => { paneRef.current = pane; }, [pane]);
+  // A ticket (Pick'em or the Bowl Pool's) holding picks not sent yet: how to send them. Putting the ticket away first asks (see UnsentPicks).
+  const unsent = useRef<(() => Promise<boolean>) | null>(null);
+  const holdUnsent = useCallback((send: (() => Promise<boolean>) | null) => { unsent.current = send; }, []);
+  const [asking, setAsking] = useState<{ go: () => void } | null>(null);
+  const [sendingUnsent, setSendingUnsent] = useState(false);
+  const askingRef = useRef(false);
+  useEffect(() => { askingRef.current = asking !== null; }, [asking]);
+  /** Runs `go` at once, or, while picks are waiting to be sent, asks first. */
+  const guarded = useCallback((go: () => void) => { if (unsent.current) setAsking({ go }); else go(); }, []);
+  // Closing the board's sheet with picks waiting: the sheet stays up and asks; once answered it slides away on this signal.
+  const [deckClose, setDeckClose] = useState(0);
+  const holdDeck = useCallback(() => { if (!unsent.current) return true; setAsking({ go: () => setDeckClose((count) => count + 1) }); return false; }, []);
+  // When each week's picks were last saved here, for the Big Board's bar ("Saved at 7:42 PM").
+  const [savedAt, setSavedAt] = useState<{ weekId: string; time: string } | null>(null);
   const openedHere = useRef(false);   // this pane was opened from the room in this visit, so closing it is one step back
   const lastRead = useRef(0);
   const main = useRef<HTMLElement>(null);
@@ -158,7 +172,18 @@ export default function ClubhousePage() {
 
   // The open page is part of the address: #slate. Back closes it, a reload reopens it.
   useEffect(() => {
-    const sync = () => { const next = paneFromHash(window.location.hash) as Pane | null; setPane(next); if (window.location.hash === "#chat") setChatOpen(true); };   // #chat opens the chat
+    const sync = () => {
+      const next = paneFromHash(window.location.hash) as Pane | null;
+      // The back gesture away from a ticket with picks waiting: stay on it and ask; leaving goes back after all.
+      const current = paneRef.current;
+      if (current && next !== current && (unsent.current || askingRef.current)) {
+        window.history.pushState(null, "", `/clubhouse#${current}`);
+        if (!askingRef.current) setAsking({ go: () => window.history.back() });
+        return;
+      }
+      setPane(next);
+      if (window.location.hash === "#chat") setChatOpen(true);   // #chat opens the chat
+    };
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
@@ -272,13 +297,31 @@ export default function ClubhousePage() {
       <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
-      {deck ? <Sheet bare onClose={() => leave(...DECK)} open title={TITLE[deck]}>
-        {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => show(next as Pane)} tabs={tabs} /> : null}
-        {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} view={view} /> : null}
-        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onSent={() => show("standings")} onWeek={(weekId) => void chooseWeek(weekId)} startOn={ticketStart} view={view} /> : null}
+      {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
+        {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => guarded(() => show(next as Pane))} tabs={tabs} /> : null}
+        {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} savedAt={savedAt && savedAt.weekId === view.weekId ? savedAt.time : null} view={view} /> : null}
+        {deck === "slate" && view ? <TicketPanel onChanged={() => read(false)} onDirty={holdUnsent} onSaved={() => { unsent.current = null; if (view.weekId) setSavedAt({ weekId: view.weekId, time: savedTime() }); }} onSent={() => show("standings")} onWeek={(weekId) => guarded(() => void chooseWeek(weekId))} startOn={ticketStart} view={view} /> : null}
         {deck === "survivor" ? <SurvivorPopup home={room.home} onPick={view?.survivor.playing ? () => show("slate", "survivor") : undefined} /> : null}
-        {deck === "bowl" ? <BowlPopup viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
+        {deck === "bowl" ? <BowlPopup onDirty={holdUnsent} viewerPlayerId={room.home.viewerPlayerId ?? null} /> : null}
       </Sheet> : null}
+      {asking ? <UnsentPicks
+        bowl={deck === "bowl"}
+        busy={sendingUnsent}
+        onDrop={() => { const { go } = asking; unsent.current = null; setAsking(null); go(); }}
+        onSend={() => {
+          const send = unsent.current;
+          if (!send) { const { go } = asking; setAsking(null); go(); return; }
+          setSendingUnsent(true);
+          void send().then((saved) => {
+            setSendingUnsent(false);
+            const { go } = asking;
+            setAsking(null);
+            // Saved: carry on to wherever the player was going. Not saved: back to the ticket, which says why.
+            if (saved) { unsent.current = null; go(); }
+          });
+        }}
+        onStay={() => setAsking(null)}
+      /> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
       {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><div className="club-notify"><h3>Notifications</h3><NotificationSettings inSheet /></div></Sheet> : null}

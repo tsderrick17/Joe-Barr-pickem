@@ -168,6 +168,53 @@ test("a pick the server refuses says so on the ticket and stays open", async ({ 
   await expect(form).toBeVisible();
 });
 
+test("putting the ticket away with picks not sent asks first: go back keeps them, leave drops them, send sends them", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
+  await page.getByRole("button", { name: /YOUR TICKET/ }).click({ timeout: 30_000 });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  await form.locator(".lab-window-part .lab-board-cell:not([disabled])").nth(0).click();
+  const ask = page.getByRole("dialog", { name: "Your picks aren’t sent yet" });
+  // Closing asks, and going back leaves the ticket as it was, the pick still on it.
+  await page.keyboard.press("Escape");
+  await expect(ask).toBeVisible();
+  await ask.getByRole("button", { name: "Go back to my ticket" }).click();
+  await expect(ask).toHaveCount(0);
+  await expect(form).toBeVisible();
+  await expect(form.getByRole("button", { name: /Submit picks/ })).toBeEnabled();
+  // Another tab asks too; leaving without sending sends nothing.
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Big Board" }).click();
+  await ask.getByRole("button", { name: "Leave without sending" }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" })).toBeVisible();
+  expect(sent).toHaveLength(0);
+  // The phone's back gesture asks too; Send my picks sends them and carries on, and the Big Board says when they were saved.
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Ticket" }).click();
+  const again = page.getByRole("dialog", { name: "Your ticket" });
+  const cells = again.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  await cells.nth(2).click();
+  await page.goBack();
+  await expect(ask).toBeVisible();
+  await ask.getByRole("button", { name: "Send my picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(ask).toHaveCount(0);
+});
+
+test("a ticket sent says so on the Big Board's bar, with the time it was saved", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
+  await page.getByRole("button", { name: /YOUR TICKET/ }).click({ timeout: 30_000 });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  await cells.nth(2).click();
+  await form.getByRole("button", { name: /Submit picks/ }).click();
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED ✓.*Saved at \d{1,2}:\d{2} [AP]M/);
+});
+
+test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  await expect(page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key")).toContainText("8 AM on game day", { timeout: 30_000 });
+});
+
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
   await openClubhouse(page, { at: "/board" });
   const nav = page.getByRole("navigation", { name: "Account navigation" });
@@ -290,7 +337,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const board = page.getByRole("dialog", { name: "The Big Board" });
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
-  await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /Tap here to (pick|change a pick)/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
   expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
@@ -628,7 +675,7 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.getByRole("button", { name: /^Ohio State -3.5, final 27, covered/ })).toBeDisabled();
   // Pick the open bowl, set the tiebreaker, save: only open bowls are sent, as the classic page sends them.
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
-  await ticket.locator(".lab-bowl-tiebreaker input").fill("47");
+  await ticket.getByRole("textbox", { name: /Tiebreaker/ }).fill("47");
   await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, championshipTotalGuess: 47, selections: [{ gameId: "g3", teamId: "h3", side: "favorite" }, { gameId: "g4", teamId: "a4", side: "underdog" }] });
@@ -636,6 +683,31 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.getByRole("button", { name: "Standings", exact: true })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
   await expect(ticket.locator(".lab-bowl-sheet tbody tr.is-you")).toContainText("Tyler");
+});
+
+test("the Bowl tiebreaker is in the ticket's own box beside Save, the title game is marked, and saving without it reminds you", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  const box = ticket.locator(".lab-window-ticket");
+  await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
+  await expect(box).toContainText("CFP National Championship");
+  await expect(ticket.locator(".lab-bowl-game").nth(3)).toContainText("TIEBREAKER GAME · ENTER YOUR GUESS BELOW");
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
+  await box.getByRole("button", { name: "Save picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(box.getByRole("status")).toContainText("Don’t forget your tiebreaker");
+  await expect(box.getByRole("button", { name: /Saved at/ })).toBeVisible();
+});
+
+test("closing the Bowl ticket with picks not saved asks first", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click({ timeout: 30_000 });
+  await page.keyboard.press("Escape");
+  const ask = page.getByRole("dialog", { name: "Your bowl picks aren’t saved yet" });
+  await ask.getByRole("button", { name: "Save my picks" }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  await expect(page.getByRole("dialog", { name: "Bowl Pool" })).toHaveCount(0);
 });
 
 test("in bowl season the room's ticker carries the bowls too, by the schools' short names under the bowl's name", async ({ page }) => {
@@ -703,7 +775,7 @@ test("a playoff round opens on the Big Board: a column a game, the race in a lin
   await expect(board.locator("tr.is-out")).toHaveCount(3);
   await expect(board.locator("tr.is-out small").filter({ hasText: "FORFEITED" })).toHaveCount(1);
   await expect(board.locator("tr.is-you .lab-tote-owed-ring")).toHaveCount(4);
-  await board.getByRole("button", { name: /4 PICKS OWED/ }).click();
+  await board.getByRole("button", { name: /4 PICKS TO MAKE/ }).click();
   const ticket = page.getByRole("dialog", { name: "Your ticket" });
   await expect(ticket.getByRole("img", { name: /P6/ })).toHaveCount(0);
   await expect(ticket.getByRole("region", { name: "Forfeit the Pick’em season" })).toBeVisible();
