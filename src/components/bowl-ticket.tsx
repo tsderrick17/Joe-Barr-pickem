@@ -1,10 +1,11 @@
 "use client";
 
-import { useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import { Lamp } from "@/components/lab/lab-tote";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
+import { useStableCallback } from "@/lib/use-stable-callback";
 
 export type BowlTicketData = {
   optedIn: boolean;
@@ -38,13 +39,18 @@ export type BowlSheetData = {
  *    flies a navy pennant lettered with its short name). A bowl you still owe a pick waves its pennant, its row carries a gold edge and
  *    PICK DUE with the lock time, and the header counts them ("3 TO PICK"); once picked the pennant hangs still. A bowl that kicked off
  *    without your pick fades its pennant to grey and says MISSED (a loss). This is not the Pick'em ticket's lamps.
- * Save sends every open pick and the tiebreaker at once; a game that has kicked off is never sent.
+ * Save sends every open pick and the tiebreaker at once; a game that has kicked off is never sent. The tiebreaker (total points in the
+ * title game) is entered in the ticket's own box beside Save, where it is always in sight, and Save reminds a player who left it blank.
+ * `onDirty` hears whether there are picks or a tiebreaker not saved yet, with a way to save them (see TicketForm's).
  */
-export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
+export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onDirty, savedAt = "" }: {
   view: BowlTicketData;
   onSave: (picks: Record<string, BowlSide>, guess: string) => Promise<string | void> | string | void;
   onOptOut?: () => void;
   flagStyle?: "name" | "logo";
+  onDirty?: (save: (() => Promise<boolean>) | null) => void;
+  /** When the picks were last saved ("7:42 PM"), kept by the page across the ticket being read again after a save. */
+  savedAt?: string;
 }) {
   const [tab, setTab] = useState<"picks" | "standings" | "sheet">("picks");
   const [picks, setPicks] = useState<Record<string, BowlSide>>(view.saved);
@@ -63,14 +69,19 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
     setPicks(next);
   };
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setSending(true);
     setProblem("");
     try {
       const answer = await onSave(picks, guess);
-      if (typeof answer === "string") setProblem(answer);
+      if (typeof answer === "string") { setProblem(answer); return false; }
+      return true;
     } finally { setSending(false); }
   }
+  const saveNow = useStableCallback(save);
+  useEffect(() => { onDirty?.(changed ? saveNow : null); }, [changed, onDirty, saveNow]);
+  useEffect(() => () => onDirty?.(null), [onDirty]);
+  const titleGame = view.games.find((game) => game.tiebreaker) ?? null;
 
   const caption = (game: BowlTicketGame) => {
     if (game.note) return game.note.toUpperCase();
@@ -138,12 +149,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
                       {cell(0)}
                       <span aria-hidden="true" className="lab-board-at">vs</span>
                       {cell(1)}
-                      {game.tiebreaker ? (
-                        <label className="lab-bowl-tiebreaker">
-                          <span>Tiebreaker: total points in this game</span>
-                          <input disabled={game.locked} inputMode="numeric" maxLength={3} onChange={(event) => { setProblem(""); setGuess(event.target.value.replace(/\D/g, "")); }} placeholder="—" value={guess} />
-                        </label>
-                      ) : null}
+                      {game.tiebreaker ? <span className="lab-bowl-tiebreaker-note">TIEBREAKER GAME · {guess ? `YOUR GUESS: ${guess} POINTS` : "ENTER YOUR GUESS BELOW"}</span> : null}
                     </li>
                   );
                 })}
@@ -157,10 +163,15 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo" }: {
           <dl>
             <div><dt>Picked</dt><dd>{pickedCount} of {view.total}</dd></div>
             <div><dt>Still to pick</dt><dd>{view.owed || "None"}</dd></div>
-            <div><dt>Tiebreaker</dt><dd>{view.guess ? `${view.guess} points` : "—"}</dd></div>
           </dl>
-          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : "Saved"}</button>
-          {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
+          {titleGame ? (
+            <label className={`lab-bowl-guess${!guess && !view.tiebreakerLocked ? " is-empty" : ""}`}>
+              <span><b>Tiebreaker</b> Your guess of the total points both teams score in the {titleGame.bowl}. If players tie on wins, the closest guess wins.</span>
+              <input aria-label="Tiebreaker: total points in the title game" disabled={view.tiebreakerLocked} inputMode="numeric" maxLength={3} onChange={(event) => { setProblem(""); setGuess(event.target.value.replace(/\D/g, "")); }} placeholder="e.g. 48" value={guess} />
+            </label>
+          ) : null}
+          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
+          {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : savedAt && !changed && !guess && titleGame && !view.tiebreakerLocked ? <p className="lab-window-problem" role="status">Picks saved. Don’t forget your tiebreaker above.</p> : null}
           {onOptOut && view.entryOpen ? <button className="lab-bowl-optout" onClick={onOptOut} type="button">Opt out of the Bowl Pool</button> : null}
         </section>
       </> : tab === "sheet" && view.sheet ? <BowlSheet sheet={view.sheet} /> : (
@@ -251,7 +262,7 @@ export function BowlFlag({ flag, state, small = false }: { flag: string; state: 
 /** A playoff game with no bowl of its own (a first-round game on campus) flies the College Football Playoff's logo, on black cloth (the logo's own ground). */
 const CFP_LOGO = "cfp";
 /** Logos drawn in light lines (gold or white on dark) sit straight on their dark cloth: on the cream patch they would wash out. */
-const BARE_LOGOS = new Set([CFP_LOGO, "las-vegas"]);
+const BARE_LOGOS = new Set([CFP_LOGO, "las-vegas", "la"]);
 
 /**
  * The bowl's banner: a tapered pennant (a trapezoid, full height at the hoist, narrower at the fly, no point) in the logo's own colours

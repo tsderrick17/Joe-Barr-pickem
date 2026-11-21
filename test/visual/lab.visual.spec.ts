@@ -238,7 +238,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await sheet.getByRole("button", { name: "Close" }).click();
   const board = page.locator(".lab-tote");
   await expect(board.getByRole("button", { name: "Survivor: not picked. Open your ticket" })).toHaveText("PICK");
-  await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK OWED");
+  await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK TO MAKE");
   await board.getByRole("button", { name: "Survivor: not picked. Open your ticket" }).click();
   await sheet.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /^Survivor/ }).click();
   await sheet.getByRole("region", { name: "Survivor" }).getByRole("button", { name: "Broncos" }).click();
@@ -665,7 +665,7 @@ test("a Wild Card round on the Big Board: a column a game, the race under each n
   const earl = board.locator("tbody tr").first();
   await expect(earl.locator("td.lab-tote-surv").nth(0).locator(".lab-tote-logo")).toHaveCount(1);
   await expect(earl.locator("td.lab-tote-surv").nth(5).getByRole("img", { name: "Pick in, hidden until kickoff" })).toHaveCount(1);
-  await expect(board.getByRole("button", { name: /2 PICKS OWED/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /2 PICKS TO MAKE/ })).toBeVisible();
   await moment.getByRole("button", { name: "Out of the race", exact: true }).click();
   await expect(board.locator(".lab-tote-race")).toContainText("You can no longer catch the leader; your score stands");
   await expect(board.locator(".lab-tote-ticket")).toHaveCount(0);

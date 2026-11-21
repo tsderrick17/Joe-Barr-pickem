@@ -11,6 +11,16 @@ a critical "Scheduled automation configuration is incomplete" incident, emailed 
 the hourly retry. Now the zero-credit odds check is tried three times, 2 and 5 seconds apart, before it counts as failed (an answer of any
 kind, even a refusal, is taken at once); its detail says whether it timed out or the connection failed; and a failed daily check runs
 again after 15 minutes, not an hour. All three cost no provider credits. Unit tests hold the retries and the 15-minute recheck.
+## 2026-11-20 - Clubhouse: a pick is never lost, and the tiebreaker is always in sight
+
+A player could tap teams on the clubhouse ticket and put it away (slide it down, Escape, another tab, another week, the phone's back
+gesture) without pressing Submit, and the picks were dropped without a word; the Slate has always asked first. Now any of those, while
+the Pick'em or Bowl ticket holds picks not sent, holds the ticket up and asks: Send my picks (sends them, then carries on), Go back to
+my ticket, or Leave without sending. Once sent, the Big Board's bar says PICKS SAVED with the time, and the Bowl ticket's Save says
+"Saved at" the time. The Bowl tiebreaker (total points in the title game) was a small box on the title game's row, the last of some
+40 bowls, where a player could not find it: it is now in the ticket's own box beside Save, gold-edged while blank, the title game's row
+is marked TIEBREAKER GAME, and a save without a guess reminds the player. The Pick'em ticket now says what its line colours mean while a
+line can still move (gold: locked; white: can still move until 8 AM on game day), as the Slate does. Behavior tests hold each.
 
 ## 2026-11-20 - Clubhouse efficiency pass
 
