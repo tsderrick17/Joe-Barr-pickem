@@ -136,7 +136,7 @@ test("the open pop-up has its own address: back closes it, a reload reopens it, 
 test("a pick sent from the ticket is the real pick: the same POST the Slate makes, and the room's ticket shows it at once", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["upcoming-unpicked", "upcoming-picked"] });
   const ticket = page.getByRole("button", { name: /YOUR TICKET/ });
-  await expect(ticket).toContainText("0 of", { timeout: 30_000 });
+  await expect(ticket).toContainText("3 LEFT", { timeout: 30_000 });   // nothing picked: three places open
   await ticket.click();
   const form = page.getByRole("dialog", { name: "Your ticket" });
   await expect(form).toBeVisible();
@@ -154,7 +154,7 @@ test("a pick sent from the ticket is the real pick: the same POST the Slate make
   expect(body.scoringPeriodId).toBe("week-5");
   expect(body.selections).toHaveLength(2);
   expect(body.selections.every((pick) => pick.gameId && pick.teamId)).toBe(true);
-  await expect(page.getByRole("button", { name: /YOUR TICKET/ })).not.toContainText("0 of");
+  await expect(page.getByRole("button", { name: /YOUR TICKET/ })).toContainText("LAR −3");   // the picks show on the ticket at once
 });
 
 test("a pick the server refuses says so on the ticket and stays open", async ({ page }) => {
