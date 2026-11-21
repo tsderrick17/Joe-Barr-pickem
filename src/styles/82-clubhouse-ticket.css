@@ -1,0 +1,101 @@
+/* Your ticket at the foot of the clubhouse (src/components/clubhouse/room-ticket.tsx). Every state it can show is decided in
+   src/lib/clubhouse-ticket.js; this file only draws it. */
+
+/* Your ticket, pinned to the foot of every clubhouse screen: an admission ticket on cream card, so it reads as something you hold,
+   laid over the green board rather than more of it. The body (a fine brass frame inside its edge, YOUR TICKET in the Big Board's own
+   lettering, one place a pick divided by hairlines) and, across a perforation notched at both ends, the dark stub that is the one
+   thing to press. It rides just above the Commissioner wheel when the wheel is there, never behind it. */
+.lab-room-ticket {
+  --slip-paper: var(--ticket-card); --slip-paper-2: var(--ticket-card-2); --slip-ink: rgb(33 29 23); --slip-soft: rgb(108 99 84);
+  --slip-hair: rgba(33, 29, 23, .13); --slip-brass: rgb(186 146 82); --slip-won: rgb(30 118 62); --slip-lost: rgb(172 42 34); --slip-stub: 80px;
+  background: none; border: 0; bottom: 12px; color: var(--slip-ink); cursor: pointer; display: block; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .34)) drop-shadow(0 1px 2px rgba(0, 0, 0, .22));
+  font: inherit; margin-inline: auto; max-width: 30rem; padding: 0; position: sticky; text-align: left; width: 100%; z-index: 3;
+}
+.cw-shell.has-dial .lab-room-ticket { bottom: calc(100px + env(safe-area-inset-bottom)); }
+.slip {
+  background: linear-gradient(180deg, var(--slip-paper), var(--slip-paper-2)); border-radius: 12px; display: grid; grid-template-columns: minmax(0, 1fr) var(--slip-stub); position: relative;
+  -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
+}
+.slip-body { min-width: 0; padding: 13px 14px 12px 16px; position: relative; }
+.slip-body::before { border: 1px solid rgba(186, 146, 82, .5); border-radius: 8px; content: ""; inset: 5px 6px 5px 6px; pointer-events: none; position: absolute; }
+.slip-head { align-items: flex-end; border-bottom: 1px solid var(--slip-hair); display: flex; gap: 10px; justify-content: space-between; padding: 0 2px 8px; }
+.slip-title { display: grid; flex: none; gap: 1px; }
+.slip-title b { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; letter-spacing: .16em; line-height: 1.1; }
+.slip-title i { color: var(--slip-soft); font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.slip-status { color: var(--slip-soft); display: grid; font-size: .76rem; font-weight: 800; gap: 1px; line-height: 1.2; min-width: 0; text-align: right; white-space: nowrap; }
+.slip-status > * { overflow: hidden; text-overflow: ellipsis; }
+.slip-status i { font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.slip-status.is-saved { color: var(--slip-won); }
+.slip-status.is-saved i::before { content: "\2713\00a0"; }
+.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }
+.slip-place { display: grid; gap: 3px; justify-items: center; min-width: 0; padding: 0 4px; position: relative; text-align: center; }
+.slip-place + .slip-place::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
+.slip-words { display: grid; gap: 3px; justify-items: center; max-width: 100%; min-width: 0; }
+/* A place missed (nothing left to put a pick on): a fainter ring and words, so it reads as gone, never as still to do. */
+.slip-place.is-missed .slip-ring { opacity: .55; }
+.slip-place.is-missed .slip-words { opacity: .7; }
+.slip-mark { display: grid; height: 28px; place-items: center; position: relative; width: 28px; }
+.slip-mark .lab-room-logo { height: 26px; width: 26px; }
+.slip-ring { background: rgba(33, 29, 23, .035); border: 1.5px solid var(--slip-hair); border-radius: 50%; height: 24px; width: 24px; }
+.slip-place.is-survivor .slip-ring { border-style: dashed; border-color: rgba(33, 29, 23, .28); }   /* Survivor's dashed rim, as everywhere in the pool */
+/* The lamp sits at the logo's shoulder, ringed in the card's own colour like a jewel set into it: dark until picked, lit once in,
+   green or red once decided; Survivor's is its spade. */
+.slip-mark .lab-lamp { box-shadow: 0 0 0 2px var(--slip-paper); height: .62rem; position: absolute; right: -6px; top: -3px; width: .62rem; }
+.slip-mark .lab-lamp.is-in { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(255, 176, 50, .6); }
+.slip-mark .lab-lamp.is-won { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(60, 180, 100, .5); }
+.slip-mark .lab-lamp.is-lost { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(210, 60, 50, .45); }
+.slip-mark .lab-lamp.is-survivor { background: var(--slip-paper); border-radius: 50%; position: absolute; box-shadow: 0 0 0 1.5px var(--slip-paper); height: .8rem; right: -7px; top: -4px; transform: none; width: .8rem; }
+.slip-mark .lab-lamp.is-survivor.is-in { box-shadow: 0 0 0 1.5px var(--slip-paper), 0 0 7px 1px rgba(255, 176, 50, .55); }
+.slip-pick { font-size: .8rem; font-variant-numeric: tabular-nums; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slip-pick b { font-weight: 800; letter-spacing: .02em; }
+.slip-pick.is-label { font-weight: 700; }
+.slip-place.is-off .slip-pick, .slip-place.is-missed .slip-pick { color: var(--slip-soft); }
+.slip-place small { color: var(--slip-soft); font-size: .6rem; font-weight: 700; letter-spacing: .1em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.slip-place.is-won small { color: var(--slip-won); }
+.slip-place.is-lost small { color: var(--slip-lost); }
+/* The stub: dark card across a perforation, the one thing to press. A small brass word over the verb says how things stand. */
+.slip-stub { align-content: center; background: linear-gradient(180deg, rgb(48 41 32), rgb(27 23 18)); color: var(--slip-paper); display: grid; gap: 3px; justify-items: center; padding: 10px 6px; position: relative; transition: background .15s; }
+.slip-stub::before { border-left: 2px dotted rgba(248, 243, 231, .7); bottom: 9px; content: ""; left: -1px; position: absolute; top: 9px; }
+.slip-stub small { color: rgb(224 192 128); font-size: .56rem; font-weight: 800; letter-spacing: .16em; padding-left: .16em; }
+.slip-stub b { font-family: var(--font-serif); font-size: 1.02rem; font-weight: 700; letter-spacing: .14em; padding-left: .14em; }
+.slip-stub i { border-right: 2px solid rgb(224 192 128); border-top: 2px solid rgb(224 192 128); height: 7px; margin-top: 2px; transform: rotate(45deg); width: 7px; }
+/* A playoff round keeps the ticket to one row (so it never grows over the room): four places tighten their type, and on a phone five or six
+   show each place as its logo or ring with the line under it, the matchups and kickoffs left to the Big Board (still read aloud). */
+.slip-places.is-four .slip-pick { font-size: .72rem; }
+.slip-places.is-four .slip-place small { font-size: .56rem; letter-spacing: .06em; }
+@media (max-width: 899px) {
+  .slip-places.is-many .slip-place { padding: 0 2px; }
+  .slip-places.is-many .slip-pick { font-size: .72rem; }
+  /* Four across: a game still to pick is its ring marked PICK over Open, its matchup read aloud only. */
+  .slip-places.is-four .slip-place:not(.is-survivor) .slip-pick.is-label { clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+  .slip-places.is-many .slip-pick b, .slip-places.is-many .slip-pick.is-label, .slip-places.is-many .slip-place small { clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
+  .slip-places:is(.is-many, .is-four) .slip-place.is-off .slip-mark::after { color: var(--slip-soft); content: "PICK"; font-size: .5rem; font-weight: 800; inset: 0; letter-spacing: .06em; place-content: center; position: absolute; display: grid; }
+}
+/* On a desktop each place lies on its side (logo, then team and line over the note), so the ticket is shorter still; a playoff round
+   widens the ticket to keep its places this roomy. */
+@media (min-width: 900px) {
+  .slip-place { column-gap: 8px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; padding: 0 8px; text-align: left; }
+  .slip-places.is-many .slip-place small { letter-spacing: .05em; }
+  .slip-words { justify-items: start; }
+  .slip-places.is-four .slip-pick, .slip-places.is-many .slip-pick { font-size: .78rem; }
+}
+.lab-room-ticket:hover .slip-stub { background: linear-gradient(180deg, rgb(60 51 40), rgb(34 29 22)); }
+.lab-room-ticket:active .slip { transform: translateY(1px); }
+.lab-room-ticket:focus-visible { outline: none; }
+.lab-room-ticket:focus-visible .slip-body::before { border: 2px solid var(--cw-gold-lt); }
+
+/* On a phone the ticket is the foot of the screen itself: edge to edge, flush with the bottom, its top corners rounded like a drawer, so
+   it meets every phone's own rounded corners without a gap. */
+.clubhouse-page > .lab-room-ticket { bottom: 0; filter: drop-shadow(0 -6px 16px rgba(0, 0, 0, .36)); left: 8px; margin: 0; max-width: none; position: fixed; right: 8px; width: auto; }   /* the foot of a phone's screen: the ticket laid over the floor, flush with the bottom, however tall it needs to be */
+.clubhouse-page > .lab-room-ticket .slip { border-radius: 14px 14px 0 0; -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); }
+.clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.clubhouse-page > .lab-room-ticket .slip-body::before { bottom: calc(5px + env(safe-area-inset-bottom)); }
+/* On a desktop the ticket sits centred at the foot of the screen, the place every pop-up rises from, notched at both ends. */
+@media (min-width: 900px) {
+  .clubhouse-page > .lab-room-ticket { bottom: 14px; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .34)) drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); left: 50%; max-width: 34rem; right: auto; transform: translateX(-50%); width: calc(100% - 32px); }
+  .clubhouse-page > .lab-room-ticket .slip { border-radius: 12px; -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; }
+  .clubhouse-page > .lab-room-ticket:has(.slip.is-round) { max-width: 58rem; }
+  .clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: 12px; }
+  .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: 5px; }
+}
+a.lab-room-ticket { text-decoration: none; }

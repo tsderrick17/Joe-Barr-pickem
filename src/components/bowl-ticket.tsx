@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
-import { Lamp } from "@/components/lab/lab-tote";
+import { Lamp } from "@/components/clubhouse/lamps";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
 import { useStableCallback } from "@/lib/use-stable-callback";

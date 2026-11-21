@@ -222,55 +222,7 @@
   color: var(--club-ink);
 }
 
-.commissioner-command-bar {
-  align-items: center;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"), radial-gradient(ellipse at 30% 0%, var(--club-felt-hi), var(--club-forest) 70%);
-  border-radius: 4px 4px 0 0;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 24px 44px -30px rgba(20, 48, 42, .8);
-  color: var(--sand-93);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: space-between;
-  padding: 2.4rem 3rem 2.3rem;
-  position: relative;
-}
-.commissioner-command-bar::before { border: 1px solid rgba(179, 150, 98, .75); border-radius: 2px; content: ""; inset: 12px; pointer-events: none; position: absolute; }
-.commissioner-command-bar::after { border: 1px solid rgba(179, 150, 98, .28); border-radius: 1px; content: ""; inset: 16px; pointer-events: none; position: absolute; }
-.commissioner-command-title { align-items: center; display: flex; gap: 1.4rem; position: relative; z-index: 1; }
-.club-monogram {
-  align-items: center;
-  border: 1px solid var(--club-gold);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(179, 150, 98, .12), inset 0 0 0 3px var(--club-forest), inset 0 0 0 4px rgba(179, 150, 98, .45);
-  color: var(--club-gold-lt);
-  display: grid;
-  flex: 0 0 3.5rem;
-  font: 400 1.1rem Georgia, serif;
-  height: 3.5rem;
-  letter-spacing: .06em;
-  place-items: center;
-  width: 3.5rem;
-}
 .club-eyebrow { color: var(--club-gold-lt); font-size: .65rem; font-weight: 700; letter-spacing: .28em; margin: 0; opacity: .9; text-transform: uppercase; }
-.commissioner-command-title h1 { color: var(--sand-89); font: 400 clamp(1.9rem, 4vw, 2.9rem)/1.05 Georgia, serif; margin: .6rem 0 0; text-shadow: 0 1px 0 rgba(0, 0, 0, .45); }
-.commissioner-command-links { display: flex; gap: .9rem; position: relative; z-index: 1; }
-.commissioner-command-links a {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(0, 0, 0, .08));
-  border: 1px solid rgba(179, 150, 98, .7);
-  border-radius: 2px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
-  color: var(--sand-93);
-  display: block;
-  min-width: 9.5rem;
-  padding: .75rem 1rem .8rem;
-  transition: background .18s ease, border-color .18s ease;
-}
-.commissioner-command-links a:hover { background: rgba(255, 255, 255, .09); border-color: var(--club-gold-lt); }
-.commissioner-command-links span { color: var(--club-gold-lt); display: block; font-size: .56rem; font-weight: 700; letter-spacing: .26em; margin-bottom: .45rem; opacity: .85; text-transform: uppercase; }
-.commissioner-command-links strong { font: 400 1rem Georgia, serif; }
-.club-band { background: linear-gradient(180deg, var(--club-cognac-2), var(--club-cognac) 70%); border-radius: 0 0 3px 3px; box-shadow: 0 2px 4px rgba(0, 0, 0, .18); height: .62rem; position: relative; }
-.club-band::before { border-top: 1px dashed rgba(245, 228, 200, .6); content: ""; left: .6rem; position: absolute; right: .6rem; top: .27rem; }
 
 /* The desk's cards: cream paper with a hairline edge, a fine gilt frame set inside it, and a soft long shadow. */
 .desk-card {
@@ -284,37 +236,6 @@
 .desk-card::before { border: 1px solid rgba(179, 150, 98, .4); border-radius: 1px; content: ""; inset: 7px; pointer-events: none; position: absolute; }
 @media (max-width: 639px) { .desk-card { padding: 1.25rem 1.1rem; } }
 
-.commissioner-panel-nav { margin: 1.6rem 0 1.8rem; }
-.commissioner-panel-tabs {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"), radial-gradient(ellipse at 30% 0%, var(--club-felt-hi), var(--club-forest) 80%);
-  border-radius: 4px;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .4), 0 0 0 1px var(--club-gold-dk), 0 10px 22px -16px rgba(20, 48, 42, .7);
-  display: flex;
-  gap: .3rem;
-  overflow-x: auto;
-  padding: .4rem;
-  scrollbar-width: none;
-}
-.commissioner-panel-tabs::-webkit-scrollbar { display: none; }
-.commissioner-panel-tab {
-  align-items: center;
-  border-radius: 2px;
-  color: rgba(245, 240, 230, .82);
-  display: inline-flex;
-  flex: 1 0 auto;
-  font: 400 .96rem Georgia, serif;
-  gap: .5rem;
-  justify-content: center;
-  padding: .7rem .85rem;
-  position: relative;
-  transition: background .18s ease, color .18s ease;
-}
-.commissioner-panel-tab > span { color: var(--club-gold); font: 700 .56rem Arial, sans-serif; letter-spacing: .2em; }
-@media (max-width: 639px) { .commissioner-panel-tab > span { display: none; } }
-.commissioner-panel-tab:hover { background: rgba(255, 255, 255, .07); color: var(--sand-93); }
-.commissioner-panel-tab.is-active { background: linear-gradient(180deg, var(--club-paper), var(--club-paper-2)); box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 3px 8px rgba(0, 0, 0, .3); color: var(--club-ink); }
-.commissioner-panel-tab.is-active::after { background: var(--club-gold); bottom: .3rem; content: ""; height: 1px; left: 24%; position: absolute; right: 24%; }
-.commissioner-panel-tab.is-active > span { color: var(--club-gold-dk); }
 /* Every desk tool shares one light card rhythm instead of heavy black rules. */
 .commissioner-tool { border-bottom: 1px solid var(--club-line); padding: 1.25rem 0; }
 .commissioner-tool:first-child { padding-top: .75rem; }
@@ -519,15 +440,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
   [aria-labelledby="grading-dashboard-title"] > .grading-rail select { min-width: 0; max-width: 9rem; padding: .34rem .4rem; }
   [aria-labelledby="grading-dashboard-title"] > .grading-rail button { padding: .34rem .45rem; }
   .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
-  .commissioner-command-bar { padding: 1.9rem 1.5rem 1.8rem; }
-  .commissioner-command-title { gap: 1rem; }
-  .club-monogram { flex-basis: 2.9rem; font-size: .95rem; height: 2.9rem; width: 2.9rem; }
-  .commissioner-command-links { width: 100%; }
-  .commissioner-command-links a { flex: 1; min-width: 0; padding: .65rem .8rem .7rem; }
-  .commissioner-command-links strong { font-size: .92rem; }
-  /* Five tabs never fit in one row on a phone, so the rail wraps into two even rows (three, then two) and nothing sits off screen. */
-  .commissioner-panel-tabs { flex-wrap: wrap; overflow-x: visible; }
-  .commissioner-panel-tab { flex: 1 1 calc(33.333% - .3rem); font-size: .9rem; min-width: 0; padding: .62rem .4rem; }
 
 }
 
