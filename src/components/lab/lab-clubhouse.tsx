@@ -6,7 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, typ
 import AllTimeTable, { type AllTimeRow } from "@/components/all-time-table";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
+import { RoomTicket } from "@/components/room-ticket";
+import { BigBoardRoom, Logo } from "@/components/lab/lab-tote";
 import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labKickedOff, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labAtsResult, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
@@ -346,16 +347,6 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   );
 }
 
-/** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
-export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1 }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean }) {
-  const inside = <>
-    <b>YOUR TICKET · {week.toUpperCase()}</b>
-    <span>{line}</span>
-    <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={survivor && index === lamps.length - 1} />)}<em>›</em></span>
-  </>;
-  return href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
-}
-
 /** The sample league's feed for the Lab's room. */
 function labFeed(season: Season, allIn: boolean, mail: boolean): RoomFeed {
   const rows = labLeaderboard({ round: "regular", moment: "gameday" });
@@ -577,7 +568,10 @@ export function LabClubhouse() {
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "constitution" ? <Constitution /> : null}
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
-      <Ticket lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "All 3 in · change any until its kickoff" : "2 of 3 in · picks close Thu 8:15 PM"} onOpen={() => enter("board", true)} week="Week 10" />
+      <RoomTicket onOpen={() => enter("board", true)} ticket={{
+        places: [{ team: "PIT", line: "-2.5", label: "", note: "Sun 1:00", state: "in" }, { team: "IND", line: "+3.5", label: "", note: "Sun 4:25", state: "in" }, allIn ? { team: "KC", label: "Survivor", note: "Thu 8:15", state: "in", survivor: true } : { label: "Survivor", note: "Open", state: "off", survivor: true }],
+        status: allIn ? { label: "All in", text: "Change until kickoff" } : null, action: allIn ? "VIEW" : "PICK", stub: allIn ? "ALL IN" : "1 LEFT",
+      }} week="Week 10" />
     </section>
   );
 }

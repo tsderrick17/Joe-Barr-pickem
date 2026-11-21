@@ -22,7 +22,8 @@
  *   playoff?: PlayoffRace | null,   // a playoff round: a pick for every game, one column a game, and the race to catch the leader
  * }} BoardView
  */
-import { coverMargin, kickoffLabel, lineFor, survivorStillShown } from "./clubhouse-feed.js";
+import { coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
+import { survivorStillShown } from "./clubhouse-feed.js";
 
 export { coverMargin };
 import { selectAvailableScoringPeriods, selectDefaultScoringPeriod } from "./scoring-period.js";

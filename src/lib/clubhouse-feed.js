@@ -5,34 +5,10 @@ import { bowlPennant } from "./bowl-logos.js";
  * wins only, and the only picks lit are the viewer's own (another player's unstarted pick never reaches either read).
  */
 
-const ET = "America/New_York";
+import { ET, coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
+import { roomTicket } from "./clubhouse-ticket.js";
 
-/** "Sun 1:00 PM", Eastern. */
-export function kickoffLabel(iso) {
-  if (!iso) return "TBA";
-  const date = new Date(iso);
-  const day = new Intl.DateTimeFormat("en-US", { timeZone: ET, weekday: "short" }).format(date);
-  const time = new Intl.DateTimeFormat("en-US", { timeZone: ET, hour: "numeric", minute: "2-digit" }).format(date);
-  return `${day} ${time}`;
-}
-
-/** A team's line as its pick reads it: "-3.5" for the favorite, "+3.5" for the other side, "PK" for none, "—" before there is a line. */
-export function lineFor(game, teamId) {
-  const spread = game.officialSpread ?? game.preliminarySpread;
-  if (spread === null || spread === undefined) return "—";
-  const size = Math.abs(Number(spread));
-  if (size === 0 || !game.favoriteTeamId) return "PK";
-  return `${teamId === game.favoriteTeamId ? "-" : "+"}${size}`;
-}
-
-/** A line as a number: "-3.5" is -3.5, "+3" is 3, "PK" is 0, no line yet is null. */
-const spreadOf = (line) => (line === "PK" ? 0 : /^[+-]?\d/.test(line) ? Number(line) : null);
-
-/** How far a team finished past its spread: its margin of victory plus its line. Positive covered it, zero is a push (a loss), negative missed it. */
-export function coverMargin(score, other, line) {
-  const spread = spreadOf(line);
-  return score === null || other === null || spread === null ? null : score - other + spread;
-}
+export { coverMargin, kickoffLabel, lineFor };
 
 /** Standings by wins, most first: each with a place (level players share it) and whether it is shared. */
 export function placedStandings(rows) {
@@ -159,7 +135,7 @@ export function boardNews(standings, viewerId) {
 }
 
 /**
- * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it). `before` is every
+ * The room's feed, and the viewer's ticket (see clubhouse-ticket.js). `before` is every
  * player's wins through an earlier week, for the standings' week-over-week arrows (see withMovement).
  * @param {{ home: import("./api-contracts").StandingsResponse, board: import("./api-contracts").SlateResponse, before?: Record<string, number> | null }} reads
  */
@@ -168,35 +144,12 @@ export function clubhouseFeed({ home, board, before = null }) {
   const games = board.games ?? [];
   const gameById = new Map(games.map((game) => [game.id, game]));
   const abbreviation = (game, teamId) => (teamId === game.awayTeamId ? game.awayTeamAbbreviation : game.homeTeamAbbreviation);
-  const resultOf = (game, teamId) => (teamId === game.awayTeamId ? game.awayResult : game.homeResult);
 
   const mine = (board.myPicks ?? []).map((pick) => gameById.get(pick.gameId)).filter(Boolean);
   const myPicks = (board.myPicks ?? []).filter((pick) => gameById.has(pick.gameId));
-  const maxPicks = Math.max(home.maxPicks ?? 0, myPicks.length);
-  const survivor = board.survivor;
-  const inSurvivor = Boolean(survivor?.available && survivor.status === "active");
-  const survivorOwed = inSurvivor && !survivor.pick;
-  const atsOwed = Math.max(0, maxPicks - myPicks.length);
-  const weekOpen = home.weekStatus !== "complete" && games.some((game) => game.status === "scheduled" || game.status === "live");
-  // Out of the playoff race, or forfeited: nothing more to pick, and the strip says so.
-  const forfeited = Boolean(board.pickem?.forfeit?.forfeited);
-  const raceOver = forfeited || Boolean(board.pickem?.playoffEliminated);
-  const owedCount = weekOpen && !raceOver ? atsOwed + (survivorOwed ? 1 : 0) : 0;
-  // Whether any pick that is in can still be changed: its game has not kicked off.
   const now = Date.parse(board.serverTime ?? home.serverTime ?? new Date().toISOString());
-  const notStarted = (gameId) => { const game = gameById.get(gameId); return Boolean(game) && game.status === "scheduled" && Date.parse(game.kickoffAt) > now; };
-  const anyChangeable = myPicks.some((pick) => notStarted(pick.gameId)) || Boolean(inSurvivor && survivor.pick && notStarted(survivor.pick.game_id));
-
-  const lamps = [
-    ...myPicks.map((pick) => {
-      const result = resultOf(gameById.get(pick.gameId), pick.teamId);
-      return result === "win" ? "won" : result === "loss" ? "lost" : "in";
-    }),
-    ...Array.from({ length: atsOwed }, () => "off"),
-    ...(inSurvivor ? [survivor.pick ? "in" : "off"] : []),
-  ];
-  const total = maxPicks + (inSurvivor ? 1 : 0);
-  const picked = total - (atsOwed + (survivorOwed ? 1 : 0));
+  const ticket = roomTicket({ home, board });
+  const owedCount = ticket?.owed ?? 0;
 
   // Survivor leaves the room when it leaves the classic pages: once it is decided, and for the playoffs.
   const survivorOver = Boolean(home.isPlayoff || home.survivorComplete);
@@ -239,10 +192,6 @@ export function clubhouseFeed({ home, board, before = null }) {
       // Survivor is being played (not decided, not the playoffs): the poker table is Survivor's while it is.
       survivorActive: Boolean(home.survivorAvailable) && !survivorOver,
     },
-    ticket: games.length && total ? {
-      lamps,
-      survivor: inSurvivor,
-      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : anyChangeable ? `All ${total} in · change any until its kickoff` : `All ${total} in · all locked`,
-    } : null,
+    ticket,
   };
 }

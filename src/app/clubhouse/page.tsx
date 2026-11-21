@@ -5,8 +5,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, savedTime, SurvivorPopup, TicketPanel, TrophyPopup, UnsentPicks, type DeckTab } from "@/components/clubhouse-popups";
-import { Constitution, RoomScene, Ticket, warmRoomPicture, type RoomFeed } from "@/components/lab/lab-clubhouse";
-import type { LampState } from "@/components/lab/lab-tote";
+import { Constitution, RoomScene, warmRoomPicture, type RoomFeed } from "@/components/lab/lab-clubhouse";
+import { RoomTicket, type RoomTicketData } from "@/components/room-ticket";
 import { FootballLoadingScreen } from "@/components/football-loader";
 import { PULL_REFRESH_EVENT } from "@/components/pull-to-refresh";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
@@ -49,7 +49,7 @@ const PAGES: Record<"standings" | "slate", ReturnType<typeof dynamic>> = {
 const REFRESH_MS = 5 * 60_000;       // as often as the Standings itself reads again
 const RETURN_GAP_MS = 30_000;        // coming back to the app sooner than this reads nothing new
 
-type Room = { feed: RoomFeed; ticket: { lamps: LampState[]; line: string; survivor: boolean } | null; home: StandingsResponse; board: SlateResponse };
+type Room = { feed: RoomFeed; ticket: RoomTicketData | null; home: StandingsResponse; board: SlateResponse };
 
 /**
  * Every player's wins as they stood a week ago, for the Big Board's ▲▼: through last week once this week has a graded game, else through
@@ -296,7 +296,7 @@ export default function ClubhousePage() {
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
-      {room.ticket ? <Ticket lamps={room.ticket.lamps} line={room.ticket.line} survivor={room.ticket.survivor} onOpen={() => show("slate")} week={room.feed.week} /> : null}
+      {room.ticket ? <RoomTicket onOpen={() => show("slate")} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
       {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => guarded(() => show(next as Pane))} tabs={tabs} /> : null}
         {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} savedAt={savedAt && savedAt.weekId === view.weekId ? savedAt.time : null} view={view} /> : null}
