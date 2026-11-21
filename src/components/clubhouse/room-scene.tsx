@@ -294,7 +294,10 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         // Filling the screen crops the picture a little at its sides; a plate that would be cut off there is drawn in from the edge: the
         // chimney's (Trophies, Rules) at the left, the bar's chat plate at the right. (The chat plate's red new-message flag hangs off its
         // left end, into the room, so it never needs room at the edge.)
-        const at = picture.spots[spot];
+        // The chalkboard stands in front of the games counter: the counter's spot stops at the board's top, so a tap on the board
+        // always opens the Season Snapshot and a tap on the counter above it your ticket.
+        const chalk = picture.spots.chalkboard;
+        const at = spot === "sportsbook" && chalk && picture.spots[spot].y + picture.spots[spot].h > chalk.y ? { ...picture.spots[spot], h: chalk.y - picture.spots[spot].y } : picture.spots[spot];
         let plateStyle: CSSProperties | undefined;
         if (full && frame && at && typeof window !== "undefined") {
           const crop = Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6;
