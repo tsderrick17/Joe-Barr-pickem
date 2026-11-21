@@ -20,17 +20,22 @@ const RENDER = 1600;  // a drawn (svg) logo is rendered with its longer side thi
  * What a few originals need before fitting:
  *   crop     - only this part of the original is the logo (a poster).
  *   cutBox   - the logo sits on a solid white box: the white joined to the image's edge is cleared.
- *   cutDark  - the logo sits on this dark colour (a poster's navy): it is cleared, and the logo's soft edges un-blended from it.
+ *   upscale  - a small photo-like original (a poster) is enlarged this many times and smoothed before it is cut out, so its edges come
+ *              out clean, not blocky (the boxes and columns below stay in the cropped picture's own pixels).
+ *   cutDark  - the logo sits on this dark colour (a poster's navy): it is cleared, the logo's soft edges un-blended from it, then
+ *              sharpened to a crisp rim (a poster's edges are blurred and speckled by its compression).
  *   clear    - boxes (in the cropped picture): every shape lying wholly inside one is wiped out, a shape reaching outside is kept whole
- *              (LA's "Bucked Up" deer and wordmark go; the swoosh under them stays).
+ *              (a sponsor standing apart: LA's "Bucked Up" deer and wordmark, First Responder's
+ *              Servpro roof; LA's swoosh under its sponsor stays).
  *   smoothTop - between these two columns the top edge is redrawn as one smooth curve joining its ends, filling any notch below it
  *              (LA's swoosh was notched to make room for the "Bucked Up" wordmark).
  *   recolor  - colours swapped in the drawing (the playoff's black lettering would vanish on a dark pennant).
- *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line.
+ *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line, LA's "Hosted by Gronk".
  */
 const PREP = {
+  "first-responder": { clear: [{ left: 0, top: 0, width: 1600, height: 400 }] },
   cfp: { recolor: [["#130c0e", "#ffffff"]] },
-  la: { crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75], clear: [{ left: 0, top: 0, width: 195, height: 200 }, { left: 190, top: 60, width: 460, height: 80 }], smoothTop: [480, 645] },
+  la: { upscale: 4, crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75], clear: [{ left: 0, top: 0, width: 195, height: 200 }, { left: 190, top: 60, width: 460, height: 80 }], smoothTop: [480, 645], dropLast: true },
   rate: { cutBox: true },
   "las-vegas": { dropLast: true },
   rose: { dropLast: 2 },
@@ -54,11 +59,16 @@ for (const file of chosen) {
   }
   let image = sharp(input, options);
   if (prep.crop) image = sharp(await image.extract(prep.crop).png().toBuffer());
+  const k = prep.upscale ?? 1;
+  if (k > 1) {
+    const { width: w, height: h } = await image.metadata();
+    image = sharp(await image.resize(w * k, h * k, { kernel: "lanczos3" }).blur(k * 0.6).png().toBuffer());
+  }
   const raw = await image.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   if (prep.cutDark) cutDark(raw, prep.cutDark);
   if (prep.cutBox) cutBox(raw);
-  if (prep.clear) clearShapes(raw, prep.clear);
-  if (prep.smoothTop) smoothTop(raw, prep.smoothTop);
+  if (prep.clear) clearShapes(raw, prep.clear.map((b) => ({ left: b.left * k, top: b.top * k, width: b.width * k, height: b.height * k })));
+  if (prep.smoothTop) smoothTop(raw, prep.smoothTop.map((x) => x * k), 12 * k);
   for (let piece = 0; piece < Number(prep.dropLast ?? 0); piece++) dropLast(raw);
   const trimmed = await sharp(raw.data, { raw: raw.info }).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 1 }).png().toBuffer({ resolveWithObject: true });
   const { width, height } = trimmed.info;
@@ -107,9 +117,9 @@ function cutDark({ data }, ground) {
   for (let i = 0; i < data.length; i += 4) {
     const off = Math.hypot(data[i] - ground[0], data[i + 1] - ground[1], data[i + 2] - ground[2]);
     const soft = Math.max(0, Math.min(1, (off - 40) / 90));
-    const alpha = soft < 0.08 ? 0 : soft; // a faint speck (a palm frond printed on the poster) is ground too
-    data[i + 3] = Math.round(alpha * 255);
-    if (alpha > 0 && alpha < 1) for (let c = 0; c < 3; c++) data[i + c] = Math.max(0, Math.min(255, Math.round((data[i + c] - (1 - alpha) * ground[c]) / alpha)));
+    if (soft > 0.05 && soft < 1) for (let c = 0; c < 3; c++) data[i + c] = Math.max(0, Math.min(255, Math.round((data[i + c] - (1 - soft) * ground[c]) / soft)));
+    const t = Math.max(0, Math.min(1, (soft - 0.3) / 0.4)); // the rim tightened: a faint speck (palms printed on the poster) drops out
+    data[i + 3] = Math.round(t * t * (3 - 2 * t) * 255);
   }
 }
 
@@ -142,20 +152,21 @@ function clearShapes({ data, info }, boxes) {
   }
 }
 
-/** Redraws the top edge between two columns as a smooth curve (matching the edge's height and slope at both ends), filling below it. */
-function smoothTop({ data, info }, [from, to]) {
+/** Redraws the top edge between two columns as a smooth curve (matching the edge's height and slope at both ends), filling below it and clearing just above it. */
+function smoothTop({ data, info }, [from, to], reach) {
   const { width, height } = info;
   const top = (x) => { for (let y = 0; y < height; y++) if (data[(y * width + x) * 4 + 3] > 128) return y; return height; };
   const y0 = top(from);
   const y1 = top(to);
-  const s0 = (top(from) - top(from - 12)) / 12;
-  const s1 = (top(to + 12) - top(to)) / 12;
+  const s0 = (top(from) - top(from - reach)) / reach;
+  const s1 = (top(to + reach) - top(to)) / reach;
   const span = to - from;
   for (let x = from; x <= to; x++) {
     const t = (x - from) / span;
     const edge = (2 * t ** 3 - 3 * t ** 2 + 1) * y0 + (t ** 3 - 2 * t ** 2 + t) * span * s0 + (-2 * t ** 3 + 3 * t ** 2) * y1 + (t ** 3 - t ** 2) * span * s1;
+    for (let y = Math.max(0, Math.floor(edge) - 4 * reach); y < Math.floor(edge); y++) data[(y * width + x) * 4 + 3] = 0; // nothing stays above the curve
     const now = top(x);
-    for (let y = Math.floor(edge); y < now; y++) {
+    for (let y = Math.floor(edge); y < Math.min(height, now + reach / 4); y++) { // a little past the old edge, so its grey rim goes too
       const i = (y * width + x) * 4;
       const cover = y === Math.floor(edge) ? 1 - (edge - y) : 1;
       data[i] = data[i + 1] = data[i + 2] = 255;
