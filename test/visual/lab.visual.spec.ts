@@ -238,7 +238,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
   await sheet.getByRole("button", { name: "Close" }).click();
   const board = page.locator(".lab-tote");
   await expect(board.getByRole("button", { name: "Survivor: not picked. Open your ticket" })).toHaveText("PICK");
-  await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK OWED");
+  await expect(board.locator(".lab-tote-ticket")).toContainText("1 PICK TO MAKE");
   await board.getByRole("button", { name: "Survivor: not picked. Open your ticket" }).click();
   await sheet.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /^Survivor/ }).click();
   await sheet.getByRole("region", { name: "Survivor" }).getByRole("button", { name: "Broncos" }).click();

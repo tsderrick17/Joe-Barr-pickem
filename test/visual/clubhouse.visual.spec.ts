@@ -337,7 +337,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const board = page.getByRole("dialog", { name: "The Big Board" });
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
-  await expect(board.getByRole("button", { name: /Tap to (make|change) your picks/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /Tap here to (pick|change a pick)/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
   expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
