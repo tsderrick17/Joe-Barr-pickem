@@ -614,11 +614,13 @@ needs nothing). Once the December schedule is imported, check the Bowl ticket's 
 flies a plain navy pennant with only its name has no logo yet. For each one, and for any bowl whose logo
 changed:
 
-1. Take the logo from the bowl's Wikipedia article (the infobox image; space requests out, Wikipedia
-   refuses quick repeats), cut away any solid box behind it (white or black) so only the logo is left,
-   save it as `public/bowl-logos/<name>.webp`, then run `node scripts/fit-bowl-logos.mjs <name>`: it
-   puts the logo on the standard clear 192 x 92 canvas at the same size as every other bowl's (a test
-   checks every file).
+1. Take the logo from the bowl's Wikipedia article (the infobox image, full size: the drawing itself when it
+   is an .svg; space requests out, Wikipedia refuses quick repeats) and save it untouched as
+   `assets/bowl-logos/<name>.svg` (or .png/.webp). Then run `node scripts/fit-bowl-logos.mjs <name>`: it
+   makes `public/bowl-logos/<name>.webp` from that original on the standard clear 288 x 138 canvas (three
+   times the pennant's size, sharp on a phone) at the same size as every other bowl's (a test checks every
+   file). A logo on a solid white box, or with a tag or sponsor line to cut off, gets a line in the
+   script's PREP list.
 2. Add or update its row in `src/lib/bowl-logos.js`: a pattern for its name, the logo file, a short name
    for the plain pennant, and a cloth and hoist colour taken from the logo.
 3. `node --test test/bowl-ticket-view.test.mjs` checks every listed logo file exists.

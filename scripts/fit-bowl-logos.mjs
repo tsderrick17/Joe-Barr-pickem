@@ -1,22 +1,54 @@
-// Sets every bowl logo in public/bowl-logos/ to one standard size for the Bowl ticket's pennants, the way every NFL team's logo
-// reads the same size on the Survivor board: each logo is trimmed to its own edges, then scaled so it covers the same area as
-// every other (a tall shield and a wide wordmark look equally big), never past the pennant's logo box, and centred on a clear
-// canvas the shape of that box (192 x 92, twice the 96 x 46 the pennant draws it at). Safe to re-run; new logos are fitted the same way.
+// Makes every bowl logo the Bowl ticket's pennants fly (public/bowl-logos/<name>.webp) from its full-size original
+// (assets/bowl-logos/<name>.svg|png|webp, as downloaded from the bowl's Wikipedia article), at one standard size, the way every NFL
+// team's logo reads the same size on the Survivor board: each logo is trimmed to its own edges, then scaled so it covers the same area
+// as every other (a tall shield and a wide wordmark look equally big), never past the pennant's logo box, and centred on a clear canvas
+// the shape of that box (288 x 138, three times the 96 x 46 the pennant draws it at, so it stays sharp on a phone). Always made from the
+// original, never from an earlier output, so re-running it loses nothing. Safe to re-run; a new bowl's original is fitted the same way.
 //   node scripts/fit-bowl-logos.mjs [name ...]      (no names: every logo)
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-const DIR = new URL("../public/bowl-logos/", import.meta.url);
-const BOX = { width: 192, height: 92 };
-const AREA = 8600;   // the area every logo covers on that canvas: about a 93 x 93 square
+const SOURCE = new URL("../assets/bowl-logos/", import.meta.url);
+const OUT = new URL("../public/bowl-logos/", import.meta.url);
+const BOX = { width: 288, height: 138 };
+const AREA = 19350;   // the area every logo covers on that canvas: about a 139 x 139 square
+const RENDER = 1600;  // a drawn (svg) logo is rendered with its longer side this many pixels before it is fitted
+
+/**
+ * What a few originals need before fitting:
+ *   cutBox   - the logo sits on a solid white box: the white joined to the image's edge is cleared.
+ *   recolor  - colours swapped in the drawing (the playoff's black lettering would vanish on a dark pennant).
+ *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line.
+ */
+const PREP = {
+  cfp: { recolor: [["#130c0e", "#ffffff"]] },
+  la: { cutBox: true },
+  rate: { cutBox: true },
+  "las-vegas": { dropLast: true },
+  rose: { dropLast: 2 },
+};
 
 const names = process.argv.slice(2);
-const files = names.length ? names.map((name) => `${name}.webp`) : readdirSync(DIR).filter((file) => file.endsWith(".webp"));
+const sources = readdirSync(SOURCE).filter((file) => /\.(svg|png|webp)$/.test(file));
+const chosen = names.length ? sources.filter((file) => names.includes(file.replace(/\.\w+$/, ""))) : sources;
 
-for (const file of files) {
-  const path = fileURLToPath(new URL(file, DIR));
-  const trimmed = await sharp(readFileSync(path)).ensureAlpha().trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 1 }).png().toBuffer({ resolveWithObject: true });
+for (const file of chosen) {
+  const name = file.replace(/\.\w+$/, "");
+  const prep = PREP[name] ?? {};
+  let input = readFileSync(fileURLToPath(new URL(file, SOURCE)));
+  let options = {};
+  if (file.endsWith(".svg")) {
+    let svg = input.toString("utf8");
+    for (const [from, to] of prep.recolor ?? []) svg = svg.split(from).join(to);
+    input = Buffer.from(svg);
+    const { width, height } = await sharp(input, { density: 72 }).metadata();
+    options = { density: Math.min(2400, (72 * RENDER) / Math.max(width, height)) };
+  }
+  const raw = await sharp(input, options).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  if (prep.cutBox) cutBox(raw);
+  for (let piece = 0; piece < Number(prep.dropLast ?? 0); piece++) dropLast(raw);
+  const trimmed = await sharp(raw.data, { raw: raw.info }).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 1 }).png().toBuffer({ resolveWithObject: true });
   const { width, height } = trimmed.info;
   const ratio = width / height;
   let fitWidth = Math.sqrt(AREA * ratio);
@@ -24,11 +56,47 @@ for (const file of files) {
   const shrink = Math.min(1, BOX.width / fitWidth, BOX.height / fitHeight);
   fitWidth = Math.round(fitWidth * shrink);
   fitHeight = Math.round(fitHeight * shrink);
-  const logo = await sharp(trimmed.data).resize(fitWidth, fitHeight).png().toBuffer();
+  const logo = await sharp(trimmed.data).resize(fitWidth, fitHeight, { kernel: "lanczos3" }).png().toBuffer();
   const output = await sharp({ create: { ...BOX, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
     .composite([{ input: logo, left: Math.round((BOX.width - fitWidth) / 2), top: Math.round((BOX.height - fitHeight) / 2) }])
-    .webp({ quality: 90, alphaQuality: 100 })
+    .webp({ quality: 92, alphaQuality: 100, smartSubsample: true, effort: 6 })
     .toBuffer();
-  writeFileSync(path, output);
-  console.log(`${file}: ${width} x ${height} -> ${fitWidth} x ${fitHeight}`);
+  if (!existsSync(OUT)) throw new Error("public/bowl-logos/ is missing");
+  writeFileSync(fileURLToPath(new URL(`${name}.webp`, OUT)), output);
+  console.log(`${name}: ${width} x ${height} -> ${fitWidth} x ${fitHeight}`);
+}
+
+/** Clears the near-white joined to the image's edge (a solid box behind the logo), softly at the logo's anti-aliased rim. */
+function cutBox({ data, info }) {
+  const { width, height } = info;
+  const whiteness = (i) => Math.max(255 - data[i], 255 - data[i + 1], 255 - data[i + 2]);
+  const seen = new Uint8Array(width * height);
+  const stack = [];
+  for (let x = 0; x < width; x++) stack.push(x, (height - 1) * width + x);
+  for (let y = 0; y < height; y++) stack.push(y * width, y * width + width - 1);
+  while (stack.length) {
+    const p = stack.pop();
+    if (seen[p]) continue;
+    seen[p] = 1;
+    const i = p * 4;
+    const off = whiteness(i);
+    if (off > 70) continue;
+    data[i + 3] = Math.min(data[i + 3], off < 22 ? 0 : Math.round(((off - 22) / 48) * 255));
+    const x = p % width;
+    if (x > 0) stack.push(p - 1);
+    if (x < width - 1) stack.push(p + 1);
+    if (p >= width) stack.push(p - width);
+    if (p < width * (height - 1)) stack.push(p + width);
+  }
+}
+
+/** Clears everything below the last clear band of rows that has drawing above it (the bottom tag). */
+function dropLast({ data, info }) {
+  const { width, height } = info;
+  const rowFilled = (y) => { for (let x = 0; x < width; x++) if (data[(y * width + x) * 4 + 3] > 24) return true; return false; };
+  let y = height - 1;
+  while (y > 0 && !rowFilled(y)) y--;          // past the empty margin
+  while (y > 0 && rowFilled(y)) y--;           // up through the tag
+  if (y <= 0) return;
+  for (let row = y; row < height; row++) for (let x = 0; x < width; x++) data[(row * width + x) * 4 + 3] = 0;
 }
