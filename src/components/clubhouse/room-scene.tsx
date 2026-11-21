@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Logo } from "@/components/clubhouse/lamps";
-import { labBoardPages } from "@/lib/lab-clubhouse.js";
-import ROOM_PICTURES from "@/lib/lab-clubhouse-room.json";
+import { boardPages } from "@/lib/board-pages.js";
+import ROOM_PICTURES from "@/lib/clubhouse-room.json";
 import { haptic } from "@/lib/haptics-client";
 import { toggleSiteTheme } from "@/lib/site-theme.js";
 
@@ -124,7 +124,7 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   // scale. Below it the rest of the standings turn a page every 8 seconds, the pages kept even (nine players are three pages of
   // three); a single leader is not repeated below, level leaders are. The lines run across the spreads board like a ticker (shown
   // twice in a row so the loop has no seam).
-  const { leaders, pages: board } = labBoardPages(rows, BOARD_PAGE);
+  const { leaders, pages: board } = boardPages(rows, BOARD_PAGE);
   const pages = Math.max(1, board.length);
   const [page, setPage] = useState(0);
   useEffect(() => {

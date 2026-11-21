@@ -915,3 +915,50 @@ for (const [label, size] of [["phone-375x667", { width: 375, height: 667 }], ["p
     });
   }
 }
+
+// The room on a phone and a desktop: every tap spot is thumb-sized however small its thing looks, and no two name plates overlap or leave the
+// picture. (These held the Lab's sample room until the room went live; the real room is the same RoomScene.)
+for (const [label, size] of Object.entries(SIZES)) {
+  test(`the room's tap spots are thumb-sized and its name plates never overlap, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size });
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    await expect(room).toBeVisible({ timeout: 30_000 });
+    for (const spot of await room.locator(".lab-room-spot").all()) {
+      const box = (await spot.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
+    const plates = await room.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
+    expect(plates.length).toBeGreaterThanOrEqual(5);
+    for (const [index, plate] of plates.entries()) {
+      for (const other of plates.slice(index + 1)) expect(plate.right <= other.left || other.right <= plate.left || plate.bottom <= other.top || other.bottom <= plate.top, "plates do not overlap").toBe(true);
+    }
+  });
+}
+
+test("the room's Big Board keeps the leader on its top line and turns a page of standings every 8 seconds", async ({ page }) => {
+  await openClubhouse(page);
+  const board = page.locator(".lab-room-screen.is-board");
+  await expect(board.locator("header")).toContainText("1/2", { timeout: 30_000 });
+  const leader = await board.locator(".lab-room-leader").textContent();
+  await page.clock.runFor(7_000);
+  await expect(board.locator("header")).toContainText("1/2");   // not yet: a page stays up the full 8 seconds
+  await page.clock.runFor(1_000);
+  await expect(board.locator("header")).toContainText("2/2");
+  await expect(board.locator(".lab-room-leader")).toHaveText(leader!);
+  await page.clock.runFor(8_000);
+  await expect(board.locator("header")).toContainText("1/2");
+});
+
+test("the room's games board stands two games wide and shifts up a row every 7 seconds", async ({ page }) => {
+  await openClubhouse(page);
+  const ticker = page.locator(".lab-ticker");
+  await expect(ticker.locator("p").first()).toBeVisible({ timeout: 30_000 });
+  await expect(ticker.locator("> div").first().locator("p")).toHaveCount(2);   // two games a row
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const step = () => ticker.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--step"));
+  expect(await step()).toBe("0");
+  await page.clock.runFor(5_500);
+  expect(await step()).toBe("0");   // not yet: a row stays up most of the 7 seconds
+  await page.clock.runFor(1_700);
+  await expect.poll(step).toBe("1");
+});
