@@ -21,13 +21,16 @@ const RENDER = 1600;  // a drawn (svg) logo is rendered with its longer side thi
  *   crop     - only this part of the original is the logo (a poster).
  *   cutBox   - the logo sits on a solid white box: the white joined to the image's edge is cleared.
  *   cutDark  - the logo sits on this dark colour (a poster's navy): it is cleared, and the logo's soft edges un-blended from it.
- *   clear    - boxes (in the cropped picture) wiped out: a sponsor's mark that is not the bowl's (LA's "Bucked Up" deer and wordmark).
+ *   clear    - boxes (in the cropped picture): every shape lying wholly inside one is wiped out, a shape reaching outside is kept whole
+ *              (LA's "Bucked Up" deer and wordmark go; the swoosh under them stays).
+ *   smoothTop - between these two columns the top edge is redrawn as one smooth curve joining its ends, filling any notch below it
+ *              (LA's swoosh was notched to make room for the "Bucked Up" wordmark).
  *   recolor  - colours swapped in the drawing (the playoff's black lettering would vanish on a dark pennant).
  *   dropLast - the lowest piece (below a clear gap) is cut off, or the lowest N pieces: Las Vegas's "XXXV" anniversary tag, the Rose Bowl's sponsor line.
  */
 const PREP = {
   cfp: { recolor: [["#130c0e", "#ffffff"]] },
-  la: { crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75], clear: [{ left: 0, top: 0, width: 165, height: 200 }, { left: 0, top: 0, width: 640, height: 132 }] },
+  la: { crop: { left: 800, top: 70, width: 920, height: 420 }, cutDark: [21, 36, 75], clear: [{ left: 0, top: 0, width: 195, height: 200 }, { left: 190, top: 60, width: 460, height: 80 }], smoothTop: [480, 645] },
   rate: { cutBox: true },
   "las-vegas": { dropLast: true },
   rose: { dropLast: 2 },
@@ -54,7 +57,8 @@ for (const file of chosen) {
   const raw = await image.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   if (prep.cutDark) cutDark(raw, prep.cutDark);
   if (prep.cutBox) cutBox(raw);
-  for (const box of prep.clear ?? []) clearBox(raw, box);
+  if (prep.clear) clearShapes(raw, prep.clear);
+  if (prep.smoothTop) smoothTop(raw, prep.smoothTop);
   for (let piece = 0; piece < Number(prep.dropLast ?? 0); piece++) dropLast(raw);
   const trimmed = await sharp(raw.data, { raw: raw.info }).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 1 }).png().toBuffer({ resolveWithObject: true });
   const { width, height } = trimmed.info;
@@ -109,9 +113,55 @@ function cutDark({ data }, ground) {
   }
 }
 
-/** Clears one box of the picture. */
-function clearBox({ data, info }, { left, top, width, height }) {
-  for (let y = top; y < Math.min(info.height, top + height); y++) for (let x = left; x < Math.min(info.width, left + width); x++) data[(y * info.width + x) * 4 + 3] = 0;
+/** Clears every shape (pixels joined to each other) that lies wholly inside one of the boxes. */
+function clearShapes({ data, info }, boxes) {
+  const { width, height } = info;
+  const seen = new Uint8Array(width * height);
+  const inside = (x, y) => boxes.some((b) => x >= b.left && x < b.left + b.width && y >= b.top && y < b.top + b.height);
+  for (let start = 0; start < width * height; start++) {
+    if (seen[start] || data[start * 4 + 3] === 0) continue;
+    const shape = [];
+    const stack = [start];
+    seen[start] = 1;
+    let contained = true;
+    while (stack.length) {
+      const p = stack.pop();
+      shape.push(p);
+      const x = p % width;
+      const y = (p - x) / width;
+      if (contained && !inside(x, y)) contained = false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const q = ny * width + nx;
+        if (!seen[q] && data[q * 4 + 3] > 0) { seen[q] = 1; stack.push(q); }
+      }
+    }
+    if (contained) for (const p of shape) data[p * 4 + 3] = 0;
+  }
+}
+
+/** Redraws the top edge between two columns as a smooth curve (matching the edge's height and slope at both ends), filling below it. */
+function smoothTop({ data, info }, [from, to]) {
+  const { width, height } = info;
+  const top = (x) => { for (let y = 0; y < height; y++) if (data[(y * width + x) * 4 + 3] > 128) return y; return height; };
+  const y0 = top(from);
+  const y1 = top(to);
+  const s0 = (top(from) - top(from - 12)) / 12;
+  const s1 = (top(to + 12) - top(to)) / 12;
+  const span = to - from;
+  for (let x = from; x <= to; x++) {
+    const t = (x - from) / span;
+    const edge = (2 * t ** 3 - 3 * t ** 2 + 1) * y0 + (t ** 3 - 2 * t ** 2 + t) * span * s0 + (-2 * t ** 3 + 3 * t ** 2) * y1 + (t ** 3 - t ** 2) * span * s1;
+    const now = top(x);
+    for (let y = Math.floor(edge); y < now; y++) {
+      const i = (y * width + x) * 4;
+      const cover = y === Math.floor(edge) ? 1 - (edge - y) : 1;
+      data[i] = data[i + 1] = data[i + 2] = 255;
+      data[i + 3] = Math.max(data[i + 3], Math.round(cover * 255));
+    }
+  }
 }
 
 /** Clears everything below the last clear band of rows that has drawing above it (the bottom tag). */
