@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase-admin";
 import { assessAutomationWorkerHeartbeat } from "@/lib/automation-heartbeat";
 import { playerAuthPepper } from "@/lib/player-auth-config";
+import { fetchWithRetries, unreachableReason } from "@/lib/fetch-retries.js";
 
 export type LaunchPreflightCheck = {
   check_id: string;
@@ -31,10 +32,9 @@ async function checkOddsProvider(): Promise<LaunchPreflightCheck> {
   const key = process.env.ODDS_API_KEY;
   if (!key) return check("odds-provider", "NFL odds provider", false, "ODDS_API_KEY is missing from the deployment.", "providers");
   try {
-    // The provider documents /sports as a zero-credit authentication check.
-    const response = await fetch(`https://api.the-odds-api.com/v4/sports/?${new URLSearchParams({ apiKey: key, all: "true" })}`, {
+    // The provider documents /sports as a zero-credit authentication check, so trying it again costs nothing.
+    const response = await fetchWithRetries(`https://api.the-odds-api.com/v4/sports/?${new URLSearchParams({ apiKey: key, all: "true" })}`, {
       cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
     });
     const payload: unknown = await response.json().catch(() => null);
     const nflAvailable = Array.isArray(payload) && payload.some(
@@ -49,8 +49,8 @@ async function checkOddsProvider(): Promise<LaunchPreflightCheck> {
         : `Provider authentication or NFL availability failed (HTTP ${response.status}).`,
       "providers",
     );
-  } catch {
-    return check("odds-provider", "NFL odds provider", false, "The zero-credit provider check could not be reached.", "providers");
+  } catch (error) {
+    return check("odds-provider", "NFL odds provider", false, `The odds provider did not answer, three tries a few seconds apart: ${unreachableReason(error)}. It is checked again in 15 minutes.`, "providers");
   }
 }
 

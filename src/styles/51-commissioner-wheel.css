@@ -42,7 +42,9 @@
 .is-idle { --cw-c: var(--cw-idle); }
 .cw-halo.is-warn, .cw-halo.is-bad { animation: cw-pulse 3s ease-in-out infinite; box-shadow: 0 0 12px var(--cw-c); }
 @keyframes cw-pulse { 0%, 100% { opacity: .95; transform: scale(1); } 50% { opacity: .55; transform: scale(1.05); } }
-.cw-pip { align-items: center; background: var(--cw-c); border: 2px solid var(--cw-deep); border-radius: 999px; color: var(--cw-pip-ink); display: grid; font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 800; height: 26%; min-width: 26%; padding: 0 6%; place-items: center; position: absolute; right: -8%; top: -8%; }
+/* The mark sits dead centre in its round badge: the badge is measured with its border, and the text line is exactly one character tall
+   (a taller line pushed a "!" down and cut it off at the bottom). */
+.cw-pip { align-items: center; background: var(--cw-c); border: 2px solid var(--cw-deep); border-radius: 999px; box-sizing: border-box; color: var(--cw-pip-ink); display: grid; font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 800; height: 30%; line-height: 1; min-width: 30%; padding: 0 3px; place-items: center; position: absolute; right: -8%; top: -8%; }
 .cw-pip.is-bad { color: var(--cw-cream); }
 
 /* The wheel */
@@ -176,7 +178,7 @@
 .cw-dial.is-dragging .cw-dk { cursor: grabbing; }
 .cw-dk .cw-med { box-shadow: 0 0 0 2px var(--cw-gold), 0 0 0 4px var(--cw-deep), 0 4px 10px rgba(0, 0, 0, .4); }
 .cw-dk .cw-halo { border-width: 2px; inset: -12%; }
-.cw-dk .cw-pip { font-size: 10px; height: 34%; min-width: 34%; right: -10%; top: -10%; }
+.cw-dk .cw-pip { font-size: 10px; height: 38%; min-width: 38%; right: -10%; top: -10%; }
 .cw-dk.is-centre .cw-med { box-shadow: 0 0 0 3px var(--cw-gold-lt), 0 0 0 5px var(--cw-deep), 0 0 22px rgba(230, 207, 152, .55); }
 .cw-dk:focus-visible { outline: none; }
 .cw-dk:focus-visible .cw-med { box-shadow: 0 0 0 3px var(--cw-gold-lt), 0 0 0 5px var(--cw-deep), 0 0 0 8px var(--cw-cream); }

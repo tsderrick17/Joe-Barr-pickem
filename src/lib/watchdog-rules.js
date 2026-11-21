@@ -174,6 +174,7 @@ export function isConfigurationDriftCheckDue(latestRun, now = new Date()) {
   const startedAt = new Date(latestRun.started_at);
   if (Number.isNaN(startedAt.getTime())) return true;
   if (easternDayKey(startedAt) !== easternDayKey(now)) return true;
+  // A check that failed is run again after 15 minutes (not an hour), so a short outage at the provider clears quickly.
   return latestRun.status !== "success"
-    && now.getTime() - startedAt.getTime() >= 60 * 60 * 1000;
+    && now.getTime() - startedAt.getTime() >= 15 * 60 * 1000;
 }

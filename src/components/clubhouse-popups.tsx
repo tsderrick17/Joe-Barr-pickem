@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BowlClaimSeat } from "@/components/bowl-pool-marks";
 import { BowlTicketCard } from "@/components/bowl-ticket";
 import ForfeitPanel from "@/components/forfeit-panel";
@@ -27,11 +27,32 @@ import { currentSeasonYear } from "@/lib/season";
 const PICK_SAVE_TIMEOUT_MS = 30_000;
 
 /** The Big Board: everyone's picks this week, and the bar that opens your ticket. */
-export function BoardPopup({ view, onOpenTicket, onWeek }: { view: BoardView; onOpenTicket: () => void; onWeek: (weekId: string) => void }) {
-  return <ToteBoard onOpen={onOpenTicket} onWeek={onWeek} view={view} />;
+export function BoardPopup({ view, onOpenTicket, onWeek, savedAt = null }: { view: BoardView; onOpenTicket: () => void; onWeek: (weekId: string) => void; savedAt?: string | null }) {
+  return <ToteBoard onOpen={onOpenTicket} onWeek={onWeek} savedAt={savedAt} view={view} />;
 }
 
+/** "7:42 PM": when picks were saved, as the ticket and the Big Board say it. */
+export const savedTime = () => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date());
+
 export type DeckTab = { pane: string; label: string };
+
+/**
+ * Asked when a ticket with picks not sent yet is about to be put away (closed, another tab, another week, the phone's back gesture):
+ * send them now, go back to the ticket, or leave without sending. Escape (or a tap outside) goes back to the ticket.
+ */
+export function UnsentPicks({ bowl, busy, onSend, onStay, onDrop }: { bowl: boolean; busy: boolean; onSend: () => void; onStay: () => void; onDrop: () => void }) {
+  const ref = useRef<HTMLDialogElement | null>(null);
+  useEffect(() => { const dialog = ref.current; if (dialog && !dialog.open) dialog.showModal(); }, []);
+  return (
+    <dialog aria-labelledby="unsent-title" className="club-unsent" onCancel={(event) => { event.preventDefault(); onStay(); }} onClick={(event) => { if (event.target === event.currentTarget) onStay(); }} ref={ref}>
+      <h2 id="unsent-title">{bowl ? "Your bowl picks aren’t saved yet" : "Your picks aren’t sent yet"}</h2>
+      <p>{bowl ? "You made changes but didn’t press Save. Save them now?" : "You picked teams but didn’t press Submit. Send them now?"}</p>
+      <button className="is-send" disabled={busy} onClick={onSend} type="button">{busy ? (bowl ? "Saving…" : "Sending…") : bowl ? "Save my picks" : "Send my picks"}</button>
+      <button disabled={busy} onClick={onStay} type="button">Go back to my ticket</button>
+      <button className="is-drop" disabled={busy} onClick={onDrop} type="button">Leave without {bowl ? "saving" : "sending"}</button>
+    </dialog>
+  );
+}
 /**
  * The clubhouse board's switch, always on top of it: Big Board, your Ticket, and Survivor (or, once Survivor is decided and the bowls are
  * on, the Bowl Pool). Each tab is its own address, so the phone's back gesture still closes the board.
@@ -48,7 +69,7 @@ export function DeckTabs({ tabs, current, onChoose }: { tabs: DeckTab[]; current
  * Your ticket, the middle tab of the clubhouse's board: sends the very same POST the Slate makes. Always there to look at, every week: once
  * every game has kicked off it is the week's ticket as it stands, nothing left to change.
  */
-export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem" }: { view: BoardView; onSent: () => void; onChanged: () => Promise<void>; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor" }) {
+export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem", onDirty, onSaved }: { view: BoardView; onSent: () => void; onSaved?: () => void; onChanged: () => Promise<void>; onWeek?: (weekId: string) => void; startOn?: "pickem" | "survivor"; onDirty?: (send: (() => Promise<boolean>) | null) => void }) {
   // All games / Pool action is the Slate's own choice, saved to the same place (the profile), and kept while the clubhouse is open.
   const [actionOnly, setActionOnly] = useState<boolean | null>(null);
   const poolAction = actionOnly ?? view.poolAction;
@@ -82,6 +103,7 @@ export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem
       if (!response.ok) { haptic("warning"); return data.error ?? "Your picks could not be saved. Please try again."; }
       haptic("success");
       window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
+      onSaved?.();
       await onChanged();   // the board and the room's ticket read again, so the pick shows at once
       onSent();
     } catch (reason) {
@@ -97,7 +119,7 @@ export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem
     <>
       {/* In the playoffs, Forfeit sits at the very foot of the ticket, inside it, as on the Slate: three questions, and only the last one
           acts. Once it does, the room and the board are read again in place (no reload) and the Big Board shows the FORFEITED row. */}
-      <TicketForm footer={view.playoff?.you.forfeitAvailable ? <ForfeitPanel onForfeited={async () => { await onChanged(); onSent(); }} /> : null} key={`${view.weekId ?? ""}-${startOn}`} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} startOn={startOn} view={view} />
+      <TicketForm footer={view.playoff?.you.forfeitAvailable ? <ForfeitPanel onForfeited={async () => { await onChanged(); onSent(); }} /> : null} key={`${view.weekId ?? ""}-${startOn}`} onDirty={onDirty} onPoolAction={choosePoolAction} onSubmit={submit} onWeek={onWeek} poolAction={poolAction} startOn={startOn} view={view} />
     </>
   );
 }
@@ -184,7 +206,8 @@ export async function prefetchBowlPool(): Promise<any> {
   return lastBowlRead;
 }
 
-export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null }) {
+export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string | null; onDirty?: (save: (() => Promise<boolean>) | null) => void }) {
+  const [savedAt, setSavedAt] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
   const [payload, setPayload] = useState<any>(lastBowlRead);
   const [reads, setReads] = useState(0);
@@ -235,6 +258,7 @@ export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null })
     try {
       await send({ optedIn: true, selections, championshipTotalGuess: guess.trim() === "" ? null : Number(guess) });
       haptic("success");
+      setSavedAt(savedTime());
       load();
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) { window.location.replace("/login"); return ""; }
@@ -264,5 +288,5 @@ export function BowlPopup({ viewerPlayerId }: { viewerPlayerId: string | null })
       ? <BowlClaimSeat busy={claiming} onClaim={() => void claim()} />
       : <p className="lab-board-note">Bowl Pool entry closed at the first kickoff. Check back next year.</p>;
   }
-  return <BowlTicketCard key={reads} onOptOut={() => void optOut()} onSave={save} view={view} />;
+  return <BowlTicketCard key={reads} onDirty={onDirty} onOptOut={() => void optOut()} onSave={save} savedAt={savedAt} view={view} />;
 }
