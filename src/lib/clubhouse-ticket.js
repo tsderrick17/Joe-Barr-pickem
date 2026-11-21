@@ -16,8 +16,7 @@ import { coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
  *    forfeited          FORFEITED / Score stands                 stub VIEW
  *    out of the race    RACE OVER / Score stands                 stub VIEW
  *    week final         FINAL / 1–1                                   stub FINAL / VIEW
- *    a pick owed        NEXT GAME / Sun 1:00 PM (red; the next game   stub N LEFT / PICK
- *                       a pick is still owed for)
+ *    a pick owed        (nothing: the stub says it)                  stub N LEFT / PICK
  *    all in, changeable ALL IN / Change until kickoff                 stub ALL IN / VIEW
  *    all in, locked     ALL IN / Locked                               stub ALL IN / VIEW
  *  (Saved, with the time, takes the corner for a while after a save; the page adds it.)
@@ -96,12 +95,10 @@ export function roomTicket({ home, board }) {
   const lost = places.filter((place) => !place.survivor && place.state === "lost").length;
 
   // The corner: a small word over a short value, the same shape in every state.
-  const next = owed ? games.find((game) => upcoming(game) && (!playoff || !pickIn(game))) : null;
   const status = forfeited ? { label: "Forfeited", text: "Score stands" }
     : raceOver ? { label: "Race over", text: "Score stands" }
     : weekFinal ? { label: "Final", text: `${won}–${lost}` }
-    : next ? { label: "Next game", text: kickoffLabel(next.kickoffAt) }
-    : owed ? { label: `${owed} to pick`, text: "" }
+    : owed ? null
     : changeable ? { label: "All in", text: "Change until kickoff" }
     : { label: "All in", text: "Locked" };
   return {
@@ -111,8 +108,6 @@ export function roomTicket({ home, board }) {
     survivor: inSurvivor,
     owed,
     status,
-    // Red while a pick is owed and a game to put it on is coming.
-    urgent: Boolean(next),
     action: owed ? "PICK" : "VIEW",
     stub: owed ? `${owed} LEFT` : raceOver ? "" : weekFinal ? "FINAL" : "ALL IN",
   };

@@ -133,7 +133,6 @@
 .slip-status { color: var(--slip-soft); display: grid; font-size: .76rem; font-weight: 800; gap: 1px; line-height: 1.2; min-width: 0; text-align: right; white-space: nowrap; }
 .slip-status > * { overflow: hidden; text-overflow: ellipsis; }
 .slip-status i { font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-.slip-status.is-urgent { color: var(--slip-lost); }
 .slip-status.is-saved { color: var(--slip-won); }
 .slip-status.is-saved i::before { content: "\2713\00a0"; }
 .slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }

@@ -878,8 +878,7 @@ test("the pool chat wears the Big Board's housing and opens already full, read a
 });
 
 // The ticket at the foot of the room, through a regular week, playoff rounds and a player out of the race: a place a pick (a place a game in the playoffs,
-// two rows of three in the Wild Card, two by two in the Divisional round), each with its logo and lamp, the dark stub to press, and
-// NEXT GAME with the kickoff of the next game still to pick while one is owed.
+// always one row), each with its logo and lamp, and the dark stub to press.
 for (const [label, home, scenario, keep] of [
   ["week", null, "upcoming-unpicked", 0],
   ["wild-card", "playoff-wildcard", "playoff-mixed-locks", 0],
@@ -892,7 +891,7 @@ for (const [label, home, scenario, keep] of [
     await expect(ticket).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-    await expect(ticket.locator(".slip-status")).toContainText(label === "race-over" ? "Race over" : "Next game");
+    if (label === "race-over") await expect(ticket.locator(".slip-status")).toContainText("Race over");
     const box = (await ticket.boundingBox())!;
     expect(Math.abs(box.y + box.height - 844)).toBeLessThanOrEqual(1);   // flush with the foot of the screen, however tall
     await expect(ticket).toHaveScreenshot(`clubhouse-ticket-${label}-phone-390.png`, { maxDiffPixels: 40 });

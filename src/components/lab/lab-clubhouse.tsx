@@ -570,7 +570,7 @@ export function LabClubhouse() {
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
       <RoomTicket onOpen={() => enter("board", true)} ticket={{
         places: [{ team: "PIT", line: "-2.5", label: "", note: "Sun 1:00", state: "in" }, { team: "IND", line: "+3.5", label: "", note: "Sun 4:25", state: "in" }, allIn ? { team: "KC", label: "Survivor", note: "Thu 8:15", state: "in", survivor: true } : { label: "Survivor", note: "Open", state: "off", survivor: true }],
-        status: allIn ? { label: "All in", text: "Change until kickoff" } : { label: "Next game", text: "Thu 8:15 PM" }, urgent: !allIn, action: allIn ? "VIEW" : "PICK", stub: allIn ? "ALL IN" : "1 LEFT",
+        status: allIn ? { label: "All in", text: "Change until kickoff" } : null, action: allIn ? "VIEW" : "PICK", stub: allIn ? "ALL IN" : "1 LEFT",
       }} week="Week 10" />
     </section>
   );

@@ -6,7 +6,7 @@ import { Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
 /** One place on your ticket (see src/lib/clubhouse-ticket.js, where every state is decided). */
 export type TicketPlace = { team?: string; line?: string; label: string; note: string; state: LampState | "missed"; survivor?: boolean };
 /** What the ticket shows, as `roomTicket` works it out. */
-export type RoomTicketData = { places: TicketPlace[]; status: { label: string; text: string }; urgent: boolean; action: "PICK" | "VIEW"; stub: string };
+export type RoomTicketData = { places: TicketPlace[]; status: { label: string; text: string } | null; action: "PICK" | "VIEW"; stub: string };
 
 /** A line as it is printed: a true minus sign. */
 const printed = (line: string) => line.replace(/^-/, "−");
@@ -22,8 +22,9 @@ const printed = (line: string) => line.replace(/^-/, "−");
 export function RoomTicket({ ticket, week, savedAt = null, onOpen, href }: { ticket: RoomTicketData; week: string; savedAt?: string | null; onOpen?: () => void; href?: string }) {
   const { places } = ticket;
   // The heading's right side mirrors its left: a small word over what it says.
-  const said = !ticket.urgent && savedAt ? { label: "Saved", text: savedAt } : ticket.status;
-  const status = <span className={`slip-status${ticket.urgent ? " is-urgent" : said !== ticket.status ? " is-saved" : ""}`}><i>{said.label}</i>{said.text}</span>;
+  // Nothing while picks are owed (the stub counts them); otherwise the week in a few words, or Saved with the time for a while after a save.
+  const said = savedAt ? { label: "Saved", text: savedAt } : ticket.status;
+  const status = said ? <span className={`slip-status${savedAt ? " is-saved" : ""}`}><i>{said.label}</i>{said.text}</span> : null;
   const size = places.length >= 5 ? " is-many" : places.length === 4 ? " is-four" : "";
   const inside = (
     <span className={`slip${places.length > 3 ? " is-round" : ""}`}>

@@ -55,7 +55,7 @@ test("the room lights only your own picks, says what is owed, and the ticket has
   assert.equal(feed.news.survivor, "2 of 3 still in · You’re in");
   assert.equal(feed.owed, true);
   assert.deepEqual(ticket.lamps, ["in", "off", "off"]);
-  assert.deepEqual(ticket.status, { label: "Next game", text: "Sun 1:00 PM" });
+  assert.equal(ticket.owed, 2);
 });
 
 test("graded picks light green or red; all in says so; a finished week owes nothing", () => {

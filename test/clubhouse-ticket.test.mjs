@@ -22,11 +22,10 @@ const board = (extra = {}) => ({
 });
 const places = (ticket) => ticket.places.map((place) => [place.team ?? place.label, place.note, place.state]);
 
-test("nothing picked: every place open and named, the next game in red, the stub counts what is left", () => {
+test("nothing picked: every place open and named, the stub counts what is left", () => {
   const ticket = roomTicket({ home: week(), board: board() });
   assert.deepEqual(places(ticket), [["Pick 1", "Open", "off"], ["Pick 2", "Open", "off"], ["Survivor", "Open", "off"]]);
-  assert.deepEqual(ticket.status, { label: "Next game", text: "Sun 1:00 PM" });
-  assert.equal(ticket.urgent, true);
+  assert.equal(ticket.status, null);   // nothing in the corner: the stub counts what is left
   assert.deepEqual([ticket.action, ticket.stub], ["PICK", "3 LEFT"]);
 });
 
@@ -40,7 +39,7 @@ test("some picked: picks by team in kickoff order, line without a leading minus 
 test("all in and still changeable; all in and every game under way", () => {
   const all = { myPicks: [{ gameId: "g1", teamId: "pit" }, { gameId: "g2", teamId: "ind" }], survivor: { available: true, status: "active", pick: { game_id: "g3", selected_team_id: "den" } } };
   const open = roomTicket({ home: week(), board: board(all) });
-  assert.deepEqual([open.action, open.stub, open.status, open.urgent], ["VIEW", "ALL IN", { label: "All in", text: "Change until kickoff" }, false]);
+  assert.deepEqual([open.action, open.stub, open.status], ["VIEW", "ALL IN", { label: "All in", text: "Change until kickoff" }]);
   assert.deepEqual(open.places[2], { team: "DEN", label: "Survivor", note: "Sun 8:20", state: "in", survivor: true });   // Survivor by its logo
   const later = roomTicket({ home: week({ serverTime: "2026-11-16T02:00:00Z" }), board: board({ ...all, serverTime: "2026-11-16T02:00:00Z", games: board().games.map((g) => ({ ...g, status: "live" })) }) });
   assert.deepEqual(later.status, { label: "All in", text: "Locked" });
@@ -63,7 +62,7 @@ test("a pick never made: missed once nothing is left to put it on, and nothing i
   const games = board().games.map((g) => ({ ...g, status: "live" }));
   const ticket = roomTicket({ home: week({ serverTime: "2026-11-16T02:00:00Z" }), board: board({ serverTime: "2026-11-16T02:00:00Z", games, myPicks: [{ gameId: "g1", teamId: "pit" }] }) });
   assert.deepEqual(places(ticket).slice(1), [["Pick 2", "No pick", "missed"], ["Survivor", "No pick", "missed"]]);
-  assert.deepEqual([ticket.owed, ticket.action, ticket.urgent], [0, "VIEW", false]);
+  assert.deepEqual([ticket.owed, ticket.action], [0, "VIEW"]);
   assert.deepEqual(ticket.lamps.slice(1), ["off", "off"]);
 });
 
@@ -101,7 +100,6 @@ test("a playoff round: a place a game in kickoff order, open ones by matchup, a 
     ["MIN @ SF", "Open", "off"], ["DEN @ PIT", "Open", "off"], ["LAR @ DET", "Open", "off"],
   ]);
   assert.deepEqual([ticket.stub, ticket.survivor], ["4 LEFT", false]);
-  assert.deepEqual(ticket.status, { label: "Next game", text: "Sun 8:15 PM" });   // the next game still to pick, not the picked one before it
 });
 
 test("every playoff round size has a place a game: 6, 4, 2 and 1", () => {
