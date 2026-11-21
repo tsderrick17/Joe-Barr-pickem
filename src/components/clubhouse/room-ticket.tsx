@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
+import { Lamp, Logo, type LampState } from "@/components/clubhouse/lamps";
 
 /** One place on your ticket (see src/lib/clubhouse-ticket.js, where every state is decided). */
 export type TicketPlace = { team?: string; line?: string; label: string; note: string; state: LampState | "missed"; survivor?: boolean };

@@ -20,6 +20,7 @@
 @import "../styles/60-bowl-pool.css";
 @import "../styles/80-commissioner-assets.css";
 @import "../styles/81-lab.css";
+@import "../styles/82-clubhouse-ticket.css";
 
 @theme inline {
   --color-background: var(--background);

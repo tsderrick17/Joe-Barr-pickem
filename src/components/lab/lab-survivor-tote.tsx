@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { HiddenPick, Logo } from "@/components/lab/lab-tote";
+import { HiddenPick, Logo } from "@/components/clubhouse/lamps";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import type { StandingsResponse } from "@/lib/api-contracts";
 

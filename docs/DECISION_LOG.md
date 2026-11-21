@@ -4,6 +4,16 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-21 - Clubhouse code lives in its own folder
+
+The clubhouse went live from the Workshop Lab, so its real pieces were still in `src/components/lab/` beside the Lab's samples. They
+now live in `src/components/clubhouse/`, one file a piece: `room-scene` (the room picture, boards and name plates), `room-ticket`
+(your ticket at the foot), `big-board`, `ticket-form`, `lamps` (lamps and logos), `trophy-room`, `constitution`, `popups` and `chips`.
+`src/components/lab/` keeps only the Lab's sample rooms, which draw the same pieces. The ticket's states are worked out in
+`src/lib/clubhouse-ticket.js` and its styles are `src/styles/82-clubhouse-ticket.css`; the kickoff and line helpers every board shares
+are `src/lib/game-lines.js`. Unused Commissioner styles (the old command bar and panel tabs) were removed. Nothing a player sees
+changed: every screenshot is the same.
+
 ## 2026-11-21 - Clubhouse: your ticket is an admission ticket
 
 The ticket pinned at the foot of the clubhouse was the board’s own green with amber lettering, so it clashed with the green Big Board
