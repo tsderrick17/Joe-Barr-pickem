@@ -3,6 +3,8 @@ import { signIn } from "./session";
 
 // The Workshop Lab's try-outs, with sample data only. Each try-out's states get a picture.
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
+// A try-out that is live in the clubhouse is pictured there in full (clubhouse.visual.spec.ts); here it keeps one picture a state, by day on a phone.
+const LIVE = [["day", "phone-390"]] as const;
 
 async function openLab(page: Page, tryOut: string, { theme = "day", size = SIZES["phone-390"] }: { theme?: string; size?: { width: number; height: number } } = {}) {
   await page.setViewportSize(size);
@@ -43,7 +45,7 @@ async function stepTo(page: Page, week: number) {
   for (let at = 7; at > week; at--) await stepper.getByRole("button", { name: "Earlier week" }).click();
 }
 for (const [shot, week, moment] of TABLE_SHOTS) {
-  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+  for (const [theme, label] of LIVE) {
     test(`Lab Survivor table, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "survivor", { theme, size: SIZES[label] });
       await stepTo(page, week);
@@ -88,7 +90,7 @@ const TOTE_SHOTS: Array<[string, Array<[string, string]>, boolean]> = [
   ["ticket-wild-card", [["Moment", "Wild Card"]], true],
 ];
 for (const [shot, choices, ticket] of TOTE_SHOTS) {
-  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+  for (const [theme, label] of LIVE) {
     test(`Lab tote board, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "tote", { theme, size: SIZES[label] });
       for (const [group, choice] of choices.filter(([group]) => group !== "What to pick")) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
@@ -253,7 +255,7 @@ test("a pick still owed reads PICK on your row, and sending it fills the row in"
 // Pick'em Pad skins: five materials for one pad. Each skin gets a picture on game day, phone by day and at night; the scratch-off before kickoff too.
 const SKIN_NAMES = ["Split-flap", "Scratch-off", "Tote board", "Bowling sheet", "Ballpark"];
 for (const skin of SKIN_NAMES) {
-  for (const [theme, label] of [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]] as const) {
+  for (const [theme, label] of LIVE) {
     test(`Lab pad skin, ${skin}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "skins", { theme, size: SIZES[label] });
       await page.getByRole("group", { name: "Skin" }).getByRole("button", { name: skin }).click();
@@ -286,7 +288,7 @@ test("every pad skin shows the same standings and picks, and covers another play
 });
 
 // Lamp-lit: the night look as a lounge after dark. A night mode, so by day it changes nothing but a note saying so.
-for (const [label, size] of Object.entries(SIZES)) {
+for (const [label, size] of [["phone-390", SIZES["phone-390"]]] as const) {
   for (const tryOut of ["survivor", "clubhouse", "skins"]) {
     test(`Lab lamp-lit ${tryOut}, night at ${label}`, async ({ page }) => {
       await page.addInitScript(() => window.localStorage.setItem("pickem-lab-lamp", "on"));
@@ -321,9 +323,8 @@ const CLUB_SHOTS: Array<[string, string, Array<[string, string]>]> = [
   ["Trophy Room", "trophy-room", []],
   ["Trophy Room", "trophy-room-crowning", [["Scene", "A champion is crowned"]]],
 ];
-const CLUB_SIZES: Array<[string, string]> = [["day", "phone-390"], ["day", "desktop-1280"], ["night", "phone-390"]];
 for (const [shot, choices] of ROOM_SHOTS) {
-  for (const [theme, label] of CLUB_SIZES) {
+  for (const [theme, label] of LIVE) {
     test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
       for (const [group, choice] of choices) await page.getByRole("group", { name: group }).getByRole("button", { name: choice, exact: true }).click();
@@ -334,7 +335,7 @@ for (const [shot, choices] of ROOM_SHOTS) {
   }
 }
 for (const [spot, shot, choices] of CLUB_SHOTS) {
-  for (const [theme, label] of CLUB_SIZES) {
+  for (const [theme, label] of LIVE) {
     test(`Lab clubhouse, ${shot}, ${theme} at ${label}`, async ({ page }) => {
       await openLab(page, "clubhouse", { theme, size: SIZES[label as keyof typeof SIZES] });
       await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: spot, exact: true }).click();
