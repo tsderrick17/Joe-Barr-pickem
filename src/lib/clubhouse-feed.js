@@ -158,6 +158,21 @@ export function boardNews(standings, viewerId) {
   return you ? `${lead} · You: ${you.tied ? "T" : ""}${you.place}, ${leaders[0].wins - you.wins} back${moved}` : lead;
 }
 
+/** Where the viewer stands, in a few words: "You lead by 2", "You share the lead", "You’re tied 2nd, 2 back". Empty when they are not on the board. */
+export function standingLine(standings, viewerId) {
+  const you = standings.find((row) => row.id === viewerId);
+  if (!you) return "";
+  if (you.place === 1) {
+    const tied = standings.filter((row) => row.place === 1).length > 1;
+    if (tied) return "You share the lead";
+    const next = standings.find((row) => row.place > 1);
+    return next ? `You lead by ${you.wins - next.wins}` : "You lead";
+  }
+  const leader = standings[0];
+  const suffix = (n) => (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th");
+  return `You’re ${you.tied ? "tied " : ""}${you.place}${suffix(you.place)}, ${leader.wins - you.wins} back`;
+}
+
 /**
  * The room's feed, and the viewer's ticket (one lamp a Pick'em pick, then Survivor's while they are still in it). `before` is every
  * player's wins through an earlier week, for the standings' week-over-week arrows (see withMovement).
@@ -195,8 +210,33 @@ export function clubhouseFeed({ home, board, before = null }) {
     ...Array.from({ length: atsOwed }, () => "off"),
     ...(inSurvivor ? [survivor.pick ? "in" : "off"] : []),
   ];
+  // The paper slip: one box a pick, in the same order as the lamps. A pick that is in says its team and line, and under it its
+  // kickoff, LIVE, or how it came out (WON 27–20). A box still to fill says PICK / OPEN; once the week is in, NO PICK.
+  const short = (iso) => kickoffLabel(iso).replace(/ (AM|PM)$/, "").toUpperCase();
+  const scoreOf = (game, teamId) => {
+    const own = teamId === game.awayTeamId ? game.awayScore : game.homeScore;
+    const other = teamId === game.awayTeamId ? game.homeScore : game.awayScore;
+    return own === null || own === undefined || other === null || other === undefined ? "" : ` ${own}–${other}`;
+  };
+  const note = (game, teamId, result) => (result === "win" ? `WON${scoreOf(game, teamId)}` : result === "loss" ? `LOST${scoreOf(game, teamId)}` : result === "push" ? "PUSH" : game.status === "live" ? "LIVE" : game.status === "final" ? "FINAL" : short(game.kickoffAt));
+  const emptyNote = weekOpen && !raceOver ? "OPEN" : "NO PICK";
+  const survivorGame = inSurvivor && survivor.pick ? gameById.get(survivor.pick.game_id) : null;
+  const slots = [
+    ...myPicks.map((pick) => {
+      const game = gameById.get(pick.gameId);
+      const result = resultOf(game, pick.teamId);
+      return { text: `${abbreviation(game, pick.teamId)} ${lineFor(game, pick.teamId)}`, note: note(game, pick.teamId, result), state: result === "win" ? "won" : result === "loss" ? "lost" : "in" };
+    }),
+    ...Array.from({ length: atsOwed }, () => ({ text: "PICK", note: emptyNote, state: "off" })),
+    ...(inSurvivor
+      ? [survivorGame
+        ? { text: abbreviation(survivorGame, survivor.pick.selected_team_id), note: "SURVIVOR", state: "in", survivor: true }
+        : { text: "SURVIVOR", note: emptyNote, state: "off", survivor: true }]
+      : []),
+  ];
+  // When the next pick still to make locks: the first game not yet kicked off.
+  const nextKickoff = games.filter((game) => game.status === "scheduled" && Date.parse(game.kickoffAt) > now).sort((a, b) => Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt))[0];
   const total = maxPicks + (inSurvivor ? 1 : 0);
-  const picked = total - (atsOwed + (survivorOwed ? 1 : 0));
 
   // Survivor leaves the room when it leaves the classic pages: once it is decided, and for the playoffs.
   const survivorOver = Boolean(home.isPlayoff || home.survivorComplete);
@@ -241,8 +281,13 @@ export function clubhouseFeed({ home, board, before = null }) {
     },
     ticket: games.length && total ? {
       lamps,
+      slots,
       survivor: inSurvivor,
-      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in · see how it went" : owedCount ? `${picked} of ${total} in · ${owedCount} still to make` : anyChangeable ? `All ${total} in · change any until its kickoff` : `All ${total} in · all locked`,
+      // The slip's corner: when the next pick locks while one is owed, otherwise where the viewer stands.
+      corner: owedCount && nextKickoff ? `Locks ${kickoffLabel(nextKickoff.kickoffAt)}` : standingLine(standings, home.viewerPlayerId),
+      urgent: Boolean(owedCount && nextKickoff),
+      action: owedCount ? "PICK" : "VIEW",
+      line: forfeited ? "You forfeited · your score stands" : raceOver ? "Out of the race · your score stands" : !weekOpen ? "The week is in" : owedCount ? `${owedCount} ${owedCount === 1 ? "pick" : "picks"} to make` : anyChangeable ? "All in · change until kickoff" : "All in · all locked",
     } : null,
   };
 }

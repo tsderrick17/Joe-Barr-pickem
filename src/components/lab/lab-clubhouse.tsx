@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, typ
 import AllTimeTable, { type AllTimeRow } from "@/components/all-time-table";
 import TrophyTurntable from "@/components/trophy-turntable";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
-import { BigBoardRoom, Lamp, Logo, type LampState } from "@/components/lab/lab-tote";
+import { BigBoardRoom, Logo, type LampState } from "@/components/lab/lab-tote";
 import { POOL_CONSTITUTION } from "@/components/commissioner-handbook";
 import { LAB_VIEWER, labBoardPages, labKickedOff, labLeaderboard, labStandard } from "@/lib/lab-clubhouse.js";
 import { LAB_RECORDS, LAB_SLATE, labAtsResult, labLineFor, labSurvivorAt } from "@/lib/lab-samples.js";
@@ -346,12 +346,31 @@ function RoomNews({ picture, frame, feed }: { picture: Picture; frame: { width: 
   );
 }
 
-/** Your ticket, pinned at the bottom of every screen: a lamp for each pick, the next deadline; it opens the Big Board with the ticket ready. */
-export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1 }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean }) {
+/** One box on the paper slip: a pick's team and line over its kickoff or result, or PICK / OPEN while it is still to make. */
+export type SlipSlot = { text: string; note: string; state: LampState; survivor?: boolean };
+
+/**
+ * Your ticket, pinned at the bottom of every screen: a cream paper slip (the betting slip the Lab's ticket and receipt are made of),
+ * notched at the sides with a dotted tear line along the top. One box a pick, in kickoff order and Survivor's last, filled in ink once
+ * the pick is in, green when it won and red when it lost; a dashed box still to fill. The corner says when the next pick locks (red)
+ * while one is owed, otherwise where you stand. A SAVED stamp shows for a while after picks are saved. It opens the Big Board with
+ * the ticket ready.
+ */
+export function Ticket({ week, lamps, line, onOpen, href, survivor = lamps.length > 1, slots, corner = "", urgent = false, action, saved = false }: { week: string; lamps: LampState[]; line: string; onOpen?: () => void; href?: string; survivor?: boolean; slots?: SlipSlot[]; corner?: string; urgent?: boolean; action?: "PICK" | "VIEW"; saved?: boolean }) {
+  const boxes: SlipSlot[] = slots ?? lamps.map((state, index) => {
+    const chip = survivor && index === lamps.length - 1;
+    return state === "off" ? { text: chip ? "SURVIVOR" : "PICK", note: "OPEN", state, survivor: chip } : { text: "IN", note: chip ? "SURVIVOR" : "", state, survivor: chip };
+  });
+  const verb = action ?? (boxes.some((box) => box.state === "off") ? "PICK" : "VIEW");
   const inside = <>
-    <b>YOUR TICKET · {week.toUpperCase()}</b>
-    <span>{line}</span>
-    <span aria-hidden="true" className="lab-room-lamps">{lamps.map((state, index) => <Lamp key={index} state={state} survivor={survivor && index === lamps.length - 1} />)}<em>›</em></span>
+    <span className="slip-top"><b>YOUR TICKET</b>{saved ? <span className="slip-stamp">SAVED</span> : null}<i>{week.toUpperCase()}</i></span>
+    <span className="slip-picks">
+      <span className="slip-boxes" style={{ ["--boxes" as string]: boxes.length }}>
+        {boxes.map((box, index) => <span className={`slip-box is-${box.state}${box.survivor ? " is-survivor" : ""}`} key={index}>{box.text}{box.note ? <small>{box.note}</small> : null}</span>)}
+      </span>
+      <span aria-hidden="true" className="slip-go">{verb} ›</span>
+    </span>
+    <span className="slip-foot"><span>{line}</span>{corner ? <span className={urgent ? "is-urgent" : undefined}>{corner}</span> : null}</span>
   </>;
   return href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
 }
@@ -577,7 +596,7 @@ export function LabClubhouse() {
       {room === "bowl" ? <StandIn>The Bowl Pool opens here.</StandIn> : null}
       {room === "constitution" ? <Constitution /> : null}
       {room !== null ? <button className="lab-room-back is-foot" onClick={leave} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button> : null}
-      <Ticket lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "All 3 in · change any until its kickoff" : "2 of 3 in · picks close Thu 8:15 PM"} onOpen={() => enter("board", true)} week="Week 10" />
+      <Ticket action={allIn ? "VIEW" : "PICK"} corner={allIn ? "You’re tied 2nd, 2 back" : "Locks Thu 8:15 PM"} lamps={allIn ? ["in", "in", "in"] : ["in", "in", "off"]} line={allIn ? "All in · change until kickoff" : "1 pick to make"} onOpen={() => enter("board", true)} slots={[{ text: "PIT -2.5", note: "SUN 1:00", state: "in" }, { text: "IND +3.5", note: "SUN 4:25", state: "in" }, allIn ? { text: "KC", note: "SURVIVOR", state: "in", survivor: true } : { text: "SURVIVOR", note: "OPEN", state: "off", survivor: true }]} urgent={!allIn} week="Week 10" />
     </section>
   );
 }

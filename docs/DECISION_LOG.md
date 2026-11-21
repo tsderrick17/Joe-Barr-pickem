@@ -4,6 +4,16 @@ This log records project rules that future changes must not casually reverse.
 Entries preserve the original reasoning; a later change marks an older detail
 as superseded and records the current contract rather than rewriting history.
 
+## 2026-11-21 - Clubhouse: your ticket is a paper slip
+
+The ticket pinned at the foot of the clubhouse was the board's own green with amber lettering, so it clashed with the green Big Board
+over it and said little more than lamps and a count. It is now a cream paper slip (the betting slip of the Lab's ticket and receipt):
+notched sides, a dotted tear line, YOUR TICKET and the week over a rule, one box a pick (team and line over its kickoff, LIVE, or
+WON/LOST with the score; Survivor a pill, last; PICK / OPEN while still to make), and a dark PICK or VIEW button. The corner says when
+the next pick locks (red) while one is owed, otherwise where you stand. A SAVED stamp shows after picks are saved. On a phone it is fixed
+to the foot of the screen at whatever height its boxes need. The stub under the Big Board is a torn corner of the same paper. By night
+both dim a little. Owner's pick of option A, 2026-11-21. The no-X rule for pop-ups and the house fonts are unchanged.
+
 ## 2026-11-20 - A provider blip does not page the Commissioner for an hour
 
 The watchdog's daily external check asked the odds provider once with a 10-second limit. One dropped connection at 9 PM Eastern opened
