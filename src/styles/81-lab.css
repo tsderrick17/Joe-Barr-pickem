@@ -586,9 +586,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
    in pale gold), the gold track filling behind the needle. */
 .lab-bowl-gauge { background: radial-gradient(ellipse 80% 90% at 50% 100%, rgba(60, 84, 140, .38), rgba(10, 18, 36, .2) 70%, transparent); border-radius: 14px 14px 8px 8px; display: grid; justify-items: center; margin: 0; padding: 4px 6px 6px; width: 9.5rem; }
 .lab-bowl-gauge svg { display: block; overflow: visible; width: 100%; }
-.lab-bowl-gauge figcaption { color: rgba(240, 232, 214, .75); font-size: .62rem; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
+.lab-bowl-gauge figcaption { align-items: center; color: rgba(240, 232, 214, .75); display: flex; font-size: .62rem; gap: .4em; justify-content: center; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
 /* The games left turn on split-flap tiles, the classic Bowl Card's own, in the ticket's navy and gold. */
-.lab-bowl-gauge figcaption { align-items: center; display: flex; gap: .4em; justify-content: center; }
 .lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: #0f1830; --flap-ink: #e6d6b4; --flap-edge: #b38b4d; --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; }
 .lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 5; stroke: rgba(240, 232, 214, .12); }
 .lab-bowl-gauge-bezel { fill: none; stroke: rgba(226, 182, 70, .55); stroke-width: .8; }
