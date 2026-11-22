@@ -529,9 +529,9 @@
 .lab-lamp.is-picked { box-shadow: inset 0 0 0 2.5px rgb(232 184 82), 0 0 3px rgba(255, 176, 60, .3); }
 /* A lit lamp is a small warm bulb behind glass, not a flat dot: a pale hot centre falling off to a deeper amber at its rim, a dark
    bezel round it, and a soft, close halo (no wide glare). Green and red are the same bulb in their colours. */
-.lab-lamp.is-in { background: radial-gradient(circle at 42% 38%, rgb(255 240 190) 0, rgb(244 190 78) 38%, rgb(196 128 30) 78%, rgb(150 92 18) 100%); box-shadow: inset 0 0 0 1px rgba(40, 24, 4, .55), 0 0 3px rgba(255, 176, 60, .45), 0 0 9px rgba(255, 160, 40, .14); }
-.lab-lamp.is-won { background: radial-gradient(circle at 42% 38%, rgb(214 246 222) 0, rgb(112 192 138) 40%, rgb(58 132 88) 80%, rgb(36 96 62) 100%); box-shadow: inset 0 0 0 1px rgba(6, 30, 16, .55), 0 0 3px rgba(104, 190, 134, .4), 0 0 8px rgba(104, 190, 134, .12); }
-.lab-lamp.is-lost { background: radial-gradient(circle at 42% 38%, rgb(250 206 196) 0, rgb(210 104 90) 40%, rgb(150 58 48) 80%, rgb(110 38 32) 100%); box-shadow: inset 0 0 0 1px rgba(40, 8, 4, .55), 0 0 3px rgba(212, 100, 88, .35), 0 0 8px rgba(212, 100, 88, .1); }
+.lab-lamp.is-in { background: radial-gradient(circle at 42% 38%, rgb(248 226 160) 0, rgb(236 184 80) 38%, rgb(196 128 30) 78%, rgb(150 92 18) 100%); box-shadow: inset 0 0 0 1px rgba(40, 24, 4, .55), 0 0 2px rgba(255, 176, 60, .22); }
+.lab-lamp.is-won { background: radial-gradient(circle at 42% 38%, rgb(180 226 194) 0, rgb(104 184 130) 40%, rgb(58 132 88) 80%, rgb(36 96 62) 100%); box-shadow: inset 0 0 0 1px rgba(6, 30, 16, .55), 0 0 2px rgba(104, 190, 134, .2); }
+.lab-lamp.is-lost { background: radial-gradient(circle at 42% 38%, rgb(238 176 164) 0, rgb(204 100 86) 40%, rgb(150 58 48) 80%, rgb(110 38 32) 100%); box-shadow: inset 0 0 0 1px rgba(40, 8, 4, .55), 0 0 2px rgba(212, 100, 88, .18); }
 /* Survivor's lamp is a spade, like a suit on a card: same light, different shape. The spade is two cut-outs (a dark edge, the light
    inside it), and the glow is a drop shadow that follows the cut, not the square around it. */
 .lab-lamp.is-survivor { background: none; border: 0; border-radius: 0; box-shadow: none; position: relative; transform: scale(1.2); }
@@ -540,12 +540,12 @@
 .lab-lamp.is-survivor.is-picked { filter: drop-shadow(0 0 2px rgba(255, 176, 60, .3)); }
 .lab-lamp.is-survivor.is-picked::before { background: rgb(232 184 82); }
 .lab-lamp.is-survivor.is-picked::after { inset: 3px; }
-.lab-lamp.is-survivor.is-in { filter: drop-shadow(0 0 2px rgba(255, 176, 60, .5)); }
-.lab-lamp.is-survivor.is-in::after { background: radial-gradient(circle at 46% 42%, rgb(255 240 190) 0, rgb(244 190 78) 38%, rgb(196 128 30) 80%); }
-.lab-lamp.is-survivor.is-won { filter: drop-shadow(0 0 2px rgba(104, 190, 134, .4)); }
-.lab-lamp.is-survivor.is-won::after { background: radial-gradient(circle at 46% 42%, rgb(214 246 222) 0, rgb(112 192 138) 40%, rgb(58 132 88) 85%); }
-.lab-lamp.is-survivor.is-lost { filter: drop-shadow(0 0 2px rgba(212, 100, 88, .35)); }
-.lab-lamp.is-survivor.is-lost::after { background: radial-gradient(circle at 46% 42%, rgb(250 206 196) 0, rgb(210 104 90) 40%, rgb(150 58 48) 85%); }
+.lab-lamp.is-survivor.is-in { filter: drop-shadow(0 0 1px rgba(255, 176, 60, .3)); }
+.lab-lamp.is-survivor.is-in::after { background: radial-gradient(circle at 46% 42%, rgb(248 226 160) 0, rgb(236 184 80) 38%, rgb(196 128 30) 80%); }
+.lab-lamp.is-survivor.is-won { filter: drop-shadow(0 0 1px rgba(104, 190, 134, .25)); }
+.lab-lamp.is-survivor.is-won::after { background: radial-gradient(circle at 46% 42%, rgb(180 226 194) 0, rgb(104 184 130) 40%, rgb(58 132 88) 85%); }
+.lab-lamp.is-survivor.is-lost { filter: drop-shadow(0 0 1px rgba(212, 100, 88, .22)); }
+.lab-lamp.is-survivor.is-lost::after { background: radial-gradient(circle at 46% 42%, rgb(238 176 164) 0, rgb(204 100 86) 40%, rgb(150 58 48) 85%); }
 .lab-lamps { align-items: start; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; list-style: none; margin: 0; max-width: 60%; padding: 0; }
 .lab-bigboard .lab-lamps li { border: 0; display: grid; gap: 4px; grid-template-columns: auto; justify-items: center; padding: 0; }
 .lab-lamps small { color: rgba(240, 180, 41, .8); font-size: .56rem; letter-spacing: .1em; }
@@ -832,8 +832,6 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .is-chalkboard .season-snapshot-range button { background: transparent; color: var(--chalk); }
 .is-chalkboard .season-snapshot-range button + button { border-left-color: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-range button[aria-pressed="true"] { background: var(--chalk); color: rgb(33 43 38); }
-.is-chalkboard .season-snapshot-rail-track { background: var(--chalk-faint); }
-.is-chalkboard .season-snapshot-rail-thumb { background: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-key-row { background: rgb(246 243 234 / .06); border-color: var(--chalk-faint); color: var(--chalk); }
 .is-chalkboard .season-snapshot-key-row:hover, .is-chalkboard .season-snapshot-key-row:focus-visible { background: rgb(246 243 234 / .14); }
 .is-chalkboard .season-snapshot-show-all { border-color: var(--chalk-dim); color: var(--chalk); }

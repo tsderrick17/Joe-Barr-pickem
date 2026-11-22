@@ -81,79 +81,50 @@ test("6 Wk windows the chart to six weeks that scroll; All fits the whole season
   await expect(plot).not.toHaveClass(/is-windowed/);
 });
 
-test("in the 6 Wk view a rail along the top of the chart shows the window and moves it; All has no rail", async ({ page }) => {
+test("in the 6 Wk view there is no bar over the chart: dragging the graph moves the weeks and lets go on exact weeks; All has no drag", async ({ page }) => {
   await open(page);
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
   const weeks = page.getByRole("group", { name: "Weeks shown" });
-  await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
   await weeks.getByRole("button", { name: "6 Wk" }).click();
   const plot = page.locator(".season-snapshot-plot-scroll");
-  const track = page.locator(".season-snapshot-rail-track");
-  const thumb = page.locator(".season-snapshot-rail-thumb");
+  await expect(page.locator(".season-snapshot-rail"), "no bar over the chart").toHaveCount(0);
+  await expect(plot).toHaveClass(/is-windowed/);
   const scrollLeft = () => plot.evaluate((element) => element.scrollLeft);
-  const boxes = async () => ({ track: (await track.boundingBox())!, thumb: (await thumb.boundingBox())! });
-
-  // It opens on the latest six of nine weeks: the thumb is two thirds of the track, at its right end.
-  let { track: bar, thumb: grip } = await boxes();
-  // The rail lies in the strip above the axis's top line (always a numbered tick), above every line.
-  const plotBox = (await plot.boundingBox())!;
-  expect(bar.y - plotBox.y).toBeLessThan(4);
-  const lineTop = await page.locator(".season-snapshot-lines").evaluate((element) => element.getBoundingClientRect().top);
-  expect(lineTop, "the highest line stays below the rail").toBeGreaterThan(bar.y + bar.height);
-  const topLine = await page.locator(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)").evaluateAll((lines) => Math.min(...lines.map((line) => line.getBoundingClientRect().top)));
-  expect(topLine, "the rail sits above the top line, not on it").toBeGreaterThanOrEqual(bar.y + bar.height);
-  const topNumber = await page.locator(".season-snapshot-yaxis .season-snapshot-tick:not(.is-leaving)").evaluateAll((texts) => Math.min(...texts.map((text) => text.getBoundingClientRect().top + text.getBoundingClientRect().height / 2)));
-  expect(Math.abs(topNumber - topLine), "and the top line has its number").toBeLessThan(4);
-  // It is as wide as the grid lines: from the axis to where the lines end, never past them.
-  const grid = await page.locator(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)").first().boundingBox();
-  expect(bar.x).toBeCloseTo(plotBox.x, 0);
-  expect(bar.x + bar.width, "the rail ends where the lines end").toBeCloseTo(grid!.x + grid!.width, 0);
-  expect(grip.width / bar.width).toBeCloseTo(2 / 3, 1);
-  expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
-  // The thin bar fills the strip (8 px of the 10 above the top line); the part of the rail that takes a press reaches well below it, to be easy to catch with a thumb.
-  expect(bar.height).toBeGreaterThanOrEqual(8);
-  const rail = (await page.locator(".season-snapshot-rail").boundingBox())!;
-  expect(rail.height, "the grab area is much taller than the bar").toBeGreaterThanOrEqual(bar.height + 10);
-  expect(rail.y + rail.height - (bar.y + bar.height), "and hangs below it, never above").toBeGreaterThanOrEqual(10);
-  // The pointer stays an ordinary arrow over every part of the rail: no hand, open or closed.
-  for (const name of [".season-snapshot-rail", ".season-snapshot-rail-track", ".season-snapshot-rail-thumb"]) {
-    expect(await page.locator(name).evaluate((element) => getComputedStyle(element).cursor), name).toBe("default");
-  }
-
-  // Dragging the thumb to the left end scrolls the chart back to the first weeks.
-  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  const step = await plot.evaluate((element) => (element.clientWidth - 20) / 6);
+  // It opens on the latest six of nine weeks; a sideways drag of the graph carries the weeks with the finger.
+  const latest = await scrollLeft();
+  expect(latest).toBeGreaterThan(0);
+  expect(await plot.evaluate((element) => getComputedStyle(element).touchAction), "a vertical swipe stays the page's").toBe("pan-y");
+  expect(await plot.evaluate((element) => getComputedStyle(element).cursor), "the pointer stays an ordinary arrow").toBe("auto");
+  const box = (await plot.boundingBox())!;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + box.width / 2, y);
   await page.mouse.down();
-  await page.mouse.move(bar.x, grip.y + grip.height / 2, { steps: 8 });
+  await page.mouse.move(box.x + box.width / 2 + step * 1.4, y, { steps: 8 });
+  await expect(plot, "held while dragging").toHaveClass(/is-dragging/);
+  await page.mouse.up();
+  // Let go at 1.4 weeks: it settles on exactly one week back.
+  await expect.poll(async () => Math.abs((await scrollLeft()) - (latest - step)) < 2).toBe(true);
+  await expect(plot, "a finished drag leaves nothing held").not.toHaveClass(/is-dragging/);
+  // A long drag to the right stops at the first week, never past it.
+  await page.mouse.move(box.x + 10, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 10, y, { steps: 10 });
+  await page.mouse.up();
+  await page.mouse.move(box.x + 10, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 10, y, { steps: 10 });
   await page.mouse.up();
   await expect.poll(scrollLeft).toBe(0);
-  ({ track: bar, thumb: grip } = await boxes());
-  expect(grip.x).toBeCloseTo(bar.x, 0);
-
-  await expect(page.locator(".season-snapshot-rail"), "a finished drag leaves nothing held").not.toHaveClass(/is-dragging/);
-
-  // Pressing the track near its right end brings back the latest weeks.
-  await page.mouse.click(bar.x + bar.width - 2, bar.y + bar.height / 2);
-  await expect.poll(scrollLeft).toBeGreaterThan(0);
-  ({ track: bar, thumb: grip } = await boxes());
-  expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
-
-  // So does pressing in the grab area below the bar, where no bar is drawn: back to the first weeks at its left end.
-  await page.mouse.click(bar.x + 2, bar.y + bar.height + 7);
-  await expect.poll(scrollLeft).toBe(0);
-  await page.mouse.click(bar.x + bar.width - 2, bar.y + bar.height + 7);
-  await expect.poll(scrollLeft).toBeGreaterThan(0);
-  ({ track: bar, thumb: grip } = await boxes());
-  expect(grip.x + grip.width).toBeCloseTo(bar.x + bar.width, 0);
-
-  // The rail takes no room of its own: All draws the axis and the week numbers in exactly the same place.
+  // Both views draw the axis and the week numbers in exactly the same place.
   const layout = () => page.evaluate(() => ["season-snapshot-yaxis", "season-snapshot-week-label"].map((name) => {
-    const box = document.querySelector(`.${name}`)!.getBoundingClientRect();
-    return [Math.round(box.top), Math.round(box.height)];
+    const rect = document.querySelector(`.${name}`)!.getBoundingClientRect();
+    return [Math.round(rect.top), Math.round(rect.height)];
   }));
   const windowed = await layout();
   await weeks.getByRole("button", { name: "All" }).click();
-  await expect(page.locator(".season-snapshot-rail")).toHaveCount(0);
+  await expect(plot).not.toHaveClass(/is-windowed/);
   expect(await layout()).toEqual(windowed);
 });
 
@@ -173,13 +144,14 @@ test("in the 6 Wk view the axis fits the weeks in view and follows them as the c
   expect(spacing(latest).size, "evenly spaced").toBe(1);
   expect(latest.length, "six numbered lines at most").toBeLessThanOrEqual(6);
 
-  // Drag the rail back to the first weeks: the axis glides down to zero, where everyone starts.
-  const bar = (await page.locator(".season-snapshot-rail-track").boundingBox())!;
-  const grip = (await page.locator(".season-snapshot-rail-thumb").boundingBox())!;
-  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(bar.x, grip.y + grip.height / 2, { steps: 10 });
-  await page.mouse.up();
+  // Drag the graph back to the first weeks: the axis glides down to zero, where everyone starts.
+  const plotBox = (await page.locator(".season-snapshot-plot-scroll").boundingBox())!;
+  for (let pass = 0; pass < 2; pass += 1) {
+    await page.mouse.move(plotBox.x + 10, plotBox.y + plotBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(plotBox.x + plotBox.width - 10, plotBox.y + plotBox.height / 2, { steps: 10 });
+    await page.mouse.up();
+  }
   await expect.poll(async () => (await settledTicks())[0]).toBe(0);
   await expect(leaving, "numbers that left the axis are gone once it settles").toHaveCount(0);
   // Exactly weeks 0 to 6 are drawn: the lines stop at week 6 instead of running on toward week 7.
@@ -272,7 +244,7 @@ test("chart choices are remembered on this device", async ({ page }) => {
   await expect(keyRows(page).first()).toHaveAttribute("aria-pressed", "false");
 });
 
-test("in the 6 Wk view only the rail moves the weeks: a sideways wheel, a drag across the graph and the arrow keys on it do nothing", async ({ page }) => {
+test("in the 6 Wk view a sideways wheel does not move the weeks, and a click leaves them where they are", async ({ page }) => {
   await open(page, nineWeekSnapshot(14));
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
@@ -282,55 +254,40 @@ test("in the 6 Wk view only the rail moves the weeks: a sideways wheel, a drag a
   const scrollLeft = () => plot.evaluate((element) => element.scrollLeft);
   const resting = await scrollLeft();
   expect(resting).toBeGreaterThan(0);
-  expect(await plot.evaluate((element) => getComputedStyle(element).overflowX), "the graph is not a scroller").toBe("hidden");
-  await expect(plot, "and does not take the keyboard").not.toHaveAttribute("tabindex", /.*/);
-
+  expect(await plot.evaluate((element) => getComputedStyle(element).overflowX), "the graph is not a browser scroller").toBe("hidden");
   const box = (await plot.boundingBox())!;
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   await page.mouse.move(middle.x, middle.y);
   await page.mouse.wheel(-900, 0);
-  await page.mouse.move(middle.x, middle.y);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.95, middle.y, { steps: 10 });
-  await page.mouse.up();
   await page.mouse.click(middle.x, middle.y);
-  for (let press = 0; press < 3; press += 1) await page.keyboard.press("ArrowLeft");
   await page.waitForTimeout(400);
   expect(await scrollLeft(), "the weeks stayed where they were").toBe(resting);
   await expect(page.locator(".season-snapshot-lines")).toBeVisible();
 });
 
-test("the rail can be used from the keyboard: arrows step one week, Home and End go to either end, and it says which weeks are shown", async ({ page }) => {
+test("the graph can be moved from the keyboard: arrows step one week, Home and End go to either end", async ({ page }) => {
   await open(page, nineWeekSnapshot(14));
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
   await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
   const plot = page.locator(".season-snapshot-plot-scroll");
-  const rail = page.getByRole("slider", { name: "Move the weeks shown" });
   const scrollLeft = () => plot.evaluate((element) => element.scrollLeft);
   const step = await plot.evaluate((element) => (element.clientWidth - 20) / 6);
   // The browser keeps a scroll position to whole pixels, so a week's width is matched to within one.
   const scrolledTo = (expected: number) => expect.poll(async () => Math.abs((await scrollLeft()) - expected) < 2, { message: `scrolled to about ${Math.round(expected)}` }).toBe(true);
   // Fourteen weeks, six in view: it opens on weeks 9 to 14.
-  await expect(rail).toHaveAttribute("aria-valuemin", "1");
-  await expect(rail).toHaveAttribute("aria-valuemax", "9");
-  await expect(rail).toHaveAttribute("aria-valuenow", "9");
-  await expect(rail).toHaveAttribute("aria-valuetext", "Weeks 9 to 14");
   const latest = await scrollLeft();
-  await rail.focus();
+  await plot.focus();
   await page.keyboard.press("ArrowLeft");
   await scrolledTo(latest - step);
-  await expect(rail).toHaveAttribute("aria-valuetext", "Weeks 8 to 13");
   await page.keyboard.press("ArrowRight");
   await scrolledTo(latest);
   await page.keyboard.press("Home");
   await expect.poll(scrollLeft).toBe(0);
-  await expect(rail).toHaveAttribute("aria-valuetext", "Weeks 1 to 6");
   await page.keyboard.press("PageDown");
   await scrolledTo(step * 6);
   await page.keyboard.press("End");
   await scrolledTo(latest);
-  await expect(rail).toHaveAttribute("aria-valuetext", "Weeks 9 to 14");
 });
 
 test("the player key's rows come out even at every width, eleven names or eight", async ({ page }) => {
@@ -361,66 +318,4 @@ test("the player key's rows come out even at every width, eleven names or eight"
   // A phone keeps its fixed four across.
   await page.setViewportSize({ width: 390, height: 1400 });
   await expect.poll(lines).toEqual([4, 4, 3]);
-});
-
-// The 6 Wk rail's thin track is centered in the open space between the masthead's rule and the top grid line, at every width.
-for (const width of [390, 700, 1280]) {
-  test(`the 6 Wk rail track is centered between the masthead rule and the top line at ${width}px`, async ({ page }) => {
-    await open(page);
-    await page.setViewportSize({ width, height: 1400 });
-    await flipButton(page).click();
-    await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
-    await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
-    await expect(page.locator(".season-snapshot-rail-track")).toBeVisible();
-    await page.waitForTimeout(600);   // the axis glides to its range
-    const { above, below } = await page.evaluate(() => {
-      const track = document.querySelector(".season-snapshot-rail-track")!.getBoundingClientRect();
-      const rule = document.querySelector(".season-snapshot .pickem-ledger-masthead")!.getBoundingClientRect().bottom;
-      const topLine = Math.min(...[...document.querySelectorAll(".season-snapshot-plot-scroll line.season-snapshot-tick:not(.is-leaving)")].map((line) => line.getBoundingClientRect().top));
-      return { above: track.top - rule, below: topLine - track.bottom };
-    });
-    expect(above, "clear of the rule").toBeGreaterThan(2);
-    expect(below, "clear of the top line").toBeGreaterThan(2);
-    expect(Math.abs(above - below), `${above.toFixed(1)}px above, ${below.toFixed(1)}px below`).toBeLessThanOrEqual(1);
-  });
-}
-
-// A touch screen leaves :hover stuck on whatever was tapped, until the next tap elsewhere. The rail's swell is for a mouse over it or a finger on it
-// (the dragging state), never for that stuck hover. The browser is made to treat the rail as hovered, as it would be after a tap on a phone.
-async function holdHover(page: Page, selector: string) {
-  const client = await page.context().newCDPSession(page);
-  await client.send("DOM.enable");
-  await client.send("CSS.enable");
-  const { root } = await client.send("DOM.getDocument");
-  const { nodeId } = await client.send("DOM.querySelector", { nodeId: root.nodeId, selector });
-  await client.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
-}
-async function openSixWeeks(page: Page) {
-  await open(page);
-  await flipButton(page).click();
-  await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
-  await page.getByRole("group", { name: "Weeks shown" }).getByRole("button", { name: "6 Wk" }).click();
-  await expect(page.locator(".season-snapshot-rail-thumb")).toBeVisible();
-}
-const thumbRing = (page: Page) => page.locator(".season-snapshot-rail-thumb").evaluate((element) => getComputedStyle(element).boxShadow);
-
-test("with a mouse, the rail thumb swells while the pointer is over it", async ({ page }) => {
-  await openSixWeeks(page);
-  expect(await thumbRing(page), "at rest").toBe("none");
-  await holdHover(page, ".season-snapshot-rail");
-  expect(await thumbRing(page), "hovered").not.toBe("none");
-});
-
-test.describe("on a touch screen", () => {
-  test.use({ hasTouch: true });
-  test("a tap leaves the rail thumb at rest once the finger lifts: it swells only while dragging", async ({ page }) => {
-    await openSixWeeks(page);
-    expect(await page.evaluate(() => matchMedia("(hover: hover)").matches), "a touch screen cannot hover").toBe(false);
-    expect(await thumbRing(page), "at rest").toBe("none");
-    const box = (await page.locator(".season-snapshot-rail-thumb").boundingBox())!;
-    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-    await expect(page.locator(".season-snapshot-rail.is-dragging")).toHaveCount(0);
-    await holdHover(page, ".season-snapshot-rail");   // what the tap leaves behind
-    expect(await thumbRing(page), "stuck hover after the tap").toBe("none");
-  });
 });

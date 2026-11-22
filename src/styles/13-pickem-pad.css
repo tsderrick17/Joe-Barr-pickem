@@ -251,23 +251,11 @@ body:has(.pickem-scoreboard-ledger) .pool-chat-dock > div:not(.pool-chat) {
   min-width: 0;
   overflow: hidden;
 }
-/* In the 6-week view the chart is wider than its window, but nothing scrolls it directly: no finger, wheel, drag or key moves the
-   weeks (a flick of the graph used to change them by accident). The position rail above the chart's top line is the only way, and the
-   page moves the chart for it. The browser's own scroll bar never shows, so it cannot sit on the week numbers. */
-.season-snapshot-plot-scroll.is-windowed { user-select: none; -webkit-user-select: none; }
-/* In the strip above the axis's top line, as wide as the grid lines: the y-axis numbers stay clear on its left, and it
-   ends where the lines end on its right. The thin track fills the strip; the part of the rail that takes a press reaches
-   further down, so it is easy to catch with a thumb. The pointer stays an ordinary arrow: the thumb swells a little instead, only while a
-   mouse is over it or a finger is on it (a touch screen leaves :hover stuck after a tap, so it has no hover swell).
-   The 8px track is centered in the open space between the masthead's rule and the top grid line: that space is the masthead's bottom margin
-   (.55rem, .7rem from 640px) plus the 10px above the line, so the rail starts half of (margin - 2px) above the chart. */
-.season-snapshot-rail { cursor: default; left: 30px; outline: none; padding: 0 0 12px; position: absolute; right: 14px; top: calc(1px - .275rem); touch-action: none; user-select: none; -webkit-user-select: none; z-index: 1; }
-@media (min-width: 640px) { .season-snapshot-rail { top: calc(1px - .35rem); } }
-.season-snapshot-rail-track { background: var(--themed-border-2); border-radius: 999px; height: 8px; position: relative; }
-.season-snapshot-rail-thumb { background: var(--themed-text-2); border-radius: 999px; bottom: 0; position: absolute; top: 0; transition: box-shadow .12s ease; }
-.season-snapshot-rail.is-dragging .season-snapshot-rail-thumb { box-shadow: 0 0 0 1px var(--themed-text-2); }
-@media (hover: hover) { .season-snapshot-rail:hover .season-snapshot-rail-thumb { box-shadow: 0 0 0 1px var(--themed-text-2); } }
-.season-snapshot-rail:focus-visible .season-snapshot-rail-track { outline: 2px solid var(--blue-50); outline-offset: 2px; }
+/* In the 6-week view the chart is wider than its window and moves by a sideways drag of the graph itself (the page follows the finger,
+   then lets the weeks settle on the nearest whole week). The browser's own scrolling stays off, so a bar never sits on the week numbers,
+   a sideways wheel does nothing, and a vertical swipe is left to the pop-up. The pointer stays an ordinary arrow. */
+.season-snapshot-plot-scroll.is-windowed { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.season-snapshot-plot-scroll.is-windowed:focus-visible { outline: 2px solid var(--blue-50); outline-offset: 2px; }
 .season-snapshot-plot-track { position: relative; }
 .season-snapshot-plot-track svg { display: block; max-width: none; }
 .season-snapshot-week-label { color: #536077; font: 800 10px/1 Arial, sans-serif; letter-spacing: .12em; margin: .15rem 0 0; padding-left: 30px; text-align: center; text-transform: uppercase; }

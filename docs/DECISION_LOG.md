@@ -441,3 +441,7 @@ the sheet are gone. Lesson kept: for this pool, simpler wins.
 ## 2026-11-22 - Chalkboard further right on the phone, a Snapshot pill, ticket back to its frame
 
 On the phone the chalkboard stands further right (clear of the poker table) and a small "Snapshot" pill sits on its upper edge so it reads as tappable (the desktop keeps its position and gets the same pill). The phone ticket went back to its old frame: the home-screen-app lift that cleared the rounded corners is removed (the owner would rather have the corner clipped than the frame moved).
+
+## 2026-11-22 - Drag the 6 Wk graph; calmer pick lights; a loss ends a 2-0 streak at once
+
+The owner asked for three things. The 6 Wk Season Snapshot lost its bar over the chart: the graph is dragged sideways and lands on exact weeks (a vertical swipe stays the pop-up's). The lamps that show a pick is in lost their wide halo and hot white centre (a tight, dim ring on the ticket, a softer bulb on the boards). A player's perfect-week streak now ends the moment a loss is in a week still being played (Rick's was still 3 with a loss and a pick to play); that week still counts for the other figures only once both picks are graded.
