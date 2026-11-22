@@ -549,3 +549,11 @@ test("a line alone on its total runs through the total itself", () => {
   const a = ribbons.find((ribbon) => ribbon.playerId === "A" && ribbon.weekIndex === 1).points;
   assert.deepEqual(a.map((point) => (point.top + point.bottom) / 2), [y(1), y(1)]);
 });
+
+test("a line settling on a total as another leaves it settles on the total itself", () => {
+  const y = (wins) => 200 - wins * 40;
+  // Z sits on 11 then leaves; S arrives on 11 the week Z leaves and stays.
+  const ribbons = snapshotRibbons(weeksOf({ Z: 11, S: 9 }, { Z: 11, S: 11 }, { Z: 13, S: 11 }), players("Z", "S"), {}, (week) => week * 100, y, 3, 0);
+  const s = ribbons.find((ribbon) => ribbon.playerId === "S" && ribbon.weekIndex === 2).points;
+  assert.deepEqual(s.map((point) => (point.top + point.bottom) / 2), [y(11), y(11)]);
+});

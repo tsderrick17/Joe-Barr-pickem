@@ -150,11 +150,14 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3,
     for (const id of order) if (total.has(id)) byWins.set(total.get(id), [...(byWins.get(total.get(id)) ?? []), id]);
     const lane = new Map();
     for (const ids of byWins.values()) {
-      const staying = ids.filter((id) => flat(k - 1, id) && settled.has(id));
-      const taken = staying.map((id) => settled.get(id));
-      staying.forEach((id) => lane.set(id, settled.get(id)));
+      // Whoever has been sitting on this total keeps their lane; a player settling here makes room only for those staying on too
+      // (one on their way out just crosses at this point), so a line settles on its total itself when nobody else stays there.
+      const sitting = ids.filter((id) => flat(k - 1, id) && settled.has(id));
+      sitting.forEach((id) => lane.set(id, settled.get(id)));
+      const taken = sitting.filter((id) => flat(k, id)).map((id) => settled.get(id));
       const arriving = ids.filter((id) => !lane.has(id) && flat(k, id));
       allocate(arriving.length, taken).forEach((at, index) => { lane.set(arriving[index], at); settled.set(arriving[index], at); taken.push(at); });
+      sitting.filter((id) => !flat(k, id)).forEach((id) => taken.push(settled.get(id)));
       const passing = ids.filter((id) => !lane.has(id));
       allocate(passing.length, taken).forEach((at, index) => lane.set(passing[index], at));
       for (const id of ids) if (!flat(k, id)) settled.delete(id);
