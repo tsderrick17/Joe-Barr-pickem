@@ -179,7 +179,7 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false, save
         </div>
       ) : null}
       {view.playoff ? <p className="lab-tote-race">{raceLine(view)}</p> : null}
-      <WeekFace open={view.canPick ? onOpen : null} view={view} />
+      <div className="lab-tote-data"><WeekFace open={view.canPick ? onOpen : null} view={view} /></div>
       {view.canPick ? (
         <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
           <span className="lab-tote-ticket-body">

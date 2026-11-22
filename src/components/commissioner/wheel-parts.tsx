@@ -76,6 +76,12 @@ export function Sheet({ open, onClose, title, children, bare = false, untitled =
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new signal slides it away
   useEffect(() => { if (closeSignal > 0) slideAway(true); }, [closeSignal]);
 
+  // Whether the finger is on content scrolled to its top: the sheet itself, and every list inside it that scrolls on its own (a pop-up
+  // scrolls only its data, under a heading that stands still).
+  const atTop = (target: Element | null) => {
+    for (let node = target; node && node !== body.current?.parentElement; node = node.parentElement) if (node.scrollTop > 0) return false;
+    return true;
+  };
   // Sliding it down with a finger puts it away. A pull only counts from the top of the content (otherwise it is the content scrolling) and
   // only when it goes mostly down (a swipe along a chart is the chart's); it follows the finger, and springs back unless it went far enough.
   return <dialog
@@ -98,7 +104,7 @@ export function Sheet({ open, onClose, title, children, bare = false, untitled =
         if (pull.down === null && Math.hypot(dx, pull.dy) > 6) pull.down = pull.dy > Math.abs(dx);
         if (pull.down && pull.dy > 0) lift(pull.dy, false);
       }}
-      onTouchStart={(event) => { drag.current = (body.current?.scrollTop ?? 0) <= 0 && leaving.current === null ? { x: event.touches[0].clientX, y: event.touches[0].clientY, dy: 0, down: null } : null; }}
+      onTouchStart={(event) => { drag.current = atTop(event.target as Element) && leaving.current === null ? { x: event.touches[0].clientX, y: event.touches[0].clientY, dy: 0, down: null } : null; }}
       ref={body}
     >
       <button aria-label="Close" className="cw-handle" onClick={() => slideAway()} type="button" />

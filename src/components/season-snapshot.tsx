@@ -15,13 +15,21 @@ type Range = "all" | "six";
 // Players take colors in the order they joined the pool and keep them for good.
 // Contrast is under 3:1 for a few hues, so identity never depends on color
 // alone: every line has a named key entry and hover highlights one player.
-const palette = [
+const paperPalette = [
   "#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4",
   "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300",
 ];
 
-/** Permanent colors: join order first, then anyone the order does not list. */
-export function snapshotColors(standings: Player[], colorOrder: string[] = []) {
+// The chalkboard's chalk: the same order of hues, toned for the dark slate and checked there (2026-11-21) so every pair of the first
+// eight stays apart, for normal and color-blind eyes alike (each at least 15 and 8 apart in OKLab x100). The last three are spares.
+const chalkPalette = [
+  "#1f9a6a", "#2452c4", "#f2922a", "#b51f30", "#44cfee", "#e85ba6",
+  "#d4dc3a", "#a184f7", "#f4efe2", "#c8a27c", "#7fe0c4",
+];
+
+/** Permanent colors: join order first, then anyone the order does not list. `chalk` gives each person their chalkboard tone. */
+export function snapshotColors(standings: Player[], colorOrder: string[] = [], chalk = false) {
+  const palette = chalk ? chalkPalette : paperPalette;
   // Keep every listed id, including players who are no longer active, so the
   // slots of everyone after them never shift.
   const known = colorOrder;
@@ -409,7 +417,7 @@ function SnapshotChart({
 }
 
 /** The chart and its player key. Kept separate from loading so it renders from plain data. */
-function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bowl = false }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs"; bowl?: boolean }) {
+function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bowl = false, keyless = false, chalk = false }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs"; bowl?: boolean; keyless?: boolean; chalk?: boolean }) {
   // Once the playoffs begin the chart can show either half; before then, only the regular season.
   const showPlayoffs = !bowl && (view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0);
   // The Bowl Pool's chart (a point a bowl day) keeps its own hidden players.
@@ -429,7 +437,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
   const [hoverId, setHoverId] = useState<string | null>(null);
 
   // Colors follow the person, never their rank or who is visible.
-  const colors = snapshotColors(standings, snapshot.colorOrder);
+  const colors = snapshotColors(standings, snapshot.colorOrder, chalk);
   const visible = standings.filter((player) => !hidden.has(player.id));
   const chooseHidden = (next: Set<string>) => {
     setHidden(next);
@@ -477,7 +485,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
         ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
         : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} axisName={bowl ? "Bowl day" : undefined} title={bowl ? "Bowl Pool" : "Regular season"} weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
-    <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
+    {keyless ? null : <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
       {keyRows.map(({ player, total }) => {
         const shown = !hidden.has(player.id);
         return <button aria-label={`${player.firstName}, ${total} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">
@@ -486,6 +494,36 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
         </button>;
       })}
       <button className="season-snapshot-show-all" disabled={hidden.size === 0} onClick={() => chooseHidden(new Set())} type="button">Show all</button>
+    </div>}
+  </div>;
+}
+
+/** The chalkboard in the clubhouse room turns between its pools (in bowl season, Pick'em and the Bowl Pool) every 10 seconds. */
+const BOARD_POOL_MS = 10_000;
+
+/**
+ * The clubhouse chalkboard's face: the very chart the Season Snapshot draws (its last six weeks; the playoffs once they begin; in bowl
+ * season the Bowl Pool's last six days in turn with it), on the slate in chalk, without its key. Players hidden on the full chart stay
+ * hidden here. Before Week 6 has settled for a player, the board says when it opens.
+ */
+export function SnapshotBoard({ snapshot, standings, isPlayoff, bowl, locked }: { snapshot: Snapshot | null; standings: Player[]; isPlayoff: boolean; bowl?: BowlChart | null; locked: boolean }) {
+  const pools = bowl ? 2 : 1;
+  const [at, setAt] = useState(0);
+  useEffect(() => {
+    if (pools < 2) return;
+    const timer = window.setInterval(() => setAt((pool) => (pool + 1) % pools), BOARD_POOL_MS);
+    return () => window.clearInterval(timer);
+  }, [pools]);
+  const onBowl = Boolean(bowl) && at % pools === 1;
+  const playoffs = !onBowl && Boolean(snapshot) && (isPlayoff || (snapshot?.playoffs.length ?? 0) > 0);
+  const title = onBowl ? "Bowl Pool" : playoffs ? "Playoffs" : "Season Snapshot";
+  return <div className="season-snapshot season-snapshot-board">
+    <p className="season-snapshot-board-title">{title}</p>
+    <div className="season-snapshot-body">
+      {onBowl && bowl
+        ? <SnapshotView bowl chalk key="bowl" keyless range="six" snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />
+        : locked ? <p className="season-snapshot-board-note">Opens after Week 6</p>
+          : snapshot ? <SnapshotView chalk isPlayoff={isPlayoff} key={playoffs ? "playoffs" : "regular"} keyless range="six" snapshot={snapshot} standings={standings} /> : null}
     </div>
   </div>;
 }
@@ -497,7 +535,7 @@ export type BowlChart = { weeks: Week[]; players: Player[] };
  * The back of the Pick'em Pad, and the clubhouse chalkboard's full chart. Loads the first time it is turned over (or opened).
  * Given `bowl` (the chalkboard in bowl season), a Pick'em | Bowl switch picks which pool it charts.
  */
-export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, bowl }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; bowl?: BowlChart | null }) {
+export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, bowl, chalk = false }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; bowl?: BowlChart | null; chalk?: boolean }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -575,7 +613,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
       </div> : null}
     </div>
     <div className="season-snapshot-body">
-      {onBowl && bowl ? (bowl.weeks.length === 0 ? <p className="season-snapshot-message">The Bowl Pool&rsquo;s chart starts once the first bowl day is final.</p> : <SnapshotView bowl key="bowl" range={range} snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />) : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
+      {onBowl && bowl ? (bowl.weeks.length === 0 ? <p className="season-snapshot-message">The Bowl Pool&rsquo;s chart starts once the first bowl day is final.</p> : <SnapshotView bowl chalk={chalk} key="bowl" range={range} snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />) : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView chalk={chalk} isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
     </div>
   </div>;
 }

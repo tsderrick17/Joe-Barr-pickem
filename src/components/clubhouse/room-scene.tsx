@@ -118,13 +118,8 @@ export type RoomGame = { id: string; kickoff: string; at?: number; away: string;
  * there), the line of news on a label, whether a pick is owed, a new chat message, and whether it is bowl season (from Dec 7: the Bowl Pool takes the poker table once Survivor is done, and the chalkboard turns between the two pools). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-/**
- * One sketch on the chalkboard: what it charts (its title and the weeks or days in view), each player's line in a 252 by 104 box in their
- * own color, and who leads. With nothing to draw yet it carries a note instead. In bowl season the board turns between the two pools.
- */
-export type ChalkPage = { title: string; span: string; lines: Array<{ id: string; color: string; points: number[][] }>; leader: string; note?: string };
-
-export type RoomFeed = { chalk?: ChalkPage[]; week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
+/** `chalk` is what the chalkboard shows: the page hands it the Season Snapshot's own chart (see `SnapshotBoard`). */
+export type RoomFeed = { chalk?: ReactNode; week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
 
 function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed; night: boolean }) {
   const rows = feed.standings;
@@ -155,7 +150,7 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
   const gameRows = rowCount === 0 ? [] : Array.from({ length: rowCount < 2 ? 1 : rowCount + 1 }, (_, row) => (games.length === 1 ? [games[0]] : [0, 1].map((side) => games[(2 * (row % rowCount) + side) % games.length])));
   return (
     <div aria-hidden="true" className="lab-room-live">
-      <Chalkboard corners={picture.screens?.chalkboard} frame={frame} night={night} pages={feed.chalk ?? []} />
+      {feed.chalk ? <Screen box={frame} className={`is-chalk${night ? " is-night" : ""}`} corners={picture.screens?.chalkboard} h={CHALK_H} w={CHALK_W}>{feed.chalk}</Screen> : null}
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
         <header><b>PICK’EM</b><span>{feed.week.toUpperCase()} · {page + 1}/{pages}</span></header>
         {leaders.length ? <p className="lab-room-leader"><i>LEAD</i><span>{leaders.length === 1 ? leaders[0].name : `${leaders.length}-WAY TIE`}</span><b>{leaders[0].wins}</b></p> : null}
@@ -201,48 +196,12 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
   );
 }
 
-/** The chalkboard turns between its sketches (in bowl season, Pick'em and the Bowl Pool) every 10 seconds. */
-const CHALK_PAGE_MS = 10_000;
-
 /**
- * The chalkboard's slate, drawn as chalk: the title and what is in view along the top, each player's line in their own color washed
- * pale the way colored chalk is, the leader named at the end of the top line, all through a rough, grainy edge. The picture's own light
- * is on it, so at night the chalk is a little dimmer.
+ * The chalkboard's slate, in its own pixels: the Season Snapshot's chart is drawn at this size and laid onto the slate, so it is small
+ * enough that its type reads from across the room. The picture's own light is on it, so at night the chalk is a little dimmer.
  */
-function Chalkboard({ corners, frame, pages, night }: { corners: Point[] | undefined; frame: { width: number; height: number } | null; pages: ChalkPage[]; night: boolean }) {
-  const [at, setAt] = useState(0);
-  useEffect(() => {
-    if (pages.length < 2) return;
-    const timer = window.setInterval(() => setAt((page) => (page + 1) % pages.length), CHALK_PAGE_MS);
-    return () => window.clearInterval(timer);
-  }, [pages.length]);
-  const page = pages[at % Math.max(1, pages.length)];
-  if (!page) return null;
-  return (
-    <Screen box={frame} className={`is-chalk${night ? " is-night" : ""}`} corners={corners} h={190} w={300}>
-      <svg viewBox="0 0 300 190">
-        <defs>
-          <filter id="chalk-grain" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence baseFrequency="0.85" numOctaves="2" result="noise" seed="4" type="fractalNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="2.4" />
-            <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.35" />
-            <feComposite in="rough" in2="grain" operator="in" />
-          </filter>
-        </defs>
-        <g filter="url(#chalk-grain)" key={page.title}>
-          <text className="chalk-title" x="16" y="30">{page.title}</text>
-          <text className="chalk-span" textAnchor="end" x="286" y="182">{page.span}</text>
-          <path className="chalk-rule" d="M16 40 Q150 37 286 41" />
-          {page.note ? <text className="chalk-note" textAnchor="middle" x="150" y="112">{page.note}</text> : <>
-            <path className="chalk-axis" d="M18 50 L17 161 L278 160" />
-            {page.lines.map((line) => <polyline className="chalk-line" key={line.id} points={line.points.map(([x, y]) => `${x + 20},${y + 52}`).join(" ")} style={{ stroke: `color-mix(in srgb, ${line.color} 62%, #f4f1e8)` }} />)}
-            <text className="chalk-leader" x="16" y="182">{page.leader}</text>
-          </>}
-        </g>
-      </svg>
-    </Screen>
-  );
-}
+const CHALK_W = 240;
+const CHALK_H = 152;
 
 /**
  * The room itself: the picture by day and at night, the two live boards, and a tap spot over each thing in it with its name plate.

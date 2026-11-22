@@ -19,7 +19,8 @@ const spots = existsSync(spotsFile) ? JSON.parse(readFileSync(spotsFile, "utf8")
 const only = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 // The tall pictures are for a phone. The wide ones are the desktop's: the same room from the same spot through a longer lens, the whole
 // room in one view (both side walls, the bar, the boards, the fireplace and the table).
-const WIDE = "w=880&h=520&fov=48";
+// The chalkboard stands further right on the desktop (owner, 2026-11-21), clear of the middle of the wider view.
+const WIDE = "w=880&h=520&fov=48&chalk=-1.45,-2.7,0.6,0.8";
 // The full-screen pictures are the real clubhouse's on a phone: taller, to fill the screen under the site's bar, with a wider view up
 // and down (fov 75) so the room is as wide side to side as the Lab's tall picture.
 const FULL = "w=390&h=700&fov=75";

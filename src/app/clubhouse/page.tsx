@@ -9,12 +9,12 @@ import { Constitution } from "@/components/clubhouse/constitution";
 import { RoomScene, warmRoomPicture, type RoomFeed } from "@/components/clubhouse/room-scene";
 import { RoomTicket, type RoomTicketData } from "@/components/clubhouse/room-ticket";
 import { FootballLoadingScreen } from "@/components/football-loader";
-import SeasonSnapshot, { loadSeasonSnapshot, snapshotColors, snapshotRefreshKey, type Snapshot } from "@/components/season-snapshot";
+import SeasonSnapshot, { SnapshotBoard, loadSeasonSnapshot, snapshotRefreshKey, type Snapshot } from "@/components/season-snapshot";
 import { PULL_REFRESH_EVENT } from "@/components/pull-to-refresh";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
-import { bowlSnapshot, chalkPages } from "@/lib/chalkboard.js";
+import { bowlChartReady, bowlSnapshot } from "@/lib/chalkboard.js";
 import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
@@ -286,11 +286,12 @@ export default function ClubhousePage() {
     return () => { live = false; };
   }, [snapshotOpen, snapshotKey]);
   const snapshotPlayers = useMemo(() => (room?.home.rows ?? []).map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated })), [room]);
-  const bowlChart = useMemo(() => (bowlInRoom && bowlRead ? bowlSnapshot(bowlRead) : null), [bowlInRoom, bowlRead]);
+  // The Bowl Pool's chart joins once its first 10 bowls are final.
+  const bowlChart = useMemo(() => (bowlInRoom && bowlRead && bowlChartReady(bowlRead) ? bowlSnapshot(bowlRead) : null), [bowlInRoom, bowlRead]);
   // In bowl season the room's ticker carries the bowls too: today's NFL games, today's bowls, then the rest sprinkled through each other.
   const roomFeed = useMemo(() => {
     if (!room) return null;
-    const chalk = chalkPages({ pickem: snapshot, players: snapshotPlayers, colors: snapshotColors(snapshotPlayers, snapshot?.colorOrder), hidden: !snapshotOpen, bowl: bowlChart });
+    const chalk = <SnapshotBoard bowl={bowlChart} isPlayoff={room.home.isPlayoff} locked={!snapshotOpen} snapshot={snapshot} standings={snapshotPlayers} />;
     if (!room.feed.bowl || !bowlRead) return { ...room.feed, chalk };
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
     return { ...room.feed, chalk, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
@@ -341,8 +342,8 @@ export default function ClubhousePage() {
         }}
         onStay={() => setAsking(null)}
       /> : null}
-      {popup("snapshot") ? <Sheet bare onClose={() => leave("snapshot")} open title="Season Snapshot"><div className="club-snapshot pickem-ledger">
-        {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
+      {popup("snapshot") ? <Sheet bare onClose={() => leave("snapshot")} open title="Season Snapshot"><div className="club-snapshot is-chalkboard pickem-ledger">
+        {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} chalk isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
       </div></Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}

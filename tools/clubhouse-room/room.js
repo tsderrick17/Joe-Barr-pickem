@@ -930,12 +930,12 @@ export async function buildRoom(q) {
     if (night) { const l = new THREE.PointLight(0xff9a40, 2.5, 4, 1.6); l.position.set(x, 2.1, z); out.add(l); }
   }
   {
-    // The chalkboard: a slate in a walnut frame on a wheeled walnut stand, standing in the room all season between the poker table and
-    // the bar, turned toward the door. Its slate is live (like the two screens): the picture leaves it clean but for old chalk dust, and
+    // The chalkboard: a slate in a walnut frame on a wheeled walnut stand, standing in the room all season at the front right, before the poker table,
+    // turned toward the room. Its slate is live (like the two screens): the picture leaves it clean but for old chalk dust, and
     // the page draws the Season Snapshot on it in chalk, so its four corners are recorded. A tray along its foot holds chalk and a felt
     // eraser. (It took the place of the Bowl Pool's bulletin board, which was only wheeled in for bowl season.)
     const chalkboard = group("chalkboard");
-    const [CX, CZ, CR, CS] = (q.get("chalk") ?? "-1.2,-5.5,0.3,0.95").split(",").map(Number);
+    const [CX, CZ, CR, CS] = (q.get("chalk") ?? "-0.55,-2.7,0.6,0.8").split(",").map(Number);
     const stand = new THREE.Group(); stand.position.set(CX, 0, CZ); stand.rotation.y = CR; stand.scale.setScalar(CS);
     chalkboard.add(stand);
     const SW = 1.45, SH = 0.92, SY = 1.0;                                                                                            // the slate, and the height of its middle

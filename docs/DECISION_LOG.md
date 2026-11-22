@@ -25,14 +25,25 @@ and add a row above. (It is read at the start of every change, so short is cheap
 
 The Bowl Pool's bulletin board was only wheeled into the room from Dec 7 and was never the way into the Bowl Pool (the poker table's
 plate is, once Survivor is done). It is gone, and with it the six bowl-season pictures of the room. In its place a chalkboard on a wheeled
-walnut stand stands in the room all season, between the poker table and the bar, clear of the Big Board and the spreads board. Its slate
-is live like the two screens: the page sketches the Season Snapshot on it in chalk (the last six weeks, each player's line in their own
-colour washed pale, the leader along the foot; the playoffs once a playoff game day is final), and a player who cannot see the Season
-Snapshot yet (before Week 6 settles) reads "Opens after Week 6". Tapping it opens the full Season Snapshot (#snapshot). From Dec 7 the
-Bowl Pool has its own chart, a point a bowl day once every bowl that day is decided, built from the Bowl Pool's read the room already
-makes (`bowlSnapshot`); the board turns between the two pools every 10 seconds and the full chart gains a Pick'em | Bowl switch,
-remembered on the device. The chalkboard and its chart share one Season Snapshot read, made again only when a result changes the
-standings. The owner asked for no weekly story line or rival line.
+walnut stand stands in the room all season at the front right, in front of the poker table (further right on a desktop, whose
+wider view would otherwise put it in the middle). Its slate is live like the two screens: the page draws the Season Snapshot's own chart
+on it, the same chart as the Pick'em Pad (its last six weeks; the playoffs once they begin) in a chalk skin without its key, and a player
+who cannot see the Season Snapshot yet (before Week 6 settles) reads "Opens after Week 6". The owner found the first hand-drawn sketch
+hard to read. Tapping it opens the full Season Snapshot (#snapshot), working exactly as on the pad, on a slate in a walnut frame. The
+chalk colours are the pad's order of hues, toned for the dark slate and checked so the first eight players stay apart for normal and
+colour-blind eyes. The Bowl Pool has its own chart, a point a bowl day once every bowl that day is decided, built from the Bowl Pool's
+read the room already makes (`bowlSnapshot`); it joins only once the first 10 bowls are final (`bowlChartReady`), so it opens on a real
+race. Then the board turns between the two pools every 10 seconds and the full chart gains a Pick'em | Bowl switch, remembered on the
+device. The chalkboard and its chart share one Season Snapshot read, made again only when a result changes the standings. The owner
+asked for no weekly story line or rival line.
+
+## 2026-11-21 - Clubhouse pop-ups: one notch, data-only scrolling, the tiebreaker in the title game
+
+Every clubhouse pop-up has the same pull notch at the same spot (a tall pop-up had squeezed it to a sliver on a desktop). Each scrolls
+only its data under a heading that stands still: the ticket's games and its send box, the Bowl Pool's bowls, the Constitution's
+articles, the Trophy Room's rooms; the scroll bar runs tight down the data, never beside a heading or out at the screen's edge, and a
+pull-down to close counts only once that data is back at its top. The Bowl tiebreaker is back in the title game's own box ("Closest
+wins."), the Bowl sheet's matchups are two quiet lines ("Teams TBD" before the schools are set) and the bowl pennants are a little bigger.
 
 ## 2026-11-21 - Lab try-outs retire once they ship
 
