@@ -980,14 +980,13 @@ function bowlReadPlayed() {
   return read;
 }
 
-test("the chalkboard is a still chalk drawing that opens the Season Snapshot, titled on its title line; the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
+test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no title line: the chart has the room); the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
   const chalk = page.locator(".lab-room-screen.is-chalk");
   await expect(chalk.locator(".chalk-line")).toHaveCount(4, { timeout: 30_000 });
   await expect(chalk).toHaveText("");   // no names, numbers or title on the board
   await page.getByRole("button", { name: "Season Snapshot" }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
-  await expect(sheet.getByRole("heading", { name: "Season Snapshot", level: 2 }).last()).toBeVisible();
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
   await expect(sheet.getByRole("group", { name: "Pool shown" })).toHaveCount(0);   // no Bowl side before 10 bowls are final
   await expect(page).toHaveURL(/#snapshot$/);

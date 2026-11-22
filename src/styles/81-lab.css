@@ -823,10 +823,6 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .is-chalkboard { --chalk: rgb(246 243 234); --chalk-dim: rgb(246 243 234 / .72); --chalk-faint: rgb(246 243 234 / .22); }
 .is-chalkboard .season-snapshot { color: var(--chalk); }
 .is-chalkboard .pickem-ledger-masthead { border-bottom: 1px solid var(--chalk-faint); border-top: 0; }
-/* The full chart says what it is on its title line (a bare pop-up's own heading is hidden; this one is the chart's). */
-.cw-sheet.is-bare .is-chalkboard .pickem-ledger-masthead h2 { clip: auto; color: var(--chalk); font-family: var(--font-serif); font-size: clamp(1.1rem, 4.8vw, 1.6rem); height: auto; white-space: nowrap; letter-spacing: .06em; margin: .18rem 0 0; overflow: visible; position: static; text-transform: uppercase; width: auto; }
-.is-chalkboard .pickem-ledger-masthead:has(.season-snapshot-view) { flex-wrap: wrap; row-gap: .4rem; }
-.is-chalkboard .pickem-ledger-masthead:has(.season-snapshot-view) h2 { flex: 1 0 100%; }   /* with a Pick'em | Bowl switch the title has its own line */
 .is-chalkboard .season-snapshot-row svg text { fill: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-axis-label, .is-chalkboard .season-snapshot-week-label { color: var(--chalk-dim); fill: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-row svg line { stroke: var(--chalk-faint); }

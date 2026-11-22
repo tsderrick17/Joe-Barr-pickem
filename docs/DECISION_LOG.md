@@ -25,7 +25,7 @@ and add a row above. (It is read at the start of every change, so short is cheap
 
 The chalkboard in the room no longer draws the live chart: it is a still chalk sketch of a race (an axis, four coloured chalk lines,
 old dust), so it reads as a real chalkboard and the room no longer reads the Season Snapshot as it loads. Tapping it opens the Season
-Snapshot, which now says so on its title line. The Chat plate stands on the bar stools just above the board, and on a phone's home
+Snapshot (with no title line: the owner wants the room for the chart). The Chat plate stands on the bar stools just above the board, and on a phone's home
 screen app the ticket's frame stands clear of the screen's rounded corners.
 
 ## 2026-11-22 - Season Snapshot: flat weeks are flat
