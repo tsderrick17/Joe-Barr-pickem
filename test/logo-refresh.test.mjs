@@ -13,11 +13,11 @@ test("the logo refresh runs on the Friday before Selection Sunday (bowls) and Ju
   assert.doesNotMatch(workflow, /git push origin main|gh pr merge/);
 });
 
-test("every saved bowl logo (except LA's poster) has a Wikipedia article to refresh from", async () => {
+test("every saved bowl logo (except LA's poster and the playoff's two) has a Wikipedia article to refresh from", async () => {
   const { BOWL_ARTICLES } = await import("../scripts/bowl-logo-articles.mjs");
   for (const file of readdirSync(new URL("../assets/bowl-logos/", import.meta.url))) {
     const name = file.replace(/\.\w+$/, "");
-    if (name === "la") continue;
+    if (["la", "cfp", "championship"].includes(name)) continue;
     assert.ok(BOWL_ARTICLES[name], `${name} has an article`);
   }
 });

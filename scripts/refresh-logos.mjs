@@ -28,12 +28,14 @@ async function get(url) {
   throw new Error(`no answer from ${url}`);
 }
 
-async function samePicture(a, b) {
-  const [x, y] = await Promise.all([a, b].map((image) => sharp(image).ensureAlpha().resize(200, 200, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).raw().toBuffer()));
+/** How far apart two logos look (0 = the same), compared at 200 x 200 so a drawing (.svg) and a picture of it (.png) compare fairly. */
+async function difference(a, b) {
+  const [x, y] = await Promise.all([a, b].map((image) => sharp(image, { density: 300 }).ensureAlpha().resize(200, 200, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).raw().toBuffer()));
   let off = 0;
   for (let i = 0; i < x.length; i += 1) off += Math.abs(x[i] - y[i]);
-  return off / x.length < 2;
+  return off / x.length;
 }
+const SAME = 6;
 
 async function refreshBowls() {
   const folder = new URL("assets/bowl-logos/", root);
@@ -56,10 +58,11 @@ async function refreshBowls() {
       const extension = (source.match(/\.(svg|png|webp|jpe?g)$/i)?.[1] ?? "png").toLowerCase().replace("jpeg", "jpg");
       const old = saved.find((file) => file.replace(/\.\w+$/, "") === name);
       const oldBytes = old ? readFileSync(new URL(old, folder)) : null;
-      if (oldBytes && (oldBytes.equals(image) || (extension !== "svg" && !old.endsWith(".svg") && await samePicture(oldBytes, image)))) continue;
+      const apart = oldBytes ? (oldBytes.equals(image) ? 0 : await difference(oldBytes, image)) : Infinity;
+      if (apart < SAME) continue;
       if (old) rmSync(new URL(old, folder));
       writeFileSync(new URL(`${name}.${extension}`, folder), image);
-      changed.push(`${name} (${page.title})`);
+      changed.push(`${name} (${page.title}, ${Number.isFinite(apart) ? `difference ${apart.toFixed(1)}` : "new"})`);
       execFileSync(process.execPath, [fileURLToPath(new URL("scripts/fit-bowl-logos.mjs", root)), name], { stdio: "inherit" });
     } catch (error) {
       missed.push(`${name} (${article}): ${error.message}`);
@@ -77,9 +80,10 @@ async function refreshNfl() {
     try {
       const image = await get(`https://a.espncdn.com/i/teamlogos/nfl/500/${ESPN_NFL[team] ?? team.toLowerCase()}.png`);
       const fresh = await sharp(image).resize(500, 500, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-      if (await samePicture(readFileSync(new URL(file, folder)), fresh)) continue;
+      const apart = await difference(readFileSync(new URL(file, folder)), fresh);
+      if (apart < SAME) continue;
       writeFileSync(new URL(file, folder), fresh);
-      changed.push(team);
+      changed.push(`${team} (difference ${apart.toFixed(1)})`);
     } catch (error) {
       missed.push(`${team}: ${error.message}`);
     }
