@@ -1016,15 +1016,16 @@ test("once 10 bowls are final the chalkboard turns to the Bowl Pool too, and its
 });
 
 test("every pop-up has the same pull notch, at the same spot, on a desktop", async ({ page }) => {
-  const seen = new Set<string>();
   for (const at of ["slate", "standings", "survivor", "bowl", "trophies", "rules", "notifications", "snapshot"]) {
     await openClubhouse(page, { at: `/clubhouse#${at}`, size: SIZES["desktop-1280"], bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
     const handle = page.locator(".cw-sheet[open] .cw-handle");
     await expect(handle).toBeVisible({ timeout: 30_000 });
-    await page.clock.runFor(1_000);   // the pop-up has finished rising
-    seen.add(await handle.evaluate((node) => { const box = node.getBoundingClientRect(); return `${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}x${Math.round(box.height)}`; }));
+    // Once the pop-up has finished rising, its notch sits where every other one does, at the same size.
+    await expect.poll(async () => {
+      await page.clock.runFor(250);
+      return handle.evaluate((node) => { const box = node.getBoundingClientRect(); return `${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}x${Math.round(box.height)}`; });
+    }, { message: at, timeout: 15_000 }).toBe("616,104 48x5");
   }
-  expect([...seen]).toEqual(["616,104 48x5"]);
 });
 
 test("every pop-up scrolls only its data, under a heading that stands still, on a phone and a desktop", async ({ page }) => {
