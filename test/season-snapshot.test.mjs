@@ -515,3 +515,45 @@ test("a week's name under the chart: its number, or a playoff round in full on o
   assert.deepEqual(snapshotWeekLines("Super Bowl"), ["SUPER", "BOWL"]);
   assert.deepEqual(snapshotWeekLines("Round"), ["ROUND"], "a name with nothing left after the trimming still shows something");
 });
+
+test("a flat week is perfectly flat, however many lines arrive on that total or pass through it", () => {
+  const y = (wins) => 200 - wins * 40;
+  // G sits on 7 for four weeks; S arrives on 7 and stays; R passes through 7 on the way up; everyone else is elsewhere.
+  const weeks = weeksOf(
+    { G: 7, S: 5, R: 4, T: 6 },
+    { G: 7, S: 5, R: 6, T: 8 },
+    { G: 7, S: 7, R: 7, T: 9 },
+    { G: 7, S: 7, R: 9, T: 10 },
+    { G: 9, S: 7, R: 11, T: 12 },
+  );
+  const ribbons = snapshotRibbons(weeks, players("T", "R", "G", "S"), {}, (week) => week * 100, y, 3, 0);
+  const lane = (id, week) => ribbons.find((ribbon) => ribbon.playerId === id && ribbon.weekIndex === week).points;
+  for (const week of [1, 2, 3]) {
+    const [from, to] = lane("G", week);
+    assert.equal(from.top, to.top, `G stays level in week ${week + 1}`);
+    assert.equal(to.top, lane("G", 1)[0].top, "G keeps one lane while on 7");
+  }
+  const [sFrom, sTo] = lane("S", 3);
+  assert.equal(sFrom.top, sTo.top, "S is level once it has settled on 7");
+  // Where S and G both sit on 7 they touch and never overlap.
+  const g = lane("G", 3)[0], s = lane("S", 3)[0];
+  assert.ok(s.bottom <= g.top + 1e-9 || g.bottom <= s.top + 1e-9);
+  // R passing through 7 takes a free lane: it never lands on G's.
+  const r = lane("R", 3)[0];
+  assert.ok(r.bottom <= g.top + 1e-9 || g.bottom <= r.top + 1e-9);
+});
+
+test("a line alone on its total runs through the total itself", () => {
+  const y = (wins) => 200 - wins * 40;
+  const ribbons = snapshotRibbons(weeksOf({ A: 1, B: 2 }, { A: 1, B: 3 }), players("B", "A"), {}, (week) => week * 100, y, 3, 0);
+  const a = ribbons.find((ribbon) => ribbon.playerId === "A" && ribbon.weekIndex === 1).points;
+  assert.deepEqual(a.map((point) => (point.top + point.bottom) / 2), [y(1), y(1)]);
+});
+
+test("a line settling on a total as another leaves it settles on the total itself", () => {
+  const y = (wins) => 200 - wins * 40;
+  // Z sits on 11 then leaves; S arrives on 11 the week Z leaves and stays.
+  const ribbons = snapshotRibbons(weeksOf({ Z: 11, S: 9 }, { Z: 11, S: 11 }, { Z: 13, S: 11 }), players("Z", "S"), {}, (week) => week * 100, y, 3, 0);
+  const s = ribbons.find((ribbon) => ribbon.playerId === "S" && ribbon.weekIndex === 2).points;
+  assert.deepEqual(s.map((point) => (point.top + point.bottom) / 2), [y(11), y(11)]);
+});

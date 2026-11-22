@@ -116,45 +116,65 @@ export function snapshotLayers(weeks, standings, startWinsById = {}) {
   return { segments };
 }
 
-/** Touching ribbon lanes, centered on each score; current leaders sit above peers.
- * Shared node boundaries keep joins continuous when a bundle splits or merges.
- * Each week is one straight band from the player's slot at the start of the
- * week to their slot at the end, so a line only bends at week boundaries, the
- * same as an ordinary line chart. Slots keep the same stacking order at both
- * ends, so bands on a shared path never cross or overlap.
- * At `start`, the first week the chart shows, every line begins from its score as a single point, so players who
- * share a score fan out of one point (the whole season: everyone from zero).
+/**
+ * Each player's line as a ribbon, one lane wide. Lines on the same total stack side by side in touching lanes, so none hides another,
+ * and the chart stays as straight as the scores (owner, 2026-11-22):
+ *  - a flat week is perfectly flat: a player who wins nothing keeps one lane from the week's start to its end, and for as long as they
+ *    stay on that total, however many others arrive or leave around them;
+ *  - only lines that are really there are stacked: a lane is given among the players on that total at that week, and those already
+ *    sitting there keep theirs, so a line passing through never nudges them;
+ *  - a bundle keeps its order: lanes go in stacking order (current leaders above), and with nobody settled on a total the bundle is
+ *    centered on it.
+ * Each week is one straight band between the player's lane at the start and at the end, so a line bends only at week boundaries.
+ * At `start`, the first week the chart shows, every line begins from its score as a single point, so players who share a score fan out
+ * of one point (the whole season: everyone from zero).
  */
 export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3, start = 0) {
-  const scores = [standings.map((player) => ({ playerId: player.id, wins: baseline[player.id] ?? 0 })), ...weeks.map((week) => week.scores)];
-  const nodes = scores.map((entries, weekIndex) => {
-    const totals = new Map(entries.map((entry) => [entry.playerId, entry.wins]));
-    const groups = new Map();
-    for (const player of standings) {
-      if (!totals.has(player.id)) continue;
-      const wins = totals.get(player.id);
-      groups.set(wins, [...(groups.get(wins) ?? []), player.id]);
+  const order = standings.map((player) => player.id);
+  const totals = [new Map(order.map((id) => [id, baseline[id] ?? 0])), ...weeks.map((week) => new Map(week.scores.map((score) => [score.playerId, score.wins])))];
+  const flat = (k, id) => k >= 0 && k < weeks.length && totals[k].has(id) && totals[k + 1].has(id) && totals[k].get(id) === totals[k + 1].get(id);
+  // The lanes nearest the total that are still free, top first; with nobody settled there, centered on it.
+  const allocate = (count, taken) => {
+    if (count === 0) return [];
+    if (taken.length === 0) return Array.from({ length: count }, (_, index) => index - (count - 1) / 2);
+    const free = [];
+    for (let step = -60; step <= 60; step++) {
+      const lane = taken[0] + step;
+      if (taken.every((other) => Math.abs(other - lane) > 1 - 1e-9)) free.push(lane);
     }
-    const positions = new Map();
-    for (const [wins, ids] of groups) {
-      ids.forEach((id, rank) => {
-        const top = y(wins) + (rank - ids.length / 2) * thickness;
-        positions.set(id, weekIndex === start
-          ? { top: y(wins), bottom: y(wins) }
-          : { top, bottom: top + thickness });
-      });
+    return free.sort((a, b) => Math.abs(a) - Math.abs(b) || a - b).slice(0, count).sort((a, b) => a - b);
+  };
+  const settled = new Map();   // a player's lane while they stay on one total
+  const lanes = totals.map((total, k) => {
+    const byWins = new Map();
+    for (const id of order) if (total.has(id)) byWins.set(total.get(id), [...(byWins.get(total.get(id)) ?? []), id]);
+    const lane = new Map();
+    for (const ids of byWins.values()) {
+      // Whoever has been sitting on this total keeps their lane; a player settling here makes room only for those staying on too
+      // (one on their way out just crosses at this point), so a line settles on its total itself when nobody else stays there.
+      const sitting = ids.filter((id) => flat(k - 1, id) && settled.has(id));
+      sitting.forEach((id) => lane.set(id, settled.get(id)));
+      const taken = sitting.filter((id) => flat(k, id)).map((id) => settled.get(id));
+      const arriving = ids.filter((id) => !lane.has(id) && flat(k, id));
+      allocate(arriving.length, taken).forEach((at, index) => { lane.set(arriving[index], at); settled.set(arriving[index], at); taken.push(at); });
+      sitting.filter((id) => !flat(k, id)).forEach((id) => taken.push(settled.get(id)));
+      const passing = ids.filter((id) => !lane.has(id));
+      allocate(passing.length, taken).forEach((at, index) => lane.set(passing[index], at));
+      for (const id of ids) if (!flat(k, id)) settled.delete(id);
     }
-    return positions;
+    return lane;
   });
-  return snapshotLayers(weeks, standings, baseline).segments.flatMap((segment) => {
-    const ids = [...segment.playerIds].reverse();
-    return ids.map((playerId) => {
-      const start = nodes[segment.weekIndex].get(playerId);
-      const end = nodes[segment.weekIndex + 1].get(playerId);
-      const points = [{ x: x(segment.weekIndex), ...start }, { x: x(segment.weekIndex + 1), ...end }];
-      return { playerId, weekIndex: segment.weekIndex, points };
-    });
-  });
+  const at = (k, id) => {
+    const middle = y(totals[k].get(id));
+    if (k === start) return { top: middle, bottom: middle };
+    const top = middle + lanes[k].get(id) * thickness - thickness / 2;
+    return { top, bottom: top + thickness };
+  };
+  return snapshotLayers(weeks, standings, baseline).segments.flatMap((segment) => [...segment.playerIds].reverse().map((playerId) => ({
+    playerId,
+    weekIndex: segment.weekIndex,
+    points: [{ x: x(segment.weekIndex), ...at(segment.weekIndex, playerId) }, { x: x(segment.weekIndex + 1), ...at(segment.weekIndex + 1, playerId) }],
+  })));
 }
 
 /** A filled strip, including inset bevel strips that never extend outside it. */
