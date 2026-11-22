@@ -241,6 +241,26 @@ test("with the switch up, opening the app goes straight to the clubhouse without
   expect(profileAnsweredAt).toBe(0);   // left for the clubhouse before the account was read
 });
 
+test("with the switch up, the Standings link on another page goes straight to the clubhouse, never through the classic Standings", async ({ page }) => {
+  await openClubhouse(page, { at: "/board" });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  await page.goto("/board");
+  const standings = page.locator("nav a:visible", { hasText: "Standings" }).first();
+  await expect(standings).toHaveAttribute("href", "/clubhouse", { timeout: 30_000 });
+  // The classic Standings page never renders on the way.
+  let classicShown = false;
+  await page.exposeFunction("classicStandingsShown", () => { classicShown = true; });
+  await page.evaluate(() => new MutationObserver(() => { if (document.querySelector("h1")?.textContent?.trim() === "Standings") (window as unknown as { classicStandingsShown: () => void }).classicStandingsShown(); }).observe(document.body, { childList: true, subtree: true }));
+  await standings.click();
+  await page.waitForURL(/\/clubhouse$/, { timeout: 30_000 });
+  await page.waitForTimeout(500);
+  expect(classicShown).toBe(false);
+  // With the switch down it is the classic Standings again.
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "off"));
+  await page.goto("/board");
+  await expect(page.locator("nav a:visible", { hasText: "Standings" }).first()).toHaveAttribute("href", "/", { timeout: 30_000 });
+});
+
 test("a player sent back from the clubhouse has the switch put down, so the Standings do not send them straight back", async ({ page }) => {
   await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
   await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
