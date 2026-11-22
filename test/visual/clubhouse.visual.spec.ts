@@ -980,14 +980,11 @@ function bowlReadPlayed() {
   return read;
 }
 
-test("the chalkboard carries the Season Snapshot's own chart in chalk and opens the full chart; the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
+test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no title line: the chart has the room); the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
   const chalk = page.locator(".lab-room-screen.is-chalk");
-  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot", { timeout: 30_000 });
-  await expect(chalk.locator(".season-snapshot-key")).toHaveCount(0);
-  await expect(chalk.locator(".season-snapshot-ribbon").first()).toBeAttached();
-  await page.clock.runFor(10_000);
-  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot");   // two bowls final: no Bowl side yet
+  await expect(chalk.locator(".chalk-line")).toHaveCount(4, { timeout: 30_000 });
+  await expect(chalk).toHaveText("");   // no names, numbers or title on the board
   await page.getByRole("button", { name: "Season Snapshot" }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
@@ -997,12 +994,9 @@ test("the chalkboard carries the Season Snapshot's own chart in chalk and opens 
   await expect(page).toHaveScreenshot("clubhouse-snapshot-phone-390.png", { maxDiffPixels: 40 });
 });
 
-test("once 10 bowls are final the chalkboard turns to the Bowl Pool too, and its chart switches to it, a point a bowl day", async ({ page }) => {
+test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too, a point a bowl day", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
-  const chalk = page.locator(".lab-room-screen.is-chalk");
-  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot", { timeout: 30_000 });
-  await page.clock.runFor(10_000);
-  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Bowl Pool");
+  await expect(page.locator(".lab-room-screen.is-chalk .chalk-line")).toHaveCount(4, { timeout: 30_000 });
   await page.getByRole("button", { name: "Season Snapshot" }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await sheet.getByRole("button", { name: "Bowl", exact: true }).click();

@@ -31,8 +31,8 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
-  // The chat plate stands over the laptop on the bar, clear of the chalkboard in front of it.
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "above" },
+  // The chat plate stands on the bar stools just above the chalkboard (owner, 2026-11-22).
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.82, y: 0.55 }, fullAt: { x: 0.82, y: 0.55 }, wideAt: { x: 0.76, y: 0.64 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // It needs no plate: its own chalk title says what it is (and a plate under it would sit behind your ticket).
   { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", label: "none" },
@@ -118,8 +118,7 @@ export type RoomGame = { id: string; kickoff: string; at?: number; away: string;
  * there), the line of news on a label, whether a pick is owed, a new chat message, and whether it is bowl season (from Dec 7: the Bowl Pool takes the poker table once Survivor is done, and the chalkboard turns between the two pools). The Lab
  * fills it with the sample league; the real clubhouse with the pool's own data, the same data the classic pages show.
  */
-/** `chalk` is what the chalkboard shows: the page hands it the Season Snapshot's own chart (see `SnapshotBoard`). */
-export type RoomFeed = { chalk?: ReactNode; week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
+export type RoomFeed = { week: string; standings: RoomStanding[]; games: RoomGame[]; mine: string[]; news: Partial<Record<string, string>>; owed: boolean; mail: boolean; bowl: boolean; survivorOver?: boolean; survivorShown?: boolean; survivorActive?: boolean };
 
 function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { width: number; height: number } | null; feed: RoomFeed; night: boolean }) {
   const rows = feed.standings;
@@ -150,7 +149,7 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
   const gameRows = rowCount === 0 ? [] : Array.from({ length: rowCount < 2 ? 1 : rowCount + 1 }, (_, row) => (games.length === 1 ? [games[0]] : [0, 1].map((side) => games[(2 * (row % rowCount) + side) % games.length])));
   return (
     <div aria-hidden="true" className="lab-room-live">
-      {feed.chalk ? <Screen box={frame} className={`is-chalk${night ? " is-night" : ""}`} corners={picture.screens?.chalkboard} h={CHALK_H} w={CHALK_W}>{feed.chalk}</Screen> : null}
+      <Screen box={frame} className={`is-chalk${night ? " is-night" : ""}`} corners={picture.screens?.chalkboard} h={152} w={240}><ChalkSketch /></Screen>
       <Screen box={frame} className="is-board" corners={picture.screens?.board} h={206} w={288}>
         <header><b>PICK’EM</b><span>{feed.week.toUpperCase()} · {page + 1}/{pages}</span></header>
         {leaders.length ? <p className="lab-room-leader"><i>LEAD</i><span>{leaders.length === 1 ? leaders[0].name : `${leaders.length}-WAY TIE`}</span><b>{leaders[0].wins}</b></p> : null}
@@ -197,11 +196,42 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
 }
 
 /**
- * The chalkboard's slate, in its own pixels: the Season Snapshot's chart is drawn at this size and laid onto the slate, so it is small
- * enough that its type reads from across the room. The picture's own light is on it, so at night the chalk is a little dimmer.
+ * The chalkboard's slate: a still chalk drawing of a standings race, the way someone would sketch one by hand (no names, no numbers),
+ * with old chalk dust where earlier races were wiped away. It is the same drawing all season; tapping the board opens the real chart.
+ * The picture's own light is on it, so at night the chalk is a little dimmer.
  */
-const CHALK_W = 240;
-const CHALK_H = 152;
+function ChalkSketch() {
+  const lines: Array<[string, string]> = [
+    ["#f4f1e8", "M22 128 C40 112 56 104 72 92 S100 70 118 62 S150 44 170 34 S204 18 222 14"],
+    ["#f3d97a", "M22 128 C42 120 58 110 76 104 S104 92 122 80 S152 74 172 62 S204 48 222 44"],
+    ["#9fd3f2", "M22 128 C44 124 60 118 80 114 S106 104 126 100 S154 94 174 86 S204 78 222 74"],
+    ["#f2a3c4", "M22 128 C46 127 64 124 84 122 S112 118 130 116 S158 112 178 110 S206 106 222 104"],
+  ];
+  return (
+    <svg viewBox="0 0 240 152">
+      <defs>
+        <filter id="chalk-grain" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence baseFrequency="0.9" numOctaves="2" result="noise" seed="7" type="fractalNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="2.2" />
+          <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.3" />
+          <feComposite in="rough" in2="grain" operator="in" />
+        </filter>
+        <filter id="chalk-dust"><feGaussianBlur stdDeviation="5" /></filter>
+      </defs>
+      {/* old races wiped with a felt */}
+      <g className="chalk-dust" filter="url(#chalk-dust)">
+        <ellipse cx="70" cy="60" rx="52" ry="18" />
+        <ellipse cx="170" cy="112" rx="58" ry="16" />
+      </g>
+      <g filter="url(#chalk-grain)">
+        <path className="chalk-axis" d="M16 14 L17 134 L228 133" />
+        {[40, 72, 104].map((y) => <path className="chalk-tick" d={`M13 ${y} L21 ${y + 1}`} key={y} />)}
+        {[62, 108, 154, 200].map((x) => <path className="chalk-tick" d={`M${x} 130 L${x + 1} 138`} key={x} />)}
+        {lines.map(([color, d]) => <path className="chalk-line" d={d} key={color} style={{ stroke: color }} />)}
+      </g>
+    </svg>
+  );
+}
 
 /**
  * The room itself: the picture by day and at night, the two live boards, and a tap spot over each thing in it with its name plate.
@@ -261,7 +291,6 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         if (full && frame && at && typeof window !== "undefined") {
           const crop = Math.max(0, (frame.width - document.documentElement.clientWidth) / 2) + 6;
           if (spot === "trophies" || spot === "constitution") plateStyle = { left: Math.max(0, crop - at.x * frame.width) };
-          if (spot === "chat") plateStyle = { right: Math.max(0, at.x * frame.width + Math.max(at.w * frame.width, 44) - (frame.width - crop)) };   // a spot is never under 44px wide
         }
         const plate = label === "none" ? null : (
           <span className={`lab-room-tag is-${label}${taken && spot === "survivor" ? " is-bowl-pool" : ""}${news[spot] ? " has-news" : ""}${spot === "chat" && feed.mail ? " has-mail" : ""}`} style={plateStyle}>

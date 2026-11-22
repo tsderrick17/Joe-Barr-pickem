@@ -388,7 +388,7 @@ measure database requests or end-to-end route time.
 - The clubhouse (`/clubhouse`): the Commissioner and the players let into the clubhouse beta (`players.clubhouse_access`, set per player
   from the Clubhouse On/Off switch on `/admin/players`, audited) see the header's light switch and can open it; everyone else is sent to
   the Standings. It reads and writes only through the classic pages' routes, so it can never show a player more than those pages do.
-  Its chalkboard carries the Season Snapshot's own chart in chalk (and, once 10 bowls are final, the Bowl Pool's day-by-day chart, `src/lib/chalkboard.js`) and opens the
+  Its chalkboard is a still chalk drawing that opens the Season Snapshot (and, once 10 bowls are final, the Bowl Pool's day-by-day chart, `src/lib/chalkboard.js`) and opens the
   full chart; it shows the Season Snapshot only to those the Standings show it to (the Commissioner, everyone once Week 6 settles).
 - The Commissioner area (`/admin`, Commissioner only): the Wheel, ten spokes each with its own address (`SPOKES` in `src/lib/commissioner-wheel.js`):
   `/admin/gameday`, `/admin/health`, `/admin/reminders` (Messages), `/admin/players`, `/admin/bowl-pool`, `/admin/season`, `/admin/stats`,
