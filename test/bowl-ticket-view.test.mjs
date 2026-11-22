@@ -131,6 +131,19 @@ test("the playoff's rounds come from the schedule: the last two playoff games be
   assert.equal(view.sheet.games.find((game) => game.id === "qf2").name, "Rose Bowl Game (QF)");
 });
 
+test("a playoff game that names its round keeps it, as the Bowl Card does: the four first-round games are never called quarterfinals or semifinals", () => {
+  const games = [
+    ...[1, 2, 3, 4].map((n) => ({ id: `fr${n}`, provider_game_id: `cfp-2026-first-round-${n}`, bowl_name: `CFP First Round ${n}`, kickoff_at: `2026-12-${n < 2 ? 18 : 19}T20:00:00Z`, is_cfp: true })),
+    ...["fiesta", "cotton", "peach", "rose"].map((bowl, i) => ({ id: `qf${i}`, provider_game_id: `cfp-2026-${bowl}-quarterfinal`, bowl_name: bowl, kickoff_at: `2026-12-31T20:00:00Z`, is_cfp: false })),
+    { id: "sf0", provider_game_id: "cfp-2027-orange-semifinal", bowl_name: "Orange", kickoff_at: "2027-01-08T00:30:00Z", is_cfp: false },
+    { id: "sf1", provider_game_id: "cfp-2027-sugar-semifinal", bowl_name: "Sugar", kickoff_at: "2027-01-09T00:30:00Z", is_cfp: false },
+    { id: "nc", provider_game_id: "cfp-2027-national-championship", bowl_name: "National Championship", kickoff_at: "2027-01-20T00:30:00Z", is_cfp: false },
+  ];
+  const rounds = cfpRounds(games, "nc");
+  assert.deepEqual(["fr1", "fr2", "fr3", "fr4"].map((id) => rounds.get(id)), ["First Round", "First Round", "First Round", "First Round"]);
+  assert.deepEqual(["qf0", "qf3", "sf0", "sf1", "nc"].map((id) => rounds.get(id)), ["Quarterfinal", "Quarterfinal", "Semifinal", "Semifinal", "Championship"]);
+});
+
 test("a word boundary in the bowl-name rules is a real one (CFP and Sun Bowl names are recognised)", () => {
   assert.equal(bowlPennant("Tony the Tiger Sun Bowl").logo, "sun");
   assert.equal(bowlPennant("LA Bowl Hosted by Gronk").logo, "la");

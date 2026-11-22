@@ -84,9 +84,10 @@ export function titleGameId(games) {
 }
 
 /**
- * Each playoff game's round, from the schedule itself (the bowls that host the quarterfinals and semifinals rotate every year, so no
- * list of names): the games ESPN marks as the College Football Playoff's, less the title game, in kickoff order: the last two are the
- * semifinals, the four before them the quarterfinals, any earlier the first round; the title game is the Championship.
+ * Each playoff game's round. A game that says its round (its schedule key or name: "cfp-2026-first-round-1", "cfp-2027-orange-semifinal",
+ * "CFP First Round 2") takes that round, the same as the Bowl Card's (QF) and (SF). Any other game ESPN marks as the College Football
+ * Playoff's, less the title game, goes by kickoff order: the last two are the semifinals, the four before them the quarterfinals,
+ * any earlier the first round. The title game is the Championship.
  * @param {any[]} games  the Bowl Pool's games
  * @param {string | null} championshipId
  * @returns {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">}
@@ -94,8 +95,18 @@ export function titleGameId(games) {
 export function cfpRounds(games, championshipId) {
   /** @type {Map<string, "First Round" | "Quarterfinal" | "Semifinal" | "Championship">} */
   const rounds = new Map();
-  const playoff = games.filter((game) => game.is_cfp && game.id !== championshipId).sort((a, b) => Date.parse(a.kickoff_at ?? "") - Date.parse(b.kickoff_at ?? ""));
-  playoff.forEach((game, index) => rounds.set(game.id, index >= playoff.length - 2 ? "Semifinal" : index >= playoff.length - 6 ? "Quarterfinal" : "First Round"));
+  /** @type {any[]} */
+  const unnamed = [];
+  for (const game of games) {
+    if (game.id === championshipId) continue;
+    const said = `${game.provider_game_id ?? ""} ${game.bowl_name ?? ""}`;
+    if (/first[ -]round/i.test(said)) rounds.set(game.id, "First Round");
+    else if (/quarterfinal/i.test(said)) rounds.set(game.id, "Quarterfinal");
+    else if (/semifinal/i.test(said)) rounds.set(game.id, "Semifinal");
+    else if (game.is_cfp) unnamed.push(game);
+  }
+  unnamed.sort((a, b) => Date.parse(a.kickoff_at ?? "") - Date.parse(b.kickoff_at ?? ""));
+  unnamed.forEach((game, index) => rounds.set(game.id, index >= unnamed.length - 2 ? "Semifinal" : index >= unnamed.length - 6 ? "Quarterfinal" : "First Round"));
   if (championshipId) rounds.set(championshipId, "Championship");
   return rounds;
 }
