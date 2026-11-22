@@ -21,6 +21,14 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-22 - Season Snapshot: flat weeks are flat
+
+Lines on the same total stack side by side so none hides another, but each player's place in the stack was chosen fresh every week,
+so a player who won nothing could wobble a line-width as others arrived on or passed through their total. Now a player keeps one lane
+for as long as they stay on a total (a week with no win is dead flat), only the players really on a total share its lanes and those
+already there keep theirs, and lanes go in stacking order, centered on the total when nobody is settled there. This applies to every
+Season Snapshot chart: the Pick'em Pad and the chalkboard, All and 6 Wk, the regular season, the playoffs and the Bowl Pool.
+
 ## 2026-11-21 - Clubhouse: the chalkboard carries the Season Snapshot
 
 The Bowl Pool's bulletin board was only wheeled into the room from Dec 7 and was never the way into the Bowl Pool (the poker table's
