@@ -133,11 +133,14 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
               const result = game.results[team];
               // Once a game is decided each side shows its final score and how it did against the spread, so who covered is plain.
               const final = result.ats !== null && result.score !== null ? coverNote(result) : null;
+              // From kickoff, while the game is being played, each side names who took it (picks are public once a game kicks off).
+              const live = !final && locked && result.pickers.length > 0 ? result.pickers : null;
               return (
-                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
+                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : live ? `, picked by ${live.join(", ")}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
                   <span className={`lab-board-line ${game.lineFinal ? "is-final" : ""}`}>{line}</span>
                   {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.map((picker, index) => <Fragment key={picker}>{index ? " · " : ""}<u>{picker.toUpperCase()}</u></Fragment>) : "NO PICKS"}</em></span> : null}
+                  {live ? <span className="lab-board-final is-live"><em>{live.map((picker, index) => <Fragment key={picker}>{index ? " · " : ""}<u>{picker.toUpperCase()}</u></Fragment>)}</em></span> : null}
                   <span aria-hidden="true" className="lab-board-trace" />
                 </button>
               );

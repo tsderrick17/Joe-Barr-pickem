@@ -151,6 +151,7 @@
 .lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
 .lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
+.lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
 .lab-board-final em u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lab-board-cell.is-locked { opacity: .55; }
@@ -655,7 +656,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag.is-missed .lab-bowl-flag-name { fill: rgba(240, 232, 214, .7); }
 .lab-bowl-flag.is-done { opacity: .75; }
 /* The tiebreaker, in the ticket's own box beside Save: always in sight, gold-edged while it is still blank. */
-.lab-bowl-guess { align-items: center; border: 1px solid rgba(179, 139, 77, .5); border-radius: 6px; color: var(--bowl-ink); display: grid; font-family: Georgia, serif; font-size: .86rem; gap: 12px; grid-template-columns: 1fr auto; line-height: 1.35; padding: 10px 12px; }
+.lab-bowl-guess { grid-column: 1 / -1; align-items: center; border: 1px solid rgba(179, 139, 77, .5); border-radius: 6px; color: var(--bowl-ink); display: grid; font-family: Georgia, serif; font-size: .86rem; gap: 12px; grid-template-columns: 1fr auto; line-height: 1.35; padding: 10px 12px; }
 .lab-bowl-guess b { color: var(--bowl-gold-lt); display: block; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
 .lab-bowl-guess.is-empty { border-color: var(--bowl-gold-lt); box-shadow: 0 0 0 1px var(--bowl-gold-lt); }
 .lab-bowl-guess input { background: rgb(26 38 64); border: 1px solid var(--bowl-slip-gold); border-radius: 4px; color: var(--bowl-ink); font: inherit; font-size: 1.15rem; font-weight: 700; min-height: 2.75rem; text-align: center; width: 5rem; }

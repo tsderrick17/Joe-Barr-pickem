@@ -272,7 +272,7 @@ test("a player the Commissioner has not let in is sent to the Standings, whateve
   await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
 });
 
-test("a finished game on the ticket shows each side's final score and who covered, and there is no lock over the line", async ({ page }) => {
+test("a finished game on the ticket shows each side's final score and who covered, a game being played shows who took each side, and there is no lock over the line", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["live-mixed-locks-survivor"], at: "/clubhouse#slate" });
   const form = page.getByRole("dialog", { name: "Your ticket" });
   await expect(form).toBeVisible({ timeout: 30_000 });
@@ -283,8 +283,13 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(first.locator(".lab-board-final:not(.is-covered)")).toContainText("MIKE · PAT");
   await expect(first).not.toContainText("COVERED BY");
   await expect(form.locator(".lab-board-lock")).toHaveCount(0);
-  // A game that has kicked off but is not final shows no score.
-  await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
+  // A game that has kicked off but is not final shows no score, only who took each side.
+  const live = form.locator("ol > li").nth(2);
+  await expect(live.locator(".lab-board-final b")).toHaveCount(0);
+  await expect(live.locator(".lab-board-final.is-live")).toHaveText(["MIKE · PAT", "DANA · SAM"]);
+  await live.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-live-pickers-phone-390.png", { maxDiffPixels: 40 });
 });
 
 for (const [phase, homeExtra, table] of [
@@ -694,6 +699,10 @@ test("the Bowl tiebreaker sits in the title game's own box, and saving without i
   const titleGame = ticket.locator(".lab-bowl-game").nth(3);
   await expect(titleGame.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
   await expect(titleGame).toContainText("Closest wins.");
+  // The tiebreaker spans the game's whole width, edge to edge with its two teams.
+  const [guess, teams] = await Promise.all([titleGame.locator(".lab-bowl-guess").boundingBox(), titleGame.locator(".lab-board-cell").evaluateAll((cells) => { const boxes = cells.map((cell) => cell.getBoundingClientRect()); return { left: Math.min(...boxes.map((box) => box.left)), right: Math.max(...boxes.map((box) => box.right)) }; })]);
+  expect(Math.abs(guess!.x - teams.left)).toBeLessThanOrEqual(1);
+  expect(Math.abs(guess!.x + guess!.width - teams.right)).toBeLessThanOrEqual(1);
   await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
   await box.getByRole("button", { name: "Save picks" }).click();
