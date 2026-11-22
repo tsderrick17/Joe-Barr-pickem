@@ -23,7 +23,8 @@ const only = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 const WIDE = "w=880&h=520&fov=48&chalk=-1.45,-2.7,0.6,0.8";
 // The full-screen pictures are the real clubhouse's on a phone: taller, to fill the screen under the site's bar, with a wider view up
 // and down (fov 75) so the room is as wide side to side as the Lab's tall picture.
-const FULL = "w=390&h=700&fov=75";
+// The chalkboard stands further right on the phone too (owner, 2026-11-22), clear of the poker table.
+const FULL = "w=390&h=700&fov=75&chalk=-1.15,-2.7,0.6,0.8";
 const views = [["day", ""], ["night", "night=1"]];
 // Nothing in the room moves but its two boards (the owner turned the turning fans and swaying plants down), so no frame strips are drawn.
 for (const [name, base] of [...views, ...views.map(([name, query]) => [`${name}-wide`, [query, WIDE].filter(Boolean).join("&")]), ...views.map(([name, query]) => [`${name}-full`, [query, FULL].filter(Boolean).join("&")])]) {
