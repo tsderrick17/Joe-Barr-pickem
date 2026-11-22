@@ -1045,6 +1045,7 @@ test("every pop-up scrolls only its data, under a heading that stands still, on 
 test("the top bar holds still when day and night flip and when the switch goes between the clubhouse and the classic site", async ({ page }) => {
   for (const size of [SIZES["desktop-1280"], SIZES["phone-390"]]) {
     await openClubhouse(page, { size });
+    await expect(page.locator(".view-switch:visible")).toBeVisible({ timeout: 30_000 });   // the account is read: the bar is whole
     await page.clock.runFor(1_500);
     // Where each thing in the bar is centred (a turning icon keeps its centre), and how tall the tabs are.
     const bar = () => page.evaluate(() => [...document.querySelectorAll(".site-nav-brand, .site-nav-links, .theme-toggle, .theme-toggle-icon, .view-switch, .account-menu")]
