@@ -198,7 +198,7 @@ export function snapshotKeyColumns(count, width, minItem, gap) {
 }
 
 /**
- * Where a drag on the position rail puts the 6-week view: the week boundary nearest the pointer, never past either end.
+ * Where a drag of the graph settles the 6-week view: the week boundary nearest the pointer, never past either end.
  * @param {number} target  the wanted scroll position, in pixels
  * @param {number} step  pixels per week
  * @param {number} furthest  the most the chart can scroll
@@ -256,19 +256,6 @@ export function snapshotStretch(scrollLeft, step, weekCount, windowWeeks) {
   const latest = Math.max(0, weekCount - windowWeeks);
   const from = Math.min(latest, Math.max(0, Math.round((scrollLeft / step) * 20) / 20));
   return { from, to: from + windowWeeks };
-}
-
-/**
- * Where the 6 Wk position thumb sits on its track, as fractions of the track. A bounce past either end of the chart
- * (a scroll position outside its range) still leaves the thumb inside the track.
- * @param {number} scrollLeft
- * @param {number} clientWidth
- * @param {number} scrollWidth
- */
-export function snapshotThumb(scrollLeft, clientWidth, scrollWidth) {
-  if (!(scrollWidth > 0)) return { left: 0, width: 1 };
-  const width = Math.min(1, clientWidth / scrollWidth);
-  return { left: Math.min(1 - width, Math.max(0, scrollLeft / scrollWidth)), width };
 }
 
 /** How many even gaps an axis may split into, most first: never more than six lines. */

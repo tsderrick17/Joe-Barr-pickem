@@ -41,11 +41,11 @@
 /* The lamp sits at the logo's shoulder, ringed in the card's own colour like a jewel set into it: dark until picked, lit once in,
    green or red once decided; Survivor's is its spade. */
 .slip-mark .lab-lamp { box-shadow: 0 0 0 2px var(--slip-paper); height: .62rem; position: absolute; right: -6px; top: -3px; width: .62rem; }
-.slip-mark .lab-lamp.is-in { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(255, 176, 50, .6); }
-.slip-mark .lab-lamp.is-won { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(60, 180, 100, .5); }
-.slip-mark .lab-lamp.is-lost { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 7px 1px rgba(210, 60, 50, .45); }
+.slip-mark .lab-lamp.is-in { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 3px rgba(255, 176, 50, .3); }
+.slip-mark .lab-lamp.is-won { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 3px rgba(60, 180, 100, .25); }
+.slip-mark .lab-lamp.is-lost { box-shadow: 0 0 0 2px var(--slip-paper), 0 0 3px rgba(210, 60, 50, .25); }
 .slip-mark .lab-lamp.is-survivor { background: var(--slip-paper); border-radius: 50%; position: absolute; box-shadow: 0 0 0 1.5px var(--slip-paper); height: .8rem; right: -7px; top: -4px; transform: none; width: .8rem; }
-.slip-mark .lab-lamp.is-survivor.is-in { box-shadow: 0 0 0 1.5px var(--slip-paper), 0 0 7px 1px rgba(255, 176, 50, .55); }
+.slip-mark .lab-lamp.is-survivor.is-in { box-shadow: 0 0 0 1.5px var(--slip-paper), 0 0 3px rgba(255, 176, 50, .3); }
 .slip-pick { font-size: .8rem; font-variant-numeric: tabular-nums; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .slip-pick b { font-weight: 800; letter-spacing: .02em; }
 .slip-pick.is-label { font-weight: 700; }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; day?: string; roundDays?: number; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
@@ -97,7 +97,7 @@ const PLOT_LEFT = 6;
 const PLOT_RIGHT = 14;
 /** The playoff chart by game day: room for a round's name centered under its last day (SUPER, half of it, spills right of the line). */
 const PLOT_RIGHT_DAYS = 20;
-// Room over the top line for the 6 Wk position rail; All keeps the same room, so both draw the axis in the same place.
+// Room over the top line, the same in both views, so the axis sits in the same place.
 const PLOT_TOP = 10;
 const PLOT_BOTTOM = 18;
 /** A playoff round's name may take two lines under its week line; each line past the first needs this much more room. */
@@ -110,89 +110,51 @@ const WINDOW_WEEKS = 6;
 const KEY_MIN_REM = 6.6;
 
 /**
- * Where the 6-week view sits in the season, and the only way to move it: the chart itself does not scroll under a finger,
- * a wheel or a drag, so a flick never shifts the weeks by accident. The page draws the rail instead of the browser so it
- * matches the pad. It lies in the strip above the top line of the axis, which All keeps empty, so both views put the axis
- * and the week numbers in exactly the same place, and spans the grid lines, from the axis to where the lines end. Drag the
- * thumb or press the track and the view lands on the nearest week; the arrow keys step a week when it has focus. Only the
- * thin track shows; the part of the rail you can grab is taller, to be easy to catch with a thumb.
+ * Moving the 6-week view: drag the graph itself, sideways, and it follows the finger or mouse; let go and it settles on the nearest
+ * week, so it always rests on exact weeks. A vertical swipe is left to the page (the pop-up scrolls, or pulls closed), so a flick up or
+ * down never shifts the weeks. The arrow keys step a week when the graph has focus (Home and End go to the first and latest weeks).
  */
-function SnapshotRail({ scroller, step, weekCount }: { scroller: RefObject<HTMLDivElement | null>; step: number; weekCount: number }) {
-  const [thumb, setThumb] = useState({ left: 0, width: 1, at: 0 });
-  const [dragging, setDragging] = useState(false);
-  // While a drag is on, how far along the thumb the pointer took hold (0 to 1 of the track).
-  const grab = useRef<number | null>(null);
-  useEffect(() => {
-    const element = scroller.current;
-    if (!element) return;
-    const update = () => {
-      const next = { ...snapshotThumb(element.scrollLeft, element.clientWidth, element.scrollWidth), at: Math.max(0, Math.round(element.scrollLeft / step)) };
-      setThumb((current) => current.left === next.left && current.width === next.width && current.at === next.at ? current : next);
-    };
-    update();
-    element.addEventListener("scroll", update, { passive: true });
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    if (element.firstElementChild) observer.observe(element.firstElementChild);
-    return () => {
-      element.removeEventListener("scroll", update);
-      observer.disconnect();
-    };
-  }, [scroller, step]);
-  const along = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    return (event.clientX - box.left) / box.width;
-  };
-  const scrollTo = (left: number) => {
-    const element = scroller.current;
-    if (element) element.scrollTo({ left: snapshotRailStop(left, step, element.scrollWidth - element.clientWidth) });
-  };
-  const moveTo = (fraction: number) => {
-    const element = scroller.current;
-    if (element && grab.current !== null) scrollTo((fraction - grab.current) * element.scrollWidth);
+function usePlotDrag(scroller: RefObject<HTMLDivElement | null>, step: number, on: boolean) {
+  const grab = useRef<{ x: number; left: number } | null>(null);
+  const furthest = (element: HTMLDivElement) => element.scrollWidth - element.clientWidth;
+  const settle = (element: HTMLDivElement, left = element.scrollLeft) => {
+    const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    element.scrollTo({ behavior: reduced ? "auto" : "smooth", left: snapshotRailStop(left, step, furthest(element)) });
   };
   const release = () => {
-    grab.current = null;
-    setDragging(false);
-  };
-  const keys: Record<string, number> = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageUp: -WINDOW_WEEKS, PageDown: WINDOW_WEEKS, Home: -Infinity, End: Infinity };
-  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    const weeks = keys[event.key];
     const element = scroller.current;
-    if (weeks === undefined || !element) return;
-    event.preventDefault();
-    scrollTo(Number.isFinite(weeks) ? element.scrollLeft + weeks * step : weeks * element.scrollWidth);
+    if (!grab.current || !element) return;
+    grab.current = null;
+    element.classList.remove("is-dragging");
+    settle(element);
   };
-  // The first week in view, counting from 0, and the furthest it can be.
-  const last = Math.max(0, weekCount - WINDOW_WEEKS);
-  const first = Math.min(last, thumb.at);
-  return <div
-    aria-label="Move the weeks shown"
-    aria-orientation="horizontal"
-    aria-valuemax={last + 1}
-    aria-valuemin={1}
-    aria-valuenow={first + 1}
-    aria-valuetext={`Weeks ${first + 1} to ${first + WINDOW_WEEKS}`}
-    className={`season-snapshot-rail${dragging ? " is-dragging" : ""}`}
-    onKeyDown={onKeyDown}
-    onLostPointerCapture={release}
-    onPointerCancel={release}
-    onPointerDown={(event) => {
-      const fraction = along(event);
-      grab.current = fraction >= thumb.left && fraction <= thumb.left + thumb.width ? fraction - thumb.left : thumb.width / 2;
+  const keys: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, PageUp: -WINDOW_WEEKS, PageDown: WINDOW_WEEKS, Home: -Infinity, End: Infinity };
+  if (!on) return {};
+  return {
+    onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      const weeks = keys[event.key];
+      const element = scroller.current;
+      if (weeks === undefined || !element) return;
+      event.preventDefault();
+      settle(element, Number.isFinite(weeks) ? element.scrollLeft + weeks * step : weeks * element.scrollWidth);
+    },
+    onLostPointerCapture: release,
+    onPointerCancel: release,
+    onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      const element = scroller.current;
+      if (!element) return;
+      grab.current = { x: event.clientX, left: element.scrollLeft };
+      element.classList.add("is-dragging");
       event.currentTarget.setPointerCapture(event.pointerId);
-      setDragging(true);
-      moveTo(fraction);
-    }}
-    onPointerMove={(event) => moveTo(along(event))}
-    onPointerUp={release}
-    role="slider"
-    tabIndex={0}
-  >
-    <div className="season-snapshot-rail-track">
-      <span className="season-snapshot-rail-thumb" style={{ left: `${thumb.left * 100}%`, width: `${thumb.width * 100}%` }} />
-    </div>
-  </div>;
+    },
+    onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => {
+      const element = scroller.current;
+      if (!grab.current || !element) return;
+      element.scrollTo({ behavior: "instant", left: Math.min(Math.max(0, grab.current.left - (event.clientX - grab.current.x)), furthest(element)) });
+    },
+    onPointerUp: release,
+  };
 }
 
 type Axis = { low: number; ceiling: number; tickStep: number };
@@ -303,6 +265,7 @@ function SnapshotChart({
   // The 6-week view always opens on the most recent six weeks.
   // The 6-week view draws exactly the weeks in view: the grid and the lines stop at the window's first and last week
   // instead of running on into the weeks either side. The clip follows the scroll without redrawing the chart.
+  const drag = usePlotDrag(scrollRef, step, scrolls);
   const gridWindow = useRef<SVGRectElement>(null);
   const lineWindow = useRef<SVGRectElement>(null);
   const fitWindow = () => {
@@ -375,7 +338,7 @@ function SnapshotChart({
         </g>
         <text className="season-snapshot-axis-label" textAnchor="middle" transform={`translate(12 ${PLOT_TOP + plotHeight / 2}) rotate(-90)`}>Wins</text>
       </svg>
-      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group">
+      <div aria-label={`${title}: cumulative wins by week`} className={`season-snapshot-plot-scroll ${scrolls ? "is-windowed" : ""}`} onScroll={scrolls ? onScroll : undefined} ref={scrollRef} role="group" tabIndex={scrolls ? 0 : undefined} {...drag}>
         <div className="season-snapshot-plot-track" style={{ width: plotWidth }}>
           <svg aria-label={`${title}, cumulative wins by week`} height={height} role="img" viewBox={`0 0 ${plotWidth} ${height}`} width={plotWidth}>
             {/* Grid and lines stay above the week numbers, even mid-glide. */}
@@ -410,7 +373,6 @@ function SnapshotChart({
           </svg>
         </div>
       </div>
-      {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
     </div>
     <p aria-hidden="true" className="season-snapshot-week-label">{axisName ?? (byDay ? "Game day" : "Week")}</p>
   </section>;
