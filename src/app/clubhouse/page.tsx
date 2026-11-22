@@ -9,7 +9,7 @@ import { Constitution } from "@/components/clubhouse/constitution";
 import { RoomScene, warmRoomPicture, type RoomFeed } from "@/components/clubhouse/room-scene";
 import { RoomTicket, type RoomTicketData } from "@/components/clubhouse/room-ticket";
 import { FootballLoadingScreen } from "@/components/football-loader";
-import SeasonSnapshot, { SnapshotBoard, loadSeasonSnapshot, snapshotRefreshKey, type Snapshot } from "@/components/season-snapshot";
+import SeasonSnapshot, { snapshotRefreshKey } from "@/components/season-snapshot";
 import { PULL_REFRESH_EVENT } from "@/components/pull-to-refresh";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
@@ -273,29 +273,21 @@ export default function ClubhousePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
   const [bowlRead, setBowlRead] = useState<any>(null);
   useEffect(() => { if (bowlInRoom) void prefetchBowlPool().then(setBowlRead); }, [bowlInRoom]);
-  // The chalkboard: the Season Snapshot, read once the room is up (and again only once a result changes the standings), for everyone who
-  // can see it on the Standings (the Commissioner, and every player once Week 6 has settled); in bowl season the Bowl Pool's too, from its
-  // read above. A failed read leaves the board showing its title.
+  // The chalkboard in the room is a still chalk drawing; tapping it opens the Season Snapshot, which reads its chart when it opens, for
+  // everyone who can see it on the Standings (the Commissioner, and every player once Week 6 has settled); once 10 bowls are final it
+  // gains the Bowl Pool's chart, from the Bowl Pool's read above.
   const snapshotOpen = Boolean(room && (room.home.isCommissioner || room.home.seasonSnapshotReleased));
   const snapshotKey = room ? snapshotRefreshKey(room.home.rows) : "";
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
-  useEffect(() => {
-    if (!snapshotOpen || !snapshotKey) return;
-    let live = true;
-    void loadSeasonSnapshot(snapshotKey).then((data) => { if (live) setSnapshot(data); }).catch(() => undefined);
-    return () => { live = false; };
-  }, [snapshotOpen, snapshotKey]);
   const snapshotPlayers = useMemo(() => (room?.home.rows ?? []).map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated })), [room]);
   // The Bowl Pool's chart joins once its first 10 bowls are final.
   const bowlChart = useMemo(() => (bowlInRoom && bowlRead && bowlChartReady(bowlRead) ? bowlSnapshot(bowlRead) : null), [bowlInRoom, bowlRead]);
   // In bowl season the room's ticker carries the bowls too: today's NFL games, today's bowls, then the rest sprinkled through each other.
   const roomFeed = useMemo(() => {
     if (!room) return null;
-    const chalk = <SnapshotBoard bowl={bowlChart} isPlayoff={room.home.isPlayoff} locked={!snapshotOpen} snapshot={snapshot} standings={snapshotPlayers} />;
-    if (!room.feed.bowl || !bowlRead) return { ...room.feed, chalk };
+    if (!room.feed.bowl || !bowlRead) return room.feed;
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
-    return { ...room.feed, chalk, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
-  }, [room, bowlRead, snapshot, snapshotPlayers, snapshotOpen, bowlChart]);
+    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
+  }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);
   // The chat and the Trophy Room are read ahead once the room has settled (not while it is still loading), so each opens already full;

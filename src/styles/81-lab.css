@@ -45,18 +45,16 @@
 /* What the room shows by itself: the live boards, laid over the screens in the picture in perspective. */
 .lab-room-live { inset: 0; pointer-events: none; position: absolute; }
 .lab-room-screen { background: rgb(7 10 9); color: var(--cw-cream); font-family: "Courier New", monospace; font-weight: 700; left: 0; overflow: hidden; position: absolute; top: 0; transform-origin: 0 0; }
-/* The chalkboard: the Season Snapshot's own chart in chalk straight on the slate in the picture (no screen behind it), without its key, a
-   little dimmer when the room's lights are down. Nothing on it takes a tap: the board's spot opens the full chart. */
-.lab-room-screen.is-chalk { background: none; opacity: .95; pointer-events: none; }
-.lab-room-screen.is-chalk.is-night { opacity: .72; }
-.season-snapshot-board { height: 100%; padding: 6px 8px 4px 2px; }
-.season-snapshot-board-title { color: var(--chalk); font: 700 15px/1 var(--font-serif); letter-spacing: .1em; margin: 0 0 4px 8px; text-transform: uppercase; }
-.season-snapshot-board-note { color: var(--chalk); font: 700 14px/1.3 var(--font-serif); letter-spacing: .06em; margin: auto; text-align: center; }
-.season-snapshot-board .season-snapshot-body { justify-content: center; }
-.season-snapshot-board .season-snapshot-charts, .season-snapshot-board .season-snapshot-chart { min-height: 0; }
-.season-snapshot-board .season-snapshot-rail { display: none; }
-.season-snapshot-board .season-snapshot-plot-scroll { overflow: hidden; }
-.season-snapshot-board .season-snapshot-lines { animation: none; }
+/* The chalkboard: a still chalk drawing straight on the slate in the picture (no screen behind it), a little dimmer when the room's
+   lights are down. Nothing on it takes a tap: the board's spot opens the Season Snapshot. */
+.lab-room-screen.is-chalk { background: none; opacity: .92; pointer-events: none; }
+.lab-room-screen.is-chalk.is-night { opacity: .7; }
+.lab-room-screen.is-chalk svg { display: block; height: 100%; width: 100%; }
+.lab-room-screen.is-chalk path { fill: none; stroke: rgb(244 241 232); stroke-linecap: round; stroke-linejoin: round; }
+.lab-room-screen.is-chalk .chalk-axis { opacity: .75; stroke-width: 2.4; }
+.lab-room-screen.is-chalk .chalk-tick { opacity: .6; stroke-width: 2; }
+.lab-room-screen.is-chalk .chalk-line { opacity: .92; stroke-width: 4.4; }
+.lab-room-screen.is-chalk .chalk-dust { fill: rgb(244 241 232 / .07); }
 .lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 4px 12px 2px; }
 .lab-room-screen.is-board header b { font-family: var(--font-serif); font-size: 22px; letter-spacing: .14em; }
 .lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; white-space: nowrap; }
@@ -820,16 +818,19 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   padding: 14px 20px 18px;
 }
 
-/* The chalk skin, on the board's face and its full chart alike: everything written in chalk on the slate, each player's line in their own
+/* The Season Snapshot in its chalk skin: everything written in chalk on the slate, each player's line in their own
    color, a touch soft and pale as colored chalk is but solid enough to read. */
-.is-chalk, .is-chalkboard { --chalk: rgb(246 243 234); --chalk-dim: rgb(246 243 234 / .72); --chalk-faint: rgb(246 243 234 / .22); }
-.is-chalkboard .season-snapshot, .is-chalk .season-snapshot { color: var(--chalk); }
+.is-chalkboard { --chalk: rgb(246 243 234); --chalk-dim: rgb(246 243 234 / .72); --chalk-faint: rgb(246 243 234 / .22); }
+.is-chalkboard .season-snapshot { color: var(--chalk); }
 .is-chalkboard .pickem-ledger-masthead { border-bottom: 1px solid var(--chalk-faint); border-top: 0; }
-.is-chalkboard .pickem-ledger-masthead h2 { color: var(--chalk); font-family: var(--font-serif); letter-spacing: .06em; text-transform: uppercase; }
-:is(.is-chalk, .is-chalkboard) .season-snapshot-row svg text { fill: var(--chalk-dim); }
-:is(.is-chalk, .is-chalkboard) .season-snapshot-axis-label, :is(.is-chalk, .is-chalkboard) .season-snapshot-week-label { color: var(--chalk-dim); fill: var(--chalk-dim); }
-:is(.is-chalk, .is-chalkboard) .season-snapshot-row svg line { stroke: var(--chalk-faint); }
-:is(.is-chalk, .is-chalkboard) .season-snapshot-start circle { stroke: rgb(33 43 38); }
+/* The full chart says what it is on its title line (a bare pop-up's own heading is hidden; this one is the chart's). */
+.cw-sheet.is-bare .is-chalkboard .pickem-ledger-masthead h2 { clip: auto; color: var(--chalk); font-family: var(--font-serif); font-size: clamp(1.1rem, 4.8vw, 1.6rem); height: auto; white-space: nowrap; letter-spacing: .06em; margin: .18rem 0 0; overflow: visible; position: static; text-transform: uppercase; width: auto; }
+.is-chalkboard .pickem-ledger-masthead:has(.season-snapshot-view) { flex-wrap: wrap; row-gap: .4rem; }
+.is-chalkboard .pickem-ledger-masthead:has(.season-snapshot-view) h2 { flex: 1 0 100%; }   /* with a Pick'em | Bowl switch the title has its own line */
+.is-chalkboard .season-snapshot-row svg text { fill: var(--chalk-dim); }
+.is-chalkboard .season-snapshot-axis-label, .is-chalkboard .season-snapshot-week-label { color: var(--chalk-dim); fill: var(--chalk-dim); }
+.is-chalkboard .season-snapshot-row svg line { stroke: var(--chalk-faint); }
+.is-chalkboard .season-snapshot-start circle { stroke: rgb(33 43 38); }
 .is-chalkboard .season-snapshot-range { border-color: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-range button { background: transparent; color: var(--chalk); }
 .is-chalkboard .season-snapshot-range button + button { border-left-color: var(--chalk-dim); }
