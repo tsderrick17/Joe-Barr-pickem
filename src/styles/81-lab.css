@@ -151,6 +151,7 @@
 .lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
 .lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
+.lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
 .lab-board-final em u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lab-board-cell.is-locked { opacity: .55; }

@@ -272,7 +272,7 @@ test("a player the Commissioner has not let in is sent to the Standings, whateve
   await expect(page.getByRole("link", { name: /Clubhouse view|Classic view/ })).toHaveCount(0);
 });
 
-test("a finished game on the ticket shows each side's final score and who covered, and there is no lock over the line", async ({ page }) => {
+test("a finished game on the ticket shows each side's final score and who covered, a game being played shows who took each side, and there is no lock over the line", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["live-mixed-locks-survivor"], at: "/clubhouse#slate" });
   const form = page.getByRole("dialog", { name: "Your ticket" });
   await expect(form).toBeVisible({ timeout: 30_000 });
@@ -283,8 +283,13 @@ test("a finished game on the ticket shows each side's final score and who covere
   await expect(first.locator(".lab-board-final:not(.is-covered)")).toContainText("MIKE · PAT");
   await expect(first).not.toContainText("COVERED BY");
   await expect(form.locator(".lab-board-lock")).toHaveCount(0);
-  // A game that has kicked off but is not final shows no score.
-  await expect(form.locator("ol > li").nth(2).locator(".lab-board-final")).toHaveCount(0);
+  // A game that has kicked off but is not final shows no score, only who took each side.
+  const live = form.locator("ol > li").nth(2);
+  await expect(live.locator(".lab-board-final b")).toHaveCount(0);
+  await expect(live.locator(".lab-board-final.is-live")).toHaveText(["MIKE · PAT", "DANA · SAM"]);
+  await live.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-live-pickers-phone-390.png", { maxDiffPixels: 40 });
 });
 
 for (const [phase, homeExtra, table] of [
