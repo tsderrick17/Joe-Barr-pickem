@@ -609,6 +609,12 @@ backup job even when the general database export is readable.
 
 The site shows three kinds of team art. Each has one yearly check, listed again in the SOP index calendar.
 
+**Automatic:** `.github/workflows/logo-refresh.yml` (`scripts/refresh-logos.mjs`) fetches the current bowl logos (from each bowl's
+Wikipedia article, on the Friday two days before Selection Sunday) and NFL logos (from ESPN, on July 31). When any changed it
+pushes them to a `logo-refresh-...` branch and opens an issue (GitHub emails the owner). Look the new logos over, open a pull
+request from that branch, record the Linux visual baselines on it, and merge. A new bowl still needs its row in
+`src/lib/bowl-logos.js` and its article in `BOWL_ARTICLES` (by hand, below); the job can be run any time from the Actions tab.
+
 - **NFL team logos (every August, after the schedule import).** The 32 logos are `public/team-logos/<ABBR>.png`
   (500 x 500, transparent), used on the Survivor board and chips. If a team changes its logo, name or
   abbreviation, or a new abbreviation shows up in the imported schedule, save the new 500 x 500 logo under

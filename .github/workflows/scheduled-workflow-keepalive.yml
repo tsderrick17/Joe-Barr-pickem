@@ -36,7 +36,8 @@ jobs:
             weekly-production-smoke.yml \
             isolated-integration.yml \
             isolated-project-keepalive.yml \
-            monthly-upgrade-rehearsal.yml; do
+            monthly-upgrade-rehearsal.yml \
+            logo-refresh.yml; do
             gh api --method PUT "repos/${REPO}/actions/workflows/${workflow}/enable"
             echo "Enabled ${workflow}"
           done
