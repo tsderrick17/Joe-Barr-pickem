@@ -1,0 +1,111 @@
+name: Logo refresh
+
+# Fetches the current logos and, when any changed, pushes them to a branch and opens an issue (GitHub emails the owner) so the
+# Commissioner can look and merge. Nothing goes live on its own.
+#   Bowl logos: the Friday two days before Selection Sunday. Selection Sunday is the day after the first Saturday of December, so
+#   it falls Dec 2-8 and its Friday Nov 30 - Dec 6; the job wakes on each of those days and runs only on the Friday.
+#   NFL logos: July 31.
+
+on:
+  schedule:
+    - cron: "0 14 30 11 *"
+    - cron: "0 14 1-6 12 *"
+    - cron: "0 14 31 7 *"
+  # A change to the refresh itself is tried out on its pull request: both kinds are fetched and compared, nothing is pushed.
+  pull_request:
+    paths:
+      - .github/workflows/logo-refresh.yml
+      - scripts/refresh-logos.mjs
+      - scripts/bowl-logo-articles.mjs
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "Which logos"
+        type: choice
+        options: [bowl, nfl]
+        default: bowl
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: logo-refresh
+  cancel-in-progress: false
+
+jobs:
+  trial:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node scripts/refresh-logos.mjs bowl
+      - run: node scripts/refresh-logos.mjs nfl
+      - name: What changed (not pushed)
+        run: git status --short
+
+  refresh:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Decide which logos
+        id: pick
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then kind="${{ inputs.kind }}"
+          elif [ "$(date -u +%m)" = "07" ]; then kind=nfl
+          elif [ "$(date -u +%u)" = "5" ]; then kind=bowl
+          else kind=""; fi
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
+          echo "Logos to refresh: ${kind:-none today (not the Friday before Selection Sunday)}"
+      - if: steps.pick.outputs.kind != ''
+        uses: actions/checkout@v7
+      - if: steps.pick.outputs.kind != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.pick.outputs.kind != ''
+        run: npm ci
+      - if: steps.pick.outputs.kind != ''
+        id: refresh
+        env:
+          LOGO_SUMMARY: ${{ runner.temp }}/logo-summary.md
+        run: node scripts/refresh-logos.mjs ${{ steps.pick.outputs.kind }}
+      - if: steps.pick.outputs.kind != '' && steps.refresh.outputs.changed != '0'
+        name: Push the new logos and open an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KIND: ${{ steps.pick.outputs.kind }}
+          SUMMARY: ${{ runner.temp }}/logo-summary.md
+        run: |
+          set -euo pipefail
+          branch="logo-refresh-${KIND}-$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add assets/bowl-logos public/bowl-logos public/team-logos src/lib/team-logo-scale.js
+          git commit -m "New ${KIND} logos from the yearly logo refresh"
+          git push origin "$branch"
+          {
+            cat "$SUMMARY"
+            echo
+            echo "The new logos are on branch \`$branch\`: https://github.com/${GITHUB_REPOSITORY}/compare/main...$branch"
+            echo "Look them over, then open a pull request from that branch (record the Linux visual baselines on it) and merge it to put them live."
+          } > issue.md
+          gh issue create --title "New ${KIND} logos are ready to review" --body-file issue.md
+      - if: steps.pick.outputs.kind != '' && steps.refresh.outputs.changed == '0' && steps.refresh.outputs.missed != '0'
+        name: Report logos that could not be checked
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KIND: ${{ steps.pick.outputs.kind }}
+        run: gh issue create --title "Some ${KIND} logos could not be checked" --body-file "${{ runner.temp }}/logo-summary.md"
