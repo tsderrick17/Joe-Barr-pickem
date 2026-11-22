@@ -437,3 +437,7 @@ still open the ticket); a hidden Survivor pick is the same plain green IN as a h
 back; and the Survivor table is one row a player: this week's team on the top line, the teams used before and how many are left on
 the bottom line, with the 32-team sheet one tap away. The lines-per-team felt, the USED/LEFT captions and the week-by-week list in
 the sheet are gone. Lesson kept: for this pool, simpler wins.
+
+## 2026-11-22 - Chalkboard further right on the phone, a Snapshot pill, ticket back to its frame
+
+On the phone the chalkboard stands further right (clear of the poker table) and a small "Snapshot" pill sits on its upper edge so it reads as tappable (the desktop keeps its position and gets the same pill). The phone ticket went back to its old frame: the home-screen-app lift that cleared the rounded corners is removed (the owner would rather have the corner clipped than the frame moved).

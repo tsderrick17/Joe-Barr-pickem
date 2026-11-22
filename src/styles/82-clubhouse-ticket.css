@@ -90,12 +90,6 @@
 .clubhouse-page > .lab-room-ticket .slip { border-radius: 14px 14px 0 0; -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); }
 .clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: calc(5px + env(safe-area-inset-bottom)); }
-/* As an app on a phone's home screen the page runs to the very foot of the screen, under its rounded corners: the ticket's paper still
-   runs to the edge, but its frame and everything on it stand clear of the corners. (In the browser its own bar sits there instead.) */
-@media (max-width: 899px) and (display-mode: standalone) {
-  .clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
-  .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: calc(22px + env(safe-area-inset-bottom)); }
-}
 /* On a desktop the ticket sits centred at the foot of the screen, the place every pop-up rises from, notched at both ends. */
 @media (min-width: 900px) {
   .clubhouse-page > .lab-room-ticket { bottom: 14px; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .34)) drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); left: 50%; max-width: 34rem; right: auto; transform: translateX(-50%); width: calc(100% - 32px); }
