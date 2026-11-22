@@ -449,3 +449,7 @@ The owner asked for three things. The 6 Wk Season Snapshot lost its bar over the
 ## 2026-11-22 - With the clubhouse switch up, Standings links go straight to the clubhouse
 
 Clicking Standings (or the masthead) from a Commissioner page with the clubhouse switch up flashed the classic Standings before the redirect to the clubhouse caught up. Those links now point at the clubhouse while the switch is up (outside the clubhouse; inside it they stay the Standings pane), so the classic page never renders on the way. Opening the app by its address still redirects as before.
+
+## 2026-11-22 - Notifications opens as ticket paper in the clubhouse
+
+The Notifications pop-up in the clubhouse is dressed like the ticket (cream card paper, dark ink, brass rules, cognac accents, a walnut button) instead of the navy/gold Bowl look, which was hard to read. Body text is 16px, its small print about 15px and its secondary ink darker; only the clubhouse copy changes, the Notifications page keeps its own paper.
