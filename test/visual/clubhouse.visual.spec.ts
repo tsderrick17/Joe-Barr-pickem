@@ -1107,3 +1107,30 @@ test("the top bar holds still when day and night flip and when the switch goes b
     expect(await bar(), `clubhouse to classic at ${size.width}px`).toEqual(start);
   }
 });
+
+test("a refresh pulled down in the clubhouse blinks the lit lamps (never with reduce motion)", async ({ page }) => {
+  await openClubhouse(page);
+  await expect(page.locator(".lab-lamp.is-in").first()).toBeVisible({ timeout: 30_000 });
+  const blinking = () => page.evaluate(() => [...document.querySelectorAll(".clubhouse-page .lab-lamp:not(.is-off)")].some((lamp) => getComputedStyle(lamp).animationName.startsWith("lamp-blink")));
+  const pull = () => page.evaluate(() => window.dispatchEvent(new CustomEvent("pickem-pull-refresh", { cancelable: true, detail: { done: null } })));
+  expect(await blinking(), "quiet until a refresh").toBe(false);
+  await pull();   // with "reduce motion" on, a refresh is still read but nothing blinks
+  await page.waitForTimeout(1_500);
+  expect(await blinking(), "reduce motion").toBe(false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await pull();
+  await expect.poll(blinking, { intervals: [50], timeout: 15_000 }).toBe(true);
+});
+
+for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  test(`the Trophy Room's plaque shelf has just its title, no extra line, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size });
+    await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
+    const wall = page.getByRole("dialog", { name: "Trophy Room" }).locator(".lab-case.lab-wall");
+    await expect(wall.getByRole("heading", { name: "Plaques", exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("one for every season")).toHaveCount(0);
+    await wall.scrollIntoViewIfNeeded();
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await expect(wall).toHaveScreenshot(`clubhouse-plaques-${label}.png`, { maxDiffPixels: 40 });
+  });
+}
