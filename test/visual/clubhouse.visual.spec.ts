@@ -335,6 +335,27 @@ for (const [phase, homeExtra, table] of [
   });
 }
 
+for (const [label, size, theme] of [["phone-390", SIZES["phone-390"], "day"], ["phone-390", SIZES["phone-390"], "night"], ["desktop-1280", SIZES["desktop-1280"], "day"]] as const) {
+  test(`the Notifications pop-up looks like the clubhouse, at ${label} by ${theme}`, async ({ page }) => {
+    await openClubhouse(page, { at: "/clubhouse#notifications", theme, size });
+    const sheet = page.getByRole("dialog", { name: "Notifications" });
+    await expect(sheet.getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.waitForTimeout(600);
+    await expect(page).toHaveScreenshot(`clubhouse-notifications-${theme}-${label}.png`, { maxDiffPixels: 40 });
+  });
+}
+
+test("the Notifications pop-up's email plans and fine-tune choices wear the clubhouse's navy and gold", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#notifications", theme: "day" });
+  const sheet = page.getByRole("dialog", { name: "Notifications" });
+  await sheet.getByLabel(/Send pool emails to this address/).check({ timeout: 30_000 });
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await sheet.getByRole("heading", { name: "CHOOSE YOUR EMAIL PLAN" }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await expect(page).toHaveScreenshot("clubhouse-notifications-plans-phone-390.png", { maxDiffPixels: 40 });
+});
+
 test("Notifications is a plate in the room's glass doors, like the others: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
   await openClubhouse(page);
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
