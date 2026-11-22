@@ -108,12 +108,12 @@ export function bowlGameNote(game, now = new Date()) {
 }
 
 /**
- * A bowl's name as the Bowl Card's column heads it: its full name (less "Football Classic"), with (QF) or (SF) after a playoff
+ * A bowl's name as the Bowl Card's column heads it: its full name (less "Football Classic", but the Frisco Football Classic reads "Frisco Classic" so it never doubles the Frisco Bowl), with (QF) or (SF) after a playoff
  * quarterfinal or semifinal. The clubhouse's Bowl sheet uses the same names.
  * @param {{ bowl_name?: string | null, provider_game_id?: string | null }} game
  */
 export function bowlColumnName(game) {
-  const name = (game.bowl_name || "Bowl").replace(/ Football Classic$/i, "");
+  const name = (game.bowl_name || "Bowl").replace(/^Frisco Football Classic$/i, "Frisco Classic").replace(/ Football Classic$/i, "");
   const cleanName = name.replace(/\s*\([^)]*\)$/, "");
   const qfBowl = /^(fiesta|cotton|peach|rose)(?: bowl)?$/i.test(cleanName);
   const sfBowl = /^(orange|sugar)(?: bowl)?$/i.test(cleanName);
