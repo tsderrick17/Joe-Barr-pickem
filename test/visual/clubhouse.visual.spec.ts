@@ -1033,9 +1033,11 @@ test("every pop-up scrolls only its data, under a heading that stands still, on 
   for (const size of [SIZES["phone-390"], SIZES["desktop-1280"]]) for (const [at, scroller] of Object.entries(want)) {
     await openClubhouse(page, { at: `/clubhouse#${at}`, size, bowl: bowlRead() });
     await expect(page.locator(".cw-sheet[open] .cw-handle")).toBeVisible({ timeout: 30_000 });
-    await page.clock.runFor(1_000);
-    const scrolling = await page.evaluate(() => [...document.querySelectorAll(".cw-sheet[open] *")].filter((node) => /(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 2).map((node) => node.className.toString()));
-    expect(scrolling, `${at} at ${size.width}px`).toHaveLength(1);
-    expect(scrolling[0], `${at} at ${size.width}px`).toContain(scroller);
+    // Once the pop-up has risen and its content is in, exactly one thing scrolls: its data.
+    await expect.poll(async () => {
+      await page.clock.runFor(250);
+      const scrolling = await page.evaluate(() => [...document.querySelectorAll(".cw-sheet[open] *")].filter((node) => /(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 2).map((node) => node.className.toString()));
+      return scrolling.length === 1 && scrolling[0].includes(scroller) ? "data only" : JSON.stringify(scrolling);
+    }, { message: `${at} at ${size.width}px`, timeout: 20_000 }).toBe("data only");
   }
 });
