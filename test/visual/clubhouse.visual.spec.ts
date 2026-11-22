@@ -1041,3 +1041,24 @@ test("every pop-up scrolls only its data, under a heading that stands still, on 
     }, { message: `${at} at ${size.width}px`, timeout: 20_000 }).toBe("data only");
   }
 });
+
+test("the top bar holds still when day and night flip and when the switch goes between the clubhouse and the classic site", async ({ page }) => {
+  for (const size of [SIZES["desktop-1280"], SIZES["phone-390"]]) {
+    await openClubhouse(page, { size });
+    await page.clock.runFor(1_500);
+    // Where each thing in the bar is centred (a turning icon keeps its centre), and how tall the tabs are.
+    const bar = () => page.evaluate(() => [...document.querySelectorAll(".site-nav-brand, .site-nav-links, .theme-toggle, .theme-toggle-icon, .view-switch, .account-menu")]
+      .filter((node) => node.getBoundingClientRect().width > 0)
+      .map((node) => { const box = node.getBoundingClientRect(); return `${node.className.toString().split(" ")[0]} ${Math.round(box.x + box.width / 2)},${Math.round(box.y + box.height / 2)}${node.classList.contains("site-nav-links") ? ` h${Math.round(box.height)}` : ""}`; }));
+    const start = await bar();
+    await page.locator(".theme-toggle:visible").click();
+    await page.mouse.move(0, 400);
+    await page.clock.runFor(1_000);
+    expect(await bar(), `day to night at ${size.width}px`).toEqual(start);
+    await page.locator(".view-switch:visible").click();
+    await page.waitForURL((url) => !url.pathname.startsWith("/clubhouse"), { timeout: 30_000 });
+    await page.mouse.move(0, 400);
+    await page.clock.runFor(1_500);
+    expect(await bar(), `clubhouse to classic at ${size.width}px`).toEqual(start);
+  }
+});
