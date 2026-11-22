@@ -445,3 +445,10 @@ On the phone the chalkboard stands further right (clear of the poker table) and 
 ## 2026-11-22 - Drag the 6 Wk graph; calmer pick lights; a loss ends a 2-0 streak at once
 
 The owner asked for three things. The 6 Wk Season Snapshot lost its bar over the chart: the graph is dragged sideways and lands on exact weeks (a vertical swipe stays the pop-up's). The lamps that show a pick is in lost their wide halo and hot white centre (a tight, dim ring on the ticket, a softer bulb on the boards). A player's perfect-week streak now ends the moment a loss is in a week still being played (Rick's was still 3 with a loss and a pick to play); that week still counts for the other figures only once both picks are graded.
+
+## 2026-11-22 - Sailboat on the mantel, tuck-away ticket, day/night crossfade in the room, no Trophy Room in the clubhouse menu
+
+- The mantel (now 0.6 deep) carries a model sailing yacht, turned to show its sails (owner picked it over a seascape and a vase; the renderer keeps `art=vase|painting` as options).
+- Your ticket tucks away: drag it down and it folds to about half its height (heading folded away, every pick on its side, the stub's word kept); drag up to bring it back. Remembered on the device. A drag never opens it and never pulls the refresh chain.
+- In the clubhouse, day and night crossfade the room's two pictures in place instead of the page-wide view transition, which photographs the page and could show the perspective boards out of place mid-switch.
+- The name menu leaves out Trophy Room in the clubhouse (it has its own plate in the room).

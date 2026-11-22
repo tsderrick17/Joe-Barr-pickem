@@ -79,6 +79,35 @@
   .slip-words { justify-items: start; }
   .slip-places.is-four .slip-pick, .slip-places.is-many .slip-pick { font-size: .78rem; }
 }
+/* Tucked away (the real clubhouse): drag the ticket down and it folds to about half its height. The heading folds away; every pick stays,
+   lying on its side (logo, then team and line over the note), and the stub keeps its word. A small grip on the top edge shows it moves;
+   while dragged the ticket follows the finger a little, then settles. Dragging never opens it and never pulls the refresh chain. */
+.clubhouse-page > .lab-room-ticket { touch-action: none; user-select: none; -webkit-user-select: none; }
+.clubhouse-page > .lab-room-ticket img { -webkit-user-drag: none; }
+.slip { transition: transform .18s ease; }
+.slip-grip { background: rgba(33, 29, 23, .22); border-radius: 999px; height: 4px; left: calc((100% - var(--slip-stub)) / 2 - 18px); position: absolute; top: 4px; width: 36px; z-index: 1; }
+.slip-head { max-height: 4rem; transition: max-height .25s ease, opacity .2s ease, padding .25s ease, border-color .25s ease; }
+.slip-places { transition: margin-top .25s ease; }
+.slip-body { transition: padding .25s ease; }
+.slip.is-tucked .slip-head { border-bottom-color: transparent; max-height: 0; opacity: 0; overflow: hidden; padding-bottom: 0; }
+.slip.is-tucked .slip-places { margin-top: 2px; }
+.slip.is-tucked .slip-body { padding-bottom: 8px; padding-top: 12px; }
+.clubhouse-page > .lab-room-ticket .slip.is-tucked .slip-body { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+.slip.is-tucked .slip-place { column-gap: 6px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; }
+.slip.is-tucked .slip-words { justify-items: start; }
+.slip.is-tucked .slip-stub { gap: 1px; padding-block: 6px; }
+.slip.is-tucked .slip-stub i { display: none; }
+@media (max-width: 899px) {
+  .slip.is-tucked { --slip-stub: 64px; }
+  .slip.is-tucked .slip-stub b { font-size: .9rem; }
+  .slip.is-tucked .slip-place { column-gap: 8px; padding: 0 2px; }
+  .slip.is-tucked .slip-mark { height: 22px; width: 22px; }
+  .slip.is-tucked .slip-mark .lab-room-logo { height: 20px; width: 20px; }
+  .slip.is-tucked .slip-pick { font-size: .68rem; }
+  .slip.is-tucked .slip-pick b { letter-spacing: 0; }
+  .slip.is-tucked .slip-place small { font-size: .55rem; letter-spacing: .04em; }
+}
+@media (prefers-reduced-motion: reduce) { .slip, .slip-head, .slip-places, .slip-body { transition: none; } }
 .lab-room-ticket:hover .slip-stub { background: linear-gradient(180deg, rgb(60 51 40), rgb(34 29 22)); }
 .lab-room-ticket:active .slip { transform: translateY(1px); }
 .lab-room-ticket:focus-visible { outline: none; }
