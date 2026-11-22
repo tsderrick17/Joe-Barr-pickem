@@ -41,10 +41,16 @@ async function refreshBowls() {
   const changed = [], missed = [];
   for (const [name, article] of Object.entries(BOWL_ARTICLES)) {
     try {
-      const api = `https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=original&titles=${encodeURIComponent(article)}`;
-      const page = Object.values(JSON.parse((await get(api)).toString("utf8")).query?.pages ?? {})[0];
-      const source = page?.original?.source;
-      if (!source) throw new Error("no infobox image");
+      // The page's own lead image, which for a bowl is its logo. (A logo is a non-free image, so pageprops' page_image, not
+      // pageimages, which only offers free ones.) Then that file's full-size address.
+      const props = `https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1&prop=pageprops&ppprop=page_image&titles=${encodeURIComponent(article)}`;
+      const page = Object.values(JSON.parse((await get(props)).toString("utf8")).query?.pages ?? {})[0];
+      const file = page?.pageprops?.page_image;
+      if (!file) throw new Error("no infobox image");
+      await pause(1500);
+      const info = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&titles=${encodeURIComponent(`File:${file}`)}`;
+      const source = Object.values(JSON.parse((await get(info)).toString("utf8")).query?.pages ?? {})[0]?.imageinfo?.[0]?.url;
+      if (!source) throw new Error(`no address for File:${file}`);
       await pause(1500);
       const image = await get(source);
       const extension = (source.match(/\.(svg|png|webp|jpe?g)$/i)?.[1] ?? "png").toLowerCase().replace("jpeg", "jpg");
