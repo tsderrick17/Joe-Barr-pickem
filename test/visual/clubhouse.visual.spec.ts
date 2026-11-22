@@ -699,6 +699,10 @@ test("the Bowl tiebreaker sits in the title game's own box, and saving without i
   const titleGame = ticket.locator(".lab-bowl-game").nth(3);
   await expect(titleGame.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
   await expect(titleGame).toContainText("Closest wins.");
+  // The tiebreaker spans the game's whole width, edge to edge with its two teams.
+  const [guess, teams] = await Promise.all([titleGame.locator(".lab-bowl-guess").boundingBox(), titleGame.locator(".lab-board-cell").evaluateAll((cells) => { const boxes = cells.map((cell) => cell.getBoundingClientRect()); return { left: Math.min(...boxes.map((box) => box.left)), right: Math.max(...boxes.map((box) => box.right)) }; })]);
+  expect(Math.abs(guess!.x - teams.left)).toBeLessThanOrEqual(1);
+  expect(Math.abs(guess!.x + guess!.width - teams.right)).toBeLessThanOrEqual(1);
   await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
   await box.getByRole("button", { name: "Save picks" }).click();
