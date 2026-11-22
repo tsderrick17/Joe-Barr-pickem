@@ -142,6 +142,9 @@ type Player = Parameters<typeof RealTrophyRoom>[0]["players"][number];
 let lastTrophyRead: { trophies: Season[]; players: Player[] } | null = null;
 let lastChatRead: ChatMessage[] | null = null;
 export async function prefetchTrophyRoom() {
+  // The turntable's first picture too, so the Trophy Room opens with its trophy already standing there.
+  const poster = new window.Image();
+  poster.src = "/trophies/turntable/frame-000.webp";
   try {
     const response = await fetchWithSession("/api/trophy-room");
     if (response.ok) { const body = await response.json() as { trophies?: Season[]; players?: Player[] }; lastTrophyRead = { trophies: body.trophies ?? [], players: body.players ?? [] }; }

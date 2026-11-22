@@ -564,7 +564,8 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   const requestId = useRef(0);
   useEffect(() => {
     if (!active) return;
-    const wanted = `${refreshKey}#${retry}`;
+    // The same key the clubhouse chalkboard reads with, so a chart the room already read opens at once; a retry asks again.
+    const wanted = retry ? `${refreshKey}#${retry}` : refreshKey;
     if (loadedFor.current === wanted) return;
     const id = ++requestId.current;
     void fetchSnapshot(wanted).then((data) => {
