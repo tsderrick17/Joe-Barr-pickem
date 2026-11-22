@@ -19,7 +19,7 @@ export const TEAM_LOGO_SCALE = {
   KC: 1.13,
   LAC: 1.20,
   LAR: 1.04,
-  LV: 0.78,
+  LV: 0.84,
   MIA: 0.96,
   MIN: 0.98,
   NE: 1.20,
