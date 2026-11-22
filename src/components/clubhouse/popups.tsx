@@ -233,7 +233,11 @@ export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string 
         const body = await response.json();
         if (!response.ok) throw new Error(body?.error ?? "The Bowl Pool could not be loaded.");
         if (disposed) return;
+        // A read that brings nothing new (the ticket opened on the room's earlier read) leaves the ticket as it is: remounting it would
+        // draw the gold around every pick a second time.
+        const unchanged = lastBowlRead !== null && JSON.stringify(lastBowlRead) === JSON.stringify(body);
         lastBowlRead = body;
+        if (unchanged) { setMessage(""); return; }
         setPayload(body);
         setReads((count) => count + 1);
         setMessage("");

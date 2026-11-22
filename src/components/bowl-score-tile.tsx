@@ -128,7 +128,7 @@ function StillDigit({ digit }: { digit: number }) {
  * a tap flips the tile once round the drum and back to the same number, just for
  * fun (a light tick; never with reduced motion).
  */
-export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace = BOARD_PACE }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** ms per flip for the whole board */ pace?: number }) {
+export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace = BOARD_PACE, label }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** what the number counts, read aloud (default: wins) */ label?: string; /** ms per flip for the whole board */ pace?: number }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
@@ -157,7 +157,7 @@ export default function BowlScoreTile({ value, settled, landDelay = 0, large = f
     setRound((count) => count + 1);
   };
   return (
-    <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
+    <span aria-label={label ?? `${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
       {reduced ? faces : <button aria-hidden="true" className="bowl-score-flip relative" disabled={!landed || !settled} onClick={flipAgain} tabIndex={-1} type="button">{faces}<HapticTap /></button>}
     </span>
   );
