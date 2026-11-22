@@ -91,6 +91,8 @@ export default function ClubhousePage() {
   const router = useRouter();
   const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState("");
+  // Each pull-down refresh that finishes blinks every lit lamp once, so a refresh is never silent (the page's own timed reads stay quiet).
+  const [blinks, setBlinks] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
   const [pane, setPane] = useState<Pane | null>(null);
   const paneRef = useRef<Pane | null>(null);   // the pop-up that is current, so a pop-up closing under a newer one does not close that one
@@ -156,7 +158,9 @@ export default function ClubhousePage() {
   useEffect(() => {
     const refresh = (event: Event) => {
       event.preventDefault();
-      (event as CustomEvent<{ done: Promise<void> | null }>).detail.done = read(false);
+      const done = read(false);
+      (event as CustomEvent<{ done: Promise<void> | null }>).detail.done = done;
+      void done.then(() => setBlinks((count) => count + 1));
     };
     window.addEventListener(PULL_REFRESH_EVENT, refresh);
     return () => window.removeEventListener(PULL_REFRESH_EVENT, refresh);
@@ -305,7 +309,7 @@ export default function ClubhousePage() {
   if (error) return <main className="clubhouse-page"><p className="dash-error" role="alert">{error}</p></main>;
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
-    <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
+    <main aria-label="Clubhouse" className={`clubhouse-page${blinks ? ` is-blink-${blinks % 2}` : ""}`} ref={main}>
       <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <RoomTicket onOpen={() => show("slate")} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
