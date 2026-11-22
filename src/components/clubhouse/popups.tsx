@@ -219,6 +219,8 @@ export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string 
   const [claiming, setClaiming] = useState(false);
 
   const [asked, setAsked] = useState(0);   // bumped to read the Bowl Pool again (after a save, a claim or an opt-out)
+  const firstRead = useRef(true);
+  const openedWith = useRef(lastBowlRead);   // the read the ticket opened on, if the room had one
   const load = useCallback(() => setAsked((count) => count + 1), []);
   useEffect(() => {
     let disposed = false;
@@ -235,7 +237,9 @@ export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string 
         if (disposed) return;
         // A read that brings nothing new (the ticket opened on the room's earlier read) leaves the ticket as it is: remounting it would
         // draw the gold around every pick a second time.
-        const unchanged = lastBowlRead !== null && JSON.stringify(lastBowlRead) === JSON.stringify(body);
+        // Only the read made on opening: a read after a save always refreshes the ticket.
+        const unchanged = firstRead.current && openedWith.current !== null && JSON.stringify(openedWith.current) === JSON.stringify(body);
+        firstRead.current = false;
         lastBowlRead = body;
         if (unchanged) { setMessage(""); return; }
         setPayload(body);
