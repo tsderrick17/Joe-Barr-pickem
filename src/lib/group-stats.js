@@ -124,12 +124,19 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
     .sort((a, b) => yearBySeason.get(a.season_id) - yearBySeason.get(b.season_id) || a.display_order - b.display_order);
   const histogram = { donut: 0, split: 0, sweep: 0 };
   const weeksByPlayer = new Map();
+  // Weeks still in play in which a player already has a loss: not decided yet (1-1 or 0-2), but certainly not a 2-0, so they end a 2-0 streak now.
+  const lostInPlay = new Map();
   for (const [joinKey, firstWeek] of weeksOfPlayerInSeason) {
     const [playerId, seasonId] = joinKey.split("|");
     for (const period of counted) {
       if (period.season_id !== seasonId || period.display_order < firstWeek) continue;
       const own = picksByPlayerPeriod.get(`${playerId}|${period.id}`) ?? [];
-      if (own.some((pick) => pick.result === "void" || pick.result === "pending")) continue;   // a voided or unsettled pick leaves the week out
+      if (own.some((pick) => pick.result === "void")) continue;   // a voided pick leaves the week out
+      if (!finished(period) && own.some((pick) => pick.result === "loss") && own.some((pick) => pick.result === "pending")) {
+        lostInPlay.set(playerId, [...(lostInPlay.get(playerId) ?? []), { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: 1 }]);
+        continue;
+      }
+      if (own.some((pick) => pick.result === "pending")) continue;   // an unsettled pick leaves the week out
       if (!finished(period) && own.filter(isDecided).length < WEEK_PICKS) continue;   // a week still in play counts once this player's own two picks are graded
       const weekWins = own.filter((pick) => pick.result === "win").length;   // a pick not made is a loss, so losses are whatever is left of the two
       const week = { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: Math.min(WEEK_PICKS, weekWins) };
@@ -137,7 +144,7 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
       histogram[week.wins === 0 ? "donut" : week.wins === 1 ? "split" : "sweep"] += 1;
     }
   }
-  return { weeksByPlayer, histogram };
+  return { weeksByPlayer, histogram, lostInPlay };
 }
 
 const NOT_PLAYED = ["postponed", "cancelled", "no_contest"];
@@ -176,7 +183,7 @@ function perfectRounds({ periods, yearBySeason, picks, games }) {
 }
 
 /**
- * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row, as
+ * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row (a week still in play ends it the moment the player has a loss in it), as
  * { longest, current, endedAt }. The 2-0 streak also carries `total`, how many perfect weeks the player has had in all: the regular season's
  * 2-0 weeks plus every playoff round won pick for pick, everything but the Super Bowl. Only the streaks are regular season. Only the periods and picks are needed.
  * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
@@ -187,13 +194,15 @@ function perfectRounds({ periods, yearBySeason, picks, games }) {
 export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set(), games = [] }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
-  const { weeksByPlayer } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
+  const { weeksByPlayer, lostInPlay } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
   const playoffPerfect = perfectRounds({ periods, yearBySeason, picks, games });
   return new Map([...new Set([...weeksByPlayer.keys(), ...playoffPerfect.keys()])].map((playerId) => {
     const weeks = weeksByPlayer.get(playerId) ?? [];
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return [playerId, { sweeps: { ...summary(runs(weeks, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+    // A week in play with a loss already is no 2-0 (it ends the 2-0 streak now) but is not yet a counted week for the rest.
+    const withLost = [...weeks, ...(lostInPlay.get(playerId) ?? [])].sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
+    return [playerId, { sweeps: { ...summary(runs(withLost, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
   }));
 }
 

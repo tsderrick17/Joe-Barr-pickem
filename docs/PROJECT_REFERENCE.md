@@ -253,9 +253,12 @@ measure database requests or end-to-end route time.
   An All / 6 Wk toggle (regular season only) sits between the title and the
   flip button. 6 Wk shows exactly six weeks, moves one whole week at a time with
   the y-axis standing still beside it, and always opens on the most recent six
-  weeks. The position rail is the only way to move the weeks: the graph itself
-  does not scroll under a finger, a wheel, a drag or the keys, so a flick can
-  never shift it. It draws exactly the six weeks in view: the lines and
+  weeks. The weeks move by dragging the graph itself sideways: it follows the
+  finger or mouse and, on letting go, settles on the nearest whole week, so it
+  always rests on exact weeks (with focus on the graph the arrow keys step a
+  week, and Home, End, Page Up and Page Down go further). A sideways wheel does
+  nothing and a vertical swipe stays the pop-up's. There is no bar over the
+  chart. It draws exactly the six weeks in view: the lines and
   the grid stop at the window's first and last week, and every line starts
   there as a point, so players who share a score fan out of one point (as All
   does from zero). The starting points show only when the window rests on a
@@ -266,18 +269,8 @@ measure database requests or end-to-end route time.
   starts. In both views the bottom line is the lowest score shown and the top
   line is one or two wins over the leader, never on it; every line is numbered
   and evenly spaced in whole wins, six lines at most (of the two possible tops,
-  the one that splits into more lines). A position rail in the strip above
-  the top line replaces the browser's scroll bar, as wide as the grid lines,
-  its thumb always inside the track, even in the bounce past either end. The
-  bar fills the strip (8 px); the part that takes a press reaches well below it
-  so a thumb can catch it; the pointer stays an ordinary arrow and the thumb
-  swells a little instead, only while a mouse is over it or a finger is on it
-  (a touch screen has no hover swell, so a tap never leaves the rail swollen).
-  The 8 px bar is centered between the masthead's rule and the top grid line.
-  Dragging or pressing lands on the nearest
-  week; with focus the arrow keys step a week and Home, End, Page Up and Page
-  Down jump (it is a slider for screen readers). All keeps that strip empty, so
-  both views put the axis and the week numbers in exactly the same place.
+  the one that splits into more lines). Both views put the axis and the week
+  numbers in exactly the same place.
   Axis margins are kept tight. On phones the key is a compact
   four-column grid; on wider screens its rows come out even (eleven names go
   six and five, not eight and three: `snapshotKeyColumns`). The key lists everyone in current-standings order;
@@ -489,7 +482,9 @@ measure database requests or end-to-end route time.
   (`src/lib/short-cache.js`); a graded game shows within about a minute. Access is checked before the cache.
 - A week counts toward the weekly figures (Perfect Weeks, both streaks) once every game in it is final, not only once the pool has advanced, and
   a player's own week counts sooner still: as soon as both of their picks are graded, since nothing left in the week can change their 2-0,
-  1-1 or 0-2. A week with a pick still pending or voided is left out; a pick not made is a loss only once the whole week is final.
+  1-1 or 0-2. A week with a pick still pending or voided is left out; a pick not made is a loss only once the whole week is final. One
+  exception: a loss in a week still being played ends a 2-0 streak at once (the week can no longer be 2-0), though the week itself is not
+  counted until both picks are graded.
 
 ## Weekly lifecycle
 

@@ -338,3 +338,21 @@ test("Perfect Weeks count every round but the Super Bowl: a regular 2-0 week and
   const open = periodsWithRounds.map((period) => (period.id === "wc" ? { ...period, status: "active" } : period));
   assert.equal(weeklyStreaks({ seasons, periods: open, picks, games: gameRows.map((game) => (game.id === "wc5" ? { ...game, status: "scheduled" } : game)) }).get("cat").sweeps.total, 1);
 });
+
+test("a loss in a week still being played ends the 2-0 streak at once, though the week is not yet a counted week", () => {
+  const one = [{ id: "s", year: 2026 }];
+  const wk = (n, status) => ({ id: `w${n}`, season_id: "s", display_order: n, period_type: "regular", status, max_picks: 2 });
+  const rows = [];
+  const add = (periodId, result) => rows.push({ id: `${periodId}-${rows.length}`, player_id: "rick", game_id: `g${rows.length}`, scoring_period_id: periodId, selected_team_id: "t", result });
+  for (const w of ["w1", "w2", "w3"]) { add(w, "win"); add(w, "win"); }
+  // Week 4 is being played: one pick lost, the other not yet played.
+  add("w4", "loss"); add("w4", "pending");
+  const periodsNow = [wk(1, "complete"), wk(2, "complete"), wk(3, "complete"), wk(4, "active")];
+  const streak = weeklyStreaks({ seasons: one, periods: periodsNow, picks: rows }).get("rick");
+  assert.equal(streak.sweeps.current, 0, "three perfect weeks, then a loss in week 4: the run is over");
+  assert.equal(streak.sweeps.longest, 3, "the best run stays 3");
+  assert.equal(streak.noDonut.current, 3, "a week with a loss and a game left is still 1-1 or 0-2: not counted yet for the win-a-week streak");
+  // Without the loss the pending week leaves the streak alone.
+  rows.splice(-2); add("w4", "win"); add("w4", "pending");
+  assert.equal(weeklyStreaks({ seasons: one, periods: periodsNow, picks: rows }).get("rick").sweeps.current, 3);
+});

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSeasonSnapshot, unsettledPlayoffDay } from "../src/lib/season-snapshot.js";
 import { FIRST_SCORE_CHECK_DELAY_MINUTES } from "../src/lib/score-window.js";
-import { snapshotAxis, snapshotKeyColumns, snapshotRoundGroups, snapshotRoundLines, snapshotWeekLines, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotThumb, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
+import { snapshotAxis, snapshotKeyColumns, snapshotRoundGroups, snapshotRoundLines, snapshotWeekLines, snapshotLayers, snapshotRailStop, snapshotRibbons, snapshotStackOrder, snapshotStretch, snapshotWindowRange, snapshotX } from "../src/lib/season-snapshot-chart.js";
 
 test("the active week waits until its last pick settles, then plots everyone and carries totals into playoffs", () => {
   const periods = [
@@ -437,17 +437,6 @@ test("the axis runs from the lowest score to one or two wins over the leader, in
   assert.deepEqual(snapshotAxis(0, 0, false), { low: 0, ceiling: 2, tickStep: 1 }, "an empty chart still has a top line");
 });
 
-test("the 6 Wk position thumb stays inside its track, even in the bounce past either end", () => {
-  // Fourteen weeks at 60 pixels a week in an 360-pixel window: 840 pixels wide, scrolling from 0 to 480.
-  assert.deepEqual(snapshotThumb(0, 360, 840), { left: 0, width: 360 / 840 });
-  assert.deepEqual(snapshotThumb(480, 360, 840), { left: 480 / 840, width: 360 / 840 });
-  assert.deepEqual(snapshotThumb(-90, 360, 840), { left: 0, width: 360 / 840 }, "pulled past the first week");
-  const past = snapshotThumb(570, 360, 840);
-  assert.equal(past.left + past.width, 1, "pulled past the latest week it ends where the track ends");
-  assert.deepEqual(snapshotThumb(0, 300, 300), { left: 0, width: 1 }, "a chart that fits fills the track");
-  assert.deepEqual(snapshotThumb(0, 0, 0), { left: 0, width: 1 }, "before the chart is measured");
-});
-
 test("the 6 Wk axis is always for a full six-week stretch: the ends and the bounce past them never shorten it", () => {
   // Fourteen weeks, 60 pixels a week: the chart scrolls from 0 to 480 pixels.
   assert.deepEqual(snapshotStretch(0, 60, 14, 6), { from: 0, to: 6 });
@@ -494,7 +483,7 @@ test("the player key's rows come out even: eleven names that fit eight across go
   }
 });
 
-test("the 6 Wk rail puts the view on the nearest week and never past either end", () => {
+test("dragging the 6 Wk graph puts the view on the nearest week and never past either end", () => {
   const step = 80;
   const furthest = step * 8;
   assert.equal(snapshotRailStop(0, step, furthest), 0);

@@ -437,3 +437,7 @@ still open the ticket); a hidden Survivor pick is the same plain green IN as a h
 back; and the Survivor table is one row a player: this week's team on the top line, the teams used before and how many are left on
 the bottom line, with the 32-team sheet one tap away. The lines-per-team felt, the USED/LEFT captions and the week-by-week list in
 the sheet are gone. Lesson kept: for this pool, simpler wins.
+
+## 2026-11-22 - Drag the 6 Wk graph; calmer pick lights; a loss ends a 2-0 streak at once
+
+The owner asked for three things. The 6 Wk Season Snapshot lost its bar over the chart: the graph is dragged sideways and lands on exact weeks (a vertical swipe stays the pop-up's). The lamps that show a pick is in lost their wide halo and hot white centre (a tight, dim ring on the ticket, a softer bulb on the boards). A player's perfect-week streak now ends the moment a loss is in a week still being played (Rick's was still 3 with a loss and a pick to play); that week still counts for the other figures only once both picks are graded.
