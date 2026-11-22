@@ -1,9 +1,9 @@
 # Clubhouse room pictures
 
 The Workshop Lab's clubhouse try-out shows the whole pool as one bright room, drawn in 3D and shown as a picture: by day, at night
-(the pool lit outside), and each again from Dec 7 with the Bowl Pool's bulletin board wheeled in. The pictures are
-`public/lab/clubhouse/room-{day,night}[-bowl].webp`; where each thing sits in them (the page lays a tap spot over each) is
-`src/lib/clubhouse-room.json`. Both are made here, with the four corners of each live screen (the Big Board and the spreads board), which the page draws today's news onto. Nothing in this folder is part of the app build, and the app never runs it.
+(the pool lit outside). The pictures are
+`public/lab/clubhouse/room-{day,night}[-wide|-full].webp`; where each thing sits in them (the page lays a tap spot over each) is
+`src/lib/clubhouse-room.json`. Both are made here, with the four corners of each live face (the Big Board, the spreads board and the chalkboard's slate), which the page draws today's news and the Season Snapshot onto. Nothing in this folder is part of the app build, and the app never runs it.
 
 The room borrows the trophy renderer's modules (its materials and helpers) and its three.js install
 (`tools/trophy-render`, see its README).
@@ -20,10 +20,10 @@ The room borrows the trophy renderer's modules (its materials and helpers) and i
 
 - `room.js`: the room, built and then drawn as its mirror image so the bar is on the right and the chimney on the left (the thatch and fans, the glass wall with its open doors and the pool patio, the Big Board and spreads board,
   the bar and its mirrored back bar, the stone fireplace (lit only at night) and the Trophy Room sign, the lounge, the oval
-  poker table, the Bowl Pool board), its light (the
+  poker table, the chalkboard on its wheeled stand), its light (the
   sun, the room's own reflections, contact shadow, glow) and the camera.
 - `surfaces.js`: what the room is made of: the drawn surfaces (planks, shiplap, fieldstone, thatch, cane, sky, flame) and the one
   modelled leaf that every fan blade and plant is grown from.
-- `render.mjs`: renders the twelve pictures (the four tall ones for the Lab on a phone, the same four wide, `-wide`, for a desktop, and four taller ones, `-full`, that fill a phone screen in the real clubhouse) and writes the tap spots. Nothing in the room moves but its two boards, so no frame strips are drawn. `ONLY=day-full,night-full node render.mjs` renders just those and keeps the rest.  `shot.mjs`: design work, renders chosen views to a folder
+- `render.mjs`: renders the six pictures (day and night: tall for the Lab on a phone, wide, `-wide`, for a desktop, and taller, `-full`, that fill a phone screen in the real clubhouse) and writes the tap spots. Nothing in the room moves but its live faces, so no frame strips are drawn. `ONLY=day-full,night-full node render.mjs` renders just those and keeps the rest.  `shot.mjs`: design work, renders chosen views to a folder
   (for example `node shot.mjs out '[["day",""],["fan","zoom=2.2,0.5,0.2"],["night","night=1"]]'`; `zoom=k,x,y` renders the part of the
   picture centred at x,y, as fractions of it, k times larger, which is how to inspect a detail). `scene.html`, `serve.mjs`: the page and static server it drives.

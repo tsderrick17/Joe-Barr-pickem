@@ -3,7 +3,7 @@ import { useBlindTable } from "@/components/collapse";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import AtsResultStamp from "@/components/ats-result-stamp";
 import { scorepadAbbreviation } from "@/lib/scorepad-abbreviations";
-import SeasonSnapshot from "@/components/season-snapshot";
+import SeasonSnapshot, { snapshotRefreshKey as refreshKeyOf } from "@/components/season-snapshot";
 import { PadSkinFoot, PadSkinHidden, PadSkinTop, type PadSkin } from "@/components/pad-skins";
 
 export type PickemScoreboardPick = {
@@ -80,7 +80,7 @@ export default function PickemScoreboard({
   const isDensePlayoffRound = isPlayoff && maxPicks >= 4;
   // Commissioners always; players once Week 6 has settled, until the Aug 1 season reset.
   const showSeasonSnapshot = isCommissioner || seasonSnapshotReleased;
-  const snapshotRefreshKey = rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
+  const snapshotRefreshKey = refreshKeyOf(rows);
   // Commissioners can turn the pad over to see the season chart on its back.
   const [flipped, setFlipped] = useState(false);
   const [spin, setSpin] = useState(0);

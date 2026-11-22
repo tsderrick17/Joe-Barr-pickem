@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./session";
-import { homeResponse } from "./standings-fixtures.mjs";
+import { homeResponse, seasonSnapshotResponse } from "./standings-fixtures.mjs";
 import { boardResponse } from "./slate-fixtures.mjs";
 
 const SIZES = { "phone-390": { width: 390, height: 844 }, "desktop-1280": { width: 1280, height: 800 } } as const;
@@ -21,9 +21,11 @@ async function openClubhouse(page: Page, { theme = "day", size = SIZES["phone-39
   const board = boardResponse(scenarios[0]);
   let reads = 0;
   await page.route("**/api/**", (route) => route.fulfill({ status: 204, body: "" }));
-  await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), ...homeExtra } }));
+  await page.route("**/api/home**", (route) => route.fulfill({ json: { ...homeResponse("regular-in"), seasonSnapshotReleased: true, ...homeExtra } }));
   // Like the real route, the Slate's read refuses without a week (bootstrap=1 asks for the default one).
   await page.route("**/api/board**", (route) => (new URL(route.request().url()).searchParams.get("bootstrap") === "1" ? route.fulfill({ json: shapeBoard(boardResponse(scenarios[Math.min(reads++, scenarios.length - 1)])) }) : route.fulfill({ status: 400, json: { error: "You must choose a week before viewing the board." } })));
+  // The Season Snapshot (nine weeks), for the chalkboard's sketch and its full chart.
+  await page.route("**/api/season-snapshot**", (route) => route.fulfill({ json: seasonSnapshotResponse("", 9) }));
   await page.route("**/api/board-totals**", (route) => route.fulfill({ json: { weekId: new URL(route.request().url()).searchParams.get("week"), totals: WEEK_TOTALS } }));
   await page.route("**/api/profile**", (route) => route.fulfill({ json: { firstName: "Tyler", isCommissioner: commissioner, showPoolChat: false, ...(clubhouseAccess === undefined ? {} : { clubhouseAccess }) } }));
   await page.route("**/api/trophy-room**", (route) => route.fulfill({ json: { trophies: [{ seasonYear: 2025, pickem: [{ playerId: "p0", name: "Gary" }], survivor: [{ playerId: "p1", name: "Connor" }], bowl: null }], players: [{ playerId: "p0", name: "Gary", ab: 40, h: 24, avg: 0.6, qualified: true, halfWins: 1, halfLosses: 0, pushes: 0, streaks: null }] } }));
@@ -685,13 +687,14 @@ test("the Bowl Pool's spot opens the Bowl ticket: pennants for picks owed, the s
   await expect(ticket.locator(".lab-bowl-sheet tbody tr.is-you")).toContainText("Tyler");
 });
 
-test("the Bowl tiebreaker is in the ticket's own box beside Save, the title game is marked, and saving without it reminds you", async ({ page }) => {
+test("the Bowl tiebreaker sits in the title game's own box, and saving without it reminds you", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
   const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
   const box = ticket.locator(".lab-window-ticket");
-  await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
-  await expect(box).toContainText("CFP National Championship");
-  await expect(ticket.locator(".lab-bowl-game").nth(3)).toContainText("TIEBREAKER GAME · ENTER YOUR GUESS BELOW");
+  const titleGame = ticket.locator(".lab-bowl-game").nth(3);
+  await expect(titleGame.getByRole("textbox", { name: /Tiebreaker/ })).toBeVisible({ timeout: 30_000 });
+  await expect(titleGame).toContainText("Closest wins.");
+  await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
   await box.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
@@ -836,12 +839,12 @@ test("on a desktop the pop-ups sit under the site's bar, the Big Board reads lar
   const [first, second] = await Promise.all([games.nth(0).boundingBox(), games.nth(1).boundingBox()]);
   expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);   // side by side
   expect(second!.x).toBeGreaterThan(first!.x + first!.width);
-  // Only the board scrolls, so its scroll bar starts at the board's top edge, never up beside the switch.
+  // Only the games and the ticket scroll, so the scroll bar starts at the top of the games, never up beside the switch or the board's header.
   const scroller = await page.getByRole("dialog", { name: "Your ticket" }).evaluate((dialog) => {
     const scrolling = [...dialog.querySelectorAll<HTMLElement>("*")].filter((node) => node.scrollHeight > node.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(node).overflowY));
     return scrolling.map((node) => node.className);
   });
-  expect(scroller).toEqual([expect.stringContaining("lab-bigboard")]);
+  expect(scroller).toEqual(["lab-window-scroll"]);
 });
 
 test("the board's switch: your ticket is always there to look at, even for a week looked back on, and sending it lands back on the Big Board", async ({ page }) => {
@@ -961,4 +964,102 @@ test("the room's games board stands two games wide and shifts up a row every 7 s
   expect(await step()).toBe("0");   // not yet: a row stays up most of the 7 seconds
   await page.clock.runFor(1_700);
   await expect.poll(step).toBe("1");
+});
+
+/** The Bowl Pool two bowl days in: ten bowls final (eight early ones nobody won), Earl and Tyler a win each. */
+function bowlReadPlayed() {
+  const read = bowlRead();
+  read.games[1] = { ...read.games[1], status: "final", away_score: 31, home_score: 20 };
+  const early = Array.from({ length: 8 }, (_, i) => ({ ...read.games[0], id: `e${i}`, bowl_name: `Early Bowl ${i + 1}`, kickoff_at: `2026-09-28T${String(12 + i).padStart(2, "0")}:00:00Z` }));
+  read.games = [...early, ...read.games];
+  read.publicPicks = [
+    { playerId: "p1", game_id: "g1", selected_team_id: "a1", result: "loss" }, { playerId: "p2", game_id: "g1", selected_team_id: "h1", result: "win" },
+    { playerId: "p1", game_id: "g2", selected_team_id: "a2", result: "win" }, { playerId: "p2", game_id: "g2", selected_team_id: "h2", result: "loss" },
+  ];
+  read.automaticResults = [];
+  return read;
+}
+
+test("the chalkboard carries the Season Snapshot's own chart in chalk and opens the full chart; the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const chalk = page.locator(".lab-room-screen.is-chalk");
+  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot", { timeout: 30_000 });
+  await expect(chalk.locator(".season-snapshot-key")).toHaveCount(0);
+  await expect(chalk.locator(".season-snapshot-ribbon").first()).toBeAttached();
+  await page.clock.runFor(10_000);
+  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot");   // two bowls final: no Bowl side yet
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
+  await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
+  await expect(sheet.getByRole("group", { name: "Pool shown" })).toHaveCount(0);   // no Bowl side before 10 bowls are final
+  await expect(page).toHaveURL(/#snapshot$/);
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-snapshot-phone-390.png", { maxDiffPixels: 40 });
+});
+
+test("once 10 bowls are final the chalkboard turns to the Bowl Pool too, and its chart switches to it, a point a bowl day", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const chalk = page.locator(".lab-room-screen.is-chalk");
+  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Season Snapshot", { timeout: 30_000 });
+  await page.clock.runFor(10_000);
+  await expect(chalk.locator(".season-snapshot-board-title")).toHaveText("Bowl Pool");
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
+  await sheet.getByRole("button", { name: "Bowl", exact: true }).click();
+  await expect(sheet.locator(".season-snapshot-key-row")).toHaveText([/Earls*1/, /Tylers*1/]);
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-snapshot-bowl-phone-390.png", { maxDiffPixels: 40 });
+  // The choice is remembered on this device.
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await expect(page.getByRole("dialog", { name: "Season Snapshot" }).getByRole("button", { name: "Bowl", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("every pop-up has the same pull notch, at the same spot, on a desktop", async ({ page }) => {
+  for (const at of ["slate", "standings", "survivor", "bowl", "trophies", "rules", "notifications", "snapshot"]) {
+    await openClubhouse(page, { at: `/clubhouse#${at}`, size: SIZES["desktop-1280"], bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+    const handle = page.locator(".cw-sheet[open] .cw-handle");
+    await expect(handle).toBeVisible({ timeout: 30_000 });
+    // Once the pop-up has finished rising, its notch sits where every other one does, at the same size.
+    await expect.poll(async () => {
+      await page.clock.runFor(250);
+      return handle.evaluate((node) => { const box = node.getBoundingClientRect(); return `${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}x${Math.round(box.height)}`; });
+    }, { message: at, timeout: 15_000 }).toBe("616,104 48x5");
+  }
+});
+
+test("every pop-up scrolls only its data, under a heading that stands still, on a phone and a desktop", async ({ page }) => {
+  const want: Record<string, string> = { slate: "lab-window-scroll", bowl: "lab-window-scroll", trophies: "lab-wall-table", rules: "lab-rules-body" };
+  for (const size of [SIZES["phone-390"], SIZES["desktop-1280"]]) for (const [at, scroller] of Object.entries(want)) {
+    await openClubhouse(page, { at: `/clubhouse#${at}`, size, bowl: bowlRead() });
+    await expect(page.locator(".cw-sheet[open] .cw-handle")).toBeVisible({ timeout: 30_000 });
+    // Once the pop-up has risen and its content is in, exactly one thing scrolls: its data.
+    await expect.poll(async () => {
+      await page.clock.runFor(250);
+      const scrolling = await page.evaluate(() => [...document.querySelectorAll(".cw-sheet[open] *")].filter((node) => /(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 2).map((node) => node.className.toString()));
+      return scrolling.length === 1 && scrolling[0].includes(scroller) ? "data only" : JSON.stringify(scrolling);
+    }, { message: `${at} at ${size.width}px`, timeout: 20_000 }).toBe("data only");
+  }
+});
+
+test("the top bar holds still when day and night flip and when the switch goes between the clubhouse and the classic site", async ({ page }) => {
+  for (const size of [SIZES["desktop-1280"], SIZES["phone-390"]]) {
+    await openClubhouse(page, { size });
+    await expect(page.locator(".view-switch:visible")).toBeVisible({ timeout: 30_000 });   // the account is read: the bar is whole
+    await page.clock.runFor(1_500);
+    // Where each thing in the bar is centred (a turning icon keeps its centre), and how tall the tabs are.
+    const bar = () => page.evaluate(() => [...document.querySelectorAll(".site-nav-brand, .site-nav-links, .theme-toggle, .theme-toggle-icon, .view-switch, .account-menu")]
+      .filter((node) => node.getBoundingClientRect().width > 0)
+      .map((node) => { const box = node.getBoundingClientRect(); return `${node.className.toString().split(" ")[0]} ${Math.round(box.x + box.width / 2)},${Math.round(box.y + box.height / 2)}${node.classList.contains("site-nav-links") ? ` h${Math.round(box.height)}` : ""}`; }));
+    const start = await bar();
+    await page.locator(".theme-toggle:visible").click();
+    await page.mouse.move(0, 400);
+    await page.clock.runFor(1_000);
+    expect(await bar(), `day to night at ${size.width}px`).toEqual(start);
+    await page.locator(".view-switch:visible").click();
+    await page.waitForURL((url) => !url.pathname.startsWith("/clubhouse"), { timeout: 30_000 });
+    await page.mouse.move(0, 400);
+    await page.clock.runFor(1_500);
+    expect(await bar(), `clubhouse to classic at ${size.width}px`).toEqual(start);
+  }
 });

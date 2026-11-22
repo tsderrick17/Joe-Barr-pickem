@@ -108,6 +108,8 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
       ) : null}
       {survivor.out && !view.champion ? <p className="lab-window-out">You’re out of Survivor{survivor.outWeek ? ` (lost in week ${survivor.outWeek})` : ""}. The pool goes on: follow it at the Survivor table.</p> : null}
 
+      {/* The games, the ticket and its send button scroll as one, under the heading that stands still. */}
+      <div className="lab-window-scroll">
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
         {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
         {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked, it won’t change. <b>White line:</b> can still move until 8 AM on game day.</> : <>Lines can still move until 8 AM on game day. Once a line locks it turns gold.</>}</p> : null}
@@ -164,6 +166,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
       </section>
       {/* Below the games and the send button, inside the ticket: Forfeit in the playoffs. */}
       {footer}
+      </div>
     </div>
   );
 }

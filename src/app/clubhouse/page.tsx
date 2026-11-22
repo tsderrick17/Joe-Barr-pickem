@@ -9,11 +9,13 @@ import { Constitution } from "@/components/clubhouse/constitution";
 import { RoomScene, warmRoomPicture, type RoomFeed } from "@/components/clubhouse/room-scene";
 import { RoomTicket, type RoomTicketData } from "@/components/clubhouse/room-ticket";
 import { FootballLoadingScreen } from "@/components/football-loader";
+import SeasonSnapshot, { SnapshotBoard, loadSeasonSnapshot, snapshotRefreshKey, type Snapshot } from "@/components/season-snapshot";
 import { PULL_REFRESH_EVENT } from "@/components/pull-to-refresh";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
-import { bowlSeason, bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
+import { bowlChartReady, bowlSnapshot } from "@/lib/chalkboard.js";
+import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
@@ -34,9 +36,9 @@ import { useStableCallback } from "@/lib/use-stable-callback";
  *    or a pick is sent (so a pick shows in the ticket's lamps at once), when the app comes back to the front, and every five minutes.
  * It can never show more than the classic pages do, and a pick sent here is the very same pick (the same POST the Slate makes).
  */
-type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications";
-const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications" };
-const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications" };
+type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications" | "snapshot";
+const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot" };
+const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications", snapshot: "Season Snapshot" };
 // Notifications (the app, phone notifications, the email plan) is loaded only when its pop-up is opened.
 const NotificationSettings = dynamic(() => import("@/components/notification-settings").then((module) => module.NotificationSettings));
 // The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
@@ -148,7 +150,7 @@ export default function ClubhousePage() {
   });
 
   // The room's picture starts down as the page opens, alongside the sign-in check and the pool's reads.
-  useEffect(() => { warmRoomPicture(bowlSeason(new Date().toISOString())); }, []);
+  useEffect(() => { warmRoomPicture(); }, []);
   useEffect(() => { if (access === "allowed") void read(true); }, [access, read]);
   // Pulling down to refresh reads the room again in place (no reload, no loading screen): the chain stays down until it is in.
   useEffect(() => {
@@ -271,12 +273,29 @@ export default function ClubhousePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
   const [bowlRead, setBowlRead] = useState<any>(null);
   useEffect(() => { if (bowlInRoom) void prefetchBowlPool().then(setBowlRead); }, [bowlInRoom]);
+  // The chalkboard: the Season Snapshot, read once the room is up (and again only once a result changes the standings), for everyone who
+  // can see it on the Standings (the Commissioner, and every player once Week 6 has settled); in bowl season the Bowl Pool's too, from its
+  // read above. A failed read leaves the board showing its title.
+  const snapshotOpen = Boolean(room && (room.home.isCommissioner || room.home.seasonSnapshotReleased));
+  const snapshotKey = room ? snapshotRefreshKey(room.home.rows) : "";
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  useEffect(() => {
+    if (!snapshotOpen || !snapshotKey) return;
+    let live = true;
+    void loadSeasonSnapshot(snapshotKey).then((data) => { if (live) setSnapshot(data); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [snapshotOpen, snapshotKey]);
+  const snapshotPlayers = useMemo(() => (room?.home.rows ?? []).map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated })), [room]);
+  // The Bowl Pool's chart joins once its first 10 bowls are final.
+  const bowlChart = useMemo(() => (bowlInRoom && bowlRead && bowlChartReady(bowlRead) ? bowlSnapshot(bowlRead) : null), [bowlInRoom, bowlRead]);
   // In bowl season the room's ticker carries the bowls too: today's NFL games, today's bowls, then the rest sprinkled through each other.
   const roomFeed = useMemo(() => {
-    if (!room || !room.feed.bowl || !bowlRead) return room?.feed ?? null;
+    if (!room) return null;
+    const chalk = <SnapshotBoard bowl={bowlChart} isPlayoff={room.home.isPlayoff} locked={!snapshotOpen} snapshot={snapshot} standings={snapshotPlayers} />;
+    if (!room.feed.bowl || !bowlRead) return { ...room.feed, chalk };
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
-    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
-  }, [room, bowlRead]);
+    return { ...room.feed, chalk, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
+  }, [room, bowlRead, snapshot, snapshotPlayers, snapshotOpen, bowlChart]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);
   // The chat and the Trophy Room are read ahead once the room has settled (not while it is still loading), so each opens already full;
@@ -323,6 +342,9 @@ export default function ClubhousePage() {
         }}
         onStay={() => setAsking(null)}
       /> : null}
+      {popup("snapshot") ? <Sheet bare onClose={() => leave("snapshot")} open title="Season Snapshot"><div className="club-snapshot is-chalkboard pickem-ledger">
+        {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} chalk isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
+      </div></Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
       {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><div className="club-notify"><h3>Notifications</h3><NotificationSettings inSheet /></div></Sheet> : null}

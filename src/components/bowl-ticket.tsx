@@ -114,6 +114,8 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
         {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
       </div>
 
+      {/* Everything under the heading scrolls as one, under the heading that stands still. */}
+      <div className="lab-window-scroll">
       {tab === "picks" ? <>
         <section aria-label="Bowl picks" className="lab-window-part">
           {view.games.length === 0 ? <p className="lab-board-note">The bowl schedule is not set yet.</p> : null}
@@ -148,7 +150,12 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
                       {cell(0)}
                       <span aria-hidden="true" className="lab-board-at">vs</span>
                       {cell(1)}
-                      {game.tiebreaker ? <span className="lab-bowl-tiebreaker-note">TIEBREAKER GAME · {guess ? `YOUR GUESS: ${guess} POINTS` : "ENTER YOUR GUESS BELOW"}</span> : null}
+                      {game.tiebreaker ? (
+                        <label className={`lab-bowl-guess${!guess && !view.tiebreakerLocked ? " is-empty" : ""}`}>
+                          <span><b>Tiebreaker</b> Your guess of the total points both teams score in the {game.bowl}. Closest wins.</span>
+                          <input aria-label="Tiebreaker: total points in the title game" disabled={view.tiebreakerLocked} inputMode="numeric" maxLength={3} onChange={(event) => { setProblem(""); setGuess(event.target.value.replace(/\D/g, "")); }} placeholder="e.g. 48" value={guess} />
+                        </label>
+                      ) : null}
                     </li>
                   );
                 })}
@@ -163,12 +170,6 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
             <div><dt>Picked</dt><dd>{pickedCount} of {view.total}</dd></div>
             <div><dt>Still to pick</dt><dd>{view.owed || "None"}</dd></div>
           </dl>
-          {titleGame ? (
-            <label className={`lab-bowl-guess${!guess && !view.tiebreakerLocked ? " is-empty" : ""}`}>
-              <span><b>Tiebreaker</b> Your guess of the total points both teams score in the {titleGame.bowl}. If players tie on wins, the closest guess wins.</span>
-              <input aria-label="Tiebreaker: total points in the title game" disabled={view.tiebreakerLocked} inputMode="numeric" maxLength={3} onChange={(event) => { setProblem(""); setGuess(event.target.value.replace(/\D/g, "")); }} placeholder="e.g. 48" value={guess} />
-            </label>
-          ) : null}
           <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
           {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : savedAt && !changed && !guess && titleGame && !view.tiebreakerLocked ? <p className="lab-window-problem" role="status">Picks saved. Don’t forget your tiebreaker above.</p> : null}
           {onOptOut && view.entryOpen ? <button className="lab-bowl-optout" onClick={onOptOut} type="button">Opt out of the Bowl Pool</button> : null}
@@ -188,6 +189,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
           </ol>
         </section>
       )}
+      </div>
     </div>
   );
 }
@@ -223,7 +225,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
             <tr>
               <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
               <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><span className="lab-bowl-sheet-matchup">{game.matchup.map((side, index) => <span className="lab-tote-slip" key={index}><b>{side.team}</b><small>{side.line}</small></span>)}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><span className="lab-bowl-sheet-matchup">{game.matchup.every((side) => side.team === "TBD") ? <span className="is-tbd">Teams TBD</span> : game.matchup.map((side, index) => <span key={index}><b>{side.team}</b> <i>{side.line}</i></span>)}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
             </tr>
           </thead>
           <tbody>

@@ -1,6 +1,6 @@
 // Renders the clubhouse room pictures with headless Chromium's software WebGL.
 // Usage: node render.mjs [out-folder]      (default: ../../public/lab/clubhouse)
-// Writes room-{day,night}[-bowl][-wide|-full].webp and the tap spots (where each thing sits in the picture) to src/lib/clubhouse-room.json.
+// Writes room-{day,night}[-wide|-full].webp and the tap spots (where each thing sits in the picture) to src/lib/clubhouse-room.json.
 // ONLY=day-full,night-full renders just those pictures and keeps every other picture's spots as they are.
 import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -19,11 +19,12 @@ const spots = existsSync(spotsFile) ? JSON.parse(readFileSync(spotsFile, "utf8")
 const only = process.env.ONLY ? new Set(process.env.ONLY.split(",")) : null;
 // The tall pictures are for a phone. The wide ones are the desktop's: the same room from the same spot through a longer lens, the whole
 // room in one view (both side walls, the bar, the boards, the fireplace and the table).
-const WIDE = "w=880&h=520&fov=48";
+// The chalkboard stands further right on the desktop (owner, 2026-11-21), clear of the middle of the wider view.
+const WIDE = "w=880&h=520&fov=48&chalk=-1.45,-2.7,0.6,0.8";
 // The full-screen pictures are the real clubhouse's on a phone: taller, to fill the screen under the site's bar, with a wider view up
 // and down (fov 75) so the room is as wide side to side as the Lab's tall picture.
 const FULL = "w=390&h=700&fov=75";
-const views = [["day", ""], ["night", "night=1"], ["day-bowl", "bowl=1"], ["night-bowl", "night=1&bowl=1"]];
+const views = [["day", ""], ["night", "night=1"]];
 // Nothing in the room moves but its two boards (the owner turned the turning fans and swaying plants down), so no frame strips are drawn.
 for (const [name, base] of [...views, ...views.map(([name, query]) => [`${name}-wide`, [query, WIDE].filter(Boolean).join("&")]), ...views.map(([name, query]) => [`${name}-full`, [query, FULL].filter(Boolean).join("&")])]) {
   if (only && !only.has(name)) continue;

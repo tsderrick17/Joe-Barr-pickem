@@ -45,6 +45,18 @@
 /* What the room shows by itself: the live boards, laid over the screens in the picture in perspective. */
 .lab-room-live { inset: 0; pointer-events: none; position: absolute; }
 .lab-room-screen { background: rgb(7 10 9); color: var(--cw-cream); font-family: "Courier New", monospace; font-weight: 700; left: 0; overflow: hidden; position: absolute; top: 0; transform-origin: 0 0; }
+/* The chalkboard: the Season Snapshot's own chart in chalk straight on the slate in the picture (no screen behind it), without its key, a
+   little dimmer when the room's lights are down. Nothing on it takes a tap: the board's spot opens the full chart. */
+.lab-room-screen.is-chalk { background: none; opacity: .95; pointer-events: none; }
+.lab-room-screen.is-chalk.is-night { opacity: .72; }
+.season-snapshot-board { height: 100%; padding: 6px 8px 4px 2px; }
+.season-snapshot-board-title { color: var(--chalk); font: 700 15px/1 var(--font-serif); letter-spacing: .1em; margin: 0 0 4px 8px; text-transform: uppercase; }
+.season-snapshot-board-note { color: var(--chalk); font: 700 14px/1.3 var(--font-serif); letter-spacing: .06em; margin: auto; text-align: center; }
+.season-snapshot-board .season-snapshot-body { justify-content: center; }
+.season-snapshot-board .season-snapshot-charts, .season-snapshot-board .season-snapshot-chart { min-height: 0; }
+.season-snapshot-board .season-snapshot-rail { display: none; }
+.season-snapshot-board .season-snapshot-plot-scroll { overflow: hidden; }
+.season-snapshot-board .season-snapshot-lines { animation: none; }
 .lab-room-screen.is-board header { align-items: baseline; border-bottom: 2px solid rgba(240, 180, 41, .45); display: flex; justify-content: space-between; padding: 4px 12px 2px; }
 .lab-room-screen.is-board header b { font-family: var(--font-serif); font-size: 22px; letter-spacing: .14em; }
 .lab-room-screen.is-board header span { color: rgb(240 180 41); font-size: 13px; white-space: nowrap; }
@@ -621,7 +633,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-board-team { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .02em; min-width: 0; }
 .lab-bowl-ticket .lab-board-line { color: var(--bowl-gold-lt); text-shadow: none; }
 .lab-bowl-ticket .lab-board-final.is-covered { color: var(--bowl-gold-lt); }
-.lab-bowl-flag { display: inline-block; flex: none; position: relative; width: 5.95rem; }
+.lab-bowl-flag { display: inline-block; flex: none; position: relative; width: 6.75rem; }   /* a smidge bigger (owner, 2026-11-21) */
 .lab-bowl-flag.is-small { width: 1.6rem; }
 .lab-bowl-flag svg { display: block; overflow: visible; width: 100%; }
 .lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
@@ -644,7 +656,6 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag.is-missed:not(.is-logo) .lab-bowl-flag-hoist { fill: rgb(120 120 120); }
 .lab-bowl-flag.is-missed .lab-bowl-flag-name { fill: rgba(240, 232, 214, .7); }
 .lab-bowl-flag.is-done { opacity: .75; }
-.lab-bowl-tiebreaker-note { color: var(--bowl-gold-lt); font-family: Georgia, serif; font-size: .74rem; grid-column: 1 / -1; letter-spacing: .06em; }
 /* The tiebreaker, in the ticket's own box beside Save: always in sight, gold-edged while it is still blank. */
 .lab-bowl-guess { align-items: center; border: 1px solid rgba(179, 139, 77, .5); border-radius: 6px; color: var(--bowl-ink); display: grid; font-family: Georgia, serif; font-size: .86rem; gap: 12px; grid-template-columns: 1fr auto; line-height: 1.35; padding: 10px 12px; }
 .lab-bowl-guess b { color: var(--bowl-gold-lt); display: block; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
@@ -671,10 +682,13 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-sheet .lab-bowl-sheet-rec { background: rgb(18 28 50); box-shadow: -8px 0 0 rgb(18 28 50); color: var(--bowl-gold-lt); font-family: "Courier New", monospace; font-weight: 800; left: 0; min-width: 3.2rem; position: sticky; z-index: 1; }
 .lab-bowl-sheet .lab-bowl-sheet-name { background: rgb(18 28 50); position: sticky; z-index: 1; box-shadow: 4px 0 6px -4px rgba(0, 0, 0, .6); color: var(--bowl-ink); font-family: Georgia, serif; font-size: .95rem; left: 3.2rem; max-width: 7rem; min-width: 5.5rem; overflow: hidden; text-align: left; text-overflow: ellipsis; }
 .lab-bowl-sheet tbody tr.is-you > * { background: rgb(40 44 58); }
-/* The matchup under each bowl's name: the Big Board's pick slip, favourite over underdog, each with its line. */
-.lab-bowl-sheet-matchup { background: rgb(7 10 9); border: 1px solid rgba(201, 164, 95, .25); border-radius: 3px; display: grid; gap: 2px; margin: 5px auto 3px; padding: 3px 6px; width: fit-content; }
-.lab-bowl-sheet-matchup .lab-tote-slip { display: grid; font-size: .78rem; gap: 8px; grid-template-columns: auto auto; justify-content: space-between; padding-left: 0; }
-.lab-bowl-sheet thead .lab-bowl-sheet-matchup small { color: inherit; display: inline; font-family: inherit; font-size: .7rem; letter-spacing: .02em; opacity: .85; }
+/* The matchup under each bowl's name: favourite over underdog, each with its line, in quiet small type (the same size on every screen);
+   one "Teams TBD" before the schools are set. */
+.lab-bowl-sheet thead th .lab-bowl-sheet-matchup { display: grid; gap: 1px; margin: 4px 0 2px; }
+.lab-bowl-sheet thead th .lab-bowl-sheet-matchup > span { color: var(--bowl-ink); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .02em; line-height: 1.25; white-space: nowrap; }
+.lab-bowl-sheet-matchup b { font-weight: 700; }
+.lab-bowl-sheet-matchup i { color: var(--bowl-gold-lt); font-style: normal; }
+.lab-bowl-sheet thead th .lab-bowl-sheet-matchup > .is-tbd { color: rgba(240, 232, 214, .5); font-style: italic; }
 .lab-bowl-sheet-pick { display: block; font-family: Georgia, serif; font-size: .82rem; line-height: 1.15; white-space: normal; }   /* the Bowl Card's school names, wrapped to the column */
 .lab-bowl-sheet-pick.is-w { color: rgb(128 200 152); }
 .lab-bowl-sheet-pick.is-l { color: rgb(220 126 114); }   /* a loss: red, not crossed off */
@@ -717,6 +731,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   .clubhouse-page .lab-tote thead th { font-size: .64rem; }
   /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
   .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
+  .clubhouse-page .cw-sheet:has(.lab-wall-table) { max-width: 760px; }   /* the Trophy Room as wide as its trophies, so its scroll bar runs down its own edge */
   .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* the Bowl Pool standings stay one list */
   .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) > li { align-content: start; grid-template-columns: 1fr 1fr; }   /* a game beside a taller one (a final) starts level with it, at the top */
   .clubhouse-page .lab-window-part .lab-board-time { grid-column: 1 / -1; }
@@ -736,13 +751,18 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* On a phone the board's sheet is always its full height, so the tabs stay in one place whichever tab is open (a short Big Board no
    longer drops the tabs halfway down the screen). */
 @media (max-width: 1023px) { .clubhouse-page .cw-sheet:has(.club-deck-tabs) .cw-sheet-body { min-height: 88dvh; } }
-/* On a desktop the switch stands still over the board and only the board scrolls, so the scroll bar runs down the board itself, from
-   its top edge, never up beside the switch. */
-@media (min-width: 1024px) and (hover: hover) {
-  .clubhouse-page .cw-sheet-body:has(> .club-deck-tabs) { display: flex; flex-direction: column; overflow: hidden; }
-  .clubhouse-page .cw-sheet-body:has(> .club-deck-tabs) > :is(.lab-tote, .lab-bigboard) { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
-  .clubhouse-page .cw-sheet-body > .club-deck-tabs { flex: none; width: 100%; }
-}
+/* Every pop-up scrolls the same way, on a phone and a desktop alike: its heading (the switch, the board's own header, the Bowl Pool's
+   title and gauge, the Constitution's title) stands still, and only the data scrolls under it: the games, the table, the bowls, the
+   articles. The scroll bar starts at the top of the data, never beside a heading, and runs tight down the data's own edge, never out at
+   the edge of the screen. The chat keeps its own scrolling. */
+.clubhouse-page .cw-sheet-body:has(> .lab-tote:not(.club-chat), > .lab-bigboard, > .lab-rules, > .lab-wall-table) { display: flex; flex-direction: column; overflow: hidden; }
+.clubhouse-page .cw-sheet-body > :is(.lab-tote:not(.club-chat), .lab-bigboard, .lab-rules) { display: flex; flex: 0 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+.clubhouse-page .cw-sheet-body > :is(.club-deck-tabs, .cw-handle, h2) { flex: none; }
+.clubhouse-page .cw-sheet-body > .club-deck-tabs { width: 100%; }
+.clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > * { flex: none; }
+.clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-survivor-scroll, .lab-window-scroll, .lab-rules-body),
+.clubhouse-page .cw-sheet-body > .lab-wall-table { align-content: start; flex: 0 1 auto; grid-auto-rows: max-content; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
+.lab-window-scroll { display: grid; gap: inherit; min-width: 0; }
 
 /* ---- The clubhouse's pop-ups rise out of the ticket at the foot of the screen: quick, smooth, settling softly; no coloured band on top ---- */
 @keyframes club-rise { from { opacity: .4; transform: translateY(calc(100% + 40px)) scale(.97); } }
@@ -791,6 +811,37 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .club-notify h3 { font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: .14em; margin: 0 0 4px; text-transform: uppercase; }
 .club-notify .notification-settings > :first-child { margin-top: 0; }
 .club-notify { background: var(--themed-bg-18); border-radius: 8px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--themed-text-18); margin: 0 auto; max-width: 640px; padding: 16px; width: 100%; }
+/* The chalkboard's full chart: the Season Snapshot itself, working exactly as on the Pick'em Pad, on a slate in a walnut frame. */
+.club-snapshot { border-radius: 8px; display: flex; flex-direction: column; height: min(34rem, calc(100dvh - 9rem)); margin: 0 auto; max-width: 720px; width: 100%; }
+.club-snapshot.is-chalkboard {
+  background: radial-gradient(ellipse at 28% 18%, rgb(58 72 64 / .9), transparent 60%), radial-gradient(ellipse at 80% 85%, rgb(52 64 57 / .7), transparent 55%), rgb(33 43 38);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 9px rgb(104 70 40), inset 0 0 0 11px rgb(58 38 20), inset 0 0 22px 12px rgb(0 0 0 / .35), 0 8px 18px rgb(0 0 0 / .35);
+  padding: 14px 20px 18px;
+}
+
+/* The chalk skin, on the board's face and its full chart alike: everything written in chalk on the slate, each player's line in their own
+   color, a touch soft and pale as colored chalk is but solid enough to read. */
+.is-chalk, .is-chalkboard { --chalk: rgb(246 243 234); --chalk-dim: rgb(246 243 234 / .72); --chalk-faint: rgb(246 243 234 / .22); }
+.is-chalkboard .season-snapshot, .is-chalk .season-snapshot { color: var(--chalk); }
+.is-chalkboard .pickem-ledger-masthead { border-bottom: 1px solid var(--chalk-faint); border-top: 0; }
+.is-chalkboard .pickem-ledger-masthead h2 { color: var(--chalk); font-family: var(--font-serif); letter-spacing: .06em; text-transform: uppercase; }
+:is(.is-chalk, .is-chalkboard) .season-snapshot-row svg text { fill: var(--chalk-dim); }
+:is(.is-chalk, .is-chalkboard) .season-snapshot-axis-label, :is(.is-chalk, .is-chalkboard) .season-snapshot-week-label { color: var(--chalk-dim); fill: var(--chalk-dim); }
+:is(.is-chalk, .is-chalkboard) .season-snapshot-row svg line { stroke: var(--chalk-faint); }
+:is(.is-chalk, .is-chalkboard) .season-snapshot-start circle { stroke: rgb(33 43 38); }
+.is-chalkboard .season-snapshot-range { border-color: var(--chalk-dim); }
+.is-chalkboard .season-snapshot-range button { background: transparent; color: var(--chalk); }
+.is-chalkboard .season-snapshot-range button + button { border-left-color: var(--chalk-dim); }
+.is-chalkboard .season-snapshot-range button[aria-pressed="true"] { background: var(--chalk); color: rgb(33 43 38); }
+.is-chalkboard .season-snapshot-rail-track { background: var(--chalk-faint); }
+.is-chalkboard .season-snapshot-rail-thumb { background: var(--chalk-dim); }
+.is-chalkboard .season-snapshot-key-row { background: rgb(246 243 234 / .06); border-color: var(--chalk-faint); color: var(--chalk); }
+.is-chalkboard .season-snapshot-key-row:hover, .is-chalkboard .season-snapshot-key-row:focus-visible { background: rgb(246 243 234 / .14); }
+.is-chalkboard .season-snapshot-show-all { border-color: var(--chalk-dim); color: var(--chalk); }
+.is-chalkboard .season-snapshot-show-all:not(:disabled):hover, .is-chalkboard .season-snapshot-show-all:not(:disabled):focus-visible { background: var(--chalk); color: rgb(33 43 38); }
+.is-chalkboard .season-snapshot-show-all:disabled { border-color: var(--chalk-faint); color: rgb(246 243 234 / .4); }
+.is-chalkboard .season-snapshot-message { color: var(--chalk-dim); }
 
 /* The All-Time Table's Record / Other Stats switch sits on its own solid ground, so the room never shows through it. */
 .clubhouse-page .trophy-view-switch { background: rgb(18 40 30); border-color: rgba(201, 164, 95, .6); }

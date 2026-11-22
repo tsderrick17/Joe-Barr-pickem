@@ -139,7 +139,7 @@ export default function SiteNav() {
     if (pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
   }, [pathname, router]);
   const viewSwitch = (size: string) => clubhouseAccess ? (
-    <a
+    <Link
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
       className={`view-switch ${size}`}
       data-on={inClubhouse}
@@ -148,7 +148,7 @@ export default function SiteNav() {
       title={inClubhouse ? "Classic view" : "Clubhouse view"}
     >
       <span aria-hidden="true" className="view-switch-lever" />
-    </a>
+    </Link>
   ) : null;
 
   if (pathname === "/login") {
@@ -163,7 +163,8 @@ export default function SiteNav() {
 
     return isActive
       ? "border-b-2 border-[#f5f0e6] pb-1 font-bold text-[#f5f0e6]"
-      : "pb-1 text-[#e4ded2] hover:border-b-2 hover:border-[#e4ded2] hover:text-white";
+      // Every tab carries its underline's room, so the bar never changes height when a tab becomes the current one.
+      : "border-b-2 border-transparent pb-1 text-[#e4ded2] hover:border-[#e4ded2] hover:text-white";
   }
 
   async function signOut() {

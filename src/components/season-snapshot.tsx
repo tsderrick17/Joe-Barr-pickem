@@ -6,7 +6,7 @@ import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, sn
 
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; day?: string; roundDays?: number; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
-type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
+export type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
 type Range = "all" | "six";
 
 // Eleven validated hues (lightness, chroma, and color-blind separation pass on
@@ -15,13 +15,21 @@ type Range = "all" | "six";
 // Players take colors in the order they joined the pool and keep them for good.
 // Contrast is under 3:1 for a few hues, so identity never depends on color
 // alone: every line has a named key entry and hover highlights one player.
-const palette = [
+const paperPalette = [
   "#1baf7a", "#2a78d6", "#eb6834", "#e34948", "#00a3c4", "#e87ba4",
   "#eda100", "#b13fd0", "#4a3aa7", "#8ab800", "#008300",
 ];
 
-/** Permanent colors: join order first, then anyone the order does not list. */
-export function snapshotColors(standings: Player[], colorOrder: string[] = []) {
+// The chalkboard's chalk: the same order of hues, toned for the dark slate and checked there (2026-11-21) so every pair of the first
+// eight stays apart, for normal and color-blind eyes alike (each at least 15 and 8 apart in OKLab x100). The last three are spares.
+const chalkPalette = [
+  "#1f9a6a", "#2452c4", "#f2922a", "#b51f30", "#44cfee", "#e85ba6",
+  "#d4dc3a", "#a184f7", "#f4efe2", "#c8a27c", "#7fe0c4",
+];
+
+/** Permanent colors: join order first, then anyone the order does not list. `chalk` gives each person their chalkboard tone. */
+export function snapshotColors(standings: Player[], colorOrder: string[] = [], chalk = false) {
+  const palette = chalk ? chalkPalette : paperPalette;
   // Keep every listed id, including players who are no longer active, so the
   // slots of everyone after them never shift.
   const known = colorOrder;
@@ -33,13 +41,39 @@ export function snapshotColors(standings: Player[], colorOrder: string[] = []) {
 // (private browsing), in which case the defaults simply apply each time.
 const RANGE_KEY = "pickem.seasonSnapshot.range";
 const VIEW_KEY = "pickem.seasonSnapshot.view";
-const hiddenKey = (phase: "regular" | "playoffs") => `pickem.seasonSnapshot.hidden.${phase}`;
+const POOL_KEY = "pickem.seasonSnapshot.pool";
+const hiddenKey = (phase: "regular" | "playoffs" | "bowl") => `pickem.seasonSnapshot.hidden.${phase}`;
 function readSetting(key: string) {
   try { return window.localStorage.getItem(key); } catch { return null; }
 }
 function saveSetting(key: string, value: string) {
   try { window.localStorage.setItem(key, value); } catch { /* not remembered; defaults apply */ }
 }
+
+/**
+ * The Season Snapshot's read, shared: the clubhouse chalkboard and its full chart ask for the same standings once, not twice. A read is
+ * kept for the standings it was made for (`refreshKey`), so it is read again only once a result changes them; a failed read is forgotten.
+ */
+const reads = new Map<string, Promise<Snapshot>>();
+export function loadSeasonSnapshot(refreshKey: string): Promise<Snapshot> {
+  const known = reads.get(refreshKey);
+  if (known) return known;
+  const read = (async () => {
+    const response = await fetchWithSession("/api/season-snapshot");
+    const payload = await response.json() as Snapshot & { error?: string };
+    if (!response.ok) throw new Error(payload.error ?? "Season Snapshot could not be loaded.");
+    const data = { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [], colorOrder: payload.colorOrder ?? [] };
+    saveSetting(SNAPSHOT_KEY, JSON.stringify(data));
+    return data;
+  })();
+  reads.clear();
+  reads.set(refreshKey, read);
+  read.catch(() => { if (reads.get(refreshKey) === read) reads.delete(refreshKey); });
+  return read;
+}
+
+/** What the standings rows say about the chart: when any of it changes, a week may have settled, so the chart is read again. */
+export const snapshotRefreshKey = (rows: Array<{ id: string; wins: number; picks: Array<{ resultMark: string }> }>) => rows.map((row) => `${row.id}:${row.wins}:${row.picks.map((pick) => pick.resultMark).join(",")}`).join("|");
 
 // The last chart is kept on the device so turning the pad over shows it at once
 // while the current one loads behind it. A saved copy is only a head start: it
@@ -217,7 +251,7 @@ function useSpringAxis(target: Axis) {
 }
 
 function SnapshotChart({
-  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false,
+  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false, axisName,
 }: {
   title: string;
   showTitle: boolean;
@@ -229,6 +263,8 @@ function SnapshotChart({
   onHover: (id: string | null) => void;
   isPlayoff: boolean;
   windowed?: boolean;
+  /** What a point is, under the axis: "Week" by default, "Game day" for the playoffs' days, "Bowl day" for the Bowl Pool. */
+  axisName?: string;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -376,15 +412,16 @@ function SnapshotChart({
       </div>
       {scrolls ? <SnapshotRail scroller={scrollRef} step={step} weekCount={weekCount} /> : null}
     </div>
-    <p aria-hidden="true" className="season-snapshot-week-label">{byDay ? "Game day" : "Week"}</p>
+    <p aria-hidden="true" className="season-snapshot-week-label">{axisName ?? (byDay ? "Game day" : "Week")}</p>
   </section>;
 }
 
 /** The chart and its player key. Kept separate from loading so it renders from plain data. */
-function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs" }) {
+function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bowl = false, keyless = false, chalk = false }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs"; bowl?: boolean; keyless?: boolean; chalk?: boolean }) {
   // Once the playoffs begin the chart can show either half; before then, only the regular season.
-  const showPlayoffs = view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0;
-  const phase = showPlayoffs ? "playoffs" : "regular";
+  const showPlayoffs = !bowl && (view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0);
+  // The Bowl Pool's chart (a point a bowl day) keeps its own hidden players.
+  const phase = bowl ? "bowl" : showPlayoffs ? "playoffs" : "regular";
   // Last choice wins. With no saved choice, the playoff chart starts without
   // players who are out of the playoff race; press a name to bring one back.
   const [hidden, setHidden] = useState<Set<string>>(() => {
@@ -400,7 +437,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
   const [hoverId, setHoverId] = useState<string | null>(null);
 
   // Colors follow the person, never their rank or who is visible.
-  const colors = snapshotColors(standings, snapshot.colorOrder);
+  const colors = snapshotColors(standings, snapshot.colorOrder, chalk);
   const visible = standings.filter((player) => !hidden.has(player.id));
   const chooseHidden = (next: Set<string>) => {
     setHidden(next);
@@ -446,9 +483,9 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
           player's final regular-season total. */}
       {showPlayoffs
         ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
-        : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} title="Regular season" weeks={snapshot.regular} windowed={range === "six"} />}
+        : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} axisName={bowl ? "Bowl day" : undefined} title={bowl ? "Bowl Pool" : "Regular season"} weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
-    <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
+    {keyless ? null : <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
       {keyRows.map(({ player, total }) => {
         const shown = !hidden.has(player.id);
         return <button aria-label={`${player.firstName}, ${total} wins. ${shown ? "Shown; press to hide" : "Hidden; press to show"}`} aria-pressed={shown} className={`season-snapshot-key-row ${shown ? "" : "is-hidden"}`} key={player.id} onBlur={() => setHoverId(null)} onClick={() => toggle(player.id)} onFocus={() => shown && setHoverId(player.id)} onMouseEnter={() => shown && setHoverId(player.id)} onMouseLeave={() => setHoverId(null)} type="button">
@@ -457,34 +494,67 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view }: {
         </button>;
       })}
       <button className="season-snapshot-show-all" disabled={hidden.size === 0} onClick={() => chooseHidden(new Set())} type="button">Show all</button>
+    </div>}
+  </div>;
+}
+
+/** The chalkboard in the clubhouse room turns between its pools (in bowl season, Pick'em and the Bowl Pool) every 10 seconds. */
+const BOARD_POOL_MS = 10_000;
+
+/**
+ * The clubhouse chalkboard's face: the very chart the Season Snapshot draws (its last six weeks; the playoffs once they begin; in bowl
+ * season the Bowl Pool's last six days in turn with it), on the slate in chalk, without its key. Players hidden on the full chart stay
+ * hidden here. Before Week 6 has settled for a player, the board says when it opens.
+ */
+export function SnapshotBoard({ snapshot, standings, isPlayoff, bowl, locked }: { snapshot: Snapshot | null; standings: Player[]; isPlayoff: boolean; bowl?: BowlChart | null; locked: boolean }) {
+  const pools = bowl ? 2 : 1;
+  const [at, setAt] = useState(0);
+  useEffect(() => {
+    if (pools < 2) return;
+    const timer = window.setInterval(() => setAt((pool) => (pool + 1) % pools), BOARD_POOL_MS);
+    return () => window.clearInterval(timer);
+  }, [pools]);
+  const onBowl = Boolean(bowl) && at % pools === 1;
+  const playoffs = !onBowl && Boolean(snapshot) && (isPlayoff || (snapshot?.playoffs.length ?? 0) > 0);
+  const title = onBowl ? "Bowl Pool" : playoffs ? "Playoffs" : "Season Snapshot";
+  return <div className="season-snapshot season-snapshot-board">
+    <p className="season-snapshot-board-title">{title}</p>
+    <div className="season-snapshot-body">
+      {onBowl && bowl
+        ? <SnapshotView bowl chalk key="bowl" keyless range="six" snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />
+        : locked ? <p className="season-snapshot-board-note">Opens after Week 6</p>
+          : snapshot ? <SnapshotView chalk isPlayoff={isPlayoff} key={playoffs ? "playoffs" : "regular"} keyless range="six" snapshot={snapshot} standings={standings} /> : null}
     </div>
   </div>;
 }
 
-/** The back of the Pick'em Pad. Loads the first time it is turned over. */
-export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean }) {
+/** The Bowl Pool's chart, a point a bowl day (see `bowlSnapshot`), and its players, for the clubhouse chalkboard's Bowl side. */
+export type BowlChart = { weeks: Week[]; players: Player[] };
+
+/**
+ * The back of the Pick'em Pad, and the clubhouse chalkboard's full chart. Loads the first time it is turned over (or opened).
+ * Given `bowl` (the chalkboard in bowl season), a Pick'em | Bowl switch picks which pool it charts.
+ */
+export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, bowl, chalk = false }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; bowl?: BowlChart | null; chalk?: boolean }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const [opened, setOpened] = useState(false);
   const [range, setRange] = useState<Range>("all");
   const [view, setView] = useState<"regular" | "playoffs">("playoffs");
+  const [pool, setPool] = useState<"pickem" | "bowl">("pickem");
   // The saved view is read when the pad is first turned over, never during the
   // first render, so the server and browser always agree on the markup.
   if (active && !opened) {
     setOpened(true);
     setRange(readSetting(RANGE_KEY) === "six" ? "six" : "all");
     setView(readSetting(VIEW_KEY) === "regular" ? "regular" : "playoffs");
+    setPool(readSetting(POOL_KEY) === "bowl" ? "bowl" : "pickem");
     const saved = readSavedSnapshot();
     if (saved) setSnapshot(saved);
   }
 
-  const fetchSnapshot = useCallback(async () => {
-    const response = await fetchWithSession("/api/season-snapshot");
-    const payload = await response.json() as Snapshot & { error?: string };
-    if (!response.ok) throw new Error(payload.error ?? "Season Snapshot could not be loaded.");
-    return { regular: payload.regular ?? [], playoffs: payload.playoffs ?? [], colorOrder: payload.colorOrder ?? [] };
-  }, []);
+  const fetchSnapshot = useCallback((key: string) => loadSeasonSnapshot(key), []);
 
   // The chart only changes when a week's last pick settles, which also changes
   // the standings the page already refreshes. So it loads only while the back is
@@ -494,15 +564,15 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   const requestId = useRef(0);
   useEffect(() => {
     if (!active) return;
-    const wanted = `${refreshKey}#${retry}`;
+    // The same key the clubhouse chalkboard reads with, so a chart the room already read opens at once; a retry asks again.
+    const wanted = retry ? `${refreshKey}#${retry}` : refreshKey;
     if (loadedFor.current === wanted) return;
     const id = ++requestId.current;
-    void fetchSnapshot().then((data) => {
+    void fetchSnapshot(wanted).then((data) => {
       if (id !== requestId.current) return;
       loadedFor.current = wanted;
       setSnapshot(data);
       setError("");
-      saveSetting(SNAPSHOT_KEY, JSON.stringify(data));
     }).catch((reason) => {
       if (id === requestId.current) setError(reason instanceof Error ? reason.message : "Season Snapshot could not be loaded.");
     });
@@ -510,12 +580,17 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
 
   // Once the playoffs begin a Season | Playoffs switch appears and the chart opens on the playoffs (starting dots, with the first game day
   // waiting on the axis, until that day is final). The week-range toggle belongs to the regular-season chart only.
-  const hasPlayoffs = isPlayoff || (snapshot?.playoffs.length ?? 0) > 0;
+  const onBowl = Boolean(bowl) && pool === "bowl";
+  const hasPlayoffs = !onBowl && (isPlayoff || (snapshot?.playoffs.length ?? 0) > 0);
   const shownView = hasPlayoffs ? view : "regular";
   const showPlayoffs = shownView === "playoffs";
   const chooseView = (next: "regular" | "playoffs") => {
     setView(next);
     saveSetting(VIEW_KEY, next);
+  };
+  const choosePool = (next: "pickem" | "bowl") => {
+    setPool(next);
+    saveSetting(POOL_KEY, next);
   };
   const chooseRange = (next: Range) => {
     setRange(next);
@@ -525,17 +600,21 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
   return <div className="season-snapshot">
     <div className="pickem-ledger-masthead">
       <h2>Season Snapshot</h2>
+      {bowl ? <div aria-label="Pool shown" className="season-snapshot-range season-snapshot-view" role="group">
+        <button aria-pressed={!onBowl} onClick={() => choosePool("pickem")} type="button">Pick&rsquo;em</button>
+        <button aria-pressed={onBowl} onClick={() => choosePool("bowl")} type="button">Bowl</button>
+      </div> : null}
       {hasPlayoffs ? <div aria-label="Season half shown" className="season-snapshot-range season-snapshot-view" role="group">
         <button aria-pressed={!showPlayoffs} onClick={() => chooseView("regular")} type="button">Season</button>
         <button aria-pressed={showPlayoffs} onClick={() => chooseView("playoffs")} type="button">Playoffs</button>
       </div> : null}
       {!showPlayoffs ? <div aria-label="Weeks shown" className="season-snapshot-range" role="group">
         <button aria-pressed={range === "all"} onClick={() => chooseRange("all")} type="button">All</button>
-        <button aria-pressed={range === "six"} onClick={() => chooseRange("six")} type="button">6 Wk</button>
+        <button aria-pressed={range === "six"} onClick={() => chooseRange("six")} type="button">{onBowl ? "6 Days" : "6 Wk"}</button>
       </div> : null}
     </div>
     <div className="season-snapshot-body">
-      {error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
+      {onBowl && bowl ? (bowl.weeks.length === 0 ? <p className="season-snapshot-message">The Bowl Pool&rsquo;s chart starts once the first bowl day is final.</p> : <SnapshotView bowl chalk={chalk} key="bowl" range={range} snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />) : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView chalk={chalk} isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
     </div>
   </div>;
 }

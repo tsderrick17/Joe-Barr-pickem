@@ -16,6 +16,7 @@ export function Constitution() {
         <p>THE JOE BARR MEMORIAL PICK’EM</p>
         <h4>Pool Constitution</h4>
       </header>
+      <div className="lab-rules-body">
       <nav aria-label="Articles" className="lab-rules-index">
         {articles.map(({ title }) => {
           const [number, name] = title.split(" · ");
@@ -36,6 +37,7 @@ export function Constitution() {
           })}
         </section>
       ))}
+      </div>
     </article>
   );
 }
