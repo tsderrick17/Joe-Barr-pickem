@@ -1200,3 +1200,4 @@ for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280",
     expect(above, "the first game day starts within this many px of the ticket's top").toBeLessThan(size.width < 600 ? 170 : 200);
   });
 }
+
