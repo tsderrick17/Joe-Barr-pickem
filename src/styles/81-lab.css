@@ -40,8 +40,11 @@
 /* The room: one 3D picture of the clubhouse (its day or night picture, by the --room-* tokens), a tap spot over each thing in it, a
    few labels, the "Show labels" switch, then the plain list of rooms. A spot is never smaller than a thumb, whatever it sits over. */
 .lab-room { border-radius: 8px; box-shadow: 0 8px 18px rgba(37, 30, 18, .3); margin-inline: auto; max-width: 30rem; overflow: hidden; position: relative; width: 100%; }
-.lab-room-picture { display: var(--room-day-display); height: 100%; inset: 0; object-fit: cover; position: absolute; width: 100%; }
-.lab-room-picture.is-night { display: var(--room-night-display); }
+/* Day and night are two pictures, one over the other; switching crossfades them in place (the page's own day/night crossfade is skipped
+   in the room: it photographs the page, and the boards drawn in perspective on the picture could jump in that photograph). */
+.lab-room-picture { height: 100%; inset: 0; object-fit: cover; opacity: var(--room-day-opacity); position: absolute; transition: opacity .45s ease; width: 100%; }
+.lab-room-picture.is-night { opacity: var(--room-night-opacity); }
+@media (prefers-reduced-motion: reduce) { .lab-room-picture { transition: none; } }
 /* What the room shows by itself: the live boards, laid over the screens in the picture in perspective. */
 .lab-room-live { inset: 0; pointer-events: none; position: absolute; }
 .lab-room-screen { background: rgb(7 10 9); color: var(--cw-cream); font-family: "Courier New", monospace; font-weight: 700; left: 0; overflow: hidden; position: absolute; top: 0; transform-origin: 0 0; }

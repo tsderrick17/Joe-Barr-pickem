@@ -249,7 +249,7 @@ export default function SiteNav() {
           </button>
           {viewSwitch("is-large")}
 
-          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen} /></div> : null}
+          {playerName ? <div className="border-l border-zinc-500 pl-3 sm:pl-4"><AccountMenu isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen && !inClubhouse} /></div> : null}
         </div>
       </div>
     </nav>
@@ -274,7 +274,7 @@ export default function SiteNav() {
             <HapticTap />
           </button>
           {viewSwitch("is-small")}
-          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen} /> : null}
+          {playerName ? <AccountMenu compact isCommissioner={isCommissioner} isSigningOut={isSigningOut} onSignOut={signOut} playerName={playerName} showCommissionerLink showNotifications={pathname !== "/clubhouse"} showTrophyRoom={trophyRoomOpen && !inClubhouse} /> : null}
           </div>
         </div>
       </div>

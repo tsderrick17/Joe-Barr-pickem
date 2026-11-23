@@ -13,12 +13,12 @@
 }
 .cw-shell.has-dial .lab-room-ticket { bottom: calc(100px + env(safe-area-inset-bottom)); }
 .slip {
-  background: linear-gradient(180deg, var(--slip-paper), var(--slip-paper-2)); border-radius: 12px; display: grid; grid-template-columns: minmax(0, 1fr) var(--slip-stub); position: relative;
+  background: linear-gradient(180deg, var(--slip-paper), var(--slip-paper-2)); border-radius: 12px; display: grid; grid-template-columns: minmax(0, 1fr) var(--slip-stub); position: relative; transition: transform .18s ease;
   -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
 }
-.slip-body { min-width: 0; padding: 13px 14px 12px 16px; position: relative; }
+.slip-body { min-width: 0; padding: 13px 14px 12px 16px; position: relative; transition: padding .25s ease; }
 .slip-body::before { border: 1px solid rgba(186, 146, 82, .5); border-radius: 8px; content: ""; inset: 5px 6px 5px 6px; pointer-events: none; position: absolute; }
-.slip-head { align-items: flex-end; border-bottom: 1px solid var(--slip-hair); display: flex; gap: 10px; justify-content: space-between; padding: 0 2px 8px; }
+.slip-head { align-items: flex-end; border-bottom: 1px solid var(--slip-hair); display: flex; gap: 10px; justify-content: space-between; max-height: 4rem; padding: 0 2px 8px; transition: max-height .25s ease, opacity .2s ease, padding .25s ease, border-color .25s ease; }
 .slip-title { display: grid; flex: none; gap: 1px; }
 .slip-title b { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; letter-spacing: .16em; line-height: 1.1; }
 .slip-title i { color: var(--slip-soft); font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
@@ -27,7 +27,7 @@
 .slip-status i { font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .slip-status.is-saved { color: var(--slip-won); }
 .slip-status.is-saved i::before { content: "\2713\00a0"; }
-.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }
+.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; transition: margin-top .25s ease; }
 .slip-place { display: grid; gap: 3px; justify-items: center; min-width: 0; padding: 0 4px; position: relative; text-align: center; }
 .slip-place + .slip-place::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
 .slip-words { display: grid; gap: 3px; justify-items: center; max-width: 100%; min-width: 0; }
@@ -79,6 +79,30 @@
   .slip-words { justify-items: start; }
   .slip-places.is-four .slip-pick, .slip-places.is-many .slip-pick { font-size: .78rem; }
 }
+/* Tucked away (the real clubhouse): drag the ticket down and it folds to about half its height. The heading folds away; every pick stays,
+   lying on its side (logo, then team and line over the note), and the stub keeps its word. A small grip on the top edge shows it moves;
+   while dragged the ticket follows the finger a little, then settles. Dragging never opens it and never pulls the refresh chain. */
+.clubhouse-page > .lab-room-ticket img { -webkit-user-drag: none; }
+.slip-grip { background: rgba(33, 29, 23, .22); border-radius: 999px; height: 4px; left: calc((100% - var(--slip-stub)) / 2 - 18px); position: absolute; top: 4px; width: 36px; z-index: 1; }
+.slip.is-tucked .slip-head { border-bottom-color: transparent; max-height: 0; opacity: 0; overflow: hidden; padding-bottom: 0; }
+.slip.is-tucked .slip-places { margin-top: 2px; }
+.slip.is-tucked .slip-body { padding-bottom: 8px; padding-top: 12px; }
+.clubhouse-page > .lab-room-ticket .slip.is-tucked .slip-body { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+.slip.is-tucked .slip-place { column-gap: 6px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; }
+.slip.is-tucked .slip-words { justify-items: start; }
+.slip.is-tucked .slip-stub { gap: 1px; padding-block: 6px; }
+.slip.is-tucked .slip-stub i { display: none; }
+@media (max-width: 899px) {
+  .slip.is-tucked { --slip-stub: 64px; }
+  .slip.is-tucked .slip-stub b { font-size: .9rem; }
+  .slip.is-tucked .slip-place { column-gap: 8px; padding: 0 2px; }
+  .slip.is-tucked .slip-mark { height: 22px; width: 22px; }
+  .slip.is-tucked .slip-mark .lab-room-logo { height: 20px; width: 20px; }
+  .slip.is-tucked .slip-pick { font-size: .68rem; }
+  .slip.is-tucked .slip-pick b { letter-spacing: 0; }
+  .slip.is-tucked .slip-place small { font-size: .55rem; letter-spacing: .04em; }
+}
+@media (prefers-reduced-motion: reduce) { .slip, .slip-head, .slip-places, .slip-body { transition: none; } }
 .lab-room-ticket:hover .slip-stub { background: linear-gradient(180deg, rgb(60 51 40), rgb(34 29 22)); }
 .lab-room-ticket:active .slip { transform: translateY(1px); }
 .lab-room-ticket:focus-visible { outline: none; }
@@ -86,7 +110,7 @@
 
 /* On a phone the ticket is the foot of the screen itself: edge to edge, flush with the bottom, its top corners rounded like a drawer, so
    it meets every phone's own rounded corners without a gap. */
-.clubhouse-page > .lab-room-ticket { bottom: 0; filter: drop-shadow(0 -6px 16px rgba(0, 0, 0, .36)); left: 8px; margin: 0; max-width: none; position: fixed; right: 8px; width: auto; }   /* the foot of a phone's screen: the ticket laid over the floor, flush with the bottom, however tall it needs to be */
+.clubhouse-page > .lab-room-ticket { bottom: 0; filter: drop-shadow(0 -6px 16px rgba(0, 0, 0, .36)); left: 8px; margin: 0; max-width: none; position: fixed; right: 8px; width: auto; touch-action: none; user-select: none; -webkit-user-select: none; }   /* the foot of a phone's screen: the ticket laid over the floor, flush with the bottom, however tall it needs to be */
 .clubhouse-page > .lab-room-ticket .slip { border-radius: 14px 14px 0 0; -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black); }
 .clubhouse-page > .lab-room-ticket .slip-body { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 .clubhouse-page > .lab-room-ticket .slip-body::before { bottom: calc(5px + env(safe-area-inset-bottom)); }
