@@ -598,7 +598,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-gauge svg { display: block; overflow: visible; width: 100%; }
 .lab-bowl-gauge figcaption { align-items: center; color: rgba(240, 232, 214, .75); display: flex; font-size: .62rem; gap: .4em; justify-content: center; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
 /* The games left turn on split-flap tiles, the classic Bowl Card's own, in the ticket's navy and gold. */
-.lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; }
+.lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .66rem; letter-spacing: 0; }
 .lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 5; stroke: rgba(240, 232, 214, .12); }
 .lab-bowl-gauge-bezel { fill: none; stroke: rgba(226, 182, 70, .55); stroke-width: .8; }
 .lab-bowl-gauge-bezel.is-inner { stroke: rgba(226, 182, 70, .22); stroke-width: .6; }
@@ -771,7 +771,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .clubhouse-page .cw-sheet-body > .club-deck-tabs { width: 100%; }
 .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > * { flex: none; }
 .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-survivor-scroll, .lab-window-scroll, .lab-rules-body),
-.clubhouse-page .cw-sheet-body > .lab-wall-table { align-content: start; flex: 0 1 auto; grid-auto-rows: max-content; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
+.clubhouse-page .cw-sheet-body > .lab-wall-table { align-content: start; flex: 0 1 auto; grid-auto-rows: max-content; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 14px; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
 .lab-window-scroll { display: grid; gap: inherit; min-width: 0; }
 
 /* ---- The clubhouse's pop-ups rise out of the ticket at the foot of the screen: quick, smooth, settling softly; no coloured band on top ---- */

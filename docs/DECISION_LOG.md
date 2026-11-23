@@ -482,3 +482,7 @@ The monthly credits chart's title uses the three-letter month ("Credits in Nov 2
 ## 2026-11-23 - Side-by-side teams on the clubhouse games board stay level
 
 When one side's list of pickers ran to a second line, its box grew and the other side's box stayed short and centred, so the team names no longer lined up. Both boxes in a game now stretch to the same height and each keeps its team and line on the top row; only the bottom grows.
+
+## 2026-11-23 - Clubhouse Bowl dial: smaller games-left tile; pop-up scroll bars leave room
+
+The games-left flap tile under the Bowl dial in the clubhouse is smaller (.66rem, was .85rem). The scrolling pop-up bodies reserve 14px on the right so the floating scroll bar never covers the figures (the Window's pick lines).
