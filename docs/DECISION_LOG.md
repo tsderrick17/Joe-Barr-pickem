@@ -485,4 +485,10 @@ When one side's list of pickers ran to a second line, its box grew and the other
 
 ## 2026-11-23 - Clubhouse Bowl dial: smaller games-left tile; pop-up scroll bars leave room
 
-The games-left flap tile under the Bowl dial in the clubhouse is smaller (.66rem, was .85rem). The scrolling pop-up bodies reserve 14px on the right so the floating scroll bar never covers the figures (the Window's pick lines).
+The games-left flap tile under the Bowl dial in the clubhouse is smaller. The scrolling pop-up bodies reserve 14px on the right so the floating scroll bar never covers the figures (the Window's pick lines).
+
+## 2026-11-23 - The ticket tucks with an arrow; the Bowl pop-up's top section is shorter
+
+Dragging the clubhouse ticket to tuck it away is replaced by a small arrow tab on the ticket's top edge: it folds the ticket to half its height (heading away, every pick kept) and, turned the other way, opens it again; the choice is still remembered on the device. The fold settles with a small spring, the picks pop back into place one after another and the arrow flips with a little overshoot (all still, with "reduce motion"). Tapping the ticket still opens your ticket.
+
+The Bowl Pool pop-up's heading is compact (no row of stars, a smaller title, counts and dial, a slimmer Picks/Sheet switch): the first game day starts about 65px higher on a phone. The earlier smaller-tile note is superseded: the games-left tile shrank by its flap size (1.9rem by 1.2rem), not its font.

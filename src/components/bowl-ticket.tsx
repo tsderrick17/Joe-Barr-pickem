@@ -95,7 +95,6 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
     <div className="lab-bigboard lab-window lab-bowl-ticket trace-gilt">
       <header className="lab-bowl-head">
         <div className="lab-bowl-title">
-          <p aria-hidden="true">★ ★ ★</p>
           <h3>Bowl Pool</h3>
           {/* Your picks at a glance: how many are still to make (gold while any are) and how many are in. */}
           {view.owed ? (
