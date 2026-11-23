@@ -264,7 +264,7 @@ export function monthlyCreditSeries(runs, now = new Date(), games = [], retryMin
     ? Math.round((regularSundayKeys.reduce((sum, key) => sum + sundayCredits.get(key), 0) / regularSundayKeys.length) * 10) / 10
     : null;
   return {
-    monthLabel: now.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
+    monthLabel: now.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
     forecastCredits, forecastTotal: Math.round(usedNow + forecastCredits), usedCredits: usedNow,
     forecastFrom: allDays.find((day) => day.forecastCumulative !== null)?.date ?? null,
     forecastAssumptions: `Each future score slate uses ${Math.round(expectedChecks * 10) / 10} expected provider checks: ${Math.round(settle.share * 100)}% of slates settle in the first hour (${settle.measured ? `${HISTORY_DAYS}-day average over ${settle.slates} slates` : "90% starting estimate until there is enough history"}), then half of the rest across the next ${expected.nextHour} checks (${listMinutes(expected.nextHourGaps)}-minute gaps) and half on the one later check. Line requests: one 7 AM pre-lock refresh every day plus one fetch for each distinct lock time, including 6 PM early locks. This is a full-operations forecast on the Normal schedule; a low-credit schedule never changes it.`,

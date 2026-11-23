@@ -476,3 +476,5 @@ The plaque shelf in the clubhouse Trophy Room lost its "one for every season" li
 ## 2026-11-23 - Slower score checking starts at 450 credits used; finals chart readable on a phone
 
 The low-balance line, where Normal score checking ends and Lean or Minimal begin, moved from 440 to 450 of the month's 500 Odds API credits used (the Commissioner asked for a 450 floor): Normal runs 10 credits longer, leaving 50 credits (35 after the lines) for the lighter schedules instead of 60 (45). On Odds credits, every card heading now puts its explanation under the whole heading row instead of squeezing it beside the headline number; the finals chart's headline reads "found in 10 min" (the share of finals found within 10 minutes of the first score check) and its explanation is shorter. Tapping a bar or day on a phone keeps its details up until a tap lands outside the chart (they used to vanish the moment the finger lifted).
+
+The monthly credits chart's title uses the three-letter month ("Credits in Nov 2026").
