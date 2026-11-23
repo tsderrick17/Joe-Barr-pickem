@@ -37,7 +37,7 @@ const TIER_PLANS = {
 const tierPlanFor = (state) => TIER_PLANS[state] ?? TIER_PLANS.normal;
 
 const CREDIT_USAGE = {
-  monthLabel: "October 2026", trackedCredits: 88, usedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
+  monthLabel: "Oct 2026", trackedCredits: 88, usedCredits: 88, forecastCredits: 190, forecastTotal: 278, forecastFrom: "2026-10-05", forecastAssumptions: "Sample forecast assumptions.",
   reportedUsed: 88, providerLimit: 500, sundayAverageCredits: 14, regularSundaysElapsed: 1, remaining: 412, reportedAt: T(1),
   days: DAYS.slice(0, 4),
   calendarDays: DAYS.map((day) => ({ ...day, forecast: 0, forecastCumulative: null, forecastScores: 0, forecastLines: 0, forecastOther: 0, forecastGames: 0, forecastSlates: 0 })),

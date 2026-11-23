@@ -77,6 +77,13 @@ export function DashChart({
     const origin = bins?.[0]?.start ?? 0, span = (bins?.at(-1)?.end ?? 1) - origin || 1;
     return area.left + ((minutes - origin) / span) * area.width;
   };
+  // A finger lifting is not leaving: a tapped bar or day keeps its details until another tap lands outside the chart (a mouse still clears on leaving).
+  useEffect(() => {
+    if (hover === null) return;
+    const away = (event: PointerEvent) => { if (!(event.target instanceof Node && box.current?.contains(event.target))) setHover(null); };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [hover, box]);
   const centre = (index: number) => (kind === "histogram" ? bars[index]?.centre ?? 0 : at(index));
   const faded = (index: number) => today !== undefined && index > today;
 
@@ -120,7 +127,7 @@ export function DashChart({
       {extraKey}
     </div> : null}
     <div className="dash-plot" ref={box} style={{ height }}>
-      {width ? <svg aria-hidden="true" height={height} onPointerDown={point} onPointerLeave={() => setHover(null)} onPointerMove={point} viewBox={`0 0 ${width} ${height}`} width={width}>
+      {width ? <svg aria-hidden="true" height={height} onPointerDown={point} onPointerLeave={(event) => { if (event.pointerType === "mouse") setHover(null); }} onPointerMove={point} viewBox={`0 0 ${width} ${height}`} width={width}>
         {yTicks.map((tick) => <g key={tick}>
           <line className="dash-grid" x1={area.left} x2={area.left + area.width} y1={y(tick)} y2={y(tick)} />
           <text className="dash-axis" textAnchor="end" x={area.left - 7} y={y(tick) + 4}>{format(tick)}</text>
@@ -229,8 +236,9 @@ export function ViewSwitch<T extends string>({ label, value, options, onChange }
 /** A chart card's head: the title (and a short line when it is needed), a headline number or a switch on the right. */
 export function CardHead({ title, line, right }: { title: string; line?: string; right?: ReactNode }) {
   return <div className="dash-head">
-    <div><h3>{title}</h3>{line ? <p>{line}</p> : null}</div>
+    <h3>{title}</h3>
     {right}
+    {line ? <p>{line}</p> : null}
   </div>;
 }
 

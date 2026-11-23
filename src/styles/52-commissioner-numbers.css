@@ -28,9 +28,9 @@
 .dash-meter s { background: var(--club-ink); border-radius: 1px; bottom: -4px; margin-left: -1px; position: absolute; top: -4px; width: 2px; }
 
 /* Card heads: a title, maybe one short line, and a number or a switch on the right */
-.dash-head { align-items: flex-start; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 10px; }
+.dash-head { align-items: start; display: grid; gap: 4px 12px; grid-template-columns: minmax(0, 1fr) auto; margin-bottom: 10px; }
 .dash-head h3 { font-family: var(--font-serif); font-size: 18px; font-weight: 600; margin: 0; text-wrap: balance; }
-.dash-head p { color: var(--club-muted); font-size: 13px; margin: 2px 0 0; }
+.dash-head p { color: var(--club-muted); font-size: 13px; grid-column: 1 / -1; line-height: 1.4; margin: 0; }
 .dash-big { flex: none; text-align: right; }
 .dash-big b { display: block; font-family: var(--font-serif); font-size: 26px; font-variant-numeric: tabular-nums lining-nums; font-weight: 600; line-height: 1; }
 .dash-big small { color: var(--club-muted); display: block; font-size: 12px; margin-top: 3px; }

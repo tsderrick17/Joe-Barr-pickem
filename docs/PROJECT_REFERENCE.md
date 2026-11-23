@@ -710,7 +710,7 @@ may enrich spreads but cannot override canonical schedule assignments.
   automatic checks follow (the overdue alert and the Commissioner's button take over). The database gate wakes the worker every five minutes. A retry gap is the real gap between two checks:
   a game's retry timer is its next time on its tier's list of times after kickoff, counted from the gate tick the run was called for, not from the run's start a few
   seconds later (`nextScoreCheckTime`, `SCORE_GATE_INTERVAL_MINUTES`; test `score-gate-replay.test.mjs`).
-- Remaining credits do not change the normal cadence until 440 of the month's 500 credits are used
+- Remaining credits do not change the normal cadence until 450 of the month's 500 credits are used
   (`LOW_BALANCE_USED_CREDITS`). Then the worker runs a Lean or Minimal list of times instead (`score-polling-tier.js`,
   decided every run from the month's usage and what the rest of the month needs: the remaining line requests plus a cushion, and each
   schedule's forecast for the game days left), and pauses automatic checks only when the balance would not cover the lines. A reading from an earlier month,

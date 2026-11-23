@@ -21,19 +21,17 @@ const KICKOFF = Date.parse("2026-11-08T18:00:00Z");
 const needs = { lineNeedCredits: 15, leanNeedCredits: 40, minimalNeedCredits: 25, gameDaysLeft: 3 };
 const choose = (usedCredits, extra = {}) => chooseScoreTier({ usedCredits, remainingCredits: 500 - usedCredits, ...needs, ...extra });
 
-test("Normal, whatever the forecast says, until 440 credits are used; from 440 on, never Normal again that month", () => {
-  assert.equal(LOW_BALANCE_USED_CREDITS, 440);
-  for (const used of [0, 100, 300, 438, 439]) assert.equal(choose(used, { leanNeedCredits: 9999, minimalNeedCredits: 9999 }).tier, "normal", `${used} used`);
-  for (const used of [440, 441, 460, 480]) assert.notEqual(choose(used).tier, "normal", `${used} used`);
+test("Normal, whatever the forecast says, until 450 credits are used; from 450 on, never Normal again that month", () => {
+  assert.equal(LOW_BALANCE_USED_CREDITS, 450);
+  for (const used of [0, 100, 300, 448, 449]) assert.equal(choose(used, { leanNeedCredits: 9999, minimalNeedCredits: 9999 }).tier, "normal", `${used} used`);
+  for (const used of [450, 451, 460, 480]) assert.notEqual(choose(used).tier, "normal", `${used} used`);
 });
 
-test("from 440 used: Lean if its forecast fits in what is left after the lines, otherwise Minimal, and paused only when nothing is left after the lines", () => {
-  // 500 - 440 = 60 left, 15 for lines: 45 spendable. Lean needs 40: fits.
-  assert.deepEqual([choose(440).tier, choose(440).spendableCredits], ["lean", 45]);
-  // 5 fewer credits: 40 spendable, Lean needs exactly 40: still fits (a tie goes to the faster tier).
-  assert.equal(choose(445).tier, "lean");
-  // One more credit used and Lean no longer fits; Minimal (25) does.
-  assert.deepEqual([choose(446).tier, choose(446).spendableCredits], ["minimal", 39]);
+test("from 450 used: Lean if its forecast fits in what is left after the lines, otherwise Minimal, and paused only when nothing is left after the lines", () => {
+  // 500 - 450 = 50 left, 15 for lines: 35 spendable. A Lean that needs 35 fits exactly (a tie goes to the faster tier).
+  assert.deepEqual([choose(450, { leanNeedCredits: 35 }).tier, choose(450, { leanNeedCredits: 35 }).spendableCredits], ["lean", 35]);
+  // Lean needing 40 no longer fits; Minimal (25) does.
+  assert.deepEqual([choose(450).tier, choose(450).spendableCredits], ["minimal", 35]);
   // Minimal keeps running even when it does not fit, as long as something is left after the lines: never a hard stop.
   assert.deepEqual([choose(480).tier, choose(480).spendableCredits], ["minimal", 5]);
   assert.equal(choose(485).tier, "paused", "the balance has reached the line need");
@@ -42,19 +40,19 @@ test("from 440 used: Lean if its forecast fits in what is left after the lines, 
 });
 
 test("it is decided afresh every run, so it steps back up from Minimal to Lean as the game days pass", () => {
-  const heavy = choose(446, { leanNeedCredits: 40, gameDaysLeft: 3 });
-  const lighter = choose(446, { leanNeedCredits: 12, lineNeedCredits: 8, gameDaysLeft: 1 });
+  const heavy = choose(450, { leanNeedCredits: 40, gameDaysLeft: 3 });
+  const lighter = choose(450, { leanNeedCredits: 12, lineNeedCredits: 8, gameDaysLeft: 1 });
   assert.deepEqual([heavy.tier, lighter.tier], ["minimal", "lean"]);
 });
 
 test("no reading of the month's usage means Normal, and the messages say why in plain words", () => {
   assert.equal(chooseScoreTier({ usedCredits: null, remainingCredits: null, ...needs }).tier, "normal");
   assert.match(chooseScoreTier({ usedCredits: null, remainingCredits: null, ...needs }).message, /no credit reading yet this month/);
-  assert.match(choose(300).message, /^Normal: 300 credits used\. Slower checking would start at 440\.$/);
-  assert.match(choose(440).message, /^Lean: 45 credits are free for scores after the lines, and Lean needs about 40 credits for the 3 game days left\.$/);
+  assert.match(choose(300).message, /^Normal: 300 credits used\. Slower checking would start at 450\.$/);
+  assert.match(choose(450, { leanNeedCredits: 35 }).message, /^Lean: 35 credits are free for scores after the lines, and Lean needs about 35 credits for the 3 game days left\.$/);
   assert.match(choose(460).message, /^Minimal: 25 credits are free for scores after the lines, and Lean would need about 40 credits/);
   assert.match(choose(490).message, /^Paused: 10 credits left and the rest of the month's official lines need about 15 credits\. The Run score check now button still works\.$/);
-  assert.match(choose(440, { gameDaysLeft: 1, leanNeedCredits: 70 }).message, /for the 1 game day left\./);
+  assert.match(choose(450, { gameDaysLeft: 1, leanNeedCredits: 70 }).message, /for the 1 game day left\./);
 });
 
 // --- The tier's times (pure) ---------------------------------------------------------------------------------------------------------------
@@ -102,9 +100,9 @@ const NOV = [game("2026-11-26T17:30:00Z"), game("2026-11-26T21:30:00Z"), game("2
 const usage = (used, at = "2026-11-26T11:00:00Z") => ({ job_type: "scores", status: "success", started_at: at, completed_at: at, details: { providerChecked: true, requestsUsed: String(used), requestsRemaining: String(500 - used), requestsLast: "2" } });
 const planAt = (now, used, games = NOV, runAt) => monthlyCreditSeries([usage(used, runAt)], new Date(now), games).tierPlan;
 
-test("the end-of-November squeeze: 439 used is still Normal, 440 is Lean, a few credits lower is Minimal, and the last credits pause", () => {
-  const picked = Object.fromEntries([439, 440, 450, 455, 480, 490].map((used) => [used, planAt("2026-11-26T12:00:00Z", used).tier]));
-  assert.deepEqual(picked, { 439: "normal", 440: "lean", 450: "lean", 455: "minimal", 480: "minimal", 490: "paused" });
+test("the end-of-November squeeze: 449 used is still Normal, 450 is Lean, a few credits lower is Minimal, and the last credits pause", () => {
+  const picked = Object.fromEntries([449, 450, 455, 480, 490].map((used) => [used, planAt("2026-11-26T12:00:00Z", used).tier]));
+  assert.deepEqual(picked, { 449: "normal", 450: "lean", 455: "minimal", 480: "minimal", 490: "paused" });
   const plan = planAt("2026-11-26T12:00:00Z", 455);
   assert.equal(plan.gameDaysLeft, 2);
   assert.ok(plan.leanNeedCredits > plan.minimalNeedCredits && plan.minimalNeedCredits > 0, "Lean costs more than Minimal");
@@ -134,7 +132,7 @@ test("the month's forecast is a full-operations forecast: it prices every slate 
   assert.equal(squeezed.forecastExpectedChecks, plenty.forecastExpectedChecks);
   assert.ok(Math.abs(plenty.forecastExpectedChecks - 7.73) < 0.01, "Normal's expected checks per slate");
   assert.equal(plenty.calendarDays.filter((day) => day.forecastSlates > 0).every((day) => Math.abs(day.forecastScores - day.forecastSlates * plenty.forecastExpectedChecks * 2) < 1e-9), true);
-  assert.doesNotMatch(squeezed.forecastAssumptions, /Past 440|Lean|Minimal/);
+  assert.doesNotMatch(squeezed.forecastAssumptions, /Past 450|Lean|Minimal/);
   assert.match(squeezed.forecastAssumptions, /full-operations forecast on the Normal schedule/);
   // Only the schedule in force reacts.
   assert.deepEqual([plenty, squeezed, paused].map((series) => series.tierPlan.tier), ["normal", "minimal", "paused"]);
@@ -143,7 +141,7 @@ test("the month's forecast is a full-operations forecast: it prices every slate 
 // --- Reading the tier for the worker ---------------------------------------------------------------------------------------------------------
 const providerRuns = (used, at) => [{ details: { requestsUsed: String(used), requestsRemaining: String(500 - used) }, completed_at: at, started_at: at }];
 
-test("under 440 used, or with no reading this month, the worker reads one small thing and answers Normal", async () => {
+test("under 450 used, or with no reading this month, the worker reads one small thing and answers Normal", async () => {
   globalThis.tierFixture = { database: recordingDatabase(() => ({ data: providerRuns(300, "2026-11-26T11:00:00Z"), error: null })) };
   const plan = await decideScoreTier(new Date("2026-11-26T12:00:00Z"));
   assert.equal(plan.tier, "normal");
@@ -153,7 +151,7 @@ test("under 440 used, or with no reading this month, the worker reads one small 
   assert.equal(globalThis.tierFixture.database.queries.length, 1);
 });
 
-test("from 440 used the worker prices the rest of the month from this month's provider calls and the schedule, as the Commissioner's chart does", async () => {
+test("from 450 used the worker prices the rest of the month from this month's provider calls and the schedule, as the Commissioner's chart does", async () => {
   const month = [usage(455, "2026-11-26T11:00:00Z")];
   globalThis.tierFixture = {
     database: recordingDatabase((table, calls) => {
