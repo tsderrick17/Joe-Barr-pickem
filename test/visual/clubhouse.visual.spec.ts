@@ -357,33 +357,32 @@ test("the Notifications pop-up's email plans and fine-tune choices wear the club
 });
 
 for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
-  test(`dragging the ticket down tucks it to about half its height, a drag never opens it, and dragging up brings it back, at ${label}`, async ({ page }) => {
+  test(`the arrow above the ticket tucks it to about half its height and opens it again, and the ticket itself still opens your ticket, at ${label}`, async ({ page }) => {
     await openClubhouse(page, { size });
-    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    const ticket = page.locator(".clubhouse-page .lab-room-ticket");
+    const arrow = page.getByRole("button", { name: /Tuck your ticket away|Open up your ticket/ });
     await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await expect(arrow).toHaveAttribute("aria-expanded", "true");
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     const whole = (await ticket.boundingBox())!;
-    const drag = async (dy: number) => {
-      const box = (await ticket.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2 + dy, { steps: 6 });
-      await page.mouse.up();
-    };
-    await drag(60);
+    const tabBox = (await arrow.boundingBox())!;
+    expect(tabBox.y + tabBox.height, "the arrow sits just above the ticket").toBeLessThanOrEqual(whole.y + 1);
+    await arrow.click();
     await expect(ticket.locator(".slip")).toHaveClass(/is-tucked/);
-    await expect(page.getByRole("dialog")).toHaveCount(0);   // the drag did not open it
+    await expect(arrow).toHaveAttribute("aria-expanded", "false");
+    await expect(arrow).toHaveAccessibleName("Open up your ticket");
+    await expect(page.getByRole("dialog")).toHaveCount(0);   // the arrow did not open the ticket
     const tucked = (await ticket.boundingBox())!;
     expect(tucked.height, "about half as tall").toBeLessThan(whole.height * 0.7);
     await expect(ticket.locator(".slip-place")).toHaveCount(3);   // every pick still on it
-    await page.waitForTimeout(300);
     await expect(page).toHaveScreenshot(`clubhouse-ticket-tucked-${label}.png`, { maxDiffPixels: 40 });
-    // It stays tucked after a reload, and a tap still opens your ticket.
+    // It stays tucked after a reload; the arrow opens it again, and a tap on the ticket opens your ticket.
     await page.reload();
-    await expect(page.locator(".clubhouse-page > .lab-room-ticket .slip")).toHaveClass(/is-tucked/, { timeout: 30_000 });
+    await expect(page.locator(".clubhouse-page .lab-room-ticket .slip")).toHaveClass(/is-tucked/, { timeout: 30_000 });
     await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
-    await drag(-60);
+    await arrow.click();
     await expect(ticket.locator(".slip")).not.toHaveClass(/is-tucked/);
+    await expect(arrow).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await ticket.click();
     await expect(page.getByRole("dialog")).toHaveCount(1);
@@ -894,7 +893,7 @@ test("forfeited, the room's ticket strip and the ticket say so: your score stand
   await expect(ticket.locator(".lab-ticket-raceover")).toHaveText("You forfeited · your score stands", { timeout: 30_000 });
   await expect(ticket.locator(".forfeit-panel")).toHaveCount(0);
   await ticket.getByRole("button", { name: "Close" }).click();
-  await expect(page.locator(".clubhouse-page > .lab-room-ticket")).toContainText("ForfeitedScore stands");
+  await expect(page.locator(".clubhouse-page .lab-room-ticket")).toContainText("ForfeitedScore stands");
 });
 
 test("out of the playoff race, the Big Board says so and there is no ticket", async ({ page }) => {
@@ -915,7 +914,7 @@ test("on a desktop the pop-ups sit under the site's bar, the Big Board reads lar
   expect(sheet.width).toBeLessThanOrEqual(760);
   expect(sheet.width).toBeGreaterThan(640);
   // The ticket centred at the foot of the screen.
-  const ticket = (await page.locator(".clubhouse-page > .lab-room-ticket").boundingBox())!;
+  const ticket = (await page.locator(".clubhouse-page .lab-room-ticket").boundingBox())!;
   expect(Math.abs(ticket.x + ticket.width / 2 - 640)).toBeLessThanOrEqual(2);
   await page.goto("/clubhouse#slate"); await page.reload();
   const games = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-window-part > ol > li");
@@ -974,7 +973,7 @@ for (const [label, home, scenario, keep] of [
 ] as const) {
   test(`your ticket at the foot of the room, ${label}`, async ({ page }) => {
     await openClubhouse(page, { ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario], ...(keep ? { shapeBoard: (response: BoardRead) => ({ ...response, games: response.games.slice(0, keep) }) } : {}) });
-    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    const ticket = page.locator(".clubhouse-page .lab-room-ticket");
     await expect(ticket).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     await page.waitForFunction(() => [...document.images].every((image) => image.complete));
@@ -993,7 +992,7 @@ for (const [label, size] of [["phone-375x667", { width: 375, height: 667 }], ["p
       await openClubhouse(page, { size, ...(home ? { homeExtra: homeResponse(home) } : {}), scenarios: [scenario] });
       await expect(page.getByRole("navigation", { name: "Clubhouse rooms" })).toBeVisible({ timeout: 30_000 });
       await page.waitForFunction(() => [...document.images].every((image) => image.complete));
-      const ticket = (await page.locator(".clubhouse-page > .lab-room-ticket").boundingBox())!;
+      const ticket = (await page.locator(".clubhouse-page .lab-room-ticket").boundingBox())!;
       const plates = await page.locator(".lab-room-tag").evaluateAll((tags) => tags.map((tag) => { const box = tag.getBoundingClientRect(); return { name: tag.textContent, left: box.left, right: box.right, top: box.top, bottom: box.bottom }; }));
       for (const plate of plates) {
         const clear = plate.bottom <= ticket.y || plate.right <= ticket.x || plate.left >= ticket.x + ticket.width;
@@ -1186,3 +1185,19 @@ test("side by side teams on the games board keep their names level when one side
   const heights = await row.locator(".lab-board-cell").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().height)));
   expect(heights[0]).toBe(heights[1]);
 });
+
+for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  test(`the Bowl Pool pop-up keeps its top section short so the games get the room, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(), size });
+    const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
+    const ticket = sheet.locator(".lab-bowl-ticket");
+    await expect(ticket.locator(".lab-bowl-game").first()).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot(`clubhouse-bowl-top-${label}.png`, { maxDiffPixels: 60 });
+    // Where the first game starts, measured from the top of the ticket: the heading, counts, dial and switch above it.
+    const above = await ticket.evaluate((node) => Math.round(node.querySelector(".lab-bowl-day")!.getBoundingClientRect().top - node.getBoundingClientRect().top));
+    expect(above, "the first game day starts within this many px of the ticket's top").toBeLessThan(size.width < 600 ? 170 : 200);
+  });
+}
+

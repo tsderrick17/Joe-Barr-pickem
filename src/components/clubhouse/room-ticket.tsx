@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useState, type CSSProperties } from "react";
 import { Lamp, Logo, type LampState } from "@/components/clubhouse/lamps";
 
 /** One place on your ticket (see src/lib/clubhouse-ticket.js, where every state is decided). */
@@ -20,46 +20,11 @@ const printed = (line: string) => line.replace(/^-/, "−");
  * the one thing to press. One row always, so the ticket stays the same short height in a playoff round and never covers the room:
  * on a phone a round of five or six shows each place as its logo (or ring) and line alone; on a desktop each place lies on its side.
  */
-/** How far the ticket must be dragged, up or down, to tuck it away or bring it back. */
-const TUCK_DRAG = 28;
-
 export function RoomTicket({ ticket, week, savedAt = null, onOpen, href, tucked = false, onTuck }: { ticket: RoomTicketData; week: string; savedAt?: string | null; onOpen?: () => void; href?: string; tucked?: boolean; onTuck?: (tucked: boolean) => void }) {
-  // Tucking it away (the real clubhouse): drag the ticket down and it folds to half its height, its heading put away and every pick still
-  // on it; drag it up and it is whole again. It follows the finger while dragged, and a drag never opens it (only a tap does).
-  const drag = useRef<{ y: number; moved: boolean; id: number } | null>(null);
-  const swallowClick = useRef(false);
-  const slip = useRef<HTMLSpanElement>(null);
-  const follow = (dy: number) => { if (slip.current) slip.current.style.transform = dy ? `translateY(${Math.max(-24, Math.min(40, dy * 0.6))}px)` : ""; };
-  const tuckHandlers = onTuck ? {
-    "data-no-pull-refresh": "",
-    onPointerDown: (event: ReactPointerEvent<HTMLElement>) => { drag.current = { y: event.clientY, moved: false, id: event.pointerId }; },
-    onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
-      const held = drag.current;
-      if (!held) return;
-      const dy = event.clientY - held.y;
-      if (!held.moved && Math.abs(dy) > 6) { held.moved = true; event.currentTarget.setPointerCapture(held.id); }
-      if (held.moved) follow(dy);
-    },
-    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
-      const held = drag.current;
-      drag.current = null;
-      follow(0);
-      if (!held?.moved) return;
-      swallowClick.current = true;
-      const dy = event.clientY - held.y;
-      if (dy > TUCK_DRAG && !tucked) onTuck(true);
-      else if (dy < -TUCK_DRAG && tucked) onTuck(false);
-    },
-    onPointerCancel: () => { drag.current = null; follow(0); },
-    // A logo is a picture, which a mouse would otherwise pick up and drag away instead of moving the ticket.
-    onDragStart: (event: { preventDefault: () => void }) => event.preventDefault(),
-    onClickCapture: (event: { preventDefault: () => void; stopPropagation: () => void }) => {
-      if (!swallowClick.current) return;
-      swallowClick.current = false;
-      event.preventDefault();
-      event.stopPropagation();
-    },
-  } : {};
+  // Tucking it away (the real clubhouse): the arrow just above the ticket folds it to half its height (its heading put away, every pick
+  // still on it) and the same arrow, turned the other way, opens it whole again. Pressing the ticket itself still opens your ticket.
+  // The picks pop back into place only after the arrow has been used (never as the page opens).
+  const [moved, setMoved] = useState(false);
   const { places } = ticket;
   // The heading's right side mirrors its left: a small word over what it says.
   // Nothing while picks are owed (the stub counts them); otherwise the week in a few words, or Saved with the time for a while after a save.
@@ -67,13 +32,12 @@ export function RoomTicket({ ticket, week, savedAt = null, onOpen, href, tucked 
   const status = said ? <span className={`slip-status${savedAt ? " is-saved" : ""}`}><i>{said.label}</i>{said.text}</span> : null;
   const size = places.length >= 5 ? " is-many" : places.length === 4 ? " is-four" : "";
   const inside = (
-    <span className={`slip${places.length > 3 ? " is-round" : ""}${tucked ? " is-tucked" : ""}`} ref={slip}>
-      {onTuck ? <span aria-hidden="true" className="slip-grip" /> : null}
+    <span className={`slip${places.length > 3 ? " is-round" : ""}${tucked ? " is-tucked" : ""}`}>
       <span className="slip-body">
         <span className="slip-head"><span className="slip-title"><i>{week}</i><b>YOUR TICKET</b></span>{status}</span>
         <span className={`slip-places${size}`} style={{ ["--cols" as string]: places.length }}>
           {places.map((place, index) => (
-            <span className={`slip-place is-${place.state}${place.survivor ? " is-survivor" : ""}`} key={index}>
+            <span className={`slip-place is-${place.state}${place.survivor ? " is-survivor" : ""}`} key={index} style={{ "--place": index } as CSSProperties}>
               <span className="slip-mark">
                 {place.team ? <Logo eager team={place.team} /> : <span aria-hidden="true" className="slip-ring" />}
                 <Lamp state={place.state === "missed" ? "off" : place.state} survivor={place.survivor} />
@@ -95,5 +59,14 @@ export function RoomTicket({ ticket, week, savedAt = null, onOpen, href, tucked 
       </span>
     </span>
   );
-  return href ? <Link className="lab-room-ticket" href={href} {...tuckHandlers}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button" {...tuckHandlers}>{inside}</button>;
+  const ticketButton = href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
+  if (!onTuck) return ticketButton;
+  return (
+    <div className={`club-ticket-dock${tucked ? " is-tucked" : ""}${moved ? " is-moved" : ""}`} data-no-pull-refresh="">
+      <button aria-expanded={!tucked} aria-label={tucked ? "Open up your ticket" : "Tuck your ticket away"} className="club-ticket-tab" onClick={() => { setMoved(true); onTuck(!tucked); }} type="button">
+        <svg aria-hidden="true" className="club-ticket-arrow" fill="none" height="10" viewBox="0 0 16 10" width="16"><path d="M2 2.5 8 8l6-5.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" /></svg>
+      </button>
+      {ticketButton}
+    </div>
+  );
 }

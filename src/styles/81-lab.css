@@ -585,20 +585,23 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* ---- Bowl ticket (Lab): the Window's layout in the Bowl Pool's navy and old gold ----
    Every bowl flies a pennant: gold while you owe its pick, navy once picked, grey when it kicked off without one. The header's gauge
    shows how much of bowl season is played. */
-.lab-bigboard.lab-bowl-ticket { --bowl-ink: rgb(240 232 214); --bowl-gold-lt: rgb(222 192 136); background: rgb(18 28 50); border-color: rgb(12 19 36); box-shadow: inset 0 0 0 1px rgba(179, 139, 77, .6), 0 8px 18px rgba(0, 0, 0, .35); color: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; }
-.lab-bowl-ticket .lab-bowl-head { align-items: center; border-bottom: 1px solid rgba(179, 139, 77, .5); display: grid; padding: 4px 0 10px; gap: 12px; grid-template-columns: 1fr auto; }
+.lab-bigboard.lab-bowl-ticket { gap: 6px; --bowl-ink: rgb(240 232 214); --bowl-gold-lt: rgb(222 192 136); background: rgb(18 28 50); border-color: rgb(12 19 36); box-shadow: inset 0 0 0 1px rgba(179, 139, 77, .6), 0 8px 18px rgba(0, 0, 0, .35); color: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; }
+.lab-bowl-ticket .lab-bowl-head { align-items: center; border-bottom: 1px solid rgba(179, 139, 77, .5); display: grid; padding: 0 0 6px; gap: 8px; grid-template-columns: 1fr auto; }
 .lab-bowl-title { display: grid; gap: 4px; justify-items: start; }
 .lab-bowl-title p { color: var(--bowl-slip-gold); font-size: .62rem; letter-spacing: .4em; margin: 0; }
-.lab-bowl-title h3 { color: var(--bowl-ink); font-size: 1.35rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
+.lab-bowl-title h3 { color: var(--bowl-ink); font-size: 1.15rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
 .lab-bowl-due { align-items: center; color: var(--bowl-gold-lt); display: inline-flex; font-size: .72rem; gap: 6px; letter-spacing: .12em; }
 .lab-bowl-due.is-clear { color: rgba(240, 232, 214, .6); }
 /* The bowl-season moon: a night-sky dial in a soft navy well, five moons waxing round it (dim until the season reaches them, then lit
    in pale gold), the gold track filling behind the needle. */
-.lab-bowl-gauge { background: radial-gradient(ellipse 80% 90% at 50% 100%, rgba(60, 84, 140, .38), rgba(10, 18, 36, .2) 70%, transparent); border-radius: 14px 14px 8px 8px; display: grid; justify-items: center; margin: 0; padding: 4px 6px 6px; width: 9.5rem; }
+.lab-bowl-gauge { background: radial-gradient(ellipse 80% 90% at 50% 100%, rgba(60, 84, 140, .38), rgba(10, 18, 36, .2) 70%, transparent); border-radius: 14px 14px 8px 8px; display: grid; justify-items: center; margin: 0; padding: 2px 4px 4px; width: 7.4rem; }
 .lab-bowl-gauge svg { display: block; overflow: visible; width: 100%; }
 .lab-bowl-gauge figcaption { align-items: center; color: rgba(240, 232, 214, .75); display: flex; font-size: .62rem; gap: .4em; justify-content: center; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
 /* The games left turn on split-flap tiles, the classic Bowl Card's own, in the ticket's navy and gold. */
-.lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; }
+.lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; margin-top: 0; }
+.lab-bowl-gauge .bowl-score-tile.is-large .bowl-flap { height: 1.9rem; width: 1.2rem; }
+.lab-bowl-gauge .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 1.4rem; }
+.lab-bowl-ticket .lab-ticket-switch.lab-ticket-action button { min-height: 30px; padding-block: 2px; }
 .lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 5; stroke: rgba(240, 232, 214, .12); }
 .lab-bowl-gauge-bezel { fill: none; stroke: rgba(226, 182, 70, .55); stroke-width: .8; }
 .lab-bowl-gauge-bezel.is-inner { stroke: rgba(226, 182, 70, .22); stroke-width: .6; }
@@ -607,10 +610,10 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-gauge-tick.is-passed { stroke: rgba(240, 210, 140, .75); }
 .lab-bowl-gauge-pin { fill: rgb(18 28 50); }
 /* Your picks under the title: two figures, how many to make (gold) and how many are in. */
-.lab-bowl-counts { display: flex; gap: 18px; margin: 4px 0 0; }
+.lab-bowl-counts { display: flex; gap: 14px; margin: 2px 0 0; }
 .lab-bowl-counts > div { display: grid; gap: 1px; }
 .lab-bowl-counts dt { color: rgba(240, 232, 214, .6); font-size: .58rem; letter-spacing: .16em; order: 2; text-transform: uppercase; }
-.lab-bowl-counts dd { color: var(--bowl-ink); font-family: var(--font-graduate), Georgia, serif; font-size: 1.45rem; line-height: 1; margin: 0; }
+.lab-bowl-counts dd { color: var(--bowl-ink); font-family: var(--font-graduate), Georgia, serif; font-size: 1.2rem; line-height: 1; margin: 0; }
 .lab-bowl-counts .is-owed dd { color: var(--bowl-gold-lt); }
 .lab-bowl-gauge-fill { fill: none; filter: drop-shadow(0 0 2px rgba(226, 182, 70, .35)); stroke-linecap: round; stroke-width: 5; stroke: var(--bowl-slip-gold); }
 .lab-bowl-moon-dark { fill: rgb(30 42 70); stroke: rgba(240, 232, 214, .28); stroke-width: .8; }
@@ -771,7 +774,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .clubhouse-page .cw-sheet-body > .club-deck-tabs { width: 100%; }
 .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > * { flex: none; }
 .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-survivor-scroll, .lab-window-scroll, .lab-rules-body),
-.clubhouse-page .cw-sheet-body > .lab-wall-table { align-content: start; flex: 0 1 auto; grid-auto-rows: max-content; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
+.clubhouse-page .cw-sheet-body > .lab-wall-table { align-content: start; flex: 0 1 auto; grid-auto-rows: max-content; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 14px; scrollbar-color: rgba(201, 164, 95, .45) transparent; scrollbar-width: thin; }
 .lab-window-scroll { display: grid; gap: inherit; min-width: 0; }
 
 /* ---- The clubhouse's pop-ups rise out of the ticket at the foot of the screen: quick, smooth, settling softly; no coloured band on top ---- */
