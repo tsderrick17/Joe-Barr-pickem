@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { haptic } from "@/lib/haptics-client";
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/commissioner/wheel-parts";
 import { BoardPopup, BowlPopup, ClubChat, prefetchBowlPool, prefetchPoolChat, prefetchTrophyRoom, DeckTabs, savedTime, SurvivorPopup, TicketPanel, TrophyPopup, UnsentPicks, type DeckTab } from "@/components/clubhouse/popups";
@@ -36,6 +37,12 @@ import { useStableCallback } from "@/lib/use-stable-callback";
  *    or a pick is sent (so a pick shows in the ticket's lamps at once), when the app comes back to the front, and every five minutes.
  * It can never show more than the classic pages do, and a pick sent here is the very same pick (the same POST the Slate makes).
  */
+const TUCK_KEY = "pickem-ticket-tucked";
+const TUCK_EVENT = "pickem-ticket-tuck";
+const readTicketTuck = () => { try { return window.localStorage.getItem(TUCK_KEY) === "1"; } catch { return false; } };
+const writeTicketTuck = (tucked: boolean) => { try { window.localStorage.setItem(TUCK_KEY, tucked ? "1" : "0"); } catch { /* kept for this visit only */ } window.dispatchEvent(new Event(TUCK_EVENT)); };
+const subscribeTicketTuck = (notify: () => void) => { window.addEventListener(TUCK_EVENT, notify); return () => window.removeEventListener(TUCK_EVENT, notify); };
+
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications" | "snapshot";
 const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications", snapshot: "Season Snapshot" };
@@ -262,6 +269,9 @@ export default function ClubhousePage() {
     }
   });
   const shown: Pane | null = pane;
+  // Your ticket tucked away to half its height, or whole: remembered on this device.
+  const ticketTucked = useSyncExternalStore(subscribeTicketTuck, readTicketTuck, () => false);
+  const tuckTicket = useCallback((tucked: boolean) => { haptic("tick"); writeTicketTuck(tucked); }, []);
   const popup = (...panes: Pane[]) => Boolean(shown && panes.includes(shown) && (shown === "standings" || shown === "slate" ? newBoard : true));
   const classic: "standings" | "slate" | null = shown === "standings" || shown === "slate" ? (newBoard ? null : shown) : null;
   // The board's sheet: which pane it shows, and its switch, always all four: the Bowl Pool, Survivor, Ticket and the Big Board.
@@ -308,7 +318,7 @@ export default function ClubhousePage() {
     <main aria-label="Clubhouse" className="clubhouse-page" ref={main}>
       <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
-      {room.ticket ? <RoomTicket onOpen={() => show("slate")} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
+      {room.ticket ? <RoomTicket onOpen={() => show("slate")} onTuck={tuckTicket} tucked={ticketTucked} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
       {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
         {tabs.length > 1 ? <DeckTabs current={deck} onChoose={(next) => guarded(() => show(next as Pane))} tabs={tabs} /> : null}
         {deck === "standings" && view ? <BoardPopup onOpenTicket={() => show("slate")} onWeek={(weekId) => void chooseWeek(weekId)} savedAt={savedAt && savedAt.weekId === view.weekId ? savedAt.time : null} view={view} /> : null}

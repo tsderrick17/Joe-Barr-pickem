@@ -96,6 +96,26 @@ function screenTex() { const c = canvas(256, 160), g = c.getContext("2d"); const
 function bookPages() { const c = canvas(512, 320), g = c.getContext("2d"); g.fillStyle = "#f3ead3"; g.fillRect(0, 0, 512, 320); g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(254, 0, 4, 320); g.fillStyle = "rgba(40,30,20,.5)"; for (let s = 0; s < 2; s++) for (let i = 0; i < 12; i++) g.fillRect(24 + s * 256, 30 + i * 23, 200 - ((i * 37) % 60), 4); return texture(c); }
 function pavers() { const c = canvas(512, 512), g = c.getContext("2d"); g.fillStyle = "#e8dcc4"; g.fillRect(0, 0, 512, 512); for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { const t = 222 + Math.floor(rand() * 18); g.fillStyle = `rgb(${t + 10}, ${t}, ${t - 22})`; g.fillRect(x * 128 + 3, y * 128 + 3, 122, 122); } return texture(c, [8, 5]); }
 
+// A small oil seascape for the mantel, in quiet colours so it sits back: a soft grey-blue sky, a low dune line, a muted sea and one
+// far-off sail, with brushy streaks so it reads as paint rather than a photo.
+function seascape() {
+  const c = canvas(640, 400), g = c.getContext("2d");
+  const sky = g.createLinearGradient(0, 0, 0, 230); sky.addColorStop(0, "#9fb1b8"); sky.addColorStop(1, "#e6dcc6");
+  g.fillStyle = sky; g.fillRect(0, 0, 640, 240);
+  const sea = g.createLinearGradient(0, 220, 0, 320); sea.addColorStop(0, "#5f7f86"); sea.addColorStop(1, "#7e9a96");
+  g.fillStyle = sea; g.fillRect(0, 220, 640, 100);
+  g.fillStyle = "#cdbb94"; g.beginPath(); g.moveTo(0, 300); g.bezierCurveTo(160, 282, 330, 318, 640, 296); g.lineTo(640, 400); g.lineTo(0, 400); g.fill();
+  g.fillStyle = "#8f8a5e"; g.beginPath(); g.moveTo(0, 318); g.bezierCurveTo(120, 300, 220, 330, 360, 322); g.lineTo(360, 400); g.lineTo(0, 400); g.fill();
+  // brush streaks
+  for (let i = 0; i < 260; i++) {
+    const y = (i * 137) % 400, x = (i * 251) % 640, w = 30 + ((i * 17) % 60);
+    g.fillStyle = `rgba(${y < 230 ? "255,250,240" : "40,60,60"},${0.04 + ((i * 7) % 5) / 100})`; g.fillRect(x, y, w, 3);
+  }
+  g.fillStyle = "#f3ecdc"; g.beginPath(); g.moveTo(452, 214); g.lineTo(466, 176); g.lineTo(468, 214); g.closePath(); g.fill();   // a far-off sail
+  g.fillStyle = "#4a4136"; g.fillRect(448, 214, 24, 3);
+  return texture(c);
+}
+
 export async function buildRoom(q) {
   const night = q.get("night") === "1";
   // The room is built as it was first drawn (the bar on the left, the chimney on the right) and then turned round as a mirror image,
@@ -607,7 +627,40 @@ export async function buildRoom(q) {
     const flame = new THREE.PointLight(0xff8a3a, Number(q.get("flame") ?? 5.5), 7, 1.5); flame.position.set(X1 - CD - 0.7, 0.9, FZ); fire.add(flame);
   } else add(fire, box(0.3, 0.02, 1.0), std(0xb8b2a8, { roughness: 1 }), [X1 - CD - 0.14, 0.55, FZ], { cast: false });              // cold ash
   for (let i = 0; i < 3; i++) add(fire, cyl(0.07, 0.07, 1.0, 8), std(0x3a2414), [X1 - CD - 0.12, 0.6 + i * 0.05, FZ - 0.15 + i * 0.15], { rot: [Math.PI / 2, 0, 0.3 * i] });
-  add(fire, rbox(0.42, 0.26, 3.8, 0.02), timberDark, [X1 - CD - 0.1, 2.25, FZ]);                                     // timber mantel beam
+  const MD = Number(q.get("mantel") ?? 0.6);   // the mantel's depth out from the stone
+  add(fire, rbox(MD, 0.26, 3.8, 0.02), timberDark, [X1 - CD + 0.11 - MD / 2, 2.25, FZ]);                            // timber mantel beam
+  // The mantel's art: a small framed seascape leaning back against the stone in the middle of the mantel, in a plain dark wood frame
+  // with a thin gilt slip, quiet enough to fill the spot without pulling the eye (art=0 leaves the mantel bare).
+  const arts = (q.get("art") ?? "boat").split(",");   // the owner chose the sailboat (2026-11-22); vase and painting stay as options
+  if (arts.includes("boat")) {
+    // A model sailing yacht on a little walnut stand, side-on to the room, sails in old canvas: it reads as a quiet silhouette.
+    const boat = new THREE.Group(); boat.position.set(X1 - CD + 0.11 - MD / 2, 2.38, FZ + Number(q.get("boatz") ?? 0.6)); fire.add(boat);
+    boat.rotation.y = Number(q.get("boatturn") ?? 0.6); boat.scale.setScalar(Number(q.get("boatscale") ?? 1.5));
+    const L = 0.5;
+    add(boat, rbox(0.2, 0.025, 0.07, 0.006), std(0x3a2416, { roughness: 0.55 }), [0, 0.012, 0]);
+    for (const dx of [-0.07, 0.07]) add(boat, box(0.012, 0.07, 0.03), std(0x3a2416, { roughness: 0.55 }), [dx, 0.05, 0]);
+    const hull = add(boat, new THREE.SphereGeometry(0.5, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), std(0x24324a, { roughness: 0.5 }), [0, 0.1, 0], { rot: [Math.PI, 0, 0] });
+    hull.scale.set(L, 0.16, 0.13);
+    add(boat, box(L * 0.98, 0.012, 0.12), std(0xc9a46a, { roughness: 0.6 }), [0, 0.1, 0]);     // the deck
+    add(boat, cyl(0.006, 0.006, 0.5, 8), std(0x6b4a2c), [0.02, 0.35, 0]);                       // the mast
+    const sail = (pts) => { const shape = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y))); return new THREE.ShapeGeometry(shape); };
+    const canvasSail = new THREE.MeshStandardMaterial({ color: 0xeee4cf, roughness: 0.95, side: THREE.DoubleSide });
+    add(boat, sail([[0.03, 0.13], [0.03, 0.58], [0.21, 0.14]]), canvasSail, [0, 0, 0.001], { cast: false });
+    add(boat, sail([[0.0, 0.16], [0.0, 0.52], [-0.2, 0.13]]), canvasSail, [0, 0, 0.002], { cast: false });
+  }
+  if (arts.includes("vase")) {
+    // A tall stoneware vase with a celadon glaze.
+    const vase = new THREE.Group(); vase.position.set(X1 - CD + 0.11 - MD / 2, 2.38, FZ + Number(q.get("vasez") ?? -0.8)); vase.scale.setScalar(Number(q.get("vasescale") ?? 1.5)); fire.add(vase);
+    const profile = [[0, 0], [0.07, 0], [0.09, 0.03], [0.13, 0.14], [0.14, 0.22], [0.11, 0.32], [0.06, 0.4], [0.05, 0.46], [0.065, 0.5], [0.06, 0.505]].map(([r, y]) => new THREE.Vector2(r, y));
+    add(vase, new THREE.LatheGeometry(profile, 32), std(0x9fb39a, { roughness: 0.35 }), [0, 0, 0]);
+  }
+  if (arts.includes("painting")) {
+    const [AW, AH] = (q.get("artsize") ?? "1.0,0.62").split(",").map(Number);
+    const art = new THREE.Group(); art.position.set(X1 - CD - 0.16, 2.38, FZ + Number(q.get("artz") ?? 0)); art.rotation.z = -0.1; fire.add(art);
+    add(art, rbox(0.045, AH, AW, 0.01), std(0x3a2416, { roughness: 0.55 }), [0, AH / 2, 0]);
+    add(art, box(0.05, AH - 0.1, AW - 0.1), std(0xb89452, { metalness: 0.55, roughness: 0.4 }), [-0.002, AH / 2, 0], { cast: false });
+    add(art, new THREE.PlaneGeometry(AW - 0.13, AH - 0.13), new THREE.MeshStandardMaterial({ map: readable(seascape()), roughness: 0.85 }), [-0.028, AH / 2, 0], { cast: false, rot: [0, -Math.PI / 2, 0] });
+  }
   const ball = add(fire, new THREE.SphereGeometry(0.1, 20, 14), std(0x6b3a1e, { roughness: 0.6 }), [X1 - CD - 0.1, 2.47, FZ + 1.35]); ball.scale.set(1, 0.95, 1.6);
   add(fire, box(0.012, 0.012, 0.2), white, [X1 - CD - 0.1, 2.57, FZ + 1.35], { cast: false });
   add(fire, rbox(0.03, 0.3, 0.38, 0.008), timberDark, [X1 - CD - 0.02, 2.54, FZ - 1.3], { rot: [0, 0, 0.12] });

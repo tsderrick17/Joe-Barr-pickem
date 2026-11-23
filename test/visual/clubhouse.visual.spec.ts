@@ -335,6 +335,40 @@ for (const [phase, homeExtra, table] of [
   });
 }
 
+for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  test(`dragging the ticket down tucks it to about half its height, a drag never opens it, and dragging up brings it back, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size });
+    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    const whole = (await ticket.boundingBox())!;
+    const drag = async (dy: number) => {
+      const box = (await ticket.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2 + dy, { steps: 6 });
+      await page.mouse.up();
+    };
+    await drag(60);
+    await expect(ticket.locator(".slip")).toHaveClass(/is-tucked/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);   // the drag did not open it
+    const tucked = (await ticket.boundingBox())!;
+    expect(tucked.height, "about half as tall").toBeLessThan(whole.height * 0.7);
+    await expect(ticket.locator(".slip-place")).toHaveCount(3);   // every pick still on it
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot(`clubhouse-ticket-tucked-${label}.png`, { maxDiffPixels: 40 });
+    // It stays tucked after a reload, and a tap still opens your ticket.
+    await page.reload();
+    await expect(page.locator(".clubhouse-page > .lab-room-ticket .slip")).toHaveClass(/is-tucked/, { timeout: 30_000 });
+    await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await drag(-60);
+    await expect(ticket.locator(".slip")).not.toHaveClass(/is-tucked/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await ticket.click();
+    await expect(page.getByRole("dialog")).toHaveCount(1);
+  });
+}
+
 test("Notifications is a plate in the room's glass doors, like the others: it opens the player's notification settings in place, and the name menu leaves it out", async ({ page }) => {
   await openClubhouse(page);
   const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
