@@ -1168,3 +1168,21 @@ for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280",
     await expect(wall).toHaveScreenshot(`clubhouse-plaques-${label}.png`, { maxDiffPixels: 40 });
   });
 }
+
+test("side by side teams on the games board keep their names level when one side's pickers run to a second line", async ({ page }) => {
+  await openClubhouse(page);
+  await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Make your picks", exact: true }).click();
+  const row = page.getByRole("dialog", { name: "Your ticket" }).locator("li:has(.lab-board-at)").first();
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  // Give the left side a tall list of pickers (the right side has none): its box grows, the other's stretches to match.
+  await row.locator(".lab-board-cell").first().evaluate((cell) => {
+    const note = document.createElement("span");
+    note.className = "lab-board-final";
+    note.innerHTML = `<b>30</b><em>${"SOME LONG NAME · ".repeat(8)}</em>`;
+    cell.appendChild(note);
+  });
+  const tops = await row.locator(".lab-board-team").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+  expect(tops[0]).toBe(tops[1]);
+  const heights = await row.locator(".lab-board-cell").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().height)));
+  expect(heights[0]).toBe(heights[1]);
+});
