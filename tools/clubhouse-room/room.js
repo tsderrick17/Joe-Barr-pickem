@@ -607,7 +607,7 @@ export async function buildRoom(q) {
   // ----- the right wall: a grand fieldstone chimney from the floor to the thatch, the constitution framed on its near face, and the
   // lounge in front of it.
   const fire = group("fireplace");
-  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: Number(q.get("stonebump") ?? 14), roughness: 0.92 });
   const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
   stoneBlock(CD, RIDGE, 3.6, [X1 - CD / 2, RIDGE / 2, FZ]);
   stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
@@ -635,7 +635,7 @@ export async function buildRoom(q) {
   if (arts.includes("boat")) {
     // A model sailing yacht on a little walnut stand, side-on to the room, sails in old canvas: it reads as a quiet silhouette.
     const boat = new THREE.Group(); boat.position.set(X1 - CD + 0.11 - MD / 2, 2.38, FZ + Number(q.get("boatz") ?? 0.6)); fire.add(boat);
-    boat.rotation.y = Number(q.get("boatturn") ?? 0.6); boat.scale.setScalar(Number(q.get("boatscale") ?? 1.5));
+    boat.rotation.y = Number(q.get("boatturn") ?? 0.5); boat.scale.setScalar(Number(q.get("boatscale") ?? 1.0));
     const L = 0.5;
     add(boat, rbox(0.2, 0.025, 0.07, 0.006), std(0x3a2416, { roughness: 0.55 }), [0, 0.012, 0]);
     for (const dx of [-0.07, 0.07]) add(boat, box(0.012, 0.07, 0.03), std(0x3a2416, { roughness: 0.55 }), [dx, 0.05, 0]);

@@ -12,7 +12,7 @@ import { dateFormat } from "./date-format.js";
  *   owed: still open and no saved pick; picked: still open, picked; missed: kicked off with no pick (a loss); done: kicked off with a
  *   pick; off: postponed, cancelled or no contest, nothing to pick.
  * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
- * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
+ * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string, place: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
  *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean,
  *   round: "First Round" | "Quarterfinal" | "Semifinal" | "Championship" | null }} BowlTicketGame
@@ -150,6 +150,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       ...pennant,
       day: Number.isFinite(kickoff) ? EASTERN_DAY.format(new Date(kickoff)).toUpperCase().replace(",", "") : "DATE TBD",
       time: Number.isFinite(kickoff) && game.time_confirmed !== false ? EASTERN_TIME.format(new Date(kickoff)) : "Time TBD",
+      place: [game.venue_city, game.venue_state].filter(Boolean).join(", "),
       cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score, "away"), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score, "home")],
       locked,
       final,

@@ -84,7 +84,7 @@ test("every thing in the room opens its pop-up over it, on the real week, and th
   };
   await opens("The Big Board", "The Big Board", /GARY/);
   await opens("Survivor", "Survivor", /GARY/);
-  await opens("Trophy Room", "Trophy Room", /Plaques/);
+  await opens("Trophy Room", "Trophy Room", /Pennants|No champions yet|20\d\d/);
   await opens("Constitution", "Constitution", /Constitution/);
   // The games board in the room opens the same board with your ticket ready.
   await room.getByRole("button", { name: "Make your picks", exact: true }).click();
@@ -726,10 +726,10 @@ function bowlRead(optedIn = true) {
   return {
     optedIn, entryOpen: !optedIn, season: { championship_game_id: "g4" }, entry: optedIn ? { championship_total_guess: null } : null,
     games: [
-      { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
-      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
-      { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
-      { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
+      { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", venue_city: "Pasadena", venue_state: "CA", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
+      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", venue_city: "Glendale", venue_state: "AZ", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
+      { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", venue_city: "Boise", venue_state: "ID", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
+      { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", venue_city: "Atlanta", venue_state: "GA", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
     ],
     ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
     ownPreviewSelections: [],
@@ -813,6 +813,33 @@ test("tapping the room's ceiling light turns the lights down for night, and agai
   await expect(page.locator("html")).toHaveAttribute("data-theme", "day");
 });
 
+test("only the ceiling light changes day and night: the bar has no lamp that does, on a desktop or a phone", async ({ page }) => {
+  for (const size of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(size);
+    await openClubhouse(page);
+    await expect(page.getByRole("button", { name: /Turn the lights (down|up).*ceiling light/ })).toHaveCount(1, { timeout: 30_000 });
+    await expect(page.getByRole("button", { name: /bar lamp/ })).toHaveCount(0);
+  }
+});
+
+test("tapping the chalkboard opens the Season Snapshot and tapping the bottles behind the bar opens Pool chat, on a desktop and a phone", async ({ page }) => {
+  for (const size of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(size);
+    await openClubhouse(page);
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    for (const [spot, dialog] of [["Chalkboard: open Season Snapshot", "Season Snapshot"], ["Bottles on the back bar: open Pool chat", "Pool chat"]] as const) {
+      const target = room.getByRole("button", { name: spot });
+      await expect(target).toBeVisible({ timeout: 30_000 });
+      const box = (await target.boundingBox())!;
+      // A tap in the middle of the picture's thing (not on a plate) reaches it: nothing else is on top there.
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      await expect(page.getByRole("dialog", { name: dialog })).toBeVisible({ timeout: 30_000 });
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog", { name: dialog })).toBeHidden();
+    }
+  }
+});
+
 test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a bowl kicks off, a lit lamp for a hidden pick, an unlit one for none", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
   const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
@@ -828,6 +855,25 @@ test("the Bowl ticket's Sheet is everyone's picks on every bowl: a school once a
   await expect(sheet.locator("thead th").first()).toHaveText("Wins");
   const widths = await sheet.locator("col.lab-bowl-sheet-col-game").evaluateAll((cols) => cols.map((col) => Math.round(col.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);   // a bowl that kicked off without a pick
+});
+
+test("the Bowl sheet stops with a game column framed beside the player columns, never part way", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  const scroller = ticket.locator(".lab-bowl-sheet-scroll");
+  await expect(scroller).toBeVisible();
+  expect(await scroller.evaluate((node) => getComputedStyle(node).scrollSnapType)).toContain("mandatory");
+  expect(await scroller.locator("thead th").nth(2).evaluate((node) => getComputedStyle(node).scrollSnapAlign)).toBe("start");
+  // Let go anywhere and it settles on a column's left edge (just past the held columns).
+  await scroller.evaluate((node) => node.scrollTo({ left: 37, behavior: "instant" }));
+  await page.waitForTimeout(600);
+  const gap = await scroller.evaluate((node) => {
+    const held = node.querySelectorAll("thead th")[2] as HTMLElement;
+    const heads = [...node.querySelectorAll("thead th")].slice(2) as HTMLElement[];
+    return Math.min(...heads.map((th) => Math.abs(th.offsetLeft - held.offsetLeft - node.scrollLeft)));
+  });
+  expect(gap).toBeLessThan(2);
 });
 
 test("on the Bowl ticket only the team you picked is outlined in gold, and you can switch teams or take the pick back", async ({ page }) => {
@@ -1068,7 +1114,7 @@ test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no
   const chalk = page.locator(".lab-room-screen.is-chalk");
   await expect(chalk.locator(".chalk-line")).toHaveCount(4, { timeout: 30_000 });
   await expect(chalk).toHaveText("");   // no names, numbers or title on the board
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
   await expect(sheet.getByRole("group", { name: "Pool shown" })).toHaveCount(0);   // no Bowl side before 10 bowls are final
@@ -1080,7 +1126,7 @@ test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no
 test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too, a point a bowl day", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
   await expect(page.locator(".lab-room-screen.is-chalk .chalk-line")).toHaveCount(4, { timeout: 30_000 });
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await sheet.getByRole("button", { name: "Bowl", exact: true }).click();
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveText([/Earls*1/, /Tylers*1/]);
@@ -1088,7 +1134,7 @@ test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too,
   await expect(page).toHaveScreenshot("clubhouse-snapshot-bowl-phone-390.png", { maxDiffPixels: 40 });
   // The choice is remembered on this device.
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Season Snapshot" }).getByRole("button", { name: "Bowl", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
@@ -1160,7 +1206,8 @@ for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280",
     await openClubhouse(page, { size });
     await page.getByRole("navigation", { name: "Clubhouse rooms" }).getByRole("button", { name: "Trophy Room", exact: true }).click();
     const wall = page.getByRole("dialog", { name: "Trophy Room" }).locator(".lab-case.lab-wall");
-    await expect(wall.getByRole("heading", { name: "Plaques", exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(wall.getByRole("region", { name: "Plaques" })).toBeVisible({ timeout: 30_000 });
+    await expect(wall.getByRole("heading", { name: "Plaques" })).toHaveCount(0);
     await expect(page.getByText("one for every season")).toHaveCount(0);
     await wall.scrollIntoViewIfNeeded();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
@@ -1201,3 +1248,13 @@ for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280",
   });
 }
 
+
+test("a Bowl game's small line says where it is played after the time, on one line that never makes the row taller", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  const line = ticket.locator(".lab-bowl-game", { hasText: "Snoozeville" }).locator(".lab-bowl-name small");
+  await expect(line).toContainText(/ · Boise, ID$/, { timeout: 30_000 });
+  const withPlace = (await line.boundingBox())!.height;
+  const bare = (await ticket.locator(".lab-bowl-game", { hasText: "National Championship" }).locator(".lab-bowl-name small").boundingBox())!.height;
+  expect(withPlace).toBeLessThanOrEqual(bare + 1);
+});

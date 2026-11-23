@@ -91,10 +91,14 @@ export function fieldstone() {
     const blot = mottle(u, v) - 0.5 + (mottle(u * 4, v * 4) - 0.5) * 0.5, joint = 0.03 + 0.035 * mottle(u * 3 + 0.3, v * 3 + 0.7);
     const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / 0.2)), round = Math.pow(face, 0.5);
     const grit = (rand() - 0.5) * 20, o = (py * W + px) * 4, mortar = edge < joint;
-    const shade = mortar ? 1 + blot * 0.1 : 0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.22 + blot * 0.24;
-    const col = mortar ? [130, 121, 106] : s1.c;
-    for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit));
-    const hgt = mortar ? 52 + grit : 92 + 128 * round + blot * 56 + grit * 0.8;
+    // Depth: each stone is a rounded lump set back from deep, dark joints (the shade closes in toward every joint, a soft light from the
+    // top left catches the upper-left of each stone), with pitting and a fine grain on the faces so no stone is flat.
+    const cavity = mortar ? 1 : 0.5 + 0.5 * Math.min(1, face * 2.4);
+    const pit = mottle(u * 14 + 0.31, v * 14 + 0.17) - 0.5, fine = mottle(u * 40 + 0.5, v * 40 + 0.9) - 0.5;
+    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
+    const col = mortar ? [118, 108, 94] : s1.c;
+    for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit * 1.1));
+    const hgt = mortar ? 34 + grit : 70 + 150 * round + blot * 60 + pit * 46 + fine * 24 + grit * 0.9;
     bi.data[o] = bi.data[o + 1] = bi.data[o + 2] = Math.max(0, Math.min(255, hgt)); ci.data[o + 3] = bi.data[o + 3] = 255;
   }
   cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0);

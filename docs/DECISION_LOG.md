@@ -21,6 +21,15 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-23 - Clubhouse: chalkboard, bottles, one lamp, sheet snap, city and state, mantel ship, deeper stone
+
+- The chalkboard was a "Snapshot" pill only; the board face is now a tap target for the Season Snapshot too. The bottles on the back bar open Pool chat. Both are real-clubhouse hit areas with no plate of their own.
+- Only the ceiling light changes day and night; the bar lamp no longer does.
+- The Bowl ticket's sheet snaps to a game column like the classic Bowl Card (scroll-snap, game columns align to the held columns).
+- Each Bowl ticket game's small line carries where it is played (city, state) after the time, on the same single line (ellipsis, never wraps), so a row is never taller for it. Pennants stay non-tappable.
+- The chat pill sits slightly lower and to the right. The mantel ship is smaller and turned so it sits on the mantel instead of running into the stone. The fireplace stone has deeper joints, cavity shading, pitting and grain; per-stone relief is tabled for about a week (owner).
+- The Trophy Room's plaque shelf has no visible "Plaques" heading (still a labelled region).
+
 ## 2026-11-22 - Clubhouse: the chalkboard is a still chalk drawing
 
 The chalkboard in the room no longer draws the live chart: it is a still chalk sketch of a race (an axis, four coloured chalk lines,
