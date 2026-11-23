@@ -26,13 +26,17 @@ const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; fullAt?: { x: number; y: number }; ticket?: boolean; realOnly?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
+  // The bottles on the back bar open the pool chat too, like the chat plate by the stools (no plate of its own; the real clubhouse only).
+  { spot: "bottles", room: "chat", name: "Bottles on the back bar: open Pool chat", label: "none", realOnly: true },
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
   // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
+  // The chalkboard itself (not only its "Snapshot" pill) opens the Season Snapshot: the same rectangle, no plate of its own.
+  { spot: "chalkface", room: "snapshot", name: "Chalkboard: open Season Snapshot", label: "none" },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   // The chat plate stands on the bar stools just above the chalkboard (owner, 2026-11-22).
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.82, y: 0.55 }, fullAt: { x: 0.82, y: 0.55 }, wideAt: { x: 0.76, y: 0.64 } },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.775, y: 0.665 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // A small "Snapshot" pill sits on the board's upper edge so it reads as tappable (owner, 2026-11-22); above your ticket on a phone.
   { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.7 } },
@@ -42,11 +46,11 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.8, y: 0.14 }, realOnly: true },
 ];
 
-/** The room's lamps, by picture shape (tall, filling the phone, wide): tapping one turns the lights down for night, or up for day. */
+/** The room's lamp, by picture shape (tall, filling the phone, wide): tapping the ceiling light turns the lights down for night, or up for day (nothing else in the room does). */
 const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y: number }>> = {
   tall: [{ name: "ceiling light", x: 0.53, y: 0.04 }],
   full: [{ name: "ceiling light", x: 0.53, y: 0.12 }],
-  wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
+  wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }],
 };
 
 /** The site's day or night, as the header's switch sets it (read straight from the page, before the header has had a turn). */
@@ -61,6 +65,12 @@ function followTheme(change: () => void) {
   watch.observe(document.documentElement, { attributeFilter: ["data-theme"] });
   return () => { window.removeEventListener("pickem-theme-change", change); watch.disconnect(); };
 }
+/** The back bar's shelves of bottles, by picture (as fractions of it), which open the chat. */
+const BOTTLES: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "-wide": { x: 0.715, y: 0.41, w: 0.125, h: 0.17 },
+  "-full": { x: 0.86, y: 0.4, w: 0.14, h: 0.13 },
+};
+
 /** A desktop (900px and wider) gets the wide picture, known on the first render so a desktop never loads the phone's picture first. */
 const WIDE_QUERY = "(min-width: 900px)";
 const wideNow = () => window.matchMedia(WIDE_QUERY).matches;
@@ -251,7 +261,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   useEffect(() => { const timer = window.setTimeout(() => setSettled(true), 2500); return () => window.clearTimeout(timer); }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
   const key = wide ? "-wide" : full ? "-full" : "";
-  const picture = PICTURES[`day${key}`] ?? PICTURES.day;
+  const base = PICTURES[`day${key}`] ?? PICTURES.day;
+  const picture: Picture = { ...base, spots: { ...base.spots, ...(BOTTLES[key] ? { bottles: BOTTLES[key] } : {}), ...(base.spots.chalkboard ? { chalkface: base.spots.chalkboard } : {}) } };
   const news = feed.news;
   // The poker table is whichever pool is being played: Survivor while it runs, the Bowl Pool in bowl season (in the Bowl Pool's navy and
   // gold), never both; between the two (Survivor decided, the Bowl Pool not open yet) it has no plate. (Both are always on the board's tabs.)

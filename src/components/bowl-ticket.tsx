@@ -90,6 +90,8 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
     if (game.locked) return "KICKED OFF";
     return game.time;
   };
+  // Where it is played (city, state) rides on the same small line as the time, so a row never grows taller for it.
+  const withPlace = (game: BowlTicketGame) => (game.place && !game.note && game.state !== "missed" ? `${caption(game)} · ${game.place}` : caption(game));
 
   return (
     <div className="lab-bigboard lab-window lab-bowl-ticket trace-gilt">
@@ -144,7 +146,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
                     <li className={`lab-bowl-game is-${game.state}`} key={game.id}>
                       <span className="lab-bowl-name">
                         {flagStyle === "logo" && (game.logo || game.playoff) ? (game.logo ? <BowlLogoFlag cloth={game.cloth} hoist={game.hoist} logo={game.logo} state={game.state} /> : <BowlLogoFlag cloth="rgb(0 0 0)" hoist="rgb(200 158 62)" logo={CFP_LOGO} state={game.state} />) : <BowlFlag flag={game.flag} state={game.state} />}
-                        <span>{game.round === "Quarterfinal" || game.round === "Semifinal" ? <em className="lab-bowl-round">CFP {game.round}</em> : null}<b>{game.bowl}</b><small>{caption(game)}</small></span>
+                        <span>{game.round === "Quarterfinal" || game.round === "Semifinal" ? <em className="lab-bowl-round">CFP {game.round}</em> : null}<b>{game.bowl}</b><small>{withPlace(game)}</small></span>
                       </span>
                       {cell(0)}
                       <span aria-hidden="true" className="lab-board-at">vs</span>

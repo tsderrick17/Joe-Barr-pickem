@@ -637,7 +637,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-name > span:last-child { display: grid; min-width: 0; }
 .lab-bowl-round { color: var(--bowl-slip-gold); font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }   /* which playoff round a bowl hosts */
 .lab-bowl-name b { color: var(--bowl-ink); font-size: .82rem; letter-spacing: .06em; }
-.lab-bowl-name small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .04em; }
+.lab-bowl-name small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lab-bowl-game.is-owed .lab-bowl-name small { color: var(--bowl-gold-lt); font-weight: 700; }
 .lab-bowl-game.is-missed .lab-bowl-name small { color: rgb(236 150 132); }
 .lab-bowl-ticket .lab-board-at { display: none; }
@@ -683,8 +683,9 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-window-submit:disabled { background: transparent; box-shadow: inset 0 0 0 1px var(--bowl-slip-gold); color: var(--bowl-gold-lt); }
 .lab-bowl-ticket .lab-window-part h4 small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; }
 /* The Bowl sheet: everyone's picks on every bowl, scrolling sideways under held record and name columns. */
-.lab-bowl-sheet-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding: 0 0 6px; scrollbar-color: rgba(179, 139, 77, .5) transparent; scrollbar-width: thin; }
+.lab-bowl-sheet-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding: 0 0 6px; scroll-padding-left: 8.7rem; scroll-snap-type: x mandatory; scrollbar-color: rgba(179, 139, 77, .5) transparent; scrollbar-width: thin; }
 .lab-bowl-sheet table { border-collapse: separate; border-spacing: 0; min-width: 100%; table-layout: fixed; }   /* every bowl column the same width */
+.lab-bowl-sheet :is(th, td):nth-child(n+3) { scroll-snap-align: start; }   /* a swipe stops with a bowl's column framed just past the held record and name, as on the Bowl Card */
 .lab-bowl-sheet-col-rec { width: 3.2rem; }
 .lab-bowl-sheet-col-name { width: 5.5rem; }
 .lab-bowl-sheet-col-game { width: 6.6rem; }

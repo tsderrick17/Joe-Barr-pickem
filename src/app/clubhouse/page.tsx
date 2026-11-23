@@ -44,7 +44,7 @@ const writeTicketTuck = (tucked: boolean) => { try { window.localStorage.setItem
 const subscribeTicketTuck = (notify: () => void) => { window.addEventListener(TUCK_EVENT, notify); return () => window.removeEventListener(TUCK_EVENT, notify); };
 
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications" | "snapshot";
-const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot" };
+const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot", chalkface: "snapshot" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications", snapshot: "Season Snapshot" };
 // Notifications (the app, phone notifications, the email plan) is loaded only when its pop-up is opened.
 const NotificationSettings = dynamic(() => import("@/components/notification-settings").then((module) => module.NotificationSettings));
@@ -324,7 +324,7 @@ export default function ClubhousePage() {
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className={`clubhouse-page${blinks ? ` is-blink-${blinks % 2}` : ""}`} ref={main}>
-      <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
+      <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" || spot === "bottles" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat" || spot === "bottles") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <RoomTicket onOpen={() => show("slate")} onTuck={tuckTicket} tucked={ticketTucked} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
       {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
