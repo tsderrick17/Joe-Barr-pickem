@@ -726,10 +726,10 @@ function bowlRead(optedIn = true) {
   return {
     optedIn, entryOpen: !optedIn, season: { championship_game_id: "g4" }, entry: optedIn ? { championship_total_guess: null } : null,
     games: [
-      { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
-      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
+      { id: "g1", bowl_name: "Rose Bowl Game presented by Prudential", kickoff_at: "2026-09-29T21:00:00Z", status: "final", venue_city: "Pasadena", venue_state: "CA", away_team_id: "a1", home_team_id: "h1", awayTeam: team("a1", "Indiana"), homeTeam: team("h1", "Ohio State"), away_score: 20, home_score: 27, line: { favorite_team_id: "h1", locked_spread: 3.5 } },
+      { id: "g2", bowl_name: "CFP First Round", kickoff_at: "2026-09-30T15:00:00Z", status: "in_progress", venue_city: "Glendale", venue_state: "AZ", away_team_id: "a2", home_team_id: "h2", awayTeam: team("a2", "Texas Tech"), homeTeam: team("h2", "Oregon"), line: { favorite_team_id: "h2", locked_spread: 7.5 } },
       { id: "g3", bowl_name: "Snoozeville Mattress Bowl", kickoff_at: "2026-10-02T20:00:00Z", status: "scheduled", venue_city: "Boise", venue_state: "ID", away_team_id: "a3", home_team_id: "h3", awayTeam: team("a3", "Duke"), homeTeam: team("h3", "Arizona"), line: { favorite_team_id: "h3", locked_spread: 2.5 } },
-      { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
+      { id: "g4", bowl_name: "CFP National Championship", kickoff_at: "2026-10-05T00:30:00Z", status: "scheduled", venue_city: "Atlanta", venue_state: "GA", away_team_id: "a4", home_team_id: "h4", awayTeam: team("a4", "Miami"), homeTeam: team("h4", "Georgia"), line: { favorite_team_id: "h4", locked_spread: 2.5 } },
     ],
     ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
     ownPreviewSelections: [],
@@ -1114,7 +1114,7 @@ test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no
   const chalk = page.locator(".lab-room-screen.is-chalk");
   await expect(chalk.locator(".chalk-line")).toHaveCount(4, { timeout: 30_000 });
   await expect(chalk).toHaveText("");   // no names, numbers or title on the board
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveCount(8);
   await expect(sheet.getByRole("group", { name: "Pool shown" })).toHaveCount(0);   // no Bowl side before 10 bowls are final
@@ -1126,7 +1126,7 @@ test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no
 test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too, a point a bowl day", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
   await expect(page.locator(".lab-room-screen.is-chalk .chalk-line")).toHaveCount(4, { timeout: 30_000 });
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await sheet.getByRole("button", { name: "Bowl", exact: true }).click();
   await expect(sheet.locator(".season-snapshot-key-row")).toHaveText([/Earls*1/, /Tylers*1/]);
@@ -1134,7 +1134,7 @@ test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too,
   await expect(page).toHaveScreenshot("clubhouse-snapshot-bowl-phone-390.png", { maxDiffPixels: 40 });
   // The choice is remembered on this device.
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Season Snapshot" }).click();
+  await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Season Snapshot" }).getByRole("button", { name: "Bowl", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 

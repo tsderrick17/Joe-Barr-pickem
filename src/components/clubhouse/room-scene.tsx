@@ -39,7 +39,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.775, y: 0.665 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // A small "Snapshot" pill sits on the board's upper edge so it reads as tappable (owner, 2026-11-22); above your ticket on a phone.
-  { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.7 } },
+  { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.72 } },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
   // Notifications: a plate like the others, up in the thatch at the right where it covers nothing (the real clubhouse only: it opens
   // the player's own settings).
