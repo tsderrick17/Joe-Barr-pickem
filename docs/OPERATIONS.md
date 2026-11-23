@@ -127,7 +127,7 @@ and playoff delayed finals use the same ladder. After the last window (the check
 kickoff) a game gets no more automatic checks: the overdue alert (6 hours after kickoff) and the
 Commissioner's score button take over. Both
 competition types become eligible 175 minutes after official kickoff. The
-monthly balance does not change the normal cadence until 440 of the month's 500
+monthly balance does not change the normal cadence until 450 of the month's 500
 credits are used (`LOW_BALANCE_USED_CREDITS`). From there the worker runs the
 Lean or Minimal schedule instead (see "Low-balance score checking" below), and
 pauses automatic checks only when the credits left would not cover the rest of
@@ -135,19 +135,19 @@ the month's official lines, so official line integrity is never traded for
 faster grading. One paid response settles every due completed game it contains.
 ### Low-balance score checking
 
-Past 440 of the month's 500 Odds API credits used, the worker runs one of two lighter schedules; each is a list of times after kickoff, so a game
+Past 450 of the month's 500 Odds API credits used, the worker runs one of two lighter schedules; each is a list of times after kickoff, so a game
 mid-ladder when the schedule changes goes straight to the next time on the new list (nothing skipped, nothing checked twice):
 
 | Schedule | Checks (minutes after kickoff) | Expected credits per slate\* |
 | --- | --- | --- |
-| Normal (until 440 used) | 175, 180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470, 710 | about 15.5 |
+| Normal (until 450 used) | 175, 180, 185, 190, 195, 200, 205, 210, 220, 230, 250, 270, 290, 350, 470, 710 | about 15.5 |
 | Lean | 175, 190, 205, 220, 235, 250, 265, 325, 445, 685 | about 5.9 |
 | Minimal | 190, 210, 230, 250, 310, 430, 670 | about 4.5 |
 
 \*The forecast model's figure at a 90% first-hour share (`expectedScoreChecks`); the Odds credits page prices the rest of the month with it.
 
-Every score run, and every health check, decides the schedule afresh (`decideScoreTier`, `chooseScoreTier`): Normal under 440 used, or when
-no credit reading was taken this month (credits renew on the 1st, UTC); from 440 used, Lean if its forecast for the game days left fits in
+Every score run, and every health check, decides the schedule afresh (`decideScoreTier`, `chooseScoreTier`): Normal under 450 used, or when
+no credit reading was taken this month (credits renew on the 1st, UTC); from 450 used, Lean if its forecast for the game days left fits in
 the balance minus the line need (the remaining 7 AM refreshes and lock-time fetches, plus a cushion of 5), otherwise Minimal; and paused only
 when nothing is left after the line need. So it can step back up from Minimal to Lean as game days pass, and Normal returns with the next month.
 A game the schedule says to leave alone is not checked and spends nothing; its retry timer moves to its next time (an hour on, when paused), so

@@ -179,8 +179,8 @@ export default function OddsCredits() {
 
     <section aria-label="Fresh finals picked up by polling ladder" className="dash-card">
       <CardHead
-        line={`Minutes after the first score check, ${FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after kickoff. Each bar is as wide as its window.`}
-        right={within10 !== null ? <Big sub="within 10 minutes" value={`${within10}%`} /> : undefined}
+        line={`When each final was found, in minutes after the first score check (${FIRST_SCORE_CHECK_DELAY_MINUTES} minutes after kickoff). Tap a bar for its window.`}
+        right={within10 !== null ? <Big sub="found in 10 min" value={`${within10}%`} /> : undefined}
         title="How fast finals arrive"
       />
       {ladder.points.length ? <>

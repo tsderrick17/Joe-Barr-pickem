@@ -13,7 +13,7 @@ const TICK = SCORE_GATE_INTERVAL_MINUTES * MINUTE;
  * the owner wants the full ladder for as long as the month has room. The Odds API allowance renews on the 1st (UTC), so a reading from an
  * earlier month does not count (see chooseScoreTier).
  */
-export const LOW_BALANCE_USED_CREDITS = 440;
+export const LOW_BALANCE_USED_CREDITS = 450;
 
 /** Credits kept beyond the forecast official-line requests, so a day with one extra lock fetch does not strand a line. */
 export const LINE_NEED_CUSHION_CREDITS = 5;

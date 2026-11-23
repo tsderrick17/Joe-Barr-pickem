@@ -143,6 +143,27 @@ for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as con
   });
 }
 
+// Tapping a bar on a phone: the finger lifting is not the pointer leaving, so the bar's details stay up until a tap lands outside the chart.
+test("a tapped bar in the polling chart keeps its details after the finger lifts, and a tap elsewhere puts them away", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await settle(page, ".cw-page-head", "/admin/odds");
+  const section = page.locator("section[aria-label='Fresh finals picked up by polling ladder']");
+  const plot = section.locator(".dash-plot svg");
+  await expect(plot).toBeVisible({ timeout: 30_000 });
+  await plot.evaluate((svg) => {
+    const box = svg.getBoundingClientRect();
+    const init = { bubbles: true, clientX: box.left + box.width * 0.4, clientY: box.top + box.height * 0.5, pointerType: "touch" as const, isPrimary: true };
+    svg.dispatchEvent(new PointerEvent("pointerdown", init));
+    svg.dispatchEvent(new PointerEvent("pointerup", init));
+    svg.dispatchEvent(new PointerEvent("pointerleave", { ...init, bubbles: false }));
+  });
+  await expect(section.locator(".dash-tip")).toBeVisible();
+  await page.locator(".cw-page-head").dispatchEvent("pointerdown", { bubbles: true });
+  await expect(section.locator(".dash-tip")).toHaveCount(0);
+});
+
 // The score-checking line on the Odds credits page: Normal, and the three schedules the low-balance rule can switch to, each with its reason in plain words.
 for (const tier of ["normal", "lean", "minimal", "paused"] as const) {
   for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
