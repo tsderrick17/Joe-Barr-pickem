@@ -241,6 +241,26 @@ test("with the switch up, opening the app goes straight to the clubhouse without
   expect(profileAnsweredAt).toBe(0);   // left for the clubhouse before the account was read
 });
 
+test("with the switch up, the Standings link on another page goes straight to the clubhouse, never through the classic Standings", async ({ page }) => {
+  await openClubhouse(page, { at: "/board" });
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
+  await page.goto("/board");
+  const standings = page.locator("nav a:visible", { hasText: "Standings" }).first();
+  await expect(standings).toHaveAttribute("href", "/clubhouse", { timeout: 30_000 });
+  // The classic Standings page never renders on the way.
+  let classicShown = false;
+  await page.exposeFunction("classicStandingsShown", () => { classicShown = true; });
+  await page.evaluate(() => new MutationObserver(() => { if (document.querySelector("h1")?.textContent?.trim() === "Standings") (window as unknown as { classicStandingsShown: () => void }).classicStandingsShown(); }).observe(document.body, { childList: true, subtree: true }));
+  await standings.click();
+  await page.waitForURL(/\/clubhouse$/, { timeout: 30_000 });
+  await page.waitForTimeout(500);
+  expect(classicShown).toBe(false);
+  // With the switch down it is the classic Standings again.
+  await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "off"));
+  await page.goto("/board");
+  await expect(page.locator("nav a:visible", { hasText: "Standings" }).first()).toHaveAttribute("href", "/", { timeout: 30_000 });
+});
+
 test("a player sent back from the clubhouse has the switch put down, so the Standings do not send them straight back", async ({ page }) => {
   await openClubhouse(page, { at: "/board", commissioner: false, clubhouseAccess: false });
   await page.evaluate(() => window.localStorage.setItem("pickem-clubhouse-mode", "on"));
@@ -312,6 +332,40 @@ for (const [phase, homeExtra, table] of [
     await room.getByRole("button", { name: "The Big Board", exact: true }).click();
     const tabs = page.getByRole("dialog", { name: "The Big Board" }).getByRole("navigation", { name: "Board" });
     await expect(tabs.getByRole("button")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"], { timeout: 30_000 });
+  });
+}
+
+for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  test(`dragging the ticket down tucks it to about half its height, a drag never opens it, and dragging up brings it back, at ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size });
+    const ticket = page.locator(".clubhouse-page > .lab-room-ticket");
+    await expect(ticket).toBeVisible({ timeout: 30_000 });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    const whole = (await ticket.boundingBox())!;
+    const drag = async (dy: number) => {
+      const box = (await ticket.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 3, box.y + box.height / 2 + dy, { steps: 6 });
+      await page.mouse.up();
+    };
+    await drag(60);
+    await expect(ticket.locator(".slip")).toHaveClass(/is-tucked/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);   // the drag did not open it
+    const tucked = (await ticket.boundingBox())!;
+    expect(tucked.height, "about half as tall").toBeLessThan(whole.height * 0.7);
+    await expect(ticket.locator(".slip-place")).toHaveCount(3);   // every pick still on it
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot(`clubhouse-ticket-tucked-${label}.png`, { maxDiffPixels: 40 });
+    // It stays tucked after a reload, and a tap still opens your ticket.
+    await page.reload();
+    await expect(page.locator(".clubhouse-page > .lab-room-ticket .slip")).toHaveClass(/is-tucked/, { timeout: 30_000 });
+    await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await drag(-60);
+    await expect(ticket.locator(".slip")).not.toHaveClass(/is-tucked/);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await ticket.click();
+    await expect(page.getByRole("dialog")).toHaveCount(1);
   });
 }
 

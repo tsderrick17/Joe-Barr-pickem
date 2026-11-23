@@ -7,7 +7,10 @@ export function setSiteTheme(night) {
   // The whole page crossfades from day to night in one smooth step, instead of each part changing colour at its own speed. Where the
   // browser cannot crossfade, or motion is turned down, it simply changes.
   const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if (typeof document.startViewTransition === "function" && !still) document.startViewTransition(apply); else apply();
+  // The clubhouse room crossfades its own two pictures instead: the page's crossfade photographs the page, and the boards drawn in
+  // perspective on the picture could show in the wrong place in that photograph.
+  const inRoom = Boolean(document.querySelector(".lab-room"));
+  if (typeof document.startViewTransition === "function" && !still && !inRoom) document.startViewTransition(apply); else apply();
   try { window.localStorage.setItem("pickem-theme", night ? "night" : "day"); } catch { /* storage blocked: it holds for this visit */ }
   window.dispatchEvent(new Event("pickem-theme-change"));
 }
