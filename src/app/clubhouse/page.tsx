@@ -287,6 +287,10 @@ export default function ClubhousePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Bowl Pool's read, as the classic page takes it
   const [bowlRead, setBowlRead] = useState<any>(null);
   useEffect(() => { if (bowlInRoom) void prefetchBowlPool().then(setBowlRead); }, [bowlInRoom]);
+  // Out of bowl season the room does not need the Bowl Pool, but its tab sits beside the ticket and Survivor: read it ahead as soon as
+  // any of those pop-ups opens, so the Bowl Pool tab opens already full instead of on "Loading".
+  const deckOpen = Boolean(shown && DECK.includes(shown));
+  useEffect(() => { if (deckOpen && !bowlInRoom) void prefetchBowlPool(); }, [deckOpen, bowlInRoom]);
   // The chalkboard in the room is a still chalk drawing; tapping it opens the Season Snapshot, which reads its chart when it opens, for
   // everyone who can see it on the Standings (the Commissioner, and every player once Week 6 has settled); once 10 bowls are final it
   // gains the Bowl Pool's chart, from the Bowl Pool's read above.

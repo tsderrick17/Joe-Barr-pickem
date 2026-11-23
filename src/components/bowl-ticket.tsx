@@ -229,9 +229,9 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
             </tr>
           </thead>
           <tbody>
-            {sheet.rows.map((row) => (
+            {sheet.rows.map((row, rowIndex) => (
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
-                <td className="lab-bowl-sheet-rec"><BowlScoreTile animate={false} settled value={row.wins} /></td>
+                <td className="lab-bowl-sheet-rec"><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled value={row.wins} /></td>
                 <th className="lab-bowl-sheet-name" scope="row">{row.name}</th>
                 {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
               </tr>
@@ -382,7 +382,7 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
         <circle className="lab-bowl-gauge-hub" cx="60" cy="58" fill={`url(#${id}-hub)`} r="3.6" />
         <circle className="lab-bowl-gauge-pin" cx="60" cy="58" r="1.2" />
       </svg>
-      <figcaption>{left ? <><b>{left}</b> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>
+      <figcaption>{left ? <><BowlScoreTile label={`${left} left`} large settled value={left} /> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>
     </figure>
   );
 }
