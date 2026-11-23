@@ -171,12 +171,12 @@
 }
 
 /* Trophy Room: a lit case; plaques of engraved brass on walnut. Only the trophy moves in the real room; here a plaque never moves. */
-.lab-case { background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255, 230, 170, .25), transparent 70%), linear-gradient(rgb(46 30 22), rgb(26 17 12)); border: 6px solid rgb(74 50 34); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); display: grid; gap: 14px; overflow: hidden; padding: 16px; }
-.lab-case-shelf { border-bottom: 6px solid rgb(74 50 34); display: grid; gap: 12px; grid-template-columns: minmax(0, 15rem); justify-content: center; padding-bottom: 12px; }
+.lab-case { background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255, 230, 170, .25), transparent 70%), linear-gradient(rgb(46 30 22), rgb(26 17 12)); border: 6px solid rgb(74 50 34); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(230, 207, 152, .25), 0 8px 18px rgba(37, 30, 18, .3); color: var(--cw-cream); display: grid; gap: 14px; overflow: hidden; padding: 10px 12px; }
+.lab-case-shelf { border-bottom: 4px solid rgb(74 50 34); display: grid; gap: 12px; grid-template-columns: minmax(0, 15rem); justify-content: center; padding-bottom: 8px; }
 /* The Trophy Room as one tall wall, top to bottom: banners in the rafters, trophies on the mantle, plaques down the front of the bar. */
-.lab-wall { gap: 22px; justify-items: center; }
-.lab-wall-part { display: grid; gap: 10px; justify-items: center; width: 100%; }
-.lab-wall-part h4 { font-family: var(--font-serif); font-size: 1.2rem; margin: 0; text-align: center; }
+.lab-wall { gap: 8px; justify-items: center; }
+.lab-wall-part { display: grid; gap: 6px; justify-items: center; width: 100%; }
+.lab-wall-part h4 { font-family: var(--font-serif); font-size: 1.05rem; margin: 0; text-align: center; }
 .lab-wall-part h4 small { color: var(--cw-gold-lt); display: block; font-family: Arial, Helvetica, sans-serif; font-size: .78rem; font-weight: 400; }
 .lab-wall .lab-chips { justify-content: center; }
 .lab-wall-table { max-width: 34rem; width: 100%; }
@@ -549,6 +549,13 @@
 .lab-lamp.is-survivor.is-won::after { background: radial-gradient(circle at 46% 42%, rgb(180 226 194) 0, rgb(104 184 130) 40%, rgb(58 132 88) 85%); }
 .lab-lamp.is-survivor.is-lost { filter: drop-shadow(0 0 1px rgba(212, 100, 88, .22)); }
 .lab-lamp.is-survivor.is-lost::after { background: radial-gradient(circle at 46% 42%, rgb(238 176 164) 0, rgb(204 100 86) 40%, rgb(150 58 48) 85%); }
+/* A refresh pulled down in the clubhouse: every lit lamp blinks twice, once (two names so each refresh restarts it). */
+@keyframes lamp-blink-0 { 0%, 50%, 100% { filter: none; } 15%, 65% { filter: brightness(.2) saturate(.5); } }
+@keyframes lamp-blink-1 { 0%, 50%, 100% { filter: none; } 15%, 65% { filter: brightness(.2) saturate(.5); } }
+@media (prefers-reduced-motion: no-preference) {
+  .clubhouse-page.is-blink-0 .lab-lamp:not(.is-off) { animation: lamp-blink-0 .9s ease-in-out; }
+  .clubhouse-page.is-blink-1 .lab-lamp:not(.is-off) { animation: lamp-blink-1 .9s ease-in-out; }
+}
 .lab-lamps { align-items: start; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: flex-end; list-style: none; margin: 0; max-width: 60%; padding: 0; }
 .lab-bigboard .lab-lamps li { border: 0; display: grid; gap: 4px; grid-template-columns: auto; justify-items: center; padding: 0; }
 .lab-lamps small { color: rgba(240, 180, 41, .8); font-size: .56rem; letter-spacing: .1em; }
@@ -809,11 +816,38 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .club-chat .pool-chat-message-meta span { color: var(--cw-gold-lt); }
 .club-chat .pool-chat-message-meta button { color: rgba(240, 236, 226, .55); }
 
-/* Notifications opens like every other clubhouse pop-up (a floating panel that rises and slides away), on the page's own ground so its
-   settings read the same as on the Notifications page. */
-.club-notify h3 { font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: .14em; margin: 0 0 4px; text-transform: uppercase; }
+/* Notifications opens like every other clubhouse pop-up (a floating panel that rises and slides away), dressed like your ticket: warm
+   card paper in dark ink, brass rules, cognac accents and a walnut button. The page's own settings, re-dressed here only (the
+   Notifications page keeps its paper). Everything is dark ink on paper, so it reads easily. */
+.club-notify {
+  --notify-ink: rgb(33 29 23); --notify-soft: rgb(66 58 46); --notify-brass: rgb(125 101 56); --notify-cognac: rgb(138 75 42);
+  background: linear-gradient(180deg, var(--ticket-card), var(--ticket-card-2)); border-radius: 10px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35), inset 0 0 0 4px var(--ticket-card), inset 0 0 0 5px rgba(125, 101, 56, .5);
+  color: var(--notify-ink); font-size: 1rem; line-height: 1.5; margin: 0 auto; max-width: 640px; padding: 20px; width: 100%;
+}
+.club-notify [class*="text-xs"], .club-notify [class*="text-sm"], .club-notify small { font-size: .96rem; line-height: 1.45; }
+.club-notify [class*="font-black"] { font-size: .82rem; letter-spacing: .08em; }
+.club-notify h3 { color: var(--notify-ink); font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: .14em; margin: 0 0 4px; text-transform: uppercase; }
 .club-notify .notification-settings > :first-child { margin-top: 0; }
-.club-notify { background: var(--themed-bg-18); border-radius: 8px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--themed-text-18); margin: 0 auto; max-width: 640px; padding: 16px; width: 100%; }
+.club-notify :is(h1, h2, h3, strong, label, legend) { color: inherit; }
+.club-notify h2, .club-notify h3:not(:first-child) { color: var(--notify-cognac); }
+.club-notify [class*="text-slate"], .club-notify [class*="text-zinc"] { color: var(--notify-soft); }
+.club-notify [class*="text-red-"] { color: rgb(160 47 34); }
+.club-notify [class*="text-green-"] { color: rgb(45 106 69); }
+.club-notify [class*="border-zinc"], .club-notify [class*="border-y"], .club-notify [class*="divide-"] > *, .club-notify form, .club-notify section { border-color: rgba(125, 101, 56, .4); }
+.club-notify [class*="bg-(color"], .club-notify [class*="bg-[#"] { background: rgba(255, 253, 247, .7); color: inherit; }
+.club-notify input:not([type="checkbox"]) { background: rgb(255 253 248); border: 1px solid var(--notify-brass); border-radius: 4px; color: var(--notify-ink); }
+.club-notify input::placeholder { color: rgba(66, 58, 46, .75); }
+.club-notify input:not([type="checkbox"]):focus { border-color: var(--notify-cognac); outline: 2px solid rgba(138, 75, 42, .35); }
+.club-notify input[type="checkbox"] { accent-color: var(--notify-cognac); }
+.club-notify button[aria-pressed] { background: rgba(255, 253, 247, .7); border: 1px solid rgba(125, 101, 56, .55); border-radius: 4px; box-shadow: none; color: inherit; }
+.club-notify button[aria-pressed="true"] { background: rgba(179, 150, 98, .22); border: 2px solid var(--notify-cognac); box-shadow: inset 5px 0 0 var(--notify-cognac); }
+.club-notify button[aria-pressed]:hover { border-color: var(--notify-cognac); }
+.club-notify [class*="rounded-full"][class*="bg-[#"] { background: var(--notify-cognac); color: rgb(255 248 234); }
+.club-notify [class*="text-[#007e72]"] { color: var(--notify-cognac); }
+.club-notify aside { background: rgba(179, 150, 98, .16); border-color: var(--notify-cognac); }
+.club-notify label:hover { background: rgba(125, 101, 56, .08); }
+.club-notify button[type="submit"] { background: linear-gradient(180deg, rgb(92 58 36), rgb(58 34 20)); border-radius: 4px; box-shadow: inset 0 1px 0 rgba(255, 220, 170, .3); color: rgb(255 248 234); font-family: "Courier New", monospace; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.club-notify button[type="submit"]:hover:not(:disabled) { background: linear-gradient(180deg, rgb(110 70 44), rgb(72 42 26)); }
 /* The chalkboard's full chart: the Season Snapshot itself, working exactly as on the Pick'em Pad, on a slate in a walnut frame. */
 .club-snapshot { border-radius: 8px; display: flex; flex-direction: column; height: min(34rem, calc(100dvh - 9rem)); margin: 0 auto; max-width: 720px; width: 100%; }
 .club-snapshot.is-chalkboard {

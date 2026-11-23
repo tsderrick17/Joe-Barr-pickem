@@ -55,7 +55,7 @@ function PlaquesShelf({ seasons }: { seasons: Champions[] }) {
     <div className="lab-room-stack">
       <div className="lab-case lab-wall">
         <section aria-label="Plaques" className="lab-wall-part">
-          <h4>Plaques <small>one for every season</small></h4>
+          <h4>Plaques</h4>
           <div className="lab-case-shelf">
             {seasons.length ? seasons.map((year) => <Plaque key={year.season} year={year} />) : <p className="lab-wall-empty">No champions yet.</p>}
           </div>
