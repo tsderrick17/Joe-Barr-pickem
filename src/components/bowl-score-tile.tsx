@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HapticTap } from "@/components/haptic-tap";
-import { haptic } from "@/lib/haptics-client";
 import { BOARD_PACE, digitPace, flipJitter, nextFlip } from "@/lib/split-flap.js";
 
 type Feel = { pace: number; start: number };
@@ -125,17 +123,16 @@ function StillDigit({ digit }: { digit: number }) {
  * A player's Bowl Pool win total as a two-digit split-flap tile. The digits
  * run on their own until `settled`; then, `landDelay` milliseconds later, each
  * flips forward to the real total, so the rows stop down the line. Once landed,
- * a tap flips the tile once round the drum and back to the same number, just for
- * fun (a light tick; never with reduced motion).
+ * It is not interactive: a tap does nothing (owner, 2026-11-22). It spins in when
+ * the view showing it opens, and only then.
  */
-export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace = BOARD_PACE }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** ms per flip for the whole board */ pace?: number }) {
+export default function BowlScoreTile({ value, settled, landDelay = 0, large = false, animate = true, pace = BOARD_PACE, label }: { value: number; settled: boolean; landDelay?: number; large?: boolean; animate?: boolean; /** what the number counts, read aloud (default: wins) */ label?: string; /** ms per flip for the whole board */ pace?: number }) {
   const total = Math.max(0, Math.min(99, value));
   const digits = [Math.floor(total / 10), total % 10];
   const [landing, setLanding] = useState(false);
   const [landedDigits, setLandedDigits] = useState(0);
   const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const [round, setRound] = useState(0);
-  const still = reduced || (!animate && round === 0);
+  const still = reduced || !animate;
   const markLanded = useCallback(() => setLandedDigits((count) => count + 1), []);
 
   useEffect(() => {
@@ -147,18 +144,10 @@ export default function BowlScoreTile({ value, settled, landDelay = 0, large = f
   const landed = still ? settled : landedDigits >= 2;
   const faces = digits.map((digit, index) => (still
     ? <StillDigit digit={digit} key={index} />
-    : round > 0
-      // Flip again: both digits start from their number and make one full turn, the second a beat behind.
-      ? <FlapDigit delay={index * pace * 0.3} key={`${round}-${index}`} landing minFlips={1} onLanded={markLanded} pace={pace} start={digit} target={digit} />
-      : <FlapDigit key={index} landing={landing} minFlips={0} onLanded={markLanded} pace={pace} target={digit} />));
-  const flipAgain = () => {
-    haptic("tick");
-    setLandedDigits(0);
-    setRound((count) => count + 1);
-  };
+    : <FlapDigit key={index} landing={landing} minFlips={0} onLanded={markLanded} pace={pace} target={digit} />));
   return (
-    <span aria-label={`${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
-      {reduced ? faces : <button aria-hidden="true" className="bowl-score-flip relative" disabled={!landed || !settled} onClick={flipAgain} tabIndex={-1} type="button">{faces}<HapticTap /></button>}
+    <span aria-label={label ?? `${value} wins`} className={`bowl-score-tile ${large ? "is-large" : ""} ${landed ? "is-landed" : "is-spinning"}`} data-settled={landed ? "true" : undefined} role="img">
+      {reduced ? faces : <span aria-hidden="true" className="bowl-score-flip relative">{faces}</span>}
     </span>
   );
 }
