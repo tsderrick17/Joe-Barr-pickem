@@ -3,7 +3,7 @@
 import Link from "next/link";
 import AccountMenu from "@/components/account-menu";
 import { setSiteTheme } from "@/lib/site-theme.js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import { supabase } from "@/lib/supabase";
@@ -13,6 +13,12 @@ import { haptic } from "@/lib/haptics-client";
 import { clubhouseModeOn, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 
 const NAVIGATION_RETRY_DELAYS_MS = [800, 2000, 4000];
+
+/** Another tab changing the remembered clubhouse switch. */
+const subscribeToStorage = (notify: () => void) => {
+  window.addEventListener("storage", notify);
+  return () => window.removeEventListener("storage", notify);
+};
 
 export default function SiteNav() {
   const pathname = usePathname();
@@ -138,6 +144,10 @@ export default function SiteNav() {
   useEffect(() => {
     if (pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
   }, [pathname, router]);
+  // With the switch up, the Standings link (and the masthead) go straight to the clubhouse instead of the classic Standings, which would
+  // flash first while the redirect above caught up. Inside the clubhouse they stay "/", the Standings pane the page opens in place.
+  const modeOn = useSyncExternalStore(subscribeToStorage, clubhouseModeOn, () => false);
+  const home = modeOn && !inClubhouse ? "/clubhouse" : "/";
   const viewSwitch = (size: string) => clubhouseAccess ? (
     <Link
       aria-label={inClubhouse ? "Classic view" : "Clubhouse view"}
@@ -197,7 +207,7 @@ export default function SiteNav() {
       <div className="site-nav-shell mx-auto max-w-6xl px-4 py-3 sm:px-5 sm:py-4 md:px-10">
         <Link
           className="site-nav-brand font-serif leading-none text-[#f5f0e6]"
-          href="/"
+          href={home}
         >
           <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-[#e4ded2] md:text-xs">
             Joe Barr Memorial
@@ -210,7 +220,7 @@ export default function SiteNav() {
         {/* The same tabs as on a phone (Commissioner is in the name menu), set from the left so a tab that appears later only extends
             the row and never moves the others. */}
         <div className="site-nav-links flex flex-wrap items-center justify-start gap-x-3 gap-y-2 text-sm sm:gap-x-4 md:ml-6 md:gap-x-8 md:text-base">
-          <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">
+          <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href={home}>
             Standings
           </Link>
 
@@ -246,7 +256,7 @@ export default function SiteNav() {
     <nav aria-label="Account navigation" className="mobile-account-nav relative border-b border-zinc-700 bg-[#171719] text-[#f5f0e6] md:hidden">
       <div className="mx-auto max-w-6xl px-3 py-2">
         <div className="flex items-center justify-between gap-3">
-          <Link className="min-w-0 font-serif leading-none text-[#f5f0e6]" href="/">
+          <Link className="min-w-0 font-serif leading-none text-[#f5f0e6]" href={home}>
             <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#e4ded2]">Joe Barr Memorial</span>
             <span className="mt-1 block text-base font-bold">Lead Pipe Locks</span>
           </Link>
@@ -271,7 +281,7 @@ export default function SiteNav() {
     </nav>
     <nav aria-label="Primary navigation" className={`mobile-primary-nav border-b-2 border-(color:--themed-border-19) bg-[#171719] text-[#f5f0e6] md:hidden${inClubhouse ? " hidden" : ""}`} ref={mobileNavRef}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-x-12 px-3 py-2 text-sm sm:gap-x-16">
-        <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href="/">Standings</Link>
+        <Link aria-current={pathname === "/" ? "page" : undefined} className={linkStyle("/")} href={home}>Standings</Link>
         <Link aria-current={pathname.startsWith("/board") ? "page" : undefined} className={linkStyle("/board")} href="/board">The Slate</Link>
         {/* The NCAA Bowls tab takes no room when it does not apply, so the tabs shown are always evenly centered (see nav-tabs.js). */}
         <Link aria-current={pathname.startsWith("/bowl-pool") ? "page" : undefined} className={`nav-bowls-tab ${linkStyle("/bowl-pool")}`} href="/bowl-pool">NCAA Bowls</Link>

@@ -452,3 +452,7 @@ The owner asked for three things. The 6 Wk Season Snapshot lost its bar over the
 - Your ticket tucks away: drag it down and it folds to about half its height (heading folded away, every pick on its side, the stub's word kept); drag up to bring it back. Remembered on the device. A drag never opens it and never pulls the refresh chain.
 - In the clubhouse, day and night crossfade the room's two pictures in place instead of the page-wide view transition, which photographs the page and could show the perspective boards out of place mid-switch.
 - The name menu leaves out Trophy Room in the clubhouse (it has its own plate in the room).
+
+## 2026-11-22 - With the clubhouse switch up, Standings links go straight to the clubhouse
+
+Clicking Standings (or the masthead) from a Commissioner page with the clubhouse switch up flashed the classic Standings before the redirect to the clubhouse caught up. Those links now point at the clubhouse while the switch is up (outside the clubhouse; inside it they stay the Standings pane), so the classic page never renders on the way. Opening the app by its address still redirects as before.
