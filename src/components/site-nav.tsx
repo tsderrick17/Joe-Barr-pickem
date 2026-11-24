@@ -20,6 +20,26 @@ const subscribeToStorage = (notify: () => void) => {
   return () => window.removeEventListener("storage", notify);
 };
 
+/**
+ * The sun and the moon, drawn (not typed as characters) in one centred square: a typed sun or moon sits off-centre in its button
+ * (each font draws it with its own side room, and the emoji sun worse), and turning the sun on night mode swung it off its middle.
+ */
+function ThemeGlyph({ sun }: { sun: boolean }) {
+  return sun ? (
+    <svg aria-hidden="true" focusable="false" height="1em" viewBox="1 1 22 22" width="1em">
+      <g fill="rgb(255 190 40)">
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => <path d="M12 1.6 14.2 5.4H9.8Z" key={angle} transform={`rotate(${angle} 12 12)`} />)}
+      </g>
+      <circle cx="12" cy="12" fill="rgb(255 165 20)" r="5.6" />
+      <circle cx="10.4" cy="10.4" fill="rgb(255 215 90)" r="2.6" />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" focusable="false" height="1em" viewBox="1 1 22 22" width="1em">
+      <path d="M15.6 3.2A9 9 0 1 0 20.8 15 7.4 7.4 0 0 1 15.6 3.2Z" fill="rgb(245 233 190)" transform="translate(-0.4 0.2)" />
+    </svg>
+  );
+}
+
 export default function SiteNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -244,7 +264,7 @@ export default function SiteNav() {
             title={isNightMode ? "Use light mode" : "Use dark mode"}
             type="button"
           >
-            <span aria-hidden="true" className="theme-toggle-icon">{isNightMode ? "☀" : "☾"}</span>
+            <span aria-hidden="true" className="theme-toggle-icon"><ThemeGlyph sun={isNightMode} /></span>
             <HapticTap />
           </button>
           {viewSwitch("is-large")}
@@ -270,7 +290,7 @@ export default function SiteNav() {
             title={isNightMode ? "Use light mode" : "Use dark mode"}
             type="button"
           >
-            <span aria-hidden="true" className="theme-toggle-icon text-xs">{isNightMode ? "☀" : "☾"}</span>
+            <span aria-hidden="true" className="theme-toggle-icon text-xs"><ThemeGlyph sun={isNightMode} /></span>
             <HapticTap />
           </button>
           {viewSwitch("is-small")}

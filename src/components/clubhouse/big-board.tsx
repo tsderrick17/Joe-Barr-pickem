@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { BoardView } from "@/lib/board-view.js";
 import { HiddenPick, Logo, NoPick } from "@/components/clubhouse/lamps";
+import PlayerTrophyName from "@/components/player-trophy-name";
 
 /**
  * The tote board family, the owner's pick of the Pad skins, as the clubhouse's main piece. Drawn from a `BoardView` (the real clubhouse) or the Lab's sample one.
@@ -43,7 +44,7 @@ function PlayoffFace({ view, open }: { view: BoardView; open: (() => void) | nul
           return (
             <tr className={`${row.you ? "is-you" : ""}${row.out || row.forfeited ? " is-out" : ""}`} key={row.id}>
               <td className="lab-tote-wins">{row.wins}</td>
-              <th className="lab-tote-name" scope="row"><span className="lab-tote-player">{row.name.toUpperCase()}</span>{standing ? <small>{standing}</small> : null}</th>
+              <th className="lab-tote-name" scope="row"><span className="lab-tote-player"><PlayerTrophyName name={row.name.toUpperCase()} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></span>{standing ? <small>{standing}</small> : null}</th>
               {view.games.map((game, index) => {
                 const slat = row.slats[index];
                 const matchup = `${name(game.away)} at ${name(game.home)}`;
@@ -90,7 +91,7 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
           return (
             <tr className={row.you ? "is-you" : ""} key={row.id}>
               <td className="lab-tote-wins">{row.wins}</td>
-              <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
+              <th className="lab-tote-name" scope="row"><PlayerTrophyName name={row.name.toUpperCase()} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
               {row.slats.map((slat, index) => (
                 <td className="lab-tote-pick" key={index}>
                   {slat === null ? (row.you ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>) : <NoPick label={`Pick ${index + 1}: none yet`} />)

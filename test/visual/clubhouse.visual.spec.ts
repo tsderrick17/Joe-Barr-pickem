@@ -733,7 +733,7 @@ function bowlRead(optedIn = true) {
     ],
     ownPicks: optedIn ? [{ game_id: "g1", selected_team_id: "h1", result: "win" }, { game_id: "g4", selected_team_id: "a4", result: null }] : [],
     ownPreviewSelections: [],
-    standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 1 }, { playerId: "p2", playerName: "Tyler", wins: 1, losses: 1 }],
+    standings: [{ playerId: "p1", playerName: "Earl", wins: 1, losses: 1 }, { playerId: "p2", playerName: "Tyler", wins: 1, losses: 1, trophies: ["Bowl Pool Champion 2025"], holdsTrophy: true }],
     // Earl's picks as the Bowl Pool's read gives them: shown once a bowl kicks off, only a marker before (and a missed bowl a loss).
     publicPicks: [{ playerId: "p1", game_id: "g1", selected_team_id: "a1", result: "loss" }],
     automaticResults: [{ playerId: "p1", game_id: "g2", result: "loss" }],
@@ -1257,4 +1257,32 @@ test("a Bowl game's small line says where it is played after the time, on one li
   const withPlace = (await line.boundingBox())!.height;
   const bare = (await ticket.locator(".lab-bowl-game", { hasText: "National Championship" }).locator(".lab-bowl-name small").boundingBox())!.height;
   expect(withPlace).toBeLessThanOrEqual(bare + 1);
+});
+
+test("the trophy a champion holds stands beside their name on the Big Board and on the Bowl sheet, with every title on hover", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#standings" });
+  const board = page.getByRole("dialog", { name: "The Big Board" });
+  await expect(board.locator(".lab-tote-name [aria-label^='Trophy:']").first()).toBeVisible({ timeout: 30_000 });
+  await expect(board.locator(".lab-tote-name [aria-label^='Trophy:'] [aria-hidden='true']")).toHaveCount(1);   // only the holder wears the mark
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  const mark = ticket.locator(".lab-bowl-sheet-name [aria-label='Trophy: Bowl Pool Champion 2025']");
+  await expect(mark).toHaveCount(1);
+  await expect(mark.locator("[aria-hidden='true']")).toHaveText("🏆");
+});
+
+test("the sun and the moon sit in the exact middle of the day and night button", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openClubhouse(page);
+  const toggle = page.locator("button.theme-toggle:visible").first();
+  await expect(toggle).toBeVisible({ timeout: 30_000 });
+  for (let turn = 0; turn < 2; turn++) {
+    await page.waitForTimeout(600);   // let the turn settle
+    const box = (await toggle.boundingBox())!;
+    const glyph = (await toggle.locator("svg").boundingBox())!;
+    expect(Math.abs(glyph.x + glyph.width / 2 - box.x - box.width / 2)).toBeLessThan(1);
+    expect(Math.abs(glyph.y + glyph.height / 2 - box.y - box.height / 2)).toBeLessThan(1);
+    await toggle.click();
+  }
 });

@@ -21,6 +21,11 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-23 - Small batch: trophies beside names, centred sun and moon
+
+- The clubhouse Big Board and Bowl sheet (and the Bowl ticket's standings list) show the champion's trophy beside their name like the classic pages (`PlayerTrophyName`, titles on hover, only the current holder wears the mark). The board's rows now carry `trophies` and `holdsTrophy`.
+- The day/night button draws its sun and moon as SVG in one exact square instead of typing the characters: the typed sun sat off-centre (font side room, worse for the emoji sun) and turning it on night mode swung it further off. A test measures both glyphs at the button's centre.
+
 ## 2026-11-23 - Clubhouse: chalkboard, bottles, one lamp, sheet snap, city and state, mantel ship, deeper stone
 
 - The chalkboard was a "Snapshot" pill only; the board face is now a tap target for the Season Snapshot too. The bottles on the back bar open Pool chat. Both are real-clubhouse hit areas with no plate of their own.

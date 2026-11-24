@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import { Lamp } from "@/components/clubhouse/lamps";
+import PlayerTrophyName from "@/components/player-trophy-name";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
 import { useStableCallback } from "@/lib/use-stable-callback";
@@ -18,7 +19,7 @@ export type BowlTicketData = {
   decided: number;
   owed: number;
   picked?: number;
-  standings: Array<{ id: string; name: string; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
+  standings: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
   /** Everyone's picks on every bowl (the classic Bowl Card), when the Bowl Pool's read is the real one. */
   sheet?: BowlSheetData;
 };
@@ -27,7 +28,7 @@ export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | nu
 export type BowlSheetData = {
   games: Array<{ id: string; name: string; day: string; locked: boolean; matchup: Array<{ team: string; line: string }> }>;
   todayIndex: number;
-  rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
+  rows: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
 };
 
 /**
@@ -183,7 +184,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
             {view.standings.map((row) => (
               <li className={row.you ? "is-you" : ""} key={row.id}>
                 <span>{row.tied ? `T${row.place}` : row.place}</span>
-                <b>{row.name}</b>
+                <b><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></b>
                 <em>{row.wins} {row.wins === 1 ? "WIN" : "WINS"}</em>
               </li>
             ))}
@@ -233,7 +234,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
             {sheet.rows.map((row, rowIndex) => (
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
                 <td className="lab-bowl-sheet-rec"><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled value={row.wins} /></td>
-                <th className="lab-bowl-sheet-name" scope="row">{row.name}</th>
+                <th className="lab-bowl-sheet-name" scope="row"><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
                 {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
               </tr>
             ))}

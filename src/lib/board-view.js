@@ -7,7 +7,7 @@
  *
  * @typedef {{ hidden: boolean, team: string | null, line: string | null, result: "W" | "L" | null }} Slat
  * @typedef {{ kind: "pick", team: string, result: "W" | "L" | null } | { kind: "out" } | { kind: "owed" } | { kind: "hidden" } | { kind: "none" }} SurvivorCell
- * @typedef {{ id: string, name: string, wins: number, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell, out?: boolean, forfeited?: boolean, back?: number | null }} BoardRow   // out / forfeited / back: the playoff race (back: wins behind the leader)
+ * @typedef {{ id: string, name: string, wins: number, trophies?: string[], holdsTrophy?: boolean, you: boolean, slats: Array<Slat | null>, survivor: SurvivorCell, out?: boolean, forfeited?: boolean, back?: number | null }} BoardRow   // out / forfeited / back: the playoff race (back: wins behind the leader)
  * @typedef {{ leaders: string[], leaderWins: number, toPlay: number, you: { back: number | null, out: boolean, forfeited: boolean, forfeitAvailable: boolean } }} PlayoffRace   // toPlay: this round's games not yet kicked off
  * @typedef {{ ats: "W" | "L" | null, su: "W" | "L" | null, score: number | null, margin: number | null, pickers: string[] }} TeamResult   // score and margin (how far past the spread, negative when it missed) only once the game is final; pickers: who took the team, as the Slate names them once the game has kicked off
  * @typedef {{ id: string, kickoff: string, kickedOff: boolean, action: boolean, away: string, home: string, awayLine: string, homeLine: string, lineFinal: boolean, results: Record<string, TeamResult> }} BoardGame   // action: a game to come, or one the pool has picks in (the Slate's Pool action); lineFinal: the official line is in (locked), not the preliminary one that can still move
@@ -145,7 +145,7 @@ export function realBoardView({ home, board }, { weekId = null, totals = null } 
     if (you) cell = out ? { kind: "out" } : mySurvivorTeam ? { kind: "pick", team: mySurvivorTeam, result: mySurvivorGame ? mySurvivorGame.view.results[mySurvivorTeam]?.su ?? null : null } : playing ? { kind: "owed" } : { kind: "none" };
     else if (seat) cell = seat.status === "eliminated" ? { kind: "out" } : !seat.pick ? { kind: "none" } : seat.pick.isHidden ? { kind: "hidden" } : { kind: "pick", team: seat.pick.abbreviation ?? "", result: mark(seat.pick.resultMark) };
     const race = playoff ? { out: Boolean(row.playoffEliminated) && !row.forfeited, forfeited: Boolean(row.forfeited), back: row.playoffEliminated || row.forfeited ? null : leaderWins - row.wins } : {};
-    return { id: row.id, name: row.firstName, wins: row.wins, you, slats, survivor: cell, ...race };
+    return { id: row.id, name: row.firstName, wins: row.wins, trophies: row.trophies ?? [], holdsTrophy: Boolean(row.holdsPickemTrophy), you, slats, survivor: cell, ...race };
   });
 
   const used = new Set((survivor?.usedTeamIds ?? []).filter((teamId) => teamId !== survivor?.pick?.selected_team_id));
