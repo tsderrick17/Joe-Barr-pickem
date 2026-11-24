@@ -25,6 +25,7 @@ and add a row above. (It is read at the start of every change, so short is cheap
 
 - The clubhouse Big Board and Bowl sheet (and the Bowl ticket's standings list) show the champion's trophy beside their name like the classic pages (`PlayerTrophyName`, titles on hover, only the current holder wears the mark). The board's rows now carry `trophies` and `holdsTrophy`.
 - The day/night button draws its sun and moon as SVG in one exact square instead of typing the characters: the typed sun sat off-centre (font side room, worse for the emoji sun) and turning it on night mode swung it further off. A test measures both glyphs at the button's centre.
+- The clubhouse ticket's tuck control is just an arrow on a small folder tab at the ticket's far left (like the Slate's How it works chevron, turning the other way, with no words). The ticket settles with a real bounce when it tucks or opens: it is pinned to the bottom, so the spring is a dip below its place that comes back up (more when it opens), because a height overshoot is invisible at a fixed edge. The tab presses down when tapped.
 
 ## 2026-11-23 - Clubhouse: chalkboard, bottles, one lamp, sheet snap, city and state, mantel ship, deeper stone
 

@@ -429,7 +429,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   await expect(board.locator("thead th")).toHaveCount(4);   // W, player and two picks: no Survivor column for another week
   // The board is the pool as it stood at the end of that week: every player's wins added up through it, in that order, not that week's own wins.
   expect(await board.locator("tbody .lab-tote-wins").allTextContents()).toEqual(Object.values(WEEK_TOTALS).map(String));
-  await expect(board.locator("tbody .lab-tote-name").first()).toHaveText("GARY");
+  await expect(board.locator("tbody .lab-tote-name").first()).toHaveText(/^GARY/);
   // Back to this week: its own board, with the ticket bar again.
   await week.selectOption({ label: "Week 5" });
   await expect(board.locator("header")).not.toContainText("WEEK 3");

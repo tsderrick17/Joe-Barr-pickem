@@ -64,7 +64,7 @@ export function RoomTicket({ ticket, week, savedAt = null, onOpen, href, tucked 
   return (
     <div className={`club-ticket-dock${tucked ? " is-tucked" : ""}${moved ? " is-moved" : ""}`} data-no-pull-refresh="">
       <button aria-expanded={!tucked} aria-label={tucked ? "Open up your ticket" : "Tuck your ticket away"} className="club-ticket-tab" onClick={() => { setMoved(true); onTuck(!tucked); }} type="button">
-        <svg aria-hidden="true" className="club-ticket-arrow" fill="none" height="10" viewBox="0 0 16 10" width="16"><path d="M2 2.5 8 8l6-5.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" /></svg>
+        <svg aria-hidden="true" className="club-ticket-arrow" fill="none" height="10" viewBox="0 0 12 8" width="12"><path d="M1.5 1.75 6 6.25l4.5-4.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
       </button>
       {ticketButton}
     </div>
