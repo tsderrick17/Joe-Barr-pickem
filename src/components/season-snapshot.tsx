@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { fetchWithSession } from "@/lib/auth-session";
-import { snapshotAxis, snapshotKeyColumns, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
+import { SNAPSHOT_ALL_UP_TO, snapshotAxis, snapshotKeyColumns, snapshotPreset, snapshotRailStop, snapshotRibbons, snapshotRibbonPath, snapshotRoundGroups, snapshotRoundLines, snapshotStackOrder, snapshotStretch, snapshotWeekLines, snapshotWindowRange, snapshotX } from "@/lib/season-snapshot-chart.js";
 
+type SnapshotPreset = "top5" | "me-top5" | "all" | "none";
 type Player = { id: string; firstName: string; wins: number; eliminated?: boolean };
 type Week = { id: string; label: string; day?: string; roundDays?: number; complete: boolean; scores: Array<{ playerId: string; wins: number }> };
 export type Snapshot = { regular: Week[]; playoffs: Week[]; colorOrder?: string[] };
@@ -381,7 +382,7 @@ function SnapshotChart({
 }
 
 /** The chart and its player key. Kept separate from loading so it renders from plain data. */
-function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bowl = false, chalk = false }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs"; bowl?: boolean; chalk?: boolean }) {
+function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bowl = false, chalk = false, viewerId }: { standings: Player[]; snapshot: Snapshot; isPlayoff: boolean; range?: Range; view?: "regular" | "playoffs"; bowl?: boolean; chalk?: boolean; viewerId?: string | null }) {
   // Once the playoffs begin the chart can show either half; before then, only the regular season.
   const showPlayoffs = !bowl && (view ? view === "playoffs" : isPlayoff || snapshot.playoffs.length > 0);
   // The Bowl Pool's chart (a point a bowl day) keeps its own hidden players.
@@ -396,7 +397,11 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
         if (Array.isArray(ids)) return new Set(ids.filter((id): id is string => typeof id === "string"));
       } catch { /* fall through to the default */ }
     }
-    return new Set(showPlayoffs ? standings.filter((player) => player.eliminated).map((player) => player.id) : []);
+    if (showPlayoffs) return new Set(standings.filter((player) => player.eliminated).map((player) => player.id));
+    // A big pool starts on its top five (and you), so the chart opens readable; a pool of eight or fewer shows everyone.
+    if (standings.length <= SNAPSHOT_ALL_UP_TO) return new Set<string>();
+    const shown = snapshotPreset("me-top5", [...standings].sort((a, b) => b.wins - a.wins).map((player) => player.id), viewerId);
+    return new Set(standings.map((player) => player.id).filter((id) => !shown.has(id)));
   });
   const [hoverId, setHoverId] = useState<string | null>(null);
 
@@ -423,6 +428,15 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
   const keyRows = standings
     .map((player, order) => ({ player, order, total: chartTotals.get(player.id) ?? 0 }))
     .sort((a, b) => b.total - a.total || a.order - b.order);
+  // Quick choices over the key: the top five on the chart, you and the top five (when you are not already in it), everyone, nobody.
+  const rankedNow = keyRows.map(({ player }) => player.id);
+  const meOutsideTop = Boolean(viewerId && rankedNow.includes(viewerId) && !rankedNow.slice(0, 5).includes(viewerId));
+  const presets: Array<{ key: SnapshotPreset; label: string }> = [
+    ...(standings.length > 5 ? [{ key: "top5" as const, label: "Top 5" }] : []),
+    ...(meOutsideTop ? [{ key: "me-top5" as const, label: "Me + Top 5" }] : []),
+    { key: "all", label: "All" },
+    { key: "none", label: "None" },
+  ];
   // The key's rows come out even (six and five, not eight and three): how many names go across follows from the room there is.
   const keyRef = useRef<HTMLDivElement>(null);
   const [keyColumns, setKeyColumns] = useState<number | null>(null);
@@ -457,7 +471,14 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
           <span className="season-snapshot-key-name">{player.firstName}</span><strong>{total}</strong>
         </button>;
       })}
-      <button className="season-snapshot-show-all" disabled={hidden.size === 0} onClick={() => chooseHidden(new Set())} type="button">Show all</button>
+      <div aria-label="Players to show" className="season-snapshot-presets" role="group">
+        {presets.map(({ key, label }) => {
+          const shown = snapshotPreset(key, keyRows.map(({ player }) => player.id), viewerId);
+          const on = shown.size === visible.length && visible.every((player) => shown.has(player.id));
+          return <button aria-pressed={on} className="season-snapshot-show-all" key={key} onClick={() => chooseHidden(new Set(standings.map((player) => player.id).filter((id) => !shown.has(id))))} type="button">{label}</button>;
+        })}
+        <span className="season-snapshot-count">{visible.length} of {standings.length} shown</span>
+      </div>
     </div>
   </div>;
 }
@@ -469,7 +490,7 @@ export type BowlChart = { weeks: Week[]; players: Player[] };
  * The back of the Pick'em Pad, and the clubhouse chalkboard's full chart. Loads the first time it is turned over (or opened).
  * Given `bowl` (the chalkboard in bowl season), a Pick'em | Bowl switch picks which pool it charts.
  */
-export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, bowl, chalk = false }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; bowl?: BowlChart | null; chalk?: boolean }) {
+export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, active, bowl, chalk = false, viewerId = null }: { standings: Player[]; refreshKey: string; isPlayoff: boolean; active: boolean; bowl?: BowlChart | null; chalk?: boolean; viewerId?: string | null }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -548,7 +569,7 @@ export default function SeasonSnapshot({ standings, refreshKey, isPlayoff, activ
       </div> : null}
     </div>
     <div className="season-snapshot-body">
-      {onBowl && bowl ? (bowl.weeks.length === 0 ? <p className="season-snapshot-message">The Bowl Pool&rsquo;s chart starts once the first bowl day is final.</p> : <SnapshotView bowl chalk={chalk} key="bowl" range={range} snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />) : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView chalk={chalk} isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
+      {onBowl && bowl ? (bowl.weeks.length === 0 ? <p className="season-snapshot-message">The Bowl Pool&rsquo;s chart starts once the first bowl day is final.</p> : <SnapshotView viewerId={viewerId} bowl chalk={chalk} key="bowl" range={range} snapshot={{ regular: bowl.weeks, playoffs: [], colorOrder: snapshot?.colorOrder ?? [] }} standings={bowl.players} isPlayoff={false} view="regular" />) : error ? <div className="season-snapshot-message" role="alert">{error} <button className="underline" onClick={() => setRetry((current) => current + 1)} type="button">Retry</button></div> : !snapshot ? <p className="season-snapshot-message">Loading scores…</p> : <SnapshotView viewerId={viewerId} chalk={chalk} isPlayoff={isPlayoff} key={showPlayoffs ? "playoffs" : "regular"} range={range} snapshot={snapshot} standings={standings} view={shownView} />}
     </div>
   </div>;
 }

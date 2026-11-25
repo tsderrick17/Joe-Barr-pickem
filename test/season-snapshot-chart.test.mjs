@@ -31,3 +31,16 @@ test("a flat stretch stays flat, and the straight ribbon is unchanged unless rou
   assert.equal(snapshotRibbonPath(points), "M0,50 L40,30 L40,34 L0,54 Z");
   assert.match(snapshotRibbonPath([...points, { x: 80, top: 10, bottom: 14 }], 0, 1, true), /^M0,50 C.* L80,14 C.* Z$/);
 });
+
+import { SNAPSHOT_ALL_UP_TO, snapshotPreset } from "../src/lib/season-snapshot-chart.js";
+
+test("the Season Snapshot's quick choices: Top 5, you and the top five, everyone, nobody", () => {
+  const ranked = Array.from({ length: 20 }, (_, index) => `p${index}`);
+  assert.deepEqual([...snapshotPreset("top5", ranked, "p12")], ["p0", "p1", "p2", "p3", "p4"]);
+  assert.deepEqual([...snapshotPreset("me-top5", ranked, "p12")], ["p0", "p1", "p2", "p3", "p4", "p12"]);
+  assert.equal(snapshotPreset("me-top5", ranked, "p3").size, 5, "already in the top five: still five lines");
+  assert.equal(snapshotPreset("me-top5", ranked, "someone-else").size, 5, "a viewer not in the pool adds nobody");
+  assert.equal(snapshotPreset("all", ranked, null).size, 20);
+  assert.equal(snapshotPreset("none", ranked, null).size, 0);
+  assert.equal(SNAPSHOT_ALL_UP_TO, 8, "a pool of eight (today's) still opens with everyone on the chart");
+});

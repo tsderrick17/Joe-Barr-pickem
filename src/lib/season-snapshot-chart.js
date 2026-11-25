@@ -313,3 +313,21 @@ export function snapshotAxis(min, max, fromZero) {
   const span = gapsFor(near + 1) > gapsFor(near) ? near + 1 : near;
   return { low, ceiling: low + span, tickStep: span / gapsFor(span) };
 }
+
+/** A pool this size or smaller opens its Season Snapshot with everyone on it; a bigger one opens on you and the top five. */
+export const SNAPSHOT_ALL_UP_TO = 8;
+
+/**
+ * Who a quick choice over the Season Snapshot's key shows.
+ * @param {"top5" | "me-top5" | "all" | "none"} preset
+ * @param {string[]} ranked  every player's id, best first
+ * @param {string | null | undefined} viewerId  you (added to the top five by "me-top5")
+ * @returns {Set<string>}
+ */
+export function snapshotPreset(preset, ranked, viewerId) {
+  if (preset === "all") return new Set(ranked);
+  if (preset === "none") return new Set();
+  const top = new Set(ranked.slice(0, 5));
+  if (preset === "me-top5" && viewerId && ranked.includes(viewerId)) top.add(viewerId);
+  return top;
+}

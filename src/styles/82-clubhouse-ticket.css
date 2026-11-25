@@ -133,3 +133,16 @@
   .club-ticket-dock .slip-body::before { bottom: 5px; }
 }
 a.lab-room-ticket { text-decoration: none; }
+
+/* The Bowl Pool's Claim your seat ticket, in the clubhouse: its navy and gold kept, its corners rounded like every ticket in the room, and
+   the perforation's notches cut through the card (never drawn on in the page's colour, which showed as pale dots over the room). */
+.club-bowl-claim .bowl-claim { border-radius: 14px; margin: 0 auto; }
+.club-bowl-claim .bowl-claim::before, .club-bowl-claim .bowl-claim::after { display: none; }
+.club-bowl-claim .bowl-claim-stub button { border-radius: 10px; }
+.club-bowl-claim .bowl-claim-main h3 { text-wrap: balance; }
+@media (min-width: 640px) {
+  .club-bowl-claim .bowl-claim {
+    -webkit-mask: radial-gradient(circle 8px at calc(100% - 10rem) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 10rem) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
+    mask: radial-gradient(circle 8px at calc(100% - 10rem) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 10rem) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
+  }
+}

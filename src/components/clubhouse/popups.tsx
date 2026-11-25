@@ -297,7 +297,7 @@ export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string 
   const view = bowlTicketView(payload, { viewerPlayerId });
   if (!view.optedIn) {
     return view.entryOpen
-      ? <BowlClaimSeat busy={claiming} onClaim={() => void claim()} />
+      ? <div className="club-bowl-claim"><BowlClaimSeat busy={claiming} onClaim={() => void claim()} /></div>
       : <p className="lab-board-note">Bowl Pool entry closed at the first kickoff. Check back next year.</p>;
   }
   return <BowlTicketCard key={reads} onDirty={onDirty} onOptOut={() => void optOut()} onSave={save} savedAt={savedAt} view={view} />;

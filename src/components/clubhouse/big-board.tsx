@@ -183,9 +183,14 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false, save
       <div className="lab-tote-data"><WeekFace open={view.canPick ? onOpen : null} view={view} /></div>
       {view.canPick ? (
         <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
+          {/* Set like the heading of your ticket in the room: a small word over what is left to do, and (once saved) when, on the right. */}
           <span className="lab-tote-ticket-body">
-            <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} TO MAKE` : savedAt ? "PICKS SAVED ✓" : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
-            <span>{owed ? "Tap here to pick" : savedAt ? `Saved at ${savedAt}` : "Tap here to change a pick"}</span>
+            <span className="lab-tote-ticket-title">
+              <i>Your ticket</i>
+              <b>{owed ? <><em>{owed}</em> {owed === 1 ? "PICK TO MAKE" : "PICKS TO MAKE"}</> : savedAt ? "PICKS SAVED" : sent ? "SUBMITTED" : "ALL PICKS IN"}</b>
+            </span>
+            {!owed && savedAt ? <span className="lab-tote-ticket-note"><i>Saved</i>{savedAt}</span> : null}
+            {!owed && !savedAt ? <span className="lab-tote-ticket-note"><i>Change</i>until kickoff</span> : null}
           </span>
           <span aria-hidden="true" className="lab-tote-ticket-stub">{owed ? "PICK" : "VIEW"}<i /></span>
         </button>

@@ -463,10 +463,13 @@
   display: grid; font: inherit; grid-template-columns: minmax(0, 1fr) 76px; margin-top: 12px; min-height: 58px; padding: 0; text-align: left; width: 100%;
   -webkit-mask: radial-gradient(circle 6px at calc(100% - 76px) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 6px at calc(100% - 76px) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 6px at calc(100% - 76px) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 6px at calc(100% - 76px) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
 }
-.lab-tote-ticket-body { align-content: center; display: grid; gap: 2px; justify-items: start; min-width: 0; padding: 9px 14px; }
-.lab-tote-ticket b { color: rgb(33 29 23); font-family: var(--font-serif); font-size: .9rem; letter-spacing: .14em; }
-.lab-tote-ticket-body > span { font-size: .74rem; font-weight: 700; }
-.lab-tote-ticket.is-owed b { color: rgb(172 42 34); }
+.lab-tote-ticket-body { align-items: center; display: flex; gap: 12px; justify-content: space-between; min-width: 0; padding: 9px 14px 9px 16px; }
+.lab-tote-ticket-title { display: grid; gap: 2px; min-width: 0; }
+.lab-tote-ticket-title i, .lab-tote-ticket-note i { color: rgb(128 117 98); font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.lab-tote-ticket-title b { align-items: center; color: rgb(33 29 23); display: flex; font-family: var(--font-serif); font-size: 1rem; font-weight: 700; gap: 8px; letter-spacing: .16em; line-height: 1.1; white-space: nowrap; }
+/* Picks still owed: the count in a red seal, the words in ink. */
+.lab-tote-ticket-title em { background: rgb(172 42 34); border-radius: 999px; box-shadow: inset 0 -1px rgb(0 0 0 / .25); color: rgb(252 246 234); display: grid; font: 800 .8rem/1 Arial, sans-serif; height: 22px; letter-spacing: 0; min-width: 22px; padding: 0 6px; place-items: center; }
+.lab-tote-ticket-note { color: rgb(108 99 84); display: grid; flex: none; font-size: .76rem; font-weight: 800; gap: 1px; line-height: 1.2; text-align: right; white-space: nowrap; }
 .lab-tote-ticket-stub { align-items: center; background: linear-gradient(180deg, rgb(48 41 32), rgb(27 23 18)); color: rgb(248 243 231); display: flex; font-family: var(--font-serif); font-size: .84rem; font-weight: 700; gap: 7px; padding-left: .12em; justify-content: center; letter-spacing: .12em; position: relative; }
 .lab-tote-ticket-stub::before { border-left: 2px dotted rgba(248, 243, 231, .7); bottom: 8px; content: ""; left: -1px; position: absolute; top: 8px; }
 .lab-tote-ticket-stub i { border-right: 2px solid rgb(224 192 128); border-top: 2px solid rgb(224 192 128); height: 6px; transform: rotate(45deg); width: 6px; }
@@ -878,7 +881,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .is-chalkboard .season-snapshot-key-row:hover, .is-chalkboard .season-snapshot-key-row:focus-visible { background: rgb(246 243 234 / .14); }
 .is-chalkboard .season-snapshot-show-all { border-color: var(--chalk-dim); color: var(--chalk); }
 .is-chalkboard .season-snapshot-show-all:not(:disabled):hover, .is-chalkboard .season-snapshot-show-all:not(:disabled):focus-visible { background: var(--chalk); color: rgb(33 43 38); }
-.is-chalkboard .season-snapshot-show-all:disabled { border-color: var(--chalk-faint); color: rgb(246 243 234 / .4); }
+.is-chalkboard .season-snapshot-show-all[aria-pressed="true"] { background: var(--chalk); color: rgb(33 38 36); }
+.is-chalkboard .season-snapshot-count { color: var(--chalk-dim); }
 .is-chalkboard .season-snapshot-message { color: var(--chalk-dim); }
 
 /* The All-Time Table's Record / Other Stats switch sits on its own solid ground, so the room never shows through it. */

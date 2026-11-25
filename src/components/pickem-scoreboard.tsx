@@ -64,6 +64,7 @@ function FlipIcon({ spin }: { spin: number }) {
 export default function PickemScoreboard({
   isPlayoff = false,
   rows,
+  viewerPlayerId,
   maxPicks,
   week,
   hideEliminatedRows = false,
@@ -152,7 +153,7 @@ export default function PickemScoreboard({
       </div>
       {holiday ? <PadSkinFoot skin={holiday} /> : null}
       </div>
-      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
+      {showSeasonSnapshot ? <div className="pad-face pad-back" aria-hidden={!flipped} inert={!flipped}><SeasonSnapshot active={flipped} isPlayoff={isPlayoff} refreshKey={snapshotRefreshKey} viewerId={viewerPlayerId} standings={rows.map((row) => ({ id: row.id, firstName: row.firstName, wins: row.wins, eliminated: row.playoffEliminated }))} /></div> : null}
       </div>
     </section>
   );

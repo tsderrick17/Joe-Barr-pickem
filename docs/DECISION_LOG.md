@@ -26,6 +26,9 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - The classic Bowl Card's score tiles spin in every time the card is opened or the page refreshed (owner, 2026-11-25), the same as the clubhouse Bowl sheet. The once-a-day-per-player memory in the browser is gone. Reduced motion still lands them at once.
 - The two Frisco bowls keep the same pennant colour (owner: fine as is).
 - On the clubhouse Season Snapshot (the chalkboard's chart) the lines' bends are rounded: a monotone curve through every week's point that never swings past the totals on either side, so it never shows a score nobody had. The classic Pick'em Pad chart keeps straight lines until the owner decides after trying it in the clubhouse.
+- The Season Snapshot's key has quick choices under it, in both views: Top 5, Me + Top 5 (only when you are outside the top five), All and None, with "N of M shown" at the end of the row; tapping a name still adds or removes just that player. A pool of eight or fewer opens with everyone; a bigger one opens on you and the top five. Colours still follow the person.
+- The Big Board's way to your ticket is set like your ticket's own heading: a small YOUR TICKET over what is left (picks still owed counted in a red seal, the words in ink), and once saved, when, on the right. "Tap here" is gone: the whole ticket is the button and its stub says PICK or VIEW.
+- In the clubhouse the Bowl Pool's Claim your seat ticket keeps its navy and gold but has the room's rounded corners, and its perforation notches are cut through the card. It also carries its own colours (it came through see-through over the room after an opt-out, 2026-11-25).
 
 ## 2026-11-23 - Small batch: trophies beside names, centred sun and moon
 

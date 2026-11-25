@@ -899,6 +899,8 @@ test("before a player claims a seat the Bowl Pool's pop-up is the Claim your sea
   expect(await claim.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("clubhouse-bowl-claim-phone-390.png", { maxDiffPixels: 40 });
+  await page.setViewportSize(SIZES["desktop-1280"]);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-desktop-1280.png", { maxDiffPixels: 40 });
   await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
