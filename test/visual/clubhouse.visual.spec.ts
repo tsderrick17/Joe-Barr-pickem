@@ -893,7 +893,13 @@ test("on the Bowl ticket only the team you picked is outlined in gold, and you c
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(false) });
   const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
-  await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click({ timeout: 30_000 });
+  const claim = sheet.getByRole("region", { name: "Join the Bowl Pool" });
+  await expect(claim).toBeVisible({ timeout: 30_000 });
+  // The claim ticket carries its own cream card and navy and gold (it once came through see-through over the room, 2026-11-25).
+  expect(await claim.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-phone-390.png", { maxDiffPixels: 40 });
+  await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
 });

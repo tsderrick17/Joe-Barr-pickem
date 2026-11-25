@@ -4,6 +4,7 @@
    Pick'em keeps its newsprint and Survivor its poker felt. */
 .bowl-pool-page,
 .bowl-card-section,
+.bowl-claim,
 .workshop .workshop-stage {
   --bowl-navy: #16223a;
   --bowl-navy-lift: #1f2f50;
