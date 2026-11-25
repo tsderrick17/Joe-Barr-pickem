@@ -6,6 +6,7 @@ import { LabPadSkins } from "@/components/lab/lab-pad-skins";
 import { LabRace } from "@/components/lab/lab-race";
 import { LabSurvivorTable } from "@/components/lab/lab-survivor-table";
 import { WorkshopTabs } from "@/components/workshop-tabs";
+import LabGameStates from "@/components/lab-game-states";
 import { LAB_SHELF, labChoice, type LabTryOut } from "@/lib/lab-shelf.js";
 import { useCommissionerAccess } from "@/lib/use-commissioner-access";
 
@@ -56,6 +57,7 @@ export default function WorkshopLabPage() {
         </div>
         {lamp ? <p className="workshop-lab-intro lab-lamp-note">Lamp-lit shows in night mode: switch to night with the moon at the top.</p> : null}
         <div className={`lab-stage ${lamp ? "is-lamp" : ""}`}>
+          {choice === "states" ? <LabGameStates /> : null}
           {choice === "skins" ? <LabPadSkins /> : null}
           {choice === "survivor" ? <LabSurvivorTable /> : null}
           {choice === "race" ? <LabRace /> : null}

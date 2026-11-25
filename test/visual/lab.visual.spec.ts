@@ -186,3 +186,43 @@ test("Lab Horse race: the pool decided, the leader at the finish pole and the re
   await expect(page.locator(".lab-race-headline")).toHaveText("Earl leads by 3 · You: 3");
 });
 
+
+// Game states: the real Big Board and your ticket in every state a week can be in, on sample players. Each state gets a picture, by day on a phone;
+// a few also at night and on a desktop.
+const GAME_STATES = ["Picks owed", "All in, can still change", "A game under way", "Results coming in", "Week final", "A pick missed", "Playoff round", "Out of the race", "Forfeited"];
+for (const name of GAME_STATES) {
+  test(`Lab Game states, ${name}, day at phone-390`, async ({ page }) => {
+    await openLab(page, "states");
+    await page.getByRole("group", { name: "Game state" }).getByRole("button", { name, exact: true }).click();
+    await holdStill(page);
+    await expect(page.locator(".lab-states")).toHaveScreenshot(`lab-states-${name.toLowerCase().replace(/[^a-z]+/g, "-")}-day-phone-390.png`, { maxDiffPixels: 12 });
+  });
+}
+for (const [name, theme, label] of [["Results coming in", "night", "phone-390"], ["Playoff round", "night", "phone-390"], ["Results coming in", "day", "desktop-1280"], ["Playoff round", "day", "desktop-1280"]] as const) {
+  test(`Lab Game states, ${name}, ${theme} at ${label}`, async ({ page }) => {
+    await openLab(page, "states", { theme, size: SIZES[label] });
+    await page.getByRole("group", { name: "Game state" }).getByRole("button", { name, exact: true }).click();
+    await holdStill(page);
+    await expect(page.locator(".lab-states")).toHaveScreenshot(`lab-states-${name.toLowerCase().replace(/[^a-z]+/g, "-")}-${theme}-${label}.png`, { maxDiffPixels: 12 });
+  });
+}
+
+test("Lab Game states changes the board and the ticket together, and steps through every state", async ({ page }) => {
+  await openLab(page, "states");
+  const states = page.locator(".lab-states");
+  await expect(states.locator(".lab-tote")).toBeVisible();
+  await expect(states.locator(".lab-room-ticket .slip-stub b")).toHaveText("PICK");   // picks owed
+  await expect(states.locator(".lab-tote-ticket b")).toContainText("TO MAKE");
+  await states.getByRole("button", { name: "Week final", exact: true }).click();
+  await expect(states.locator(".lab-room-ticket .slip-stub b")).toHaveText("VIEW");
+  await expect(states.locator(".lab-room-ticket .slip-status")).toContainText("FINAL");
+  await expect(states.locator(".lab-tote header span")).toContainText("FINAL");
+  await states.getByRole("button", { name: "Playoff round", exact: true }).click();
+  await expect(states.locator(".lab-tote table.is-playoff")).toBeVisible();
+  // The arrows go state to state: nine in all, no way past either end.
+  await states.getByRole("button", { name: "Picks owed", exact: true }).click();
+  await expect(states.getByRole("button", { name: "Earlier state" })).toBeDisabled();
+  for (let at = 1; at < GAME_STATES.length; at++) await states.getByRole("button", { name: "Next state" }).click();
+  await expect(states.getByRole("button", { name: "Next state" })).toBeDisabled();
+  await expect(states).toContainText("9 of 9");
+});

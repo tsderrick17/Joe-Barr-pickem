@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -142,8 +142,9 @@ export async function buildRoom(q) {
 
   const m = materials();
   const white = std(0xf7f4ec, { roughness: 0.85 });
-  const timber = std(0x7a5634, { roughness: 0.7 });
-  const timberDark = std(0x8a6440, { roughness: 0.65 });
+  // Solid timber with its grain, knots and checks (timberGrain); the colour stays the tone it always was.
+  const timber = new THREE.MeshStandardMaterial({ ...timberGrain([122, 86, 52], [1, 1]), bumpScale: 1.2, roughness: 0.7 });
+  const timberDark = new THREE.MeshStandardMaterial({ ...timberGrain([138, 100, 64], [1, 1]), bumpScale: 1.2, roughness: 0.65 });
   const brass = m.brass;
   // The bar's walnut: veneer boards on end with real grain (see walnutVeneer), laid on by the metre; the flutes take the same wood at
   // their own scale, the grain running up each one.
@@ -160,7 +161,8 @@ export async function buildRoom(q) {
   const whiteCane = new THREE.MeshStandardMaterial({ bumpMap: cane().bumpMap, color: 0xf3efe6, bumpScale: 2.5, roughness: 0.8 });   // the weave painted white: its relief, not its brown
   const whiteWood = std(0xf1ede4, { roughness: 0.55 });
   const rattan = new THREE.MeshStandardMaterial({ ...cane(), bumpScale: 2.5, roughness: 0.8 });
-  const green = std(0x234d3a, { roughness: 0.6 });
+  const hide = leatherGrain();   // the leather's grain, shared by every leather seat and the poker rail
+  const green = new THREE.MeshStandardMaterial({ color: 0x234d3a, roughness: 0.6, bumpMap: hide, bumpScale: 0.6 });
   const caneOpen = rattan.clone(); caneOpen.side = THREE.DoubleSide;
   const chairWood = std(0x4a2c16, { roughness: 0.45 });
   const glow = (color, intensity) => new THREE.MeshStandardMaterial({ color: 0x000000, emissive: color, emissiveIntensity: intensity, roughness: 0.6 });
@@ -172,7 +174,10 @@ export async function buildRoom(q) {
   // short loop of small pictures over these places; see the end of this file.
   const movers = [];
   // every leaf in and around the room is grown from the one modelled frond
-  const leafGreen = new THREE.MeshStandardMaterial({ color: 0x3f8a48, roughness: 0.55, side: THREE.DoubleSide }), leafDeep = new THREE.MeshStandardMaterial({ color: 0x2a6a36, roughness: 0.38, side: THREE.DoubleSide }), leafFresh = new THREE.MeshStandardMaterial({ color: 0x5aa052, roughness: 0.5, side: THREE.DoubleSide });
+  // Leaves wear a skin (leafSkin: midrib, veins, a tone that deepens to the edges), a waxy sheen, and let a little light through.
+  const leafMat = (tone, roughness, seed, extra = {}) => { const skin = leafSkin(tone, { seed, ...extra }); return new THREE.MeshPhysicalMaterial({ map: skin.map, bumpMap: skin.bumpMap, bumpScale: 0.8, roughness, sheen: 0.35, sheenColor: new THREE.Color(0xc8e6a0), clearcoat: 0.12, clearcoatRoughness: 0.5, side: THREE.DoubleSide, ...(extra.torn ? { alphaTest: 0.5, transparent: false } : {}) }); };
+  const leafGreen = leafMat([63, 138, 72], 0.55, 3), leafDeep = leafMat([42, 106, 54], 0.4, 4), leafFresh = leafMat([90, 160, 82], 0.5, 5);
+  const stalk = std(0x6f8f62, { roughness: 0.6 });   // the plants' stems: grey-green, lighter than their leaves
   const palmLeaf = frond({ L: 1.3, HW: 0.21, pleats: 30, droop: 0.55, keel: 0.5, depth: 0.01, scallop: 0.1, shape: 0.6, NU: 240, NV: 64 });
   const pottedLeaf = frond({ L: 1.3, HW: 0.17, pleats: 16, droop: 0.6, keel: 0.35, depth: 0.004, scallop: 0.04, shape: 0.6, NU: 200, NV: 48 });   // softer pleats: read as leaflets, not blocks
   const broadLeaf = frond({ L: 0.46, HW: 0.21, pleats: 7, droop: 0.07, keel: 0.22, depth: 0.004, scallop: 0.2, shape: 0.5, NU: 90, NV: 40 });
@@ -328,7 +333,7 @@ export async function buildRoom(q) {
   // A sunny jungle beach: coconut palms leaning every way (the crown heavy with nuts), banana plants and big-leafed undergrowth banked
   // thick along both sides of the patio and past the side windows, jungle-green headlands either side of the bay, white sand, and the
   // water turquoise over the shallows and deepening to blue.
-  const trunkBark = std(0x9a8064, { roughness: 1 }), nut = std(0x5a3a1a, { roughness: 0.8 }), frondDark = new THREE.MeshStandardMaterial({ color: 0x2f7a3a, roughness: 0.55, side: THREE.DoubleSide });
+  const trunkBark = std(0x9a8064, { roughness: 1 }), nut = std(0x5a3a1a, { roughness: 0.8 }), frondDark = leafMat([47, 122, 58], 0.55, 6);
   const palm = (x, z, h, lean = 0.3, turn = 0) => {
     const dx = Math.cos(turn) * lean * h * 0.25, dz = -Math.sin(turn) * lean * h * 0.25;
     const trunk = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0, z), new THREE.Vector3(x + dx * 0.9, h * 0.5, z + dz * 0.9), new THREE.Vector3(x + dx * 1.4, h, z + dz * 1.4)]);
@@ -607,14 +612,39 @@ export async function buildRoom(q) {
   // ----- the right wall: a grand fieldstone chimney from the floor to the thatch, the constitution framed on its near face, and the
   // lounge in front of it.
   const fire = group("fireplace");
-  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: Number(q.get("stonebump") ?? 14), roughness: 0.92 });
-  const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
+  STONE.lift = Number(q.get("stonelift") ?? 1);
+  // The stone is real relief, not only shading: the wall's surface is moved out by each stone's height (displacement), so stones stand
+  // proud of one another, throw shade into their joints and break the chimney's outline. stonedisp=0 goes back to a flat shaded wall.
+  const DISP = Number(q.get("stonedisp") ?? 0.04), { displacementMap: stoneRelief, ...stoneTex } = fieldstone();
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...stoneTex, bumpScale: Number(q.get("stonebump") ?? 10), roughness: 0.92, ...(DISP ? { displacementMap: stoneRelief, displacementScale: DISP, displacementBias: -DISP * 0.15 } : {}) });
+  // Every stone box is laid with wrapTile, so the stones carry round the corners of the chimney and the fireplace surround; with relief on,
+  // it is cut fine enough (about 2.5 cm) for the surface to follow each stone.
+  const seg = (size) => (DISP ? Math.max(1, Math.ceil(size / 0.025)) : 1);
+  // Behind the relief, a plain core of mortar a little inside each box: where two faces lift apart at a corner, the gap shows mortar,
+  // a joint running up the corner, never daylight.
+  const mortar = std(0x5e554a, { roughness: 1 });
+  const stoneBlock = (w, h, d, at) => {
+    if (DISP) add(fire, box(w - 0.004, h - 0.004, d - 0.004), mortar, at, { cast: false });
+    const g = wrapTile(new THREE.BoxGeometry(w, h, d, seg(w), seg(h), seg(d)), 1.9, 2.0, at);
+    if (DISP) {
+      // On every edge the two faces' points sit together and carry the same height (wrapTile); pointing both out along the corner's
+      // diagonal moves them to the same place, so a stone lifted at a corner stays one stone round it, with no seam.
+      const p = g.attributes.position, n = g.attributes.normal, e = 1e-4;
+      for (let i = 0; i < p.count; i++) {
+        const x = Math.abs(Math.abs(p.getX(i)) - w / 2) < e, y = Math.abs(Math.abs(p.getY(i)) - h / 2) < e, z = Math.abs(Math.abs(p.getZ(i)) - d / 2) < e;
+        if (x + y + z < 2) continue;
+        const v = new THREE.Vector3(x ? Math.sign(p.getX(i)) : 0, y ? Math.sign(p.getY(i)) : 0, z ? Math.sign(p.getZ(i)) : 0).normalize();
+        n.setXYZ(i, v.x, v.y, v.z);
+      }
+    }
+    return add(fire, g, stone, at);
+  };
   stoneBlock(CD, RIDGE, 3.6, [X1 - CD / 2, RIDGE / 2, FZ]);
   stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
   // the fireplace proper: a stone surround standing proud of the chimney, the firebox set back between its jambs
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
   stoneBlock(0.28, 0.3, 2.78, [X1 - CD - 0.14, 1.97, FZ]);
-  add(fire, box(0.04, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.01, 1.16, FZ], { cast: false });
+  add(fire, box(0.1, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.04, 1.16, FZ], { cast: false });   // in front of the stones' relief
   // The fire is lit at night. By day it is laid but cold: logs on the grate, a little pale ash.
   add(fire, box(0.5, 0.04, 1.3), std(0x1c1814, { roughness: 1 }), [X1 - CD - 0.14, 0.52, FZ], { cast: false });                      // the grate
   if (night) {
@@ -721,8 +751,8 @@ export async function buildRoom(q) {
   const poker = group("survivor");
   const PX = 1.2, PZ = -4.85, PRX = 1.45, PRZ = 0.84, SEATS = 10;
   const oval = (geometry, mat, y, sx, sz, opts) => { const mesh = add(poker, geometry, mat, [PX, y, PZ], opts); mesh.scale.set(sx, 1, sz); return mesh; };
-  const saddle = new THREE.MeshPhysicalMaterial({ color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
-  const leather = new THREE.MeshPhysicalMaterial({ color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
+  const saddle = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
+  const leather = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
   oval(cyl(1, 1, 0.12, 96), m.walnut, 0.72, PRX + 0.06, PRZ + 0.06);                                                                   // apron
   oval(cyl(1, 1, 0.06, 96), m.felt, 0.79, PRX - 0.2, PRZ - 0.2);                                                                       // the felt
   oval(new THREE.RingGeometry(0.86, 1.0, 120, 1), m.walnut, 0.822, PRX - 0.08, PRZ - 0.08, { rot: [-Math.PI / 2, 0, 0], cast: false });  // the racetrack
@@ -821,7 +851,7 @@ export async function buildRoom(q) {
     for (let f = 0; f < 11; f++) {
       const a = (f / 11) * Math.PI * 2 + rand(), reach = (0.16 + rand() * 0.3) * s, high = (0.7 + rand() * 0.75) * s;
       const tip = new THREE.Vector3(x + Math.cos(a) * reach, high, z - Math.sin(a) * reach), foot = new THREE.Vector3(x, 0.45 * s, z);
-      const stem = add(room, cyl(0.008 * s, 0.012 * s, tip.distanceTo(foot), 6), leafDeep, [(tip.x + foot.x) / 2, (tip.y + foot.y) / 2, (tip.z + foot.z) / 2]);
+      const stem = add(room, cyl(0.008 * s, 0.012 * s, tip.distanceTo(foot), 6), stalk, [(tip.x + foot.x) / 2, (tip.y + foot.y) / 2, (tip.z + foot.z) / 2]);
       stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tip.clone().sub(foot).normalize());
       const g = new THREE.Group(); g.position.copy(tip); g.rotation.set(rand() * 0.5 - 0.25, a, -0.15 - rand() * 0.45); g.scale.setScalar(s * (0.85 + rand() * 0.4)); room.add(g);
       add(g, broadLeaf, f % 4 === 0 ? leafGreen : leafDeep, [0, 0, 0]); leaves.push(g);
@@ -830,7 +860,9 @@ export async function buildRoom(q) {
   };
   // A bird of paradise, tall and slim: a tall glossy black cylinder pot, a dozen paddle leaves on long upright stems fanning out a
   // little as they climb past two metres, and three of its flowers (a blue-green beak, orange crest, a blue tongue) held up among them.
-  const paddle = frond({ L: 0.66, HW: 0.085, pleats: 0, droop: 0.12, keel: 0.45, depth: 0, scallop: 0, shape: 0.6, NU: 60, NV: 16 });
+  // A bird of paradise's leaf: a long, broad, cupped paddle (a slight ripple at the edge), split here and there along its veins.
+  const paddle = frond({ L: 0.66, HW: 0.11, pleats: 5, droop: 0.14, keel: 0.6, depth: 0.003, scallop: 0.05, shape: 0.6, NU: 90, NV: 24 });
+  const paddleSkin = [leafMat([44, 108, 62], 0.38, 11, { veins: 34, torn: 5 }), leafMat([58, 128, 74], 0.42, 12, { veins: 34, torn: 3 })];
   const birdOfParadise = (x, z) => {
     const POT = 0.62;
     add(room, cyl(0.17, 0.15, POT, 32), new THREE.MeshPhysicalMaterial({ color: 0x141414, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.15 }), [x, POT / 2, z]);
@@ -839,16 +871,16 @@ export async function buildRoom(q) {
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * Math.PI * 2 + rand() * 0.4, lean = 0.05 + rand() * 0.16, tall = 1.15 + rand() * 0.75;
       const foot = new THREE.Vector3(x + Math.cos(a) * 0.04, POT, z - Math.sin(a) * 0.04), tip = new THREE.Vector3(x + Math.cos(a) * (0.05 + lean * tall), POT + tall, z - Math.sin(a) * (0.05 + lean * tall));
-      const stem = add(room, cyl(0.007, 0.013, foot.distanceTo(tip), 6), leafDeep, [(foot.x + tip.x) / 2, (foot.y + tip.y) / 2, (foot.z + tip.z) / 2]);
+      const stem = add(room, cyl(0.006, 0.014, foot.distanceTo(tip), 8), stalk, [(foot.x + tip.x) / 2, (foot.y + tip.y) / 2, (foot.z + tip.z) / 2]);
       stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tip.clone().sub(foot).normalize());
       // the paddle carries on up from its stem, tipped out a little, its face turned to the light
       const g = new THREE.Group(); g.position.copy(tip); g.rotation.set(0, a + (rand() - 0.5) * 0.6, Math.PI / 2 - 0.45 - lean * 2.2 - rand() * 0.35); g.scale.setScalar(0.85 + rand() * 0.35); room.add(g);
-      add(g, paddle, k % 3 ? leafDeep : leafGreen, [0, 0, 0]); leaves.push(g); stemTip.push(tip);
+      add(g, paddle, paddleSkin[k % 3 ? 0 : 1], [0, 0, 0]); leaves.push(g); stemTip.push(tip);
     }
     const orange = std(0xff8a1c, { roughness: 0.5, side: THREE.DoubleSide, emissive: 0x3a1400 }), beak = std(0x2f5a52, { roughness: 0.5 }), tongue = std(0x2b4fd0, { roughness: 0.45 });
     for (const [k, h] of [[1, 1.35], [5, 1.15], [8, 1.5]]) {
       const a = (k / 12) * Math.PI * 2, fx = x + Math.cos(a) * 0.12, fz = z - Math.sin(a) * 0.12, fy = POT + h;
-      add(room, cyl(0.006, 0.009, h - 0.05, 6), leafDeep, [x + Math.cos(a) * 0.06, POT + (h - 0.05) / 2, z - Math.sin(a) * 0.06], { rot: [Math.sin(a) * 0.08, 0, Math.cos(a) * 0.08] });
+      add(room, cyl(0.006, 0.009, h - 0.05, 6), stalk, [x + Math.cos(a) * 0.06, POT + (h - 0.05) / 2, z - Math.sin(a) * 0.06], { rot: [Math.sin(a) * 0.08, 0, Math.cos(a) * 0.08] });
       const head = new THREE.Group(); head.position.set(fx, fy, fz); head.rotation.y = a; room.add(head);
       add(head, new THREE.ConeGeometry(0.022, 0.2, 8), beak, [0.09, 0, 0], { rot: [0, 0, -Math.PI / 2 + 0.2] });                         // the beak, held out level
       for (let p = 0; p < 4; p++) add(head, new THREE.ConeGeometry(0.012, 0.14, 5), orange, [0.03 + p * 0.018, 0.06 + p * 0.004, (p - 1.5) * 0.012], { rot: [(p - 1.5) * 0.25, 0, -0.35 - p * 0.12], cast: false });   // the orange crest

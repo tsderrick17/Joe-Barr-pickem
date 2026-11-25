@@ -209,7 +209,7 @@ test("a ticket sent says so on the Big Board's bar, with the time it was saved",
   await cells.nth(0).click();
   await cells.nth(2).click();
   await form.getByRole("button", { name: /Submit picks/ }).click();
-  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED ✓.*Saved at \d{1,2}:\d{2} [AP]M/);
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED.*Saved\s*\d{1,2}:\d{2} [AP]M/);
 });
 
 test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
@@ -339,25 +339,38 @@ for (const [label, size, theme] of [["phone-390", SIZES["phone-390"], "day"], ["
   test(`the Notifications pop-up looks like the clubhouse, at ${label} by ${theme}`, async ({ page }) => {
     await openClubhouse(page, { at: "/clubhouse#notifications", theme, size });
     const sheet = page.getByRole("dialog", { name: "Notifications" });
-    await expect(sheet.getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+    await expect(sheet.getByText("Send me pool emails")).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     await page.waitForTimeout(600);
     await expect(page).toHaveScreenshot(`clubhouse-notifications-${theme}-${label}.png`, { maxDiffPixels: 40 });
   });
 }
 
-test("the Notifications pop-up's email plans and fine-tune choices wear the clubhouse's navy and gold", async ({ page }) => {
+test("Notifications reads like a phone's settings: a switch for pool emails, the plan in three plain choices, every email folded under Choose each email, and Save", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#notifications", theme: "day" });
   const sheet = page.getByRole("dialog", { name: "Notifications" });
-  await sheet.getByLabel(/Send pool emails to this address/).check({ timeout: 30_000 });
+  const emails = sheet.getByRole("switch", { name: /Send me pool emails/ });
+  await emails.check({ timeout: 30_000 });
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
-  await sheet.getByRole("heading", { name: "CHOOSE YOUR EMAIL PLAN" }).scrollIntoViewIfNeeded();
+  const plans = sheet.getByRole("group", { name: "Email plan" });
+  await plans.getByRole("button", { name: "Regular" }).click();
+  await expect(plans.getByRole("button", { name: "Regular" })).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.getByText("Essentials, plus the Slate")).toBeVisible();
+  // One email switched off by hand: no plan is chosen any more, and the line says it is your own mix.
+  await sheet.getByRole("button", { name: "Choose each email" }).click();
+  await sheet.getByRole("switch", { name: /Fresh Slate on Wednesday/ }).uncheck();
+  await expect(plans.getByRole("button", { name: "Regular" })).toHaveAttribute("aria-pressed", "false");
+  await expect(sheet.getByText("Your own mix")).toBeVisible();
+  await sheet.getByRole("group", { name: "Email plan" }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
   await expect(page).toHaveScreenshot("clubhouse-notifications-plans-phone-390.png", { maxDiffPixels: 40 });
+  await sheet.getByRole("button", { name: "Save" }).click();
+  await expect(sheet.getByRole("status")).toHaveText(/saved/i);
 });
 
 for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
   test(`the arrow above the ticket tucks it to about half its height and opens it again, and the ticket itself still opens your ticket, at ${label}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });   // the fold plays instantly, so the sizes below are the settled ones
     await openClubhouse(page, { size });
     const ticket = page.locator(".clubhouse-page .lab-room-ticket");
     const arrow = page.getByRole("button", { name: /Tuck your ticket away|Open up your ticket/ });
@@ -399,7 +412,7 @@ test("Notifications is a plate in the room's glass doors, like the others: it op
   await page.keyboard.press("Escape");
   await room.getByRole("button", { name: "Notifications", exact: true }).click();
   await expect(page).toHaveURL(/\/clubhouse#notifications$/);
-  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send me pool emails")).toBeVisible({ timeout: 30_000 });
 });
 
 test("the Survivor table's Make pick opens your ticket on Survivor", async ({ page }) => {
@@ -418,7 +431,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const board = page.getByRole("dialog", { name: "The Big Board" });
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
-  await expect(board.getByRole("button", { name: /Tap here to (pick|change a pick)/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /Your ticket.*(PICKS? TO MAKE|ALL PICKS IN|PICKS SAVED|SUBMITTED)/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
   expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
@@ -892,7 +905,15 @@ test("on the Bowl ticket only the team you picked is outlined in gold, and you c
 test("before a player claims a seat the Bowl Pool's pop-up is the Claim your seat ticket", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(false) });
   const sheet = page.getByRole("dialog", { name: "Bowl Pool" });
-  await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click({ timeout: 30_000 });
+  const claim = sheet.getByRole("region", { name: "Join the Bowl Pool" });
+  await expect(claim).toBeVisible({ timeout: 30_000 });
+  // The claim ticket carries its own cream card and navy and gold (it once came through see-through over the room, 2026-11-25).
+  expect(await claim.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-phone-390.png", { maxDiffPixels: 40 });
+  await page.setViewportSize(SIZES["desktop-1280"]);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-desktop-1280.png", { maxDiffPixels: 40 });
+  await sheet.getByRole("button", { name: "CLAIM YOUR SEAT" }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
 });
@@ -1112,7 +1133,7 @@ function bowlReadPlayed() {
 test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no title line: the chart has the room); the Bowl Pool joins only once 10 bowls are final", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlRead(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
   const chalk = page.locator(".lab-room-screen.is-chalk");
-  await expect(chalk.locator(".chalk-line")).toHaveCount(4, { timeout: 30_000 });
+  await expect(chalk.locator(".chalk-line")).toHaveCount(7, { timeout: 30_000 });
   await expect(chalk).toHaveText("");   // no names, numbers or title on the board
   await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
@@ -1125,7 +1146,7 @@ test("the chalkboard is a still chalk drawing that opens the Season Snapshot (no
 
 test("once 10 bowls are final the Season Snapshot switches to the Bowl Pool too, a point a bowl day", async ({ page }) => {
   await openClubhouse(page, { bowl: bowlReadPlayed(), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
-  await expect(page.locator(".lab-room-screen.is-chalk .chalk-line")).toHaveCount(4, { timeout: 30_000 });
+  await expect(page.locator(".lab-room-screen.is-chalk .chalk-line")).toHaveCount(7, { timeout: 30_000 });
   await page.getByRole("button", { name: "Season Snapshot", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Season Snapshot" });
   await sheet.getByRole("button", { name: "Bowl", exact: true }).click();
@@ -1285,4 +1306,38 @@ test("the sun and the moon sit in the exact middle of the day and night button",
     expect(Math.abs(glyph.y + glyph.height / 2 - box.y - box.height / 2)).toBeLessThan(1);
     await toggle.click();
   }
+});
+
+
+test("by night the clubhouse's Claim your seat ticket takes the Bowl Pool's night colours (light words on the dark card)", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(false), theme: "night" });
+  const claim = page.getByRole("dialog", { name: "Bowl Pool" }).getByRole("region", { name: "Join the Bowl Pool" });
+  await expect(claim).toBeVisible({ timeout: 30_000 });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-night-phone-390.png", { maxDiffPixels: 40 });
+});
+
+test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick warns", async ({ page }) => {
+  await page.addInitScript(() => {
+    const vibrations: number[][] = [];
+    (window as unknown as { vibrations: number[][] }).vibrations = vibrations;
+    Object.defineProperty(navigator, "vibrate", { value: (pattern: number[]) => { vibrations.push([...pattern]); return true; }, configurable: true });
+    Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
+  });
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"] });
+  const ticket = page.getByRole("button", { name: /YOUR TICKET/ });
+  await expect(ticket).toContainText("3 LEFT", { timeout: 30_000 });
+  await ticket.click();
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const felt = () => page.evaluate(() => (window as unknown as { vibrations: number[][] }).vibrations.splice(0));
+  await felt();   // the tap that opened the ticket
+  const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  expect(await felt()).toEqual([[10]]);   // tick: chosen
+  await cells.nth(0).click();
+  expect(await felt()).toEqual([[6]]);    // light tick: taken back
+  await cells.nth(0).click(); await cells.nth(2).click(); await felt();
+  await form.getByRole("button", { name: /Pick’em/ }).click(); await felt();
+  await cells.nth(4).click();
+  expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import { useLayoutEffect, useRef } from "react";
 import { HiddenPick, Logo } from "@/components/clubhouse/lamps";
 import PlayerTrophyName from "@/components/player-trophy-name";
@@ -50,12 +51,12 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
         <span className="lab-survivor-when">
           <span>{String(home.week ?? "").toUpperCase()}</span>
           {/* Your Survivor pick is made on your ticket: this opens it on Survivor. */}
-          {onPick ? <button className="lab-survivor-pick" onClick={onPick} type="button">Make pick <span aria-hidden="true">›</span></button> : null}
+          {onPick ? <button className="lab-survivor-pick" onClick={() => { haptic("tick"); onPick(); }} type="button">Make pick <span aria-hidden="true">›</span></button> : null}
         </span>
       </header>
       {onBoard ? (
         <div className="lab-tote-links">
-          <button onClick={onBoard} type="button">Big Board</button>
+          <button onClick={() => { haptic("tick"); onBoard(); }} type="button">Big Board</button>
           <span aria-current="page">Survivor</span>
         </div>
       ) : null}

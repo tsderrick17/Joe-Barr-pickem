@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { WheelIcon } from "@/components/commissioner/wheel-icons";
 
@@ -48,6 +49,7 @@ export function Sheet({ open, onClose, title, children, bare = false, untitled =
     const node = body.current;
     if (!dialog || !dialog.open || leaving.current !== null) return;
     if (!forced && guard && !guard()) { lift(0, true); return; }   // held open: the page asks first
+    if (!forced) haptic("lightTick");   // put away by the player: the light tick of something taken back
     const finish = () => { leaving.current = null; dialog.close(); dialog.classList.remove("is-leaving"); if (node) { node.style.transition = ""; node.style.transform = ""; } };
     if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
     dialog.classList.add("is-leaving");

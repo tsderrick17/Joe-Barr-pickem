@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import type { ReactNode } from "react";
 import type { BoardView } from "@/lib/board-view.js";
 import { HiddenPick, Logo, NoPick } from "@/components/clubhouse/lamps";
@@ -146,7 +147,7 @@ export function WeekChoice({ view, onWeek, text, step = false }: { view: BoardVi
   const label = (
     <label className="lab-tote-week">
       <span>{text} <i aria-hidden="true">▾</i></span>
-      <select aria-label="Change week" onChange={(event) => onWeek(event.target.value)} value={view.weekId ?? ""}>
+      <select aria-label="Change week" onChange={(event) => { haptic("tick"); onWeek(event.target.value); }} value={view.weekId ?? ""}>
         {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
       </select>
     </label>
@@ -154,9 +155,9 @@ export function WeekChoice({ view, onWeek, text, step = false }: { view: BoardVi
   if (!step) return label;
   return (
     <div className="lab-week-step">
-      <button aria-label={before ? `Back to ${before.name}` : "No earlier week"} disabled={!before} onClick={() => before && onWeek(before.id)} type="button"><i aria-hidden="true" /></button>
+      <button aria-label={before ? `Back to ${before.name}` : "No earlier week"} disabled={!before} onClick={() => { if (before) { haptic("tick"); onWeek(before.id); } }} type="button"><i aria-hidden="true" /></button>
       {label}
-      <button aria-label={after ? `On to ${after.name}` : "No later week"} disabled={!after} onClick={() => after && onWeek(after.id)} type="button"><i aria-hidden="true" /></button>
+      <button aria-label={after ? `On to ${after.name}` : "No later week"} disabled={!after} onClick={() => { if (after) { haptic("tick"); onWeek(after.id); } }} type="button"><i aria-hidden="true" /></button>
     </div>
   );
 }
@@ -176,16 +177,21 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false, save
       {onSurvivor ? (
         <div className="lab-tote-links">
           <span aria-current="page">Big Board</span>
-          <button onClick={onSurvivor} type="button">Survivor</button>
+          <button onClick={() => { haptic("tick"); onSurvivor(); }} type="button">Survivor</button>
         </div>
       ) : null}
       {view.playoff ? <p className="lab-tote-race">{raceLine(view)}</p> : null}
       <div className="lab-tote-data"><WeekFace open={view.canPick ? onOpen : null} view={view} /></div>
       {view.canPick ? (
-        <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
+        <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => { haptic("tick"); onOpen?.(); }} type="button">
+          {/* Set like the heading of your ticket in the room: a small word over what is left to do, and (once saved) when, on the right. */}
           <span className="lab-tote-ticket-body">
-            <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} TO MAKE` : savedAt ? "PICKS SAVED ✓" : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
-            <span>{owed ? "Tap here to pick" : savedAt ? `Saved at ${savedAt}` : "Tap here to change a pick"}</span>
+            <span className="lab-tote-ticket-title">
+              <i>Your ticket</i>
+              <b>{owed ? <><em>{owed}</em> {owed === 1 ? "PICK TO MAKE" : "PICKS TO MAKE"}</> : savedAt ? "PICKS SAVED" : sent ? "SUBMITTED" : "ALL PICKS IN"}</b>
+            </span>
+            {!owed && savedAt ? <span className="lab-tote-ticket-note"><i>Saved</i>{savedAt}</span> : null}
+            {!owed && !savedAt ? <span className="lab-tote-ticket-note"><i>Change</i>until kickoff</span> : null}
           </span>
           <span aria-hidden="true" className="lab-tote-ticket-stub">{owed ? "PICK" : "VIEW"}<i /></span>
         </button>

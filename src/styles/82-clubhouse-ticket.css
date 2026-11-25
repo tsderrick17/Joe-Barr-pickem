@@ -14,12 +14,11 @@
 .cw-shell.has-dial .lab-room-ticket { bottom: calc(100px + env(safe-area-inset-bottom)); }
 .slip {
   background: linear-gradient(180deg, var(--slip-paper), var(--slip-paper-2)); border-radius: 12px; display: grid; grid-template-columns: minmax(0, 1fr) var(--slip-stub); position: relative; transition: transform .18s ease;
-  --tuck-ms: .52s; --tuck-ease: cubic-bezier(.3, 1.45, .45, 1);
   -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat; mask: radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--slip-stub)) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
 }
-.slip-body { min-width: 0; padding: 13px 14px 12px 16px; position: relative; transition: padding var(--tuck-ms) var(--tuck-ease); }
+.slip-body { min-width: 0; padding: 13px 14px 12px 16px; position: relative; }
 .slip-body::before { border: 1px solid rgba(186, 146, 82, .5); border-radius: 8px; content: ""; inset: 5px 6px 5px 6px; pointer-events: none; position: absolute; }
-.slip-head { align-items: flex-end; border-bottom: 1px solid var(--slip-hair); display: flex; gap: 10px; justify-content: space-between; max-height: 4rem; padding: 0 2px 8px; transition: max-height var(--tuck-ms) var(--tuck-ease), opacity calc(var(--tuck-ms) * .55) ease, padding var(--tuck-ms) var(--tuck-ease), border-color calc(var(--tuck-ms) * .5) ease; }
+.slip-head { align-items: flex-end; border-bottom: 1px solid var(--slip-hair); display: flex; gap: 10px; justify-content: space-between; padding: 0 2px 8px; }
 .slip-title { display: grid; flex: none; gap: 1px; }
 .slip-title b { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; letter-spacing: .16em; line-height: 1.1; }
 .slip-title i { color: var(--slip-soft); font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
@@ -28,7 +27,7 @@
 .slip-status i { font-size: .6rem; font-style: normal; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .slip-status.is-saved { color: var(--slip-won); }
 .slip-status.is-saved i::before { content: "\2713\00a0"; }
-.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; transition: margin-top var(--tuck-ms) var(--tuck-ease); }
+.slip-places { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); margin-top: 10px; }
 .slip-place { display: grid; gap: 3px; justify-items: center; min-width: 0; padding: 0 4px; position: relative; text-align: center; }
 .slip-place + .slip-place::before { border-left: 1px solid var(--slip-hair); bottom: 2px; content: ""; left: 0; position: absolute; top: 2px; }
 .slip-words { display: grid; gap: 3px; justify-items: center; max-width: 100%; min-width: 0; }
@@ -87,16 +86,13 @@
 .club-ticket-tab::before { content: ""; inset: -12px -10px 0; position: absolute; }
 .club-ticket-tab:hover { color: rgb(33 29 23); }
 .club-ticket-tab:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
-.club-ticket-arrow { transition: transform var(--tuck-ms) cubic-bezier(.3, 1.8, .5, 1); }
+.club-ticket-arrow { transition: transform .42s cubic-bezier(.32, .72, 0, 1); }
 .club-ticket-tab:active .club-ticket-arrow { transform: scale(.82); }
 .club-ticket-dock.is-tucked .club-ticket-arrow { transform: rotate(-180deg); }
 .club-ticket-dock.is-tucked .club-ticket-tab:active .club-ticket-arrow { transform: rotate(-180deg) scale(.82); }
 .club-ticket-tab:active { transform: translateY(2px) scale(.94); }
-@keyframes slip-place-a { from { opacity: 0; transform: translateY(9px) scale(.88); } 55% { opacity: 1; } }
-@keyframes slip-place-b { from { opacity: 0; transform: translateY(9px) scale(.88); } 55% { opacity: 1; } }
-.club-ticket-dock.is-moved .slip-place { animation: slip-place-a calc(var(--tuck-ms) * .9) var(--tuck-ease) both; animation-delay: calc(var(--place, 0) * 55ms); }
-.club-ticket-dock.is-moved .slip.is-tucked .slip-place { animation-name: slip-place-b; }
-.slip.is-tucked .slip-head { border-bottom-color: transparent; max-height: 0; opacity: 0; overflow: hidden; padding-bottom: 0; }
+/* Tucked, the heading leaves the flow (so the fold can fade it where it stood) and stays out of sight and out of reach. */
+.slip.is-tucked .slip-head { left: 16px; opacity: 0; pointer-events: none; position: absolute; right: 14px; top: 13px; }
 .slip.is-tucked .slip-places { margin-top: 2px; }
 .slip.is-tucked .slip-body { padding-bottom: 8px; padding-top: 12px; }
 .club-ticket-dock .slip.is-tucked .slip-body { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
@@ -114,7 +110,7 @@
   .slip.is-tucked .slip-pick b { letter-spacing: 0; }
   .slip.is-tucked .slip-place small { font-size: .55rem; letter-spacing: .04em; }
 }
-@media (prefers-reduced-motion: reduce) { .slip, .slip-head, .slip-places, .slip-body, .club-ticket-arrow { transition: none; } .club-ticket-dock .slip-place { animation: none; } .club-ticket-tab { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .slip, .club-ticket-arrow, .club-ticket-tab { transition: none; } }
 .lab-room-ticket:hover .slip-stub { background: linear-gradient(180deg, rgb(60 51 40), rgb(34 29 22)); }
 .lab-room-ticket:active .slip { transform: translateY(1px); }
 .lab-room-ticket:focus-visible { outline: none; }
@@ -137,3 +133,16 @@
   .club-ticket-dock .slip-body::before { bottom: 5px; }
 }
 a.lab-room-ticket { text-decoration: none; }
+
+/* The Bowl Pool's Claim your seat ticket, in the clubhouse: its navy and gold kept, its corners rounded like every ticket in the room, and
+   the perforation's notches cut through the card (never drawn on in the page's colour, which showed as pale dots over the room). */
+.club-bowl-claim .bowl-claim { border-radius: 14px; margin: 0 auto; }
+.club-bowl-claim .bowl-claim::before, .club-bowl-claim .bowl-claim::after { display: none; }
+.club-bowl-claim .bowl-claim-stub button { border-radius: 10px; }
+.club-bowl-claim .bowl-claim-main h3 { text-wrap: balance; }
+@media (min-width: 640px) {
+  .club-bowl-claim .bowl-claim {
+    -webkit-mask: radial-gradient(circle 8px at calc(100% - 10rem) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 10rem) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
+    mask: radial-gradient(circle 8px at calc(100% - 10rem) 0, transparent 96%, black) top / 100% 51% no-repeat, radial-gradient(circle 8px at calc(100% - 10rem) 100%, transparent 96%, black) bottom / 100% 51% no-repeat;
+  }
+}

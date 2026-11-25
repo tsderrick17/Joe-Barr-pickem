@@ -111,9 +111,9 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
       </header>
 
       <div aria-label="Bowl Pool view" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
-        <button aria-pressed={tab === "picks"} onClick={() => setTab("picks")} type="button">Picks</button>
+        <button aria-pressed={tab === "picks"} onClick={() => { haptic("tick"); setTab("picks"); }} type="button">Picks</button>
         {/* With the sheet (the real Bowl Pool) the standings are its first column, so there is no separate Standings tab. */}
-        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
+        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => { haptic("tick"); setTab("sheet"); }} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
       </div>
 
       {/* Everything under the heading scrolls as one, under the heading that stands still. */}

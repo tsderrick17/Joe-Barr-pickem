@@ -19,6 +19,27 @@ export function tile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
   }
   return geometry;
 }
+
+// Lays stone round a box the way a mason would: the faces that turn a corner share one strip of stone, so a stone cut by a corner
+// carries on round it (the same stone seen from its other side), never a fresh pattern starting at the edge. The strip runs along the
+// front (the -x face, by its z), turns both corners onto the sides, and meets itself only on the +x face, the one set into the wall.
+export function wrapTile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
+  geometry.computeBoundingBox();
+  const { min, max } = geometry.boundingBox, x0 = min.x + ox, z0 = min.z + oz, z1 = max.z + oz;
+  const p = geometry.attributes.position, n = geometry.attributes.normal, uv = geometry.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) + ox, y = (p.getY(i) + oy) / sv, z = p.getZ(i) + oz;
+    const nx = n.getX(i), ny = n.getY(i), nz = n.getZ(i);
+    let t;
+    if (Math.abs(ny) > 0.5) { uv.setXY(i, x / su, z / su); continue; }
+    if (nx < -0.5) t = z;                                   // the front
+    else if (nz < -0.5) t = z0 - (x - x0);                  // round the near corner onto that side
+    else if (nz > 0.5) t = z1 + (x - x0);                   // round the far corner onto the other side
+    else t = z;                                             // the face in the wall: never seen
+    uv.setXY(i, t / su, y);
+  }
+  return geometry;
+}
 // A colour picture and its matching relief (white is high), drawn together.
 function pair(w, h, draw, repeat = [1, 1]) {
   const c = canvas(w, h), b = canvas(w, h); draw(c.getContext("2d"), b.getContext("2d"));
@@ -68,17 +89,22 @@ export function shiplap(repeat) {
 
 // Fieldstone: flat-lying stones of many greys and tans, each one mottled and rounded up out of a raked mortar joint. The pattern is
 // worked out stone by stone (the nearest and second-nearest stone to every point), so no two are alike and the picture still repeats.
+/** Knobs for test renders (scene query `stonelift`): how strongly stones stand out from or sit back in the wall. */
+export const STONE = { lift: 1 };
 export function fieldstone() {
   const W = 1024, H = 1024, GX = 8, GY = 13, seeds = [];
   const palette = [[176, 168, 156], [152, 146, 136], [188, 176, 156], [136, 132, 128], [172, 152, 130], [120, 115, 110], [200, 192, 178], [160, 146, 128], [146, 150, 152]];
+  // Each stone's own relief comes from a stream of its own, so the rest of the room's surfaces keep their looks.
+  const relief = (() => { let r = 4242; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; })();
   for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
     const t = (rand() - 0.5) * 22, p = palette[Math.floor(rand() * palette.length)];
-    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5 });
+    // lift: how far the stone stands out (-1 set back, +1 proud); dome: how rounded its face is (low = a flat slab, high = a cobble).
+    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5, lift: relief() * 2 - 1, dome: 0.3 + relief() * 0.6 });
   }
   const N = 48, lattice = Array.from({ length: N * N }, () => rand()), at = (i, j) => lattice[(((j % N) + N) % N) * N + (((i % N) + N) % N)];
   const mottle = (u, v) => { const x = u * N, y = v * N, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy); return (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy; };
   const c = canvas(W, H), b = canvas(W, H), cg = c.getContext("2d"), bg = b.getContext("2d");
-  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H);
+  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H), d = canvas(W, H), dg = d.getContext("2d"), di = dg.createImageData(W, H);
   for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
     const u = px / W, v = py / H, gi = Math.floor(u * GX), gj = Math.floor(v * GY);
     let d1 = 9, d2 = 9, s1 = seeds[0], ox = 0, oy = 0;
@@ -89,21 +115,32 @@ export function fieldstone() {
       if (d < d1) { d2 = d1; d1 = d; s1 = s; ox = dx * GX; oy = dy * GY; } else if (d < d2) d2 = d;
     }
     const blot = mottle(u, v) - 0.5 + (mottle(u * 4, v * 4) - 0.5) * 0.5, joint = 0.03 + 0.035 * mottle(u * 3 + 0.3, v * 3 + 0.7);
-    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / 0.2)), round = Math.pow(face, 0.5);
+    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / (0.16 + 0.1 * s1.dome))), round = Math.pow(face, s1.dome), lift = Number(STONE.lift);
     const grit = (rand() - 0.5) * 20, o = (py * W + px) * 4, mortar = edge < joint;
     // Depth: each stone is a rounded lump set back from deep, dark joints (the shade closes in toward every joint, a soft light from the
     // top left catches the upper-left of each stone), with pitting and a fine grain on the faces so no stone is flat.
     const cavity = mortar ? 1 : 0.5 + 0.5 * Math.min(1, face * 2.4);
     const pit = mottle(u * 14 + 0.31, v * 14 + 0.17) - 0.5, fine = mottle(u * 40 + 0.5, v * 40 + 0.9) - 0.5;
-    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
+    // A proud stone catches more light and a set-back one sits in shade; both deepen toward the joint.
+    const proud = 1 + s1.lift * 0.1 * lift;
+    // A proud stone throws a little shade down and to the right into its joint; a set-back one is shaded along its own top and left edge.
+    const rim = mortar ? 0 : (1 - Math.min(1, face * 3)) * lift * (s1.lift > 0 ? 0 : -s1.lift * 0.35);
+    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity * proud - rim) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
     const col = mortar ? [118, 108, 94] : s1.c;
     for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit * 1.1));
-    const hgt = mortar ? 34 + grit : 70 + 150 * round + blot * 60 + pit * 46 + fine * 24 + grit * 0.9;
+    // The stone's shape (its dome and how far it stands out) and, much fainter, its pitting: smooth faces that still feel worn.
+    const form = mortar ? 30 : 60 + (110 + 40 * s1.dome) * round + s1.lift * 48 * lift * round;
+    const hgt = mortar ? 30 + grit * 0.3 : form + blot * 24 + pit * 16 + fine * 6 + grit * 0.25;
     bi.data[o] = bi.data[o + 1] = bi.data[o + 2] = Math.max(0, Math.min(255, hgt)); ci.data[o + 3] = bi.data[o + 3] = 255;
+    di.data[o] = di.data[o + 1] = di.data[o + 2] = Math.max(0, Math.min(255, form)); di.data[o + 3] = 255;
   }
-  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0);
-  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b); bumpMap.anisotropy = 8; bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
-  return { map, bumpMap };
+  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0); dg.putImageData(di, 0, 0);
+  // The relief the wall is shaped by: only each stone's form, softened a little so faces and edges come out smooth, never jagged.
+  const soft = canvas(W, H), sg = soft.getContext("2d"); sg.filter = "blur(3px)";
+  for (const [x, y] of [[0, 0], [-W, 0], [W, 0], [0, -H], [0, H]]) sg.drawImage(d, x, y);   // wrapped, so the blur meets itself at the tile's edges
+  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b), displacementMap = new THREE.CanvasTexture(soft);
+  for (const t of [bumpMap, displacementMap]) { t.anisotropy = 8; t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  return { map, bumpMap, displacementMap };
 }
 
 // The thatch behind the courses: deep, dark straw, only glimpsed between them.
@@ -274,4 +311,98 @@ export function bottleLabels() {
     g.fillStyle = paper; g.fillRect(x + 44, y + 110, 168, 10);
   });
   return texture(c);
+}
+
+// A random stream of its own for the surfaces added later, so adding one never reshuffles the rest of the room.
+const stream = (seed) => { let r = seed; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; };
+
+// Solid timber for the beams, the trusses and the mantel: one piece of wood, not boards. Long grain along its length (the width of the
+// picture) that wavers and gathers round the odd knot, a few seasoning checks, a slow wash of tone; its relief follows the grain.
+// `tone` is the wood's middle colour as [r, g, b].
+export function timberGrain(tone, repeat = [1, 1]) {
+  const rnd = stream(tone[0] * 7 + tone[1]);
+  return pair(1024, 512, (g, b) => {
+    const [r0, g0, b0] = tone;
+    g.fillStyle = `rgb(${r0}, ${g0}, ${b0})`; g.fillRect(0, 0, 1024, 512);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, 1024, 512);
+    const wash = g.createLinearGradient(0, 0, 0, 512); wash.addColorStop(0, "rgba(0, 0, 0, .08)"); wash.addColorStop(0.5, "rgba(255, 220, 170, .05)"); wash.addColorStop(1, "rgba(0, 0, 0, .1)");
+    g.fillStyle = wash; g.fillRect(0, 0, 1024, 512);
+    const knots = Array.from({ length: 3 }, () => ({ x: rnd() * 1024, y: 60 + rnd() * 392, r: 8 + rnd() * 10 }));
+    for (let k = 0; k < 140; k++) {
+      const y0 = rnd() * 512, dark = rnd() < 0.65, amp = 2 + rnd() * 6, len = 120 + rnd() * 300;
+      g.strokeStyle = dark ? `rgba(${r0 * 0.45}, ${g0 * 0.4}, ${b0 * 0.35}, ${0.12 + rnd() * 0.22})` : `rgba(255, 225, 180, ${0.04 + rnd() * 0.07})`;
+      g.lineWidth = 0.6 + rnd() * 1.6; g.beginPath();
+      for (let x = -20; x <= 1044; x += 16) {
+        let y = y0 + Math.sin(x / len + k) * amp;
+        for (const kn of knots) { const dx = x - kn.x, dy = y - kn.y, d = Math.hypot(dx, dy); if (d < kn.r * 5) y += (dy >= 0 ? 1 : -1) * (kn.r * 5 - d) * 0.35; }
+        if (x === -20) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.stroke();
+      if (dark) { b.strokeStyle = "rgba(50, 50, 50, .3)"; b.lineWidth = 1; b.stroke(); }
+    }
+    for (const kn of knots) {
+      for (let i = 4; i >= 0; i--) { g.fillStyle = `rgba(${r0 * 0.35}, ${g0 * 0.3}, ${b0 * 0.25}, ${0.16 + (4 - i) * 0.1})`; g.beginPath(); g.ellipse(kn.x, kn.y, kn.r * (1 + i * 0.45), kn.r * 0.6 * (1 + i * 0.3), 0, 0, Math.PI * 2); g.fill(); }
+      b.fillStyle = "#5a5a5a"; b.beginPath(); b.ellipse(kn.x, kn.y, kn.r, kn.r * 0.6, 0, 0, Math.PI * 2); b.fill();
+    }
+    for (let k = 0; k < 5; k++) {
+      const x = rnd() * 900, y = 40 + rnd() * 432, l = 80 + rnd() * 160;
+      g.strokeStyle = `rgba(20, 10, 4, ${0.35 + rnd() * 0.25})`; g.lineWidth = 1 + rnd(); g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + (rnd() - 0.5) * 6); g.stroke();
+      b.strokeStyle = "#202020"; b.lineWidth = 2; b.beginPath(); b.moveTo(x, y); b.lineTo(x + l, y + (rnd() - 0.5) * 6); b.stroke();
+    }
+  }, repeat);
+}
+
+// Leather's grain for its relief only: a fine pebble of tiny raised cells with creases between them, so a leather seat or the table's
+// padded rail catches the light like hide instead of plastic.
+export function leatherGrain(repeat = [4, 4]) {
+  const rnd = stream(99);
+  const c = canvas(512, 512), g = c.getContext("2d");
+  g.fillStyle = "#909090"; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 9000; i++) {
+    const x = rnd() * 512, y = rnd() * 512, r = 1.5 + rnd() * 3, t = 140 + rnd() * 60;
+    g.fillStyle = `rgba(${t}, ${t}, ${t}, .55)`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * 512, y = rnd() * 512, a = rnd() * Math.PI;
+    g.strokeStyle = "rgba(60, 60, 60, .35)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * (6 + rnd() * 14), y + Math.sin(a) * (6 + rnd() * 14)); g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8;
+  return t;
+}
+
+// A leaf's skin, laid along a frond's own UVs (u from stem to tip, v across with the midrib at the middle): the green lighter toward the
+// stem and the midrib and deeper toward the edges, a pale midrib, fine side veins sweeping out toward the tip, and a faint stipple, with
+// the veins pressed in for the relief. `torn` cuts the splits a banana or bird of paradise leaf gets: slits from the edge toward the
+// midrib along the veins (see-through, alphaTest), so the leaf reads as a real one, not a cut-out.
+export function leafSkin(tone, { veins = 26, torn = 0, seed = 5 } = {}) {
+  const rnd = stream(seed), W = 512, H = 256;
+  return pair(W, H, (g, b) => {
+    const [r, gg, bl] = tone;
+    const across = g.createLinearGradient(0, 0, 0, H);
+    const edge = `rgb(${r * 0.72}, ${gg * 0.74}, ${bl * 0.7})`, mid = `rgb(${Math.min(255, r * 1.12)}, ${Math.min(255, gg * 1.1)}, ${Math.min(255, bl * 1.05)})`;
+    across.addColorStop(0, edge); across.addColorStop(0.42, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(0.5, mid); across.addColorStop(0.58, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(1, edge);
+    g.fillStyle = across; g.fillRect(0, 0, W, H);
+    const along = g.createLinearGradient(0, 0, W, 0); along.addColorStop(0, "rgba(220, 240, 170, .18)"); along.addColorStop(0.35, "rgba(220, 240, 170, 0)"); along.addColorStop(1, "rgba(10, 30, 10, .12)");
+    g.fillStyle = along; g.fillRect(0, 0, W, H);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, W, H);
+    for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(${rnd() < 0.5 ? "255, 255, 220" : "0, 30, 0"}, ${0.03 + rnd() * 0.05})`; g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2, 1 + rnd() * 2); }
+    // side veins: from the midrib out and forward to the edge, both halves
+    for (let k = 1; k < veins; k++) {
+      const x = (k / veins) * W * 0.96, sweep = 40 + rnd() * 20;
+      for (const side of [-1, 1]) {
+        g.strokeStyle = `rgba(230, 245, 190, ${0.12 + rnd() * 0.08})`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, H / 2); g.quadraticCurveTo(x + sweep * 0.5, H / 2 + side * H * 0.22, x + sweep, H / 2 + side * H * 0.5); g.stroke();
+        b.strokeStyle = "rgba(60, 60, 60, .6)"; b.lineWidth = 1.2; b.stroke();
+      }
+    }
+    // the midrib: a pale raised line down the middle, broad at the stem, fine at the tip
+    for (let x = 0; x < W; x += 2) { const w = 5 * (1 - x / W) + 1; g.fillStyle = "rgba(225, 240, 185, .55)"; g.fillRect(x, H / 2 - w / 2, 2, w); b.fillStyle = "#d0d0d0"; b.fillRect(x, H / 2 - w / 2, 2, w); }
+    if (torn) {
+      g.globalCompositeOperation = "destination-out";
+      for (let k = 0; k < torn; k++) {
+        const x = W * (0.2 + rnd() * 0.7), side = rnd() < 0.5 ? -1 : 1, depth = H * (0.18 + rnd() * 0.26);
+        g.lineWidth = 2.2; g.strokeStyle = "black"; g.beginPath(); g.moveTo(x + 30, side > 0 ? H : 0); g.quadraticCurveTo(x + 12, H / 2 + side * (H / 2 - depth * 0.5), x, H / 2 + side * (H / 2 - depth)); g.stroke();
+      }
+      g.globalCompositeOperation = "source-over";
+    }
+  });
 }

@@ -1,9 +1,12 @@
 /* ==== Bowl Pool ==== */
+/* The roles are set on the page root too, so a Bowl piece shown outside the Bowl pages (the clubhouse's Claim your seat ticket)
+   has them by day and takes the night palette from the root by night. */
 /* The Bowl Pool is its own event: navy and old gold on cream, varsity
    lettering for names and lines, and megaphones in each school's colors.
    Pick'em keeps its newsprint and Survivor its poker felt. */
 .bowl-pool-page,
 .bowl-card-section,
+:root,
 .workshop .workshop-stage {
   --bowl-navy: #16223a;
   --bowl-navy-lift: #1f2f50;

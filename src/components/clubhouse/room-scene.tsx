@@ -36,7 +36,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   // The chat plate stands on the bar stools just above the chalkboard (owner, 2026-11-22).
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.775, y: 0.665 } },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.768, y: 0.635 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // A small "Snapshot" pill sits on the board's upper edge so it reads as tappable (owner, 2026-11-22); above your ticket on a phone.
   { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.72 } },
@@ -210,34 +210,64 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
  * with old chalk dust where earlier races were wiped away. It is the same drawing all season; tapping the board opens the real chart.
  * The picture's own light is on it, so at night the chalk is a little dimmer.
  */
+/** The sketch's race: seven runners' running totals over nine weeks, made up, weaving and crossing as a real season does. */
+const SKETCH_RACE: Array<[string, number[]]> = [
+  ["#f4f1e8", [0, 2, 3, 5, 6, 8, 10, 11, 13]],
+  ["#f3d97a", [0, 1, 3, 4, 6, 7, 8, 10, 12]],
+  ["#9fd3f2", [0, 2, 2, 4, 5, 6, 8, 9, 10]],
+  ["#f2a3c4", [0, 1, 2, 3, 5, 6, 7, 8, 9]],
+  ["#b8e0a8", [0, 0, 2, 3, 3, 5, 6, 7, 8]],
+  ["#f0b98a", [0, 1, 1, 2, 3, 4, 4, 6, 7]],
+  ["#c9b8f0", [0, 0, 1, 2, 2, 3, 4, 4, 5]],
+];
+const SKETCH = { x0: 24, x1: 220, y0: 128, y1: 20, top: 13 };
+const sketchX = (week: number) => SKETCH.x0 + (week / 8) * (SKETCH.x1 - SKETCH.x0);
+const sketchY = (wins: number) => SKETCH.y0 - (wins / SKETCH.top) * (SKETCH.y0 - SKETCH.y1);
+/** A hand-drawn line through the weeks: gentle curves (Catmull-Rom), each point nudged a hair off true, as a hand would. */
+function sketchPath(totals: number[], wobble: number) {
+  const pts = totals.map((wins, week) => [sketchX(week), sketchY(wins) + (week ? Math.sin(week * 2.3 + wobble) * 0.7 : 0)]);
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [pts[Math.max(0, i - 1)], pts[i], pts[i + 1], pts[Math.min(pts.length - 1, i + 2)]];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+/**
+ * The chalkboard's slate: a still chalk sketch of a standings race, the way someone would draw one by hand (no names, no numbers):
+ * seven fine lines that weave over nine weeks, each with a soft halo of chalk dust and a dot where it ends, faint week guides, a light
+ * hand-drawn axis, and old chalk dust where earlier races were wiped away. It is the same drawing all season; tapping it opens the
+ * real chart. The picture's own light is on it, so at night the chalk is a little dimmer.
+ */
 function ChalkSketch() {
-  const lines: Array<[string, string]> = [
-    ["#f4f1e8", "M22 128 C40 112 56 104 72 92 S100 70 118 62 S150 44 170 34 S204 18 222 14"],
-    ["#f3d97a", "M22 128 C42 120 58 110 76 104 S104 92 122 80 S152 74 172 62 S204 48 222 44"],
-    ["#9fd3f2", "M22 128 C44 124 60 118 80 114 S106 104 126 100 S154 94 174 86 S204 78 222 74"],
-    ["#f2a3c4", "M22 128 C46 127 64 124 84 122 S112 118 130 116 S158 112 178 110 S206 106 222 104"],
-  ];
   return (
     <svg viewBox="0 0 240 152">
       <defs>
         <filter id="chalk-grain" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence baseFrequency="0.9" numOctaves="2" result="noise" seed="7" type="fractalNoise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="2.2" />
-          <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.3" />
+          <feTurbulence baseFrequency="1.1" numOctaves="2" result="noise" seed="7" type="fractalNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="1.4" />
+          <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.8 1.45" />
           <feComposite in="rough" in2="grain" operator="in" />
         </filter>
         <filter id="chalk-dust"><feGaussianBlur stdDeviation="5" /></filter>
+        <filter id="chalk-halo"><feGaussianBlur stdDeviation="1.6" /></filter>
       </defs>
       {/* old races wiped with a felt */}
       <g className="chalk-dust" filter="url(#chalk-dust)">
         <ellipse cx="70" cy="60" rx="52" ry="18" />
         <ellipse cx="170" cy="112" rx="58" ry="16" />
       </g>
+      <g className="chalk-halo" filter="url(#chalk-halo)">
+        {SKETCH_RACE.map(([color, totals], index) => <path d={sketchPath(totals, index)} key={color} style={{ stroke: color }} />)}
+      </g>
       <g filter="url(#chalk-grain)">
-        <path className="chalk-axis" d="M16 14 L17 134 L228 133" />
-        {[40, 72, 104].map((y) => <path className="chalk-tick" d={`M13 ${y} L21 ${y + 1}`} key={y} />)}
-        {[62, 108, 154, 200].map((x) => <path className="chalk-tick" d={`M${x} 130 L${x + 1} 138`} key={x} />)}
-        {lines.map(([color, d]) => <path className="chalk-line" d={d} key={color} style={{ stroke: color }} />)}
+        {Array.from({ length: 8 }, (_, week) => <path className="chalk-guide" d={`M${sketchX(week + 1).toFixed(1)} 18 L${(sketchX(week + 1) + 0.6).toFixed(1)} 130`} key={week} />)}
+        <path className="chalk-axis" d="M18 14 L18.6 132.5 L228 132" />
+        {[54, 92].map((y) => <path className="chalk-tick" d={`M15 ${y} L21 ${y + 0.5}`} key={y} />)}
+        {SKETCH_RACE.map(([color, totals], index) => <path className="chalk-line" d={sketchPath(totals, index)} key={color} style={{ stroke: color }} />)}
+        {SKETCH_RACE.map(([color, totals]) => <circle className="chalk-end" cx={sketchX(8)} cy={sketchY(totals[8])} key={color} r="1.9" style={{ fill: color }} />)}
       </g>
     </svg>
   );
@@ -315,8 +345,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         const className = free ? `lab-room-bubble is-${spot}` : `lab-room-spot is-${spot}${spot === "sportsbook" && feed.owed ? " is-owed" : ""}`;
         const style = (free ? { left: `${free.x * 100}%`, top: `${free.y * 100}%` } : { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` }) as CSSProperties;
         // A "#name" is not a page: it is a button that asks the screen to open that thing over the room (the chat).
-        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
-        return <button aria-label={name} className={className} key={spot} onClick={() => onSpot?.(spot, next, ticket)} style={style} type="button">{plate}</button>;
+        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} onClick={() => haptic("tick")} style={style}>{plate}</Link>;
+        return <button aria-label={name} className={className} key={spot} onClick={() => { haptic("tick"); onSpot?.(spot, next, ticket); }} style={style} type="button">{plate}</button>;
       })}
       {/* The lamps (the real clubhouse): tap one and the lights go down for night, or up for day, the same switch as the header's. */}
       {hrefFor ? LAMPS[wide ? "wide" : full ? "full" : "tall"].map((lamp) => (
