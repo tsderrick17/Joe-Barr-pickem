@@ -43,7 +43,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
   // Notifications: a plate like the others, up in the thatch at the right where it covers nothing (the real clubhouse only: it opens
   // the player's own settings).
-  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.8, y: 0.14 }, realOnly: true },
+  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.745, y: 0.186 }, realOnly: true },
 ];
 
 /** The room's lamp, by picture shape (tall, filling the phone, wide): tapping the ceiling light turns the lights down for night, or up for day (nothing else in the room does). */

@@ -406,3 +406,41 @@ export function leafSkin(tone, { veins = 26, torn = 0, seed = 5 } = {}) {
     }
   });
 }
+
+// Book spines, sixteen to a sheet (each a column 64 wide): cloth in old library colours, worn a little at the head and foot, with gilt
+// bands, a title in gilt (bars of tiny type: from across the room a title is a line of gold, which is all it needs to be) on some a dark
+// leather label, and a publisher's mark at the foot. Like the bottle labels, one sheet, each book a window onto its own spine.
+export function spineSheet() {
+  const rnd = stream(31), W = 1024, H = 512, c = canvas(W, H), g = c.getContext("2d");
+  const cloths = [[110, 28, 32], [24, 40, 70], [30, 64, 44], [120, 92, 52], [30, 26, 24], [86, 40, 30], [64, 72, 86], [150, 120, 80], [70, 24, 44], [40, 80, 84], [180, 160, 120], [96, 60, 30], [20, 30, 50], [130, 50, 40], [60, 52, 40], [36, 56, 40]];
+  cloths.forEach(([r, gg, b], i) => {
+    const x = i * 64;
+    g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.fillRect(x, 0, 64, H);
+    for (let k = 0; k < 900; k++) { g.fillStyle = `rgba(${rnd() < 0.5 ? "255, 240, 210" : "0, 0, 0"}, ${0.04 + rnd() * 0.05})`; g.fillRect(x + rnd() * 64, rnd() * H, 1, 1 + rnd() * 3); }
+    const wear = g.createLinearGradient(0, 0, 0, H); wear.addColorStop(0, "rgba(255, 235, 200, .18)"); wear.addColorStop(0.06, "rgba(0, 0, 0, 0)"); wear.addColorStop(0.94, "rgba(0, 0, 0, 0)"); wear.addColorStop(1, "rgba(255, 235, 200, .2)");
+    g.fillStyle = wear; g.fillRect(x, 0, 64, H);
+    const gold = (y, h) => { g.fillStyle = `rgba(${206 + rnd() * 20}, ${168 + rnd() * 20}, ${90 + rnd() * 20}, ${0.75 + rnd() * 0.2})`; g.fillRect(x + 6, y, 52, h); };
+    const style = i % 4;
+    if (style !== 3) { gold(26, 3); gold(33, 1.5); gold(H - 36, 1.5); gold(H - 30, 3); }
+    if (style === 1 || style === 2) { g.fillStyle = style === 1 ? "rgb(28, 20, 16)" : "rgb(120, 30, 28)"; g.fillRect(x + 8, 70, 48, 120); gold(74, 1); gold(186, 1); }
+    // the title: short gilt strokes like letters, in two or three lines, centred
+    const lines = 2 + Math.floor(rnd() * 2);
+    for (let l = 0; l < lines; l++) {
+      const y = 96 + l * 26, n = 4 + Math.floor(rnd() * 5);
+      let tx = x + 32 - n * 3.2;
+      for (let k = 0; k < n; k++) { const w = 3 + rnd() * 3; g.fillStyle = "rgba(226, 190, 112, .9)"; g.fillRect(tx, y, w, 9); tx += w + 1.6; }
+    }
+    if (style !== 2) for (let k = 0; k < 3 + Math.floor(rnd() * 3); k++) { g.fillStyle = "rgba(226, 190, 112, .7)"; g.fillRect(x + 22 + k * 5, 300, 3, 5); }   // the author, smaller
+    g.fillStyle = "rgba(226, 190, 112, .8)"; g.beginPath(); g.arc(x + 32, H - 64, 5, 0, Math.PI * 2); g.fill();   // the publisher's mark
+    g.fillStyle = "rgba(0, 0, 0, .35)"; g.fillRect(x, 0, 1.5, H); g.fillRect(x + 62.5, 0, 1.5, H);             // the rounded spine's edges in shade
+  });
+  return texture(c);
+}
+
+// The tops of a book block: cream page edges, packed lines, a little dusky at the edge.
+export function pageEdges() {
+  const rnd = stream(37), c = canvas(128, 64), g = c.getContext("2d");
+  g.fillStyle = "rgb(232, 222, 198)"; g.fillRect(0, 0, 128, 64);
+  for (let y = 0; y < 64; y += 1.5) { g.fillStyle = `rgba(120, 100, 70, ${0.06 + rnd() * 0.08})`; g.fillRect(0, y, 128, 0.6); }
+  return texture(c);
+}

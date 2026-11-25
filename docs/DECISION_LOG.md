@@ -21,6 +21,12 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-25 - Clubhouse: a bookcase by the fire, a real neon sign, Notifications on the thatch
+
+- A low walnut bookcase stands against the chimney's near face under the constitution (owner's spot): three shelves of books made like the bar's bottles, each its own size and depth, in old library cloth with gilt-banded spines (one sheet of sixteen spines, each book a window onto its own), a few leaning, a short stack laid flat, a framed photograph and two books on top. It stands clear of the stones' relief.
+- The neon is a real sign now (owner: "looks flat"): lit tubes (a white core in pink glass with a glint) on a clear acrylic backer held off the walnut by four brass stand-offs, their soft shadow and a pink haze on the wood, and a little real pink light on the walnut round it.
+- On a desktop the Notifications pill sits on the thatch just under the beam, left of the ledge plants (owner, 2026-11-25).
+
 ## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
 
 - The classic Bowl Card's score tiles spin in every time the card is opened or the page refreshed (owner, 2026-11-25), the same as the clubhouse Bowl sheet. The once-a-day-per-player memory in the browser is gone. Reduced motion still lands them at once.
