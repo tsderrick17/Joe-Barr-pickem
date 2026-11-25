@@ -1316,3 +1316,28 @@ test("by night the clubhouse's Claim your seat ticket takes the Bowl Pool's nigh
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("clubhouse-bowl-claim-night-phone-390.png", { maxDiffPixels: 40 });
 });
+
+test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick warns", async ({ page }) => {
+  await page.addInitScript(() => {
+    const vibrations: number[][] = [];
+    (window as unknown as { vibrations: number[][] }).vibrations = vibrations;
+    Object.defineProperty(navigator, "vibrate", { value: (pattern: number[]) => { vibrations.push([...pattern]); return true; }, configurable: true });
+    Object.defineProperty(navigator, "userAgent", { get: () => "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36", configurable: true });
+  });
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"] });
+  const ticket = page.getByRole("button", { name: /YOUR TICKET/ });
+  await expect(ticket).toContainText("3 LEFT", { timeout: 30_000 });
+  await ticket.click();
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const felt = () => page.evaluate(() => (window as unknown as { vibrations: number[][] }).vibrations.splice(0));
+  await felt();   // the tap that opened the ticket
+  const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
+  await cells.nth(0).click();
+  expect(await felt()).toEqual([[10]]);   // tick: chosen
+  await cells.nth(0).click();
+  expect(await felt()).toEqual([[6]]);    // light tick: taken back
+  await cells.nth(0).click(); await cells.nth(2).click(); await felt();
+  await form.getByRole("button", { name: /Pick’em/ }).click(); await felt();
+  await cells.nth(4).click();
+  expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
+});
