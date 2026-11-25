@@ -426,7 +426,7 @@ measure database requests or end-to-end route time.
 - The Bowl Card's win tiles and its Games remaining counter are split-flap digits (`src/components/bowl-score-tile.tsx`, motion in
   `src/lib/split-flap.js`): one motor drives the whole board, so every flap flips at the same speed (each digit within 3% of it). They flip
   while the card loads, then each digit flips forward only as far as its number and stops, its last three flips slowing, so the board settles
-  raggedly down the rows, once a day per player. A tap on a landed tile flips it once round the drum and back to the same number, with a
+  raggedly down the rows, every time the card is opened or the page refreshed. A tap on a landed tile flips it once round the drum and back to the same number, with a
   tick; it changes nothing. With reduced motion the tiles stand still and cannot be tapped.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,

@@ -213,7 +213,7 @@ function useSpringAxis(target: Axis) {
 }
 
 function SnapshotChart({
-  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false, axisName,
+  title, showTitle, weeks, players, colors, baseline, hoverId, onHover, isPlayoff, windowed = false, axisName, chalk = false,
 }: {
   title: string;
   showTitle: boolean;
@@ -227,6 +227,8 @@ function SnapshotChart({
   windowed?: boolean;
   /** What a point is, under the axis: "Week" by default, "Game day" for the playoffs' days, "Bowl day" for the Bowl Pool. */
   axisName?: string;
+  /** The clubhouse chalkboard: the lines' bends are rounded there (owner, 2026-11-25: try it on the clubhouse first). */
+  chalk?: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -362,9 +364,9 @@ function SnapshotChart({
             {/* The window clip sits on a wrapper: the reveal animation's own clip-path replaces one on the lines' group. */}
             <g clipPath={scrolls ? `url(#${clip}-window)` : undefined}><g className="season-snapshot-lines" clipPath={`url(#${clip}-plot)`}>
               {ribbons.map((ribbon) => <g className={`season-snapshot-ribbon ${hoverId && hoverId !== ribbon.playerId ? "is-dim" : ""}`} key={`${ribbon.weekIndex}:${ribbon.playerId}`} onMouseEnter={() => onHover(ribbon.playerId)} onMouseLeave={() => onHover(null)}>
-                <path d={snapshotRibbonPath(ribbon.points)} fill={colors.get(ribbon.playerId)} />
-                <path d={snapshotRibbonPath(ribbon.points, 0, 0.22)} fill="white" fillOpacity="0.32" />
-                <path d={snapshotRibbonPath(ribbon.points, 0.78, 1)} fill="#102030" fillOpacity="0.3" />
+                <path d={snapshotRibbonPath(ribbon.points, 0, 1, chalk)} fill={colors.get(ribbon.playerId)} />
+                <path d={snapshotRibbonPath(ribbon.points, 0, 0.22, chalk)} fill="white" fillOpacity="0.32" />
+                <path d={snapshotRibbonPath(ribbon.points, 0.78, 1, chalk)} fill="#102030" fillOpacity="0.3" />
               </g>)}
             </g></g>
             {startDots.map(({ player, cx, cy }) => <g className={`season-snapshot-ribbon season-snapshot-start ${hoverId && hoverId !== player.id ? "is-dim" : ""}`} key={player.id} onMouseEnter={() => onHover(player.id)} onMouseLeave={() => onHover(null)}>
@@ -444,8 +446,8 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
       {/* The playoff chart replaces the regular-season chart; it starts from each
           player's final regular-season total. */}
       {showPlayoffs
-        ? <SnapshotChart baseline={playoffBaseline} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
-        : <SnapshotChart baseline={{}} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} axisName={bowl ? "Bowl day" : undefined} title={bowl ? "Bowl Pool" : "Regular season"} weeks={snapshot.regular} windowed={range === "six"} />}
+        ? <SnapshotChart baseline={playoffBaseline} chalk={chalk} colors={colors} hoverId={hoverId} isPlayoff onHover={setHoverId} players={visible} showTitle={false} title="Playoffs" weeks={snapshot.playoffs} />
+        : <SnapshotChart baseline={{}} chalk={chalk} colors={colors} hoverId={hoverId} isPlayoff={false} onHover={setHoverId} players={visible} showTitle={false} axisName={bowl ? "Bowl day" : undefined} title={bowl ? "Bowl Pool" : "Regular season"} weeks={snapshot.regular} windowed={range === "six"} />}
     </div>
     <div aria-label="Players shown on the chart" className="season-snapshot-key" ref={keyRef} style={keyColumns ? { "--key-columns": keyColumns } as CSSProperties : undefined}>
       {keyRows.map(({ player, total }) => {

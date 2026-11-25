@@ -178,9 +178,46 @@ export function snapshotRibbons(weeks, standings, baseline, x, y, thickness = 3,
 }
 
 /** A filled strip, including inset bevel strips that never extend outside it. */
-export function snapshotRibbonPath(points, upper = 0, lower = 1) {
-  const edge = (fraction) => points.map((point) => `${point.x},${point.top + (point.bottom - point.top) * fraction}`);
-  return `M${edge(upper).join(" L")} L${edge(lower).reverse().join(" L")} Z`;
+export function snapshotRibbonPath(points, upper = 0, lower = 1, round = false) {
+  const edge = (fraction) => points.map((point) => [point.x, point.top + (point.bottom - point.top) * fraction]);
+  if (round) return `${roundedEdge(edge(upper), "M")} ${roundedEdge(edge(lower).reverse(), "L")} Z`;
+  const straight = (pairs) => pairs.map(([x, y]) => `${x},${y}`);
+  return `M${straight(edge(upper)).join(" L")} L${straight(edge(lower).reverse()).join(" L")} Z`;
+}
+
+const r2 = (value) => Math.round(value * 100) / 100;
+
+/**
+ * One edge of a ribbon with its bends rounded (monotone cubic, Fritsch-Carlson): the curve passes through every week's point and
+ * never swings above or below the totals on either side of a bend, so a rounded line never shows a score nobody had. Flat
+ * stretches stay flat. Works in either direction along x (the ribbon's lower edge is drawn back to front).
+ * @param {Array<[number, number]>} pairs  the edge's points, in drawing order
+ * @param {"M" | "L"} lead  how the edge starts: a move (the ribbon's first edge) or a line on from the other edge
+ */
+export function roundedEdge(pairs, lead) {
+  const n = pairs.length;
+  if (n === 0) return "";
+  const start = `${lead}${r2(pairs[0][0])},${r2(pairs[0][1])}`;
+  if (n < 3) return [start, ...pairs.slice(1).map(([x, y]) => `L${r2(x)},${r2(y)}`)].join(" ");
+  const dx = [], slope = [];
+  for (let i = 0; i < n - 1; i += 1) {
+    dx.push(pairs[i + 1][0] - pairs[i][0]);
+    slope.push(dx[i] === 0 ? 0 : (pairs[i + 1][1] - pairs[i][1]) / dx[i]);
+  }
+  const tangent = [slope[0]];
+  for (let i = 1; i < n - 1; i += 1) tangent.push(slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2);
+  tangent.push(slope[n - 2]);
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) { tangent[i] = 0; tangent[i + 1] = 0; continue; }
+    const a = tangent[i] / slope[i], b = tangent[i + 1] / slope[i], h = a * a + b * b;
+    if (h > 9) { const t = 3 / Math.sqrt(h); tangent[i] = t * a * slope[i]; tangent[i + 1] = t * b * slope[i]; }
+  }
+  const parts = [start];
+  for (let i = 0; i < n - 1; i += 1) {
+    const [x0, y0] = pairs[i], [x1, y1] = pairs[i + 1], third = dx[i] / 3;
+    parts.push(`C${r2(x0 + third)},${r2(y0 + tangent[i] * third)} ${r2(x1 - third)},${r2(y1 - tangent[i + 1] * third)} ${r2(x1)},${r2(y1)}`);
+  }
+  return parts.join(" ");
 }
 
 /**
