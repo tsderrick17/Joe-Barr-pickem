@@ -23,7 +23,7 @@ and add a row above. (It is read at the start of every change, so short is cheap
 
 ## 2026-11-25 - Clubhouse: a bookcase by the fire, a real neon sign, Notifications on the thatch
 
-- A low walnut bookcase stands against the chimney's near face under the constitution (owner's spot): three shelves of books made like the bar's bottles, each its own size and depth, in old library cloth with gilt-banded spines (one sheet of sixteen spines, each book a window onto its own), a few leaning, a short stack laid flat. On top a small record player (walnut plinth, black record with a red label, tone arm) between two walnut bookshelf speakers toed in toward the room (owner, 2026-11-25). It stands clear of the stones' relief.
+- A low walnut record cabinet stands against the chimney's near face under the constitution (owner's spot and ask): two rows of square bays packed with LPs on their edges, spines out in their covers' colours, two or three leaning at each bay's end so their covers show (sixteen made-up covers on one sheet, no real words). On top a small record player (walnut plinth, black record with a red label, tone arm) between two walnut bookshelf speakers toed in toward the room. It stands clear of the stones' relief.
 - The neon is a real sign now (owner: "looks flat"): lit tubes (a white core in pink glass with a glint) on a clear acrylic backer held off the walnut by four brass stand-offs, their soft shadow and a pink haze on the wood, and a little real pink light on the walnut round it.
 - On a desktop the Notifications pill sits on the thatch just under the beam, left of the ledge plants (owner, 2026-11-25).
 

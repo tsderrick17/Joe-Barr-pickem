@@ -444,3 +444,29 @@ export function pageEdges() {
   for (let y = 0; y < 64; y += 1.5) { g.fillStyle = `rgba(120, 100, 70, ${0.06 + rnd() * 0.08})`; g.fillRect(0, y, 128, 0.6); }
   return texture(c);
 }
+
+// Sixteen record sleeves on one sheet (4 x 4): each a 12-inch cover of its own, made of what album covers are made of (a bold field of
+// colour, rings and bars, a photo-like wash, a band of type) with no real words, so from across the room each reads as an album. The
+// spine colour of each is returned with it, so the edge on the shelf matches its cover.
+export function albumCovers() {
+  const rnd = stream(53), S = 256, c = canvas(S * 4, S * 4), g = c.getContext("2d"), spines = [];
+  const fields = [[226, 196, 120], [24, 34, 52], [176, 46, 38], [238, 232, 218], [40, 92, 80], [232, 120, 56], [18, 18, 18], [96, 64, 140], [210, 168, 60], [60, 110, 170], [200, 80, 110], [120, 140, 90], [244, 210, 196], [70, 40, 30], [150, 190, 200], [30, 60, 40]];
+  fields.forEach(([r, gg, b], i) => {
+    const x = (i % 4) * S, y = Math.floor(i / 4) * S, ink = (r + gg + b) / 3 > 140 ? "rgba(20, 20, 24, .85)" : "rgba(245, 240, 228, .9)";
+    g.save(); g.beginPath(); g.rect(x, y, S, S); g.clip();
+    g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.fillRect(x, y, S, S);
+    const kind = i % 5;
+    if (kind === 0) { for (let k = 6; k > 0; k--) { g.fillStyle = `rgba(${255 - k * 30}, ${120 + k * 15}, ${80 + k * 20}, .55)`; g.beginPath(); g.arc(x + S * 0.55, y + S * 0.45, k * 18, 0, Math.PI * 2); g.fill(); } }
+    if (kind === 1) { for (let k = 0; k < 7; k++) { g.fillStyle = `hsla(${(i * 40 + k * 30) % 360}, 60%, 55%, .8)`; g.fillRect(x, y + 30 + k * 26, S, 14); } }
+    if (kind === 2) { const w = g.createRadialGradient(x + S * 0.4, y + S * 0.35, 10, x + S / 2, y + S / 2, S * 0.7); w.addColorStop(0, "rgba(255, 230, 190, .7)"); w.addColorStop(1, "rgba(0, 0, 0, .55)"); g.fillStyle = w; g.fillRect(x, y, S, S); g.fillStyle = "rgba(0, 0, 0, .55)"; g.beginPath(); g.ellipse(x + S * 0.5, y + S * 0.62, 46, 64, 0, 0, Math.PI * 2); g.fill(); }
+    if (kind === 3) { g.strokeStyle = ink; g.lineWidth = 3; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(x, y + k * 22 + rnd() * 8); g.bezierCurveTo(x + S * 0.3, y + k * 22 - 30, x + S * 0.7, y + k * 22 + 30, x + S, y + k * 22); g.stroke(); } }
+    if (kind === 4) { g.fillStyle = ink; g.fillRect(x + 40, y + 40, S - 80, S - 80); g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.beginPath(); g.arc(x + S / 2, y + S / 2, 60, 0, Math.PI * 2); g.fill(); }
+    // the band of type: the artist big, the title small
+    g.fillStyle = ink; let tx = x + 18;
+    for (let k = 0; k < 4 + Math.floor(rnd() * 4); k++) { const w = 10 + rnd() * 16; g.fillRect(tx, y + S - 46, w, 18); tx += w + 5; }
+    tx = x + 18; for (let k = 0; k < 6; k++) { const w = 6 + rnd() * 8; g.fillRect(tx, y + S - 22, w, 7); tx += w + 4; }
+    g.restore();
+    spines.push((r << 16) | (gg << 8) | b);
+  });
+  return { map: texture(c), spines };
+}
