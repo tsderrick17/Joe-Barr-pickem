@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin, spineSheet, pageEdges, albumCovers } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -41,12 +41,17 @@ const rbox = (w, h, d, r = 0.04) => new RoundedBoxGeometry(w, h, d, 3, r);
 const cyl = (rt, rb, h, seg = 32) => new THREE.CylinderGeometry(rt, rb, h, seg);
 
 // ---------- textures
-function neon(text) {
+// A neon sign, drawn in layers so it reads as glass tubes standing off the wall, not a picture of one: "tube" is the lit glass (a hot
+// white core in a pink tube, a glint along its top), "glow" the haze round it, "shadow" the tubes' own soft shadow on the wood behind.
+function neon(text, layer = "tube") {
   const c = canvas(1024, 200), g = c.getContext("2d");
-  g.fillStyle = "rgba(0,0,0,0)"; g.fillRect(0, 0, 1024, 200);
-  g.font = "italic 700 104px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle";
-  g.shadowColor = "#ff5fa2"; g.shadowBlur = 30; g.strokeStyle = "#ffd1e6"; g.lineWidth = 7; g.strokeText(text, 512, 104);
-  g.shadowBlur = 12; g.strokeStyle = "#fff"; g.lineWidth = 3; g.strokeText(text, 512, 104);
+  g.font = "italic 700 104px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineCap = "round";
+  if (layer === "glow") { g.filter = "blur(18px)"; g.strokeStyle = "rgba(255, 70, 150, .55)"; g.lineWidth = 26; g.strokeText(text, 512, 104); return texture(c); }
+  if (layer === "shadow") { g.filter = "blur(5px)"; g.strokeStyle = "rgba(10, 4, 2, .55)"; g.lineWidth = 9; g.strokeText(text, 512, 104); return texture(c); }
+  g.shadowColor = "#ff5fa2"; g.shadowBlur = 14; g.strokeStyle = "#ff6eb0"; g.lineWidth = 9; g.strokeText(text, 512, 104);
+  g.shadowBlur = 0; g.strokeStyle = "#ffc2dc"; g.lineWidth = 5; g.strokeText(text, 512, 104);
+  g.strokeStyle = "#ffffff"; g.lineWidth = 2.2; g.strokeText(text, 512, 104);
+  g.strokeStyle = "rgba(255, 255, 255, .7)"; g.lineWidth = 1; g.strokeText(text, 512, 101.5);   // the glint along the top of the glass
   return texture(c);
 }
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
@@ -583,7 +588,17 @@ export async function buildRoom(q) {
       }
     });
   }
-  add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  // The sign: tubes on a clear acrylic backer held off the walnut by four brass stand-offs, their shadow and a pink haze on the wood
+  // behind, and real pink light thrown on the walnut and the shelves round it.
+  {
+    const NY = 2.8, NZ = -10.0, face = { cast: false, rot: [0, Math.PI / 2, 0] };
+    add(bar, new THREE.PlaneGeometry(3.0, 0.8), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks", "glow")), transparent: true, depthWrite: false, toneMapped: false, opacity: night ? 1 : 0.7 }), [WALL + 0.087, NY, NZ], face).renderOrder = 1;
+    add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks", "shadow")), transparent: true, depthWrite: false, opacity: night ? 0.35 : 0.8 }), [WALL + 0.089, NY - 0.018, NZ - 0.012], face).renderOrder = 1;
+    add(bar, box(0.008, 0.6, 2.7), new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transmission: 0.95, thickness: 0.008, ior: 1.49, transparent: true, opacity: 0.35, clearcoat: 1 }), [WALL + 0.112, NY, NZ], { cast: false });
+    for (const dy of [-0.24, 0.24]) for (const dz of [-1.28, 1.28]) add(bar, cyl(0.009, 0.009, 0.05, 12), brass, [WALL + 0.095, NY + dy, NZ + dz], { cast: false, rot: [0, 0, Math.PI / 2] });
+    add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.125, NY, NZ], face).renderOrder = 2;
+    const pink = new THREE.PointLight(0xff4f9a, night ? 1.1 : 0.5, 1.8, 1.8); pink.position.set(WALL + 0.4, NY, NZ); bar.add(pink);
+  }
   // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
@@ -700,6 +715,74 @@ export async function buildRoom(q) {
   add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.45, CZ + 0.03]);
   add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: readable(parchment()), roughness: 0.9 }), [CX, 2.45, CZ + 0.065], { cast: false });
   add(charter, box(0.5, 0.04, 0.12), brass, [CX, 2.99, CZ + 0.07]);
+
+  // A low walnut bookcase against the chimney's near face, under the constitution (owner, 2026-11-25): three shelves of real books, as
+  // convincing as the bar's bottles: each its own thickness, height and depth, cloth of an old library colour with a gilt-banded spine
+  // (spineSheet), cream page edges on top, packed close with the odd gap, a few leaning at a row's end and a short stack laid flat; a
+  // little framed photograph and two books lie on top. Its random stream is its own, so nothing else in the room moves.
+  {
+    const books = group(), brnd = (() => { let r = 777; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; })();
+    const BW = Number(q.get("bookw") ?? 1.15), BH = 0.95, BD = 0.36, BX = Number(q.get("bookx") ?? X1 - 0.78), BZ0 = CZ + BD / 2 + 0.05;   // clear of the stones' relief
+    const carcass = new THREE.MeshStandardMaterial({ ...walnutVeneer([0.6, 0.6]), bumpScale: 0.6, roughness: 0.5 });
+    add(books, box(0.025, BH, BD), carcass, [BX - BW / 2 + 0.0125, BH / 2, BZ0]);
+    add(books, box(0.025, BH, BD), carcass, [BX + BW / 2 - 0.0125, BH / 2, BZ0]);
+    add(books, box(BW + 0.03, 0.03, BD + 0.02), carcass, [BX, BH + 0.015, BZ0 + 0.005]);
+    add(books, box(BW, 0.07, BD - 0.02), carcass, [BX, 0.035, BZ0 + 0.01]);                                       // the plinth
+    add(books, box(BW - 0.05, BH - 0.07, 0.012), std(0x2a1a10, { roughness: 0.8 }), [BX, BH / 2 + 0.035, BZ0 - BD / 2 + 0.006], { cast: false });   // the back
+    // Record shelves (owner, 2026-11-25): two rows of square bays, each packed with LPs on their edges, spines out; a few lean at a bay's
+    // end, their covers showing. Every sleeve is one of sixteen covers (albumCovers), its spine the colour of its cover.
+    const SH = [0.085, 0.5];   // the rows' floors
+    add(books, box(BW - 0.05, 0.022, BD - 0.03), carcass, [BX, SH[1] - 0.011, BZ0 + 0.005]);
+    for (const y0 of SH) add(books, box(0.022, (y0 === SH[0] ? SH[1] - 0.022 : BH) - y0, BD - 0.03), carcass, [BX, (y0 + (y0 === SH[0] ? SH[1] - 0.022 : BH)) / 2, BZ0 + 0.005]);   // the bays' divider
+    const sleeves = albumCovers(), cardEdge = std(0xd8d0c0, { roughness: 0.9 });
+    const covers = Array.from({ length: 16 }, (_, i) => { const t = sleeves.map.clone(); if (MIRROR < 0) { t.repeat.set(-0.25, 0.25); t.offset.set((i % 4 + 1) * 0.25, 0.75 - Math.floor(i / 4) * 0.25); } else { t.repeat.set(0.25, 0.25); t.offset.set((i % 4) * 0.25, 0.75 - Math.floor(i / 4) * 0.25); } t.needsUpdate = true; return t; });
+    const lp = covers.map((t, i) => { const cover = new THREE.MeshStandardMaterial({ map: t, roughness: 0.55 }), spine = std(sleeves.spines[i], { roughness: 0.6 }); return [cover, cover, cardEdge, cardEdge, spine, cardEdge]; });
+    const LP = 0.315;
+    const record = (x, floor, t, i, lean = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(t, LP, LP), lp[i % 16]); m.position.set(x, floor + LP / 2 + Math.abs(Math.sin(lean)) * 0.002, BZ0 + BD / 2 - 0.02 - LP / 2 - brnd() * 0.006); m.rotation.z = lean; m.castShadow = m.receiveShadow = true; books.add(m); };
+    SH.forEach((floor) => {
+      for (const side of [-1, 1]) {
+        const left = side < 0 ? BX - BW / 2 + 0.03 : BX + 0.016, right = side < 0 ? BX - 0.016 : BX + BW / 2 - 0.03;
+        // packed from one end, two or three leaning into the gap left at the other
+        const fill = 0.62 + brnd() * 0.25;
+        let x = side < 0 ? left : right;
+        const stopAt = side < 0 ? left + (right - left) * fill : right - (right - left) * fill;
+        while (side < 0 ? x < stopAt : x > stopAt) {
+          const t = brnd() < 0.08 ? 0.009 : 0.0035 + brnd() * 0.0025;
+          record(x + side * -0 + (side < 0 ? t / 2 : -t / 2), floor, t, Math.floor(brnd() * 16));
+          x += side < 0 ? t + 0.0004 : -(t + 0.0004);
+        }
+        for (let k = 0; k < 3; k++) { const t = 0.004; const lean = side < 0 ? -0.22 - k * 0.05 : 0.22 + k * 0.05; record(x + (side < 0 ? 0.03 + k * 0.012 : -0.03 - k * 0.012), floor, t, Math.floor(brnd() * 16), lean); }
+      }
+    });
+    // On top (owner, 2026-11-25): a small record player in the middle and a bookshelf speaker at each end, toed in a touch toward the room.
+    const TOP = BH + 0.03, black = std(0x111111, { roughness: 0.35 }), satin = new THREE.MeshStandardMaterial({ color: 0xc9ccd0, metalness: 1, roughness: 0.25 });
+    const walnut = new THREE.MeshStandardMaterial({ ...walnutVeneer([0.3, 0.3]), roughness: 0.45 });
+    // the record player: a walnut plinth on four little feet, a cast platter with a black record and its red label, the tone arm
+    // resting across the record's edge, a speed knob and a smoked dust cover hinged open behind
+    const deck = new THREE.Group(); deck.position.set(BX, TOP, BZ0 + 0.01); books.add(deck);
+    for (const dx of [-0.15, 0.15]) for (const dz of [-0.11, 0.11]) add(deck, cyl(0.014, 0.014, 0.012, 12), black, [dx, 0.006, dz], { cast: false });
+    add(deck, rbox(0.36, 0.06, 0.28, 0.008), walnut, [0, 0.042, 0]);
+    add(deck, cyl(0.126, 0.126, 0.012, 48), satin, [-0.03, 0.078, 0]);
+    add(deck, cyl(0.122, 0.122, 0.003, 64), new THREE.MeshPhysicalMaterial({ color: 0x0b0b0b, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.3 }), [-0.03, 0.0855, 0], { cast: false });
+    add(deck, cyl(0.035, 0.035, 0.0035, 32), std(0xa8282c, { roughness: 0.6 }), [-0.03, 0.0865, 0], { cast: false });
+    add(deck, cyl(0.004, 0.004, 0.02, 8), satin, [-0.03, 0.094, 0], { cast: false });                                       // the spindle
+    add(deck, cyl(0.016, 0.018, 0.02, 16), satin, [0.135, 0.082, -0.08]);                                                     // the arm's pivot
+    const arm = add(deck, cyl(0.003, 0.003, 0.2, 8), satin, [0.075, 0.095, -0.02], { cast: false }); arm.rotation.set(Math.PI / 2, 0, 0); arm.rotation.y = 0.55; arm.rotation.order = "YXZ";
+    add(deck, box(0.02, 0.012, 0.03), black, [0.015, 0.094, 0.06], { cast: false });                                         // the head shell
+    add(deck, cyl(0.012, 0.012, 0.014, 16), satin, [0.14, 0.079, 0.1]);                                                       // the speed knob
+    add(deck, box(0.35, 0.2, 0.004), new THREE.MeshPhysicalMaterial({ color: 0x302820, roughness: 0.08, transmission: 0.7, thickness: 0.004, transparent: true, opacity: 0.45 }), [0, 0.17, -0.15], { cast: false, rot: [-0.32, 0, 0] });   // the open dust cover
+    // the speakers: walnut cabinets, a black baffle with a woofer (its cone and dust cap) and a little dome tweeter above it
+    for (const side of [-1, 1]) {
+      const spk = new THREE.Group(); spk.position.set(BX + side * 0.47, TOP, BZ0 + 0.01); spk.rotation.y = -side * 0.12; books.add(spk);
+      add(spk, rbox(0.16, 0.26, 0.2, 0.006), walnut, [0, 0.13, 0]);
+      add(spk, box(0.146, 0.246, 0.004), std(0x161616, { roughness: 0.7 }), [0, 0.13, 0.1], { cast: false });
+      add(spk, cyl(0.052, 0.052, 0.006, 32), std(0x262626, { roughness: 0.5 }), [0, 0.09, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                // the woofer's surround
+      add(spk, cyl(0.044, 0.02, 0.012, 32, true), std(0x1a1a1a, { roughness: 0.85 }), [0, 0.09, 0.1], { cast: false, rot: [Math.PI / 2, 0, 0] });             // its cone
+      add(spk, new THREE.SphereGeometry(0.014, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x2c2c2c, { roughness: 0.4 }), [0, 0.09, 0.104], { cast: false, rot: [Math.PI / 2, 0, 0] });   // the dust cap
+      add(spk, cyl(0.02, 0.02, 0.005, 24), satin, [0, 0.19, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                                                // the tweeter's ring
+      add(spk, new THREE.SphereGeometry(0.011, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x101010, { roughness: 0.2 }), [0, 0.19, 0.106], { cast: false, rot: [Math.PI / 2, 0, 0] });
+    }
+  }
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
   add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: stripeRug(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
