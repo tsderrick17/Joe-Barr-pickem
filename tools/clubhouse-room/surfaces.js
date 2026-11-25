@@ -369,3 +369,40 @@ export function leatherGrain(repeat = [4, 4]) {
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8;
   return t;
 }
+
+// A leaf's skin, laid along a frond's own UVs (u from stem to tip, v across with the midrib at the middle): the green lighter toward the
+// stem and the midrib and deeper toward the edges, a pale midrib, fine side veins sweeping out toward the tip, and a faint stipple, with
+// the veins pressed in for the relief. `torn` cuts the splits a banana or bird of paradise leaf gets: slits from the edge toward the
+// midrib along the veins (see-through, alphaTest), so the leaf reads as a real one, not a cut-out.
+export function leafSkin(tone, { veins = 26, torn = 0, seed = 5 } = {}) {
+  const rnd = stream(seed), W = 512, H = 256;
+  return pair(W, H, (g, b) => {
+    const [r, gg, bl] = tone;
+    const across = g.createLinearGradient(0, 0, 0, H);
+    const edge = `rgb(${r * 0.72}, ${gg * 0.74}, ${bl * 0.7})`, mid = `rgb(${Math.min(255, r * 1.12)}, ${Math.min(255, gg * 1.1)}, ${Math.min(255, bl * 1.05)})`;
+    across.addColorStop(0, edge); across.addColorStop(0.42, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(0.5, mid); across.addColorStop(0.58, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(1, edge);
+    g.fillStyle = across; g.fillRect(0, 0, W, H);
+    const along = g.createLinearGradient(0, 0, W, 0); along.addColorStop(0, "rgba(220, 240, 170, .18)"); along.addColorStop(0.35, "rgba(220, 240, 170, 0)"); along.addColorStop(1, "rgba(10, 30, 10, .12)");
+    g.fillStyle = along; g.fillRect(0, 0, W, H);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, W, H);
+    for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(${rnd() < 0.5 ? "255, 255, 220" : "0, 30, 0"}, ${0.03 + rnd() * 0.05})`; g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2, 1 + rnd() * 2); }
+    // side veins: from the midrib out and forward to the edge, both halves
+    for (let k = 1; k < veins; k++) {
+      const x = (k / veins) * W * 0.96, sweep = 40 + rnd() * 20;
+      for (const side of [-1, 1]) {
+        g.strokeStyle = `rgba(230, 245, 190, ${0.12 + rnd() * 0.08})`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, H / 2); g.quadraticCurveTo(x + sweep * 0.5, H / 2 + side * H * 0.22, x + sweep, H / 2 + side * H * 0.5); g.stroke();
+        b.strokeStyle = "rgba(60, 60, 60, .6)"; b.lineWidth = 1.2; b.stroke();
+      }
+    }
+    // the midrib: a pale raised line down the middle, broad at the stem, fine at the tip
+    for (let x = 0; x < W; x += 2) { const w = 5 * (1 - x / W) + 1; g.fillStyle = "rgba(225, 240, 185, .55)"; g.fillRect(x, H / 2 - w / 2, 2, w); b.fillStyle = "#d0d0d0"; b.fillRect(x, H / 2 - w / 2, 2, w); }
+    if (torn) {
+      g.globalCompositeOperation = "destination-out";
+      for (let k = 0; k < torn; k++) {
+        const x = W * (0.2 + rnd() * 0.7), side = rnd() < 0.5 ? -1 : 1, depth = H * (0.18 + rnd() * 0.26);
+        g.lineWidth = 2.2; g.strokeStyle = "black"; g.beginPath(); g.moveTo(x + 30, side > 0 ? H : 0); g.quadraticCurveTo(x + 12, H / 2 + side * (H / 2 - depth * 0.5), x, H / 2 + side * (H / 2 - depth)); g.stroke();
+      }
+      g.globalCompositeOperation = "source-over";
+    }
+  });
+}

@@ -33,6 +33,8 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - Haptics across the clubhouse, with the app's five feels and their one meaning each: picking on your ticket ticks, taking a pick back is a light tick, a full ticket warns, a Survivor team locks in (as on the Slate); tapping a place in the room, the ticket, the deck's tabs, the Big Board's week and links, the Bowl ticket's Picks/Sheet and the Notifications fold tick; a pop-up put away by the player gives a light tick (shared Sheet, the Commissioner's too).
 - On a desktop the Chat pill sits on the bar's front panel, just under the counter by the laptop (owner, 2026-11-25).
 - Room texture pass: the beams and mantel are solid timber with grain, knots and checks; the leather (poker chairs, the table's rail, the bar stools) has a fine hide grain. New surfaces draw from random streams of their own so nothing else in the room shifts.
+- The chalkboard's still sketch is lighter and less basic (owner: "a bit too bold and a bit too basic"): seven fine chalk lines that weave and cross over nine weeks like a real season, each with a soft halo of dust and a dot where it ends, faint dashed week guides and a finer axis. Still no names, numbers or title.
+- Plant realism pass: every leaf wears a skin (pale midrib, fine side veins, lighter at the stem and deeper to the edges, a faint stipple), a waxy sheen and a little light through it; stems are a lighter grey-green; the bird of paradise's paddles are broader, cupped and split along their veins.
 
 ## 2026-11-23 - Small batch: trophies beside names, centred sun and moon
 
