@@ -1308,3 +1308,11 @@ test("the sun and the moon sit in the exact middle of the day and night button",
   }
 });
 
+
+test("by night the clubhouse's Claim your seat ticket takes the Bowl Pool's night colours (light words on the dark card)", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead(false), theme: "night" });
+  const claim = page.getByRole("dialog", { name: "Bowl Pool" }).getByRole("region", { name: "Join the Bowl Pool" });
+  await expect(claim).toBeVisible({ timeout: 30_000 });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-claim-night-phone-390.png", { maxDiffPixels: 40 });
+});
