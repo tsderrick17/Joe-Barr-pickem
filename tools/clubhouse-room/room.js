@@ -610,8 +610,8 @@ export async function buildRoom(q) {
   STONE.lift = Number(q.get("stonelift") ?? 1);
   // The stone is real relief, not only shading: the wall's surface is moved out by each stone's height (displacement), so stones stand
   // proud of one another, throw shade into their joints and break the chimney's outline. stonedisp=0 goes back to a flat shaded wall.
-  const DISP = Number(q.get("stonedisp") ?? 0.04), stoneTex = fieldstone();
-  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...stoneTex, bumpScale: Number(q.get("stonebump") ?? 14), roughness: 0.92, ...(DISP ? { displacementMap: stoneTex.bumpMap, displacementScale: DISP, displacementBias: -DISP * 0.15 } : {}) });
+  const DISP = Number(q.get("stonedisp") ?? 0.04), { displacementMap: stoneRelief, ...stoneTex } = fieldstone();
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...stoneTex, bumpScale: Number(q.get("stonebump") ?? 10), roughness: 0.92, ...(DISP ? { displacementMap: stoneRelief, displacementScale: DISP, displacementBias: -DISP * 0.15 } : {}) });
   // Every stone box is laid with wrapTile, so the stones carry round the corners of the chimney and the fireplace surround; with relief on,
   // it is cut fine enough (about 2.5 cm) for the surface to follow each stone.
   const seg = (size) => (DISP ? Math.max(1, Math.ceil(size / 0.025)) : 1);

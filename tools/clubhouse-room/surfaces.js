@@ -104,7 +104,7 @@ export function fieldstone() {
   const N = 48, lattice = Array.from({ length: N * N }, () => rand()), at = (i, j) => lattice[(((j % N) + N) % N) * N + (((i % N) + N) % N)];
   const mottle = (u, v) => { const x = u * N, y = v * N, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy); return (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy; };
   const c = canvas(W, H), b = canvas(W, H), cg = c.getContext("2d"), bg = b.getContext("2d");
-  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H);
+  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H), d = canvas(W, H), dg = d.getContext("2d"), di = dg.createImageData(W, H);
   for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
     const u = px / W, v = py / H, gi = Math.floor(u * GX), gj = Math.floor(v * GY);
     let d1 = 9, d2 = 9, s1 = seeds[0], ox = 0, oy = 0;
@@ -128,12 +128,19 @@ export function fieldstone() {
     const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity * proud - rim) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
     const col = mortar ? [118, 108, 94] : s1.c;
     for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit * 1.1));
-    const hgt = mortar ? 30 + grit : 60 + (110 + 40 * s1.dome) * round + s1.lift * 48 * lift * round + blot * 50 + pit * 46 + fine * 24 + grit * 0.9;
+    // The stone's shape (its dome and how far it stands out) and, much fainter, its pitting: smooth faces that still feel worn.
+    const form = mortar ? 30 : 60 + (110 + 40 * s1.dome) * round + s1.lift * 48 * lift * round;
+    const hgt = mortar ? 30 + grit * 0.3 : form + blot * 24 + pit * 16 + fine * 6 + grit * 0.25;
     bi.data[o] = bi.data[o + 1] = bi.data[o + 2] = Math.max(0, Math.min(255, hgt)); ci.data[o + 3] = bi.data[o + 3] = 255;
+    di.data[o] = di.data[o + 1] = di.data[o + 2] = Math.max(0, Math.min(255, form)); di.data[o + 3] = 255;
   }
-  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0);
-  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b); bumpMap.anisotropy = 8; bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
-  return { map, bumpMap };
+  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0); dg.putImageData(di, 0, 0);
+  // The relief the wall is shaped by: only each stone's form, softened a little so faces and edges come out smooth, never jagged.
+  const soft = canvas(W, H), sg = soft.getContext("2d"); sg.filter = "blur(3px)";
+  for (const [x, y] of [[0, 0], [-W, 0], [W, 0], [0, -H], [0, H]]) sg.drawImage(d, x, y);   // wrapped, so the blur meets itself at the tile's edges
+  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b), displacementMap = new THREE.CanvasTexture(soft);
+  for (const t of [bumpMap, displacementMap]) { t.anisotropy = 8; t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  return { map, bumpMap, displacementMap };
 }
 
 // The thatch behind the courses: deep, dark straw, only glimpsed between them.
