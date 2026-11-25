@@ -757,10 +757,34 @@ export async function buildRoom(q) {
       // the last two lean against the rest
       if (row !== 1 && x < stop - 0.06) { book(x + 0.04, floor + 0.0, 0.03, clear * 0.8, 0.18, row * 7 + 2, -0.32); }
     });
-    // on top: a little framed photograph leaning back, and two books lying flat
-    add(books, box(0.16, 0.2, 0.015), std(0x2a1a10, { roughness: 0.6 }), [BX + 0.32, BH + 0.03 + 0.1, BZ0 - 0.04], { rot: [-0.18, 0, 0] });
-    add(books, new THREE.PlaneGeometry(0.12, 0.16), std(0xc8b48c, { roughness: 0.7 }), [BX + 0.32, BH + 0.03 + 0.1, BZ0 - 0.03], { rot: [-0.18, 0, 0], cast: false });
-    for (let k = 0; k < 2; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.24 - k * 0.03, 0.035, 0.17), cloth[k ? 9 : 4]); m.position.set(BX - 0.25, BH + 0.03 + 0.0175 + k * 0.035, BZ0); m.rotation.y = k * 0.12; m.castShadow = true; books.add(m); }
+    // On top (owner, 2026-11-25): a small record player in the middle and a bookshelf speaker at each end, toed in a touch toward the room.
+    const TOP = BH + 0.03, black = std(0x111111, { roughness: 0.35 }), satin = new THREE.MeshStandardMaterial({ color: 0xc9ccd0, metalness: 1, roughness: 0.25 });
+    const walnut = new THREE.MeshStandardMaterial({ ...walnutVeneer([0.3, 0.3]), roughness: 0.45 });
+    // the record player: a walnut plinth on four little feet, a cast platter with a black record and its red label, the tone arm
+    // resting across the record's edge, a speed knob and a smoked dust cover hinged open behind
+    const deck = new THREE.Group(); deck.position.set(BX, TOP, BZ0 + 0.01); books.add(deck);
+    for (const dx of [-0.15, 0.15]) for (const dz of [-0.11, 0.11]) add(deck, cyl(0.014, 0.014, 0.012, 12), black, [dx, 0.006, dz], { cast: false });
+    add(deck, rbox(0.36, 0.06, 0.28, 0.008), walnut, [0, 0.042, 0]);
+    add(deck, cyl(0.126, 0.126, 0.012, 48), satin, [-0.03, 0.078, 0]);
+    add(deck, cyl(0.122, 0.122, 0.003, 64), new THREE.MeshPhysicalMaterial({ color: 0x0b0b0b, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.3 }), [-0.03, 0.0855, 0], { cast: false });
+    add(deck, cyl(0.035, 0.035, 0.0035, 32), std(0xa8282c, { roughness: 0.6 }), [-0.03, 0.0865, 0], { cast: false });
+    add(deck, cyl(0.004, 0.004, 0.02, 8), satin, [-0.03, 0.094, 0], { cast: false });                                       // the spindle
+    add(deck, cyl(0.016, 0.018, 0.02, 16), satin, [0.135, 0.082, -0.08]);                                                     // the arm's pivot
+    const arm = add(deck, cyl(0.003, 0.003, 0.2, 8), satin, [0.075, 0.095, -0.02], { cast: false }); arm.rotation.set(Math.PI / 2, 0, 0); arm.rotation.y = 0.55; arm.rotation.order = "YXZ";
+    add(deck, box(0.02, 0.012, 0.03), black, [0.015, 0.094, 0.06], { cast: false });                                         // the head shell
+    add(deck, cyl(0.012, 0.012, 0.014, 16), satin, [0.14, 0.079, 0.1]);                                                       // the speed knob
+    add(deck, box(0.35, 0.2, 0.004), new THREE.MeshPhysicalMaterial({ color: 0x302820, roughness: 0.08, transmission: 0.7, thickness: 0.004, transparent: true, opacity: 0.45 }), [0, 0.17, -0.15], { cast: false, rot: [-0.32, 0, 0] });   // the open dust cover
+    // the speakers: walnut cabinets, a black baffle with a woofer (its cone and dust cap) and a little dome tweeter above it
+    for (const side of [-1, 1]) {
+      const spk = new THREE.Group(); spk.position.set(BX + side * 0.47, TOP, BZ0 + 0.01); spk.rotation.y = -side * 0.12; books.add(spk);
+      add(spk, rbox(0.16, 0.26, 0.2, 0.006), walnut, [0, 0.13, 0]);
+      add(spk, box(0.146, 0.246, 0.004), std(0x161616, { roughness: 0.7 }), [0, 0.13, 0.1], { cast: false });
+      add(spk, cyl(0.052, 0.052, 0.006, 32), std(0x262626, { roughness: 0.5 }), [0, 0.09, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                // the woofer's surround
+      add(spk, cyl(0.044, 0.02, 0.012, 32, true), std(0x1a1a1a, { roughness: 0.85 }), [0, 0.09, 0.1], { cast: false, rot: [Math.PI / 2, 0, 0] });             // its cone
+      add(spk, new THREE.SphereGeometry(0.014, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x2c2c2c, { roughness: 0.4 }), [0, 0.09, 0.104], { cast: false, rot: [Math.PI / 2, 0, 0] });   // the dust cap
+      add(spk, cyl(0.02, 0.02, 0.005, 24), satin, [0, 0.19, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                                                // the tweeter's ring
+      add(spk, new THREE.SphereGeometry(0.011, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x101010, { roughness: 0.2 }), [0, 0.19, 0.106], { cast: false, rot: [Math.PI / 2, 0, 0] });
+    }
   }
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
