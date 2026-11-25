@@ -339,21 +339,33 @@ for (const [label, size, theme] of [["phone-390", SIZES["phone-390"], "day"], ["
   test(`the Notifications pop-up looks like the clubhouse, at ${label} by ${theme}`, async ({ page }) => {
     await openClubhouse(page, { at: "/clubhouse#notifications", theme, size });
     const sheet = page.getByRole("dialog", { name: "Notifications" });
-    await expect(sheet.getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+    await expect(sheet.getByText("Send me pool emails")).toBeVisible({ timeout: 30_000 });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
     await page.waitForTimeout(600);
     await expect(page).toHaveScreenshot(`clubhouse-notifications-${theme}-${label}.png`, { maxDiffPixels: 40 });
   });
 }
 
-test("the Notifications pop-up's email plans and fine-tune choices wear the clubhouse's navy and gold", async ({ page }) => {
+test("Notifications reads like a phone's settings: a switch for pool emails, the plan in three plain choices, every email folded under Choose each email, and Save", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#notifications", theme: "day" });
   const sheet = page.getByRole("dialog", { name: "Notifications" });
-  await sheet.getByLabel(/Send pool emails to this address/).check({ timeout: 30_000 });
+  const emails = sheet.getByRole("switch", { name: /Send me pool emails/ });
+  await emails.check({ timeout: 30_000 });
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
-  await sheet.getByRole("heading", { name: "CHOOSE YOUR EMAIL PLAN" }).scrollIntoViewIfNeeded();
+  const plans = sheet.getByRole("group", { name: "Email plan" });
+  await plans.getByRole("button", { name: "Regular" }).click();
+  await expect(plans.getByRole("button", { name: "Regular" })).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.getByText("Essentials, plus the Slate")).toBeVisible();
+  // One email switched off by hand: no plan is chosen any more, and the line says it is your own mix.
+  await sheet.getByRole("button", { name: "Choose each email" }).click();
+  await sheet.getByRole("switch", { name: /Fresh Slate on Wednesday/ }).uncheck();
+  await expect(plans.getByRole("button", { name: "Regular" })).toHaveAttribute("aria-pressed", "false");
+  await expect(sheet.getByText("Your own mix")).toBeVisible();
+  await sheet.getByRole("group", { name: "Email plan" }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
   await expect(page).toHaveScreenshot("clubhouse-notifications-plans-phone-390.png", { maxDiffPixels: 40 });
+  await sheet.getByRole("button", { name: "Save" }).click();
+  await expect(sheet.getByRole("status")).toHaveText(/saved/i);
 });
 
 for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
@@ -400,7 +412,7 @@ test("Notifications is a plate in the room's glass doors, like the others: it op
   await page.keyboard.press("Escape");
   await room.getByRole("button", { name: "Notifications", exact: true }).click();
   await expect(page).toHaveURL(/\/clubhouse#notifications$/);
-  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send pool emails to this address")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("dialog", { name: "Notifications" }).getByText("Send me pool emails")).toBeVisible({ timeout: 30_000 });
 });
 
 test("the Survivor table's Make pick opens your ticket on Survivor", async ({ page }) => {

@@ -47,7 +47,7 @@ type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" |
 const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot", chalkface: "snapshot" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications", snapshot: "Season Snapshot" };
 // Notifications (the app, phone notifications, the email plan) is loaded only when its pop-up is opened.
-const NotificationSettings = dynamic(() => import("@/components/notification-settings").then((module) => module.NotificationSettings));
+const ClubNotifications = dynamic(() => import("@/components/clubhouse/notifications").then((module) => module.ClubNotifications));
 // The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
 const DECK: Pane[] = ["standings", "slate", "survivor", "bowl"];
 // The classic pages, loaded the first time they are opened: any week the new board does not cover.
@@ -357,7 +357,7 @@ export default function ClubhousePage() {
       </div></Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
-      {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><div className="club-notify"><h3>Notifications</h3><NotificationSettings inSheet /></div></Sheet> : null}
+      {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><ClubNotifications /></Sheet> : null}
       {classic ? <section aria-label="Standings" className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>

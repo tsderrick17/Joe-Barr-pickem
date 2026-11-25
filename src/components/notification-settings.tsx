@@ -8,7 +8,7 @@ import { haptic } from "@/lib/haptics-client";
 import { useHapticsKind } from "@/lib/use-haptics";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
-type NotificationChoices = {
+export type NotificationChoices = {
   weekly: boolean;
   finalLines: boolean;
   sundayFinalLines: boolean;
@@ -44,18 +44,18 @@ type Profile = {
   emailPlayoffPublicRevealEnabled: boolean;
 };
 
-type NotificationPace = "essentials" | "regular" | "full" | "custom";
-type FinalLineChoice = "all" | "sunday" | "none";
+export type NotificationPace = "essentials" | "regular" | "full" | "custom";
+export type FinalLineChoice = "all" | "sunday" | "none";
 
-const essentials: NotificationChoices = { weekly: false, finalLines: false, sundayFinalLines: false, earlyLock: false, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: false, playoffPublicReveal: false };
-const regular: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: false };
-const full: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: true, sundayLateReveal: true, featuredWindowReveal: true, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: true };
+export const essentials: NotificationChoices = { weekly: false, finalLines: false, sundayFinalLines: false, earlyLock: false, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: false, playoffPublicReveal: false };
+export const regular: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: false };
+export const full: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: true, sundayLateReveal: true, featuredWindowReveal: true, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: true };
 
 function matches(left: NotificationChoices, right: NotificationChoices) {
   return (Object.keys(left) as Array<keyof NotificationChoices>).every((key) => left[key] === right[key]);
 }
 
-function paceFor(preferences: NotificationChoices): NotificationPace {
+export function paceFor(preferences: NotificationChoices): NotificationPace {
   if (matches(preferences, essentials)) return "essentials";
   if (matches(preferences, regular)) return "regular";
   if (matches(preferences, full)) return "full";
@@ -81,15 +81,14 @@ function FinalLinesChoice({ active, detail, onChoose, title }: { active: boolean
 }
 
 /**
- * A player's notification choices: getting the app, phone notifications, and pool emails with their pace. The Notifications page
- * shows it; the clubhouse opens the same thing from its cloud, in a pop-up (`inSheet`: no page around it, no page-sized heading).
+ * A player's notification choices, read from and saved to their profile: shared by the Notifications page and the clubhouse's
+ * Notifications pop-up, which look different but save exactly the same thing.
  */
-export function NotificationSettings({ inSheet = false }: { inSheet?: boolean }) {
+export function useNotificationChoices() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [preferences, setPreferences] = useState<NotificationChoices>(regular);
-  const [showFineTune, setShowFineTune] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -106,7 +105,7 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data);
-        setEmail(data.notificationEmail);
+        setEmail(data.notificationEmail ?? "");
         setEnabled(data.emailNotificationsEnabled);
         setPreferences({
           weekly: data.emailWeeklyEnabled,
@@ -131,8 +130,7 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
     return () => { active = false; };
   }, []);
 
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function save() {
     setSaving(true); setError(""); setMessage("");
     try {
       const response = await fetchWithSession("/api/profile", {
@@ -165,6 +163,18 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
       else setError(reason instanceof Error ? reason.message : "Your notification settings could not be saved.");
     } finally { setSaving(false); }
   }
+
+  return { profile, email, setEmail, enabled, setEnabled, preferences, setPreferences, update, pace, finalLineChoice, message, error, saving, save };
+}
+
+/**
+ * A player's notification choices: getting the app, phone notifications, and pool emails with their pace. The Notifications page
+ * shows it; the clubhouse opens the same thing from its cloud, in a pop-up (`inSheet`: no page around it, no page-sized heading).
+ */
+export function NotificationSettings({ inSheet = false }: { inSheet?: boolean }) {
+  const { profile, email, setEmail, enabled, setEnabled, preferences, setPreferences, update, pace, finalLineChoice, message, error, saving, save: saveChoices } = useNotificationChoices();
+  const [showFineTune, setShowFineTune] = useState(false);
+  const save = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); void saveChoices(); };
 
   if (!profile && !error) return inSheet ? <p className="notification-settings is-sheet">Loading Notifications…</p> : <main className="min-h-screen bg-(color:--themed-bg-18) p-8 text-(color:--themed-text-18)">Loading Notifications…</main>;
 
