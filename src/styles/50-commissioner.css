@@ -217,7 +217,7 @@
 
 /* Commissioner desk: the Clubhouse. Forest felt, a gilt hairline frame, cream paper cards, one cognac leather band. Colors come from
    the --club-* tokens, which carry their own night values, so nothing here needs a night rule. */
-.commissioner-desk, .commissioner-subpage {
+.commissioner-subpage {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .26 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), var(--club-page);
   color: var(--club-ink);
 }
@@ -351,7 +351,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 .desk-status.is-warn { border-left-color: var(--club-warn); }
 .desk-status.is-alert { border-left-color: var(--club-alert); }
 .desk-card.is-awaiting { box-shadow: 0 0 0 1px var(--club-gold-dk); opacity: .85; }
-.desk-rule-top { border-top: 1px solid var(--club-line); }
 .desk-rule-bottom { border-bottom: 1px solid var(--club-gold-dk); }
 .desk-rule-y { border-block: 1px solid var(--club-gold-dk); }
 .desk-input { background: var(--field-bg, var(--club-paper)); border: 1px solid var(--field-edge, var(--club-line)); border-radius: 2px; color: var(--field-ink, var(--club-ink)); }
@@ -416,11 +415,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 }
 .commissioner-tool-card--write { border-left-color: var(--club-cognac-2); }
 .commissioner-tool-card--write .commissioner-tool-eyebrow { color: var(--club-cognac); }
-.commissioner-diagnostics { border-bottom: 1px solid var(--club-line); margin-top: 1rem; padding: .8rem 0 1.2rem; }
-.commissioner-diagnostics summary { cursor: pointer; font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; }
-.commissioner-diagnostics summary span { color: var(--club-muted); display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; font-weight: 500; margin-top: .35rem; }
-.commissioner-diagnostics > details + details { border-top: 1px solid var(--club-line); margin-top: 1rem; padding-top: 1rem; }
-.commissioner-diagnostics details[open] summary { color: var(--club-cognac); }
 
 /* Compact the commissioner subpages while preserving comfortable form targets. */
 .commissioner-subpage > div > header { padding-bottom: 1.2rem; }
@@ -439,7 +433,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
   [aria-labelledby="grading-dashboard-title"] > .grading-rail button:first-of-type { display: none; }
   [aria-labelledby="grading-dashboard-title"] > .grading-rail select { min-width: 0; max-width: 9rem; padding: .34rem .4rem; }
   [aria-labelledby="grading-dashboard-title"] > .grading-rail button { padding: .34rem .45rem; }
-  .commissioner-desk { padding-left: .85rem; padding-right: .85rem; }
 
 }
 
@@ -479,12 +472,6 @@ select.desk-button { background-color: var(--select-bg, transparent); border-col
 }
 
 /* ---- Trophy room: past champions as plaques, and the all-time batting table. */
-.trophy-season h3 { font: 400 1.9rem Georgia, serif; letter-spacing: .02em; margin: 0; }
-.trophy-season dl { display: grid; gap: .5rem; margin: .6rem 0 0; }
-.trophy-season dl > div { align-items: baseline; border-top: 1px solid var(--club-line); display: grid; gap: .6rem; grid-template-columns: 5.6rem minmax(0, 1fr); padding-top: .5rem; }
-.trophy-season dt { color: var(--club-muted); font: 700 .62rem Arial, sans-serif; letter-spacing: .2em; text-transform: uppercase; }
-.trophy-season dd { font: 400 1.05rem Georgia, serif; margin: 0; }
-.trophy-season dd.is-open { color: var(--club-muted); font-style: italic; }
 .trophy-display { background: oklch(0.13 0.01 20); border: 1px solid var(--club-gold-dk); }
 .trophy-turn-stage { position: relative; user-select: none; }
 .trophy-turn-stage:focus-visible { outline: 2px solid var(--club-gold-dk); outline-offset: -4px; }
