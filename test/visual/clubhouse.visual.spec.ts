@@ -209,7 +209,7 @@ test("a ticket sent says so on the Big Board's bar, with the time it was saved",
   await cells.nth(0).click();
   await cells.nth(2).click();
   await form.getByRole("button", { name: /Submit picks/ }).click();
-  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED ✓.*Saved at \d{1,2}:\d{2} [AP]M/);
+  await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED.*Saved\s*\d{1,2}:\d{2} [AP]M/);
 });
 
 test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
@@ -431,7 +431,7 @@ test("the Big Board's week is a button: choosing another week shows that week's 
   const board = page.getByRole("dialog", { name: "The Big Board" });
   const week = board.getByLabel("Change week");
   await expect(week).toBeVisible({ timeout: 30_000 });
-  await expect(board.getByRole("button", { name: /Tap here to (pick|change a pick)/ })).toBeVisible();
+  await expect(board.getByRole("button", { name: /Your ticket.*(PICKS? TO MAKE|ALL PICKS IN|PICKS SAVED|SUBMITTED)/ })).toBeVisible();
   // The switch's three tabs (Big Board, Ticket, Survivor) are exact mirrors: the same width and height.
   const tabs = await board.locator(".club-deck-tabs > *").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return [Math.round(box.width), Math.round(box.height)]; }));
   expect(tabs).toHaveLength(4); for (const tab of tabs) expect(tab).toEqual(tabs[0]);
