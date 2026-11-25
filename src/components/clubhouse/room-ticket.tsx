@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import Link from "next/link";
 import { useLayoutEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { Lamp, Logo, type LampState } from "@/components/clubhouse/lamps";
@@ -61,7 +62,7 @@ export function RoomTicket({ ticket, week, savedAt = null, onOpen, href, tucked 
       </span>
     </span>
   );
-  const ticketButton = href ? <Link className="lab-room-ticket" href={href}>{inside}</Link> : <button className="lab-room-ticket" onClick={onOpen} type="button">{inside}</button>;
+  const ticketButton = href ? <Link className="lab-room-ticket" href={href} onClick={() => haptic("tick")}>{inside}</Link> : <button className="lab-room-ticket" onClick={() => { haptic("tick"); onOpen?.(); }} type="button">{inside}</button>;
   if (!onTuck) return ticketButton;
   return (
     <div className={`club-ticket-dock${tucked ? " is-tucked" : ""}`} data-no-pull-refresh="">

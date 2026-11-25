@@ -312,3 +312,60 @@ export function bottleLabels() {
   });
   return texture(c);
 }
+
+// A random stream of its own for the surfaces added later, so adding one never reshuffles the rest of the room.
+const stream = (seed) => { let r = seed; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; };
+
+// Solid timber for the beams, the trusses and the mantel: one piece of wood, not boards. Long grain along its length (the width of the
+// picture) that wavers and gathers round the odd knot, a few seasoning checks, a slow wash of tone; its relief follows the grain.
+// `tone` is the wood's middle colour as [r, g, b].
+export function timberGrain(tone, repeat = [1, 1]) {
+  const rnd = stream(tone[0] * 7 + tone[1]);
+  return pair(1024, 512, (g, b) => {
+    const [r0, g0, b0] = tone;
+    g.fillStyle = `rgb(${r0}, ${g0}, ${b0})`; g.fillRect(0, 0, 1024, 512);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, 1024, 512);
+    const wash = g.createLinearGradient(0, 0, 0, 512); wash.addColorStop(0, "rgba(0, 0, 0, .08)"); wash.addColorStop(0.5, "rgba(255, 220, 170, .05)"); wash.addColorStop(1, "rgba(0, 0, 0, .1)");
+    g.fillStyle = wash; g.fillRect(0, 0, 1024, 512);
+    const knots = Array.from({ length: 3 }, () => ({ x: rnd() * 1024, y: 60 + rnd() * 392, r: 8 + rnd() * 10 }));
+    for (let k = 0; k < 140; k++) {
+      const y0 = rnd() * 512, dark = rnd() < 0.65, amp = 2 + rnd() * 6, len = 120 + rnd() * 300;
+      g.strokeStyle = dark ? `rgba(${r0 * 0.45}, ${g0 * 0.4}, ${b0 * 0.35}, ${0.12 + rnd() * 0.22})` : `rgba(255, 225, 180, ${0.04 + rnd() * 0.07})`;
+      g.lineWidth = 0.6 + rnd() * 1.6; g.beginPath();
+      for (let x = -20; x <= 1044; x += 16) {
+        let y = y0 + Math.sin(x / len + k) * amp;
+        for (const kn of knots) { const dx = x - kn.x, dy = y - kn.y, d = Math.hypot(dx, dy); if (d < kn.r * 5) y += (dy >= 0 ? 1 : -1) * (kn.r * 5 - d) * 0.35; }
+        if (x === -20) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.stroke();
+      if (dark) { b.strokeStyle = "rgba(50, 50, 50, .3)"; b.lineWidth = 1; b.stroke(); }
+    }
+    for (const kn of knots) {
+      for (let i = 4; i >= 0; i--) { g.fillStyle = `rgba(${r0 * 0.35}, ${g0 * 0.3}, ${b0 * 0.25}, ${0.16 + (4 - i) * 0.1})`; g.beginPath(); g.ellipse(kn.x, kn.y, kn.r * (1 + i * 0.45), kn.r * 0.6 * (1 + i * 0.3), 0, 0, Math.PI * 2); g.fill(); }
+      b.fillStyle = "#5a5a5a"; b.beginPath(); b.ellipse(kn.x, kn.y, kn.r, kn.r * 0.6, 0, 0, Math.PI * 2); b.fill();
+    }
+    for (let k = 0; k < 5; k++) {
+      const x = rnd() * 900, y = 40 + rnd() * 432, l = 80 + rnd() * 160;
+      g.strokeStyle = `rgba(20, 10, 4, ${0.35 + rnd() * 0.25})`; g.lineWidth = 1 + rnd(); g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + (rnd() - 0.5) * 6); g.stroke();
+      b.strokeStyle = "#202020"; b.lineWidth = 2; b.beginPath(); b.moveTo(x, y); b.lineTo(x + l, y + (rnd() - 0.5) * 6); b.stroke();
+    }
+  }, repeat);
+}
+
+// Leather's grain for its relief only: a fine pebble of tiny raised cells with creases between them, so a leather seat or the table's
+// padded rail catches the light like hide instead of plastic.
+export function leatherGrain(repeat = [4, 4]) {
+  const rnd = stream(99);
+  const c = canvas(512, 512), g = c.getContext("2d");
+  g.fillStyle = "#909090"; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 9000; i++) {
+    const x = rnd() * 512, y = rnd() * 512, r = 1.5 + rnd() * 3, t = 140 + rnd() * 60;
+    g.fillStyle = `rgba(${t}, ${t}, ${t}, .55)`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * 512, y = rnd() * 512, a = rnd() * Math.PI;
+    g.strokeStyle = "rgba(60, 60, 60, .35)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * (6 + rnd() * 14), y + Math.sin(a) * (6 + rnd() * 14)); g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8;
+  return t;
+}

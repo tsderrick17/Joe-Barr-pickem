@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import type { BoardView } from "@/lib/board-view.js";
 import { useStableCallback } from "@/lib/use-stable-callback";
@@ -42,9 +43,11 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const choose = (team: string, gameId: string) => {
     const game = view.games.find((item) => item.id === gameId)!;
     const other = team === game.home ? game.away : game.home;
-    if (picks.includes(team)) { setPicks(picks.filter((pick) => pick !== team)); return; }
-    if (picks.length >= cap && !picks.includes(other)) return;
+    // The same feels as the Slate: a pick ticks, taking one back is lighter, a full ticket warns.
+    if (picks.includes(team)) { haptic("lightTick"); setPicks(picks.filter((pick) => pick !== team)); return; }
+    if (picks.length >= cap && !picks.includes(other)) { haptic("warning"); return; }
     const next = [...picks.filter((pick) => pick !== other), team];
+    haptic("tick");
     setPicks(next);
     // The last pick moves you on to Survivor, if it is still to do.
     if (next.length === cap && pickingSurvivor && !chip && !picks.includes(other)) setMode("survivor");
@@ -96,14 +99,14 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
       {view.playoff?.you.forfeited || view.playoff?.you.out ? <p className="lab-ticket-raceover">{view.playoff.you.forfeited ? "You forfeited · your score stands" : "Out of the race · your score stands"}</p> : null}
 
       <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
-        <button aria-pressed={!actionOnly} onClick={() => chooseAction(false)} type="button">All games</button>
-        <button aria-pressed={actionOnly} onClick={() => chooseAction(true)} type="button">Pool action</button>
+        <button aria-pressed={!actionOnly} onClick={() => { haptic("tick"); chooseAction(false); }} type="button">All games</button>
+        <button aria-pressed={actionOnly} onClick={() => { haptic("tick"); chooseAction(true); }} type="button">Pool action</button>
       </div>
 
       {pickingSurvivor ? (
         <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick {cap} vs. the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 · {survivor.left} teams left</small></button>
+          <button aria-pressed={mode === "pickem"} onClick={() => { haptic("tick"); setMode("pickem"); }} type="button">Pick’em<small>pick {cap} vs. the spread</small></button>
+          <button aria-pressed={mode === "survivor"} onClick={() => { haptic("tick"); setMode("survivor"); }} type="button">Survivor<small>pick 1 · {survivor.left} teams left</small></button>
         </div>
       ) : null}
       {survivor.out && !view.champion ? <p className="lab-window-out">You’re out of Survivor{survivor.outWeek ? ` (lost in week ${survivor.outWeek})` : ""}. The pool goes on: follow it at the Survivor table.</p> : null}
@@ -121,7 +124,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
                 const entry = survivor.teams[team];
                 const picked = chip === team;
                 return (
-                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { setChip(picked ? null : team); }} type="button">
+                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { haptic(picked ? "lightTick" : "lockIn"); setChip(picked ? null : team); }} type="button">
                     <span className="lab-board-team"><Logo team={team} />{team}</span>
                     <span className="lab-board-used">{entry.usedWeek ? `USED WK ${entry.usedWeek}` : entry.used ? "USED" : entry.locked ? "KICKED OFF" : picked ? "YOUR PICK" : ""}</span>
                     <span aria-hidden="true" className="lab-board-trace" />

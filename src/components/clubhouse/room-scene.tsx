@@ -36,7 +36,7 @@ const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: strin
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   // The chat plate stands on the bar stools just above the chalkboard (owner, 2026-11-22).
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.775, y: 0.665 } },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.768, y: 0.635 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // A small "Snapshot" pill sits on the board's upper edge so it reads as tappable (owner, 2026-11-22); above your ticket on a phone.
   { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.72 } },
@@ -315,8 +315,8 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
         const className = free ? `lab-room-bubble is-${spot}` : `lab-room-spot is-${spot}${spot === "sportsbook" && feed.owed ? " is-owed" : ""}`;
         const style = (free ? { left: `${free.x * 100}%`, top: `${free.y * 100}%` } : { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` }) as CSSProperties;
         // A "#name" is not a page: it is a button that asks the screen to open that thing over the room (the chat).
-        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
-        return <button aria-label={name} className={className} key={spot} onClick={() => onSpot?.(spot, next, ticket)} style={style} type="button">{plate}</button>;
+        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} onClick={() => haptic("tick")} style={style}>{plate}</Link>;
+        return <button aria-label={name} className={className} key={spot} onClick={() => { haptic("tick"); onSpot?.(spot, next, ticket); }} style={style} type="button">{plate}</button>;
       })}
       {/* The lamps (the real clubhouse): tap one and the lights go down for night, or up for day, the same switch as the header's. */}
       {hrefFor ? LAMPS[wide ? "wide" : full ? "full" : "tall"].map((lamp) => (

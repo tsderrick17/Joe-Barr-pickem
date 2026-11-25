@@ -97,7 +97,7 @@ export function ClubNotifications() {
             <Choices label="Email plan" onChoose={(key) => setPreferences(PLANS.find((option) => option.key === key)!.choices)} options={PLANS.map(({ key, title }) => ({ key, title }))} value={plan ? plan.key : null} />
             <p className="club-notify-note">{plan ? plan.line : "Your own mix: see each email below."}</p>
 
-            <button aria-expanded={each} className="club-notify-fold" onClick={() => setEach((open) => !open)} type="button">
+            <button aria-expanded={each} className="club-notify-fold" onClick={() => { haptic(each ? "lightTick" : "tick"); setEach((open) => !open); }} type="button">
               <span>Choose each email</span>
               <svg aria-hidden="true" fill="none" height="10" viewBox="0 0 12 8" width="12"><path d="M1.5 1.75 6 6.25l4.5-4.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>
             </button>

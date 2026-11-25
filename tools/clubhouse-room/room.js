@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -142,8 +142,9 @@ export async function buildRoom(q) {
 
   const m = materials();
   const white = std(0xf7f4ec, { roughness: 0.85 });
-  const timber = std(0x7a5634, { roughness: 0.7 });
-  const timberDark = std(0x8a6440, { roughness: 0.65 });
+  // Solid timber with its grain, knots and checks (timberGrain); the colour stays the tone it always was.
+  const timber = new THREE.MeshStandardMaterial({ ...timberGrain([122, 86, 52], [1, 1]), bumpScale: 1.2, roughness: 0.7 });
+  const timberDark = new THREE.MeshStandardMaterial({ ...timberGrain([138, 100, 64], [1, 1]), bumpScale: 1.2, roughness: 0.65 });
   const brass = m.brass;
   // The bar's walnut: veneer boards on end with real grain (see walnutVeneer), laid on by the metre; the flutes take the same wood at
   // their own scale, the grain running up each one.
@@ -160,7 +161,8 @@ export async function buildRoom(q) {
   const whiteCane = new THREE.MeshStandardMaterial({ bumpMap: cane().bumpMap, color: 0xf3efe6, bumpScale: 2.5, roughness: 0.8 });   // the weave painted white: its relief, not its brown
   const whiteWood = std(0xf1ede4, { roughness: 0.55 });
   const rattan = new THREE.MeshStandardMaterial({ ...cane(), bumpScale: 2.5, roughness: 0.8 });
-  const green = std(0x234d3a, { roughness: 0.6 });
+  const hide = leatherGrain();   // the leather's grain, shared by every leather seat and the poker rail
+  const green = new THREE.MeshStandardMaterial({ color: 0x234d3a, roughness: 0.6, bumpMap: hide, bumpScale: 0.6 });
   const caneOpen = rattan.clone(); caneOpen.side = THREE.DoubleSide;
   const chairWood = std(0x4a2c16, { roughness: 0.45 });
   const glow = (color, intensity) => new THREE.MeshStandardMaterial({ color: 0x000000, emissive: color, emissiveIntensity: intensity, roughness: 0.6 });
@@ -746,8 +748,8 @@ export async function buildRoom(q) {
   const poker = group("survivor");
   const PX = 1.2, PZ = -4.85, PRX = 1.45, PRZ = 0.84, SEATS = 10;
   const oval = (geometry, mat, y, sx, sz, opts) => { const mesh = add(poker, geometry, mat, [PX, y, PZ], opts); mesh.scale.set(sx, 1, sz); return mesh; };
-  const saddle = new THREE.MeshPhysicalMaterial({ color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
-  const leather = new THREE.MeshPhysicalMaterial({ color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
+  const saddle = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
+  const leather = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
   oval(cyl(1, 1, 0.12, 96), m.walnut, 0.72, PRX + 0.06, PRZ + 0.06);                                                                   // apron
   oval(cyl(1, 1, 0.06, 96), m.felt, 0.79, PRX - 0.2, PRZ - 0.2);                                                                       // the felt
   oval(new THREE.RingGeometry(0.86, 1.0, 120, 1), m.walnut, 0.822, PRX - 0.08, PRZ - 0.08, { rot: [-Math.PI / 2, 0, 0], cast: false });  // the racetrack
