@@ -358,6 +358,7 @@ test("the Notifications pop-up's email plans and fine-tune choices wear the club
 
 for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
   test(`the arrow above the ticket tucks it to about half its height and opens it again, and the ticket itself still opens your ticket, at ${label}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });   // the fold plays instantly, so the sizes below are the settled ones
     await openClubhouse(page, { size });
     const ticket = page.locator(".clubhouse-page .lab-room-ticket");
     const arrow = page.getByRole("button", { name: /Tuck your ticket away|Open up your ticket/ });
@@ -1286,3 +1287,4 @@ test("the sun and the moon sit in the exact middle of the day and night button",
     await toggle.click();
   }
 });
+
