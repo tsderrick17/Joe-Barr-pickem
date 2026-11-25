@@ -19,6 +19,27 @@ export function tile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
   }
   return geometry;
 }
+
+// Lays stone round a box the way a mason would: the faces that turn a corner share one strip of stone, so a stone cut by a corner
+// carries on round it (the same stone seen from its other side), never a fresh pattern starting at the edge. The strip runs along the
+// front (the -x face, by its z), turns both corners onto the sides, and meets itself only on the +x face, the one set into the wall.
+export function wrapTile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
+  geometry.computeBoundingBox();
+  const { min, max } = geometry.boundingBox, x0 = min.x + ox, z0 = min.z + oz, z1 = max.z + oz;
+  const p = geometry.attributes.position, n = geometry.attributes.normal, uv = geometry.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) + ox, y = (p.getY(i) + oy) / sv, z = p.getZ(i) + oz;
+    const nx = n.getX(i), ny = n.getY(i), nz = n.getZ(i);
+    let t;
+    if (Math.abs(ny) > 0.5) { uv.setXY(i, x / su, z / su); continue; }
+    if (nx < -0.5) t = z;                                   // the front
+    else if (nz < -0.5) t = z0 - (x - x0);                  // round the near corner onto that side
+    else if (nz > 0.5) t = z1 + (x - x0);                   // round the far corner onto the other side
+    else t = z;                                             // the face in the wall: never seen
+    uv.setXY(i, t / su, y);
+  }
+  return geometry;
+}
 // A colour picture and its matching relief (white is high), drawn together.
 function pair(w, h, draw, repeat = [1, 1]) {
   const c = canvas(w, h), b = canvas(w, h); draw(c.getContext("2d"), b.getContext("2d"));
@@ -68,12 +89,17 @@ export function shiplap(repeat) {
 
 // Fieldstone: flat-lying stones of many greys and tans, each one mottled and rounded up out of a raked mortar joint. The pattern is
 // worked out stone by stone (the nearest and second-nearest stone to every point), so no two are alike and the picture still repeats.
+/** Knobs for test renders (scene query `stonelift`): how strongly stones stand out from or sit back in the wall. */
+export const STONE = { lift: 1 };
 export function fieldstone() {
   const W = 1024, H = 1024, GX = 8, GY = 13, seeds = [];
   const palette = [[176, 168, 156], [152, 146, 136], [188, 176, 156], [136, 132, 128], [172, 152, 130], [120, 115, 110], [200, 192, 178], [160, 146, 128], [146, 150, 152]];
+  // Each stone's own relief comes from a stream of its own, so the rest of the room's surfaces keep their looks.
+  const relief = (() => { let r = 4242; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; })();
   for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
     const t = (rand() - 0.5) * 22, p = palette[Math.floor(rand() * palette.length)];
-    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5 });
+    // lift: how far the stone stands out (-1 set back, +1 proud); dome: how rounded its face is (low = a flat slab, high = a cobble).
+    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5, lift: relief() * 2 - 1, dome: 0.3 + relief() * 0.6 });
   }
   const N = 48, lattice = Array.from({ length: N * N }, () => rand()), at = (i, j) => lattice[(((j % N) + N) % N) * N + (((i % N) + N) % N)];
   const mottle = (u, v) => { const x = u * N, y = v * N, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy); return (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy; };
@@ -89,16 +115,20 @@ export function fieldstone() {
       if (d < d1) { d2 = d1; d1 = d; s1 = s; ox = dx * GX; oy = dy * GY; } else if (d < d2) d2 = d;
     }
     const blot = mottle(u, v) - 0.5 + (mottle(u * 4, v * 4) - 0.5) * 0.5, joint = 0.03 + 0.035 * mottle(u * 3 + 0.3, v * 3 + 0.7);
-    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / 0.2)), round = Math.pow(face, 0.5);
+    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / (0.16 + 0.1 * s1.dome))), round = Math.pow(face, s1.dome), lift = Number(STONE.lift);
     const grit = (rand() - 0.5) * 20, o = (py * W + px) * 4, mortar = edge < joint;
     // Depth: each stone is a rounded lump set back from deep, dark joints (the shade closes in toward every joint, a soft light from the
     // top left catches the upper-left of each stone), with pitting and a fine grain on the faces so no stone is flat.
     const cavity = mortar ? 1 : 0.5 + 0.5 * Math.min(1, face * 2.4);
     const pit = mottle(u * 14 + 0.31, v * 14 + 0.17) - 0.5, fine = mottle(u * 40 + 0.5, v * 40 + 0.9) - 0.5;
-    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
+    // A proud stone catches more light and a set-back one sits in shade; both deepen toward the joint.
+    const proud = 1 + s1.lift * 0.1 * lift;
+    // A proud stone throws a little shade down and to the right into its joint; a set-back one is shaded along its own top and left edge.
+    const rim = mortar ? 0 : (1 - Math.min(1, face * 3)) * lift * (s1.lift > 0 ? 0 : -s1.lift * 0.35);
+    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity * proud - rim) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
     const col = mortar ? [118, 108, 94] : s1.c;
     for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit * 1.1));
-    const hgt = mortar ? 34 + grit : 70 + 150 * round + blot * 60 + pit * 46 + fine * 24 + grit * 0.9;
+    const hgt = mortar ? 30 + grit : 60 + (110 + 40 * s1.dome) * round + s1.lift * 48 * lift * round + blot * 50 + pit * 46 + fine * 24 + grit * 0.9;
     bi.data[o] = bi.data[o + 1] = bi.data[o + 2] = Math.max(0, Math.min(255, hgt)); ci.data[o + 3] = bi.data[o + 3] = 255;
   }
   cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0);

@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -607,14 +607,39 @@ export async function buildRoom(q) {
   // ----- the right wall: a grand fieldstone chimney from the floor to the thatch, the constitution framed on its near face, and the
   // lounge in front of it.
   const fire = group("fireplace");
-  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: Number(q.get("stonebump") ?? 14), roughness: 0.92 });
-  const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
+  STONE.lift = Number(q.get("stonelift") ?? 1);
+  // The stone is real relief, not only shading: the wall's surface is moved out by each stone's height (displacement), so stones stand
+  // proud of one another, throw shade into their joints and break the chimney's outline. stonedisp=0 goes back to a flat shaded wall.
+  const DISP = Number(q.get("stonedisp") ?? 0.04), stoneTex = fieldstone();
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...stoneTex, bumpScale: Number(q.get("stonebump") ?? 14), roughness: 0.92, ...(DISP ? { displacementMap: stoneTex.bumpMap, displacementScale: DISP, displacementBias: -DISP * 0.15 } : {}) });
+  // Every stone box is laid with wrapTile, so the stones carry round the corners of the chimney and the fireplace surround; with relief on,
+  // it is cut fine enough (about 2.5 cm) for the surface to follow each stone.
+  const seg = (size) => (DISP ? Math.max(1, Math.ceil(size / 0.025)) : 1);
+  // Behind the relief, a plain core of mortar a little inside each box: where two faces lift apart at a corner, the gap shows mortar,
+  // a joint running up the corner, never daylight.
+  const mortar = std(0x5e554a, { roughness: 1 });
+  const stoneBlock = (w, h, d, at) => {
+    if (DISP) add(fire, box(w - 0.004, h - 0.004, d - 0.004), mortar, at, { cast: false });
+    const g = wrapTile(new THREE.BoxGeometry(w, h, d, seg(w), seg(h), seg(d)), 1.9, 2.0, at);
+    if (DISP) {
+      // On every edge the two faces' points sit together and carry the same height (wrapTile); pointing both out along the corner's
+      // diagonal moves them to the same place, so a stone lifted at a corner stays one stone round it, with no seam.
+      const p = g.attributes.position, n = g.attributes.normal, e = 1e-4;
+      for (let i = 0; i < p.count; i++) {
+        const x = Math.abs(Math.abs(p.getX(i)) - w / 2) < e, y = Math.abs(Math.abs(p.getY(i)) - h / 2) < e, z = Math.abs(Math.abs(p.getZ(i)) - d / 2) < e;
+        if (x + y + z < 2) continue;
+        const v = new THREE.Vector3(x ? Math.sign(p.getX(i)) : 0, y ? Math.sign(p.getY(i)) : 0, z ? Math.sign(p.getZ(i)) : 0).normalize();
+        n.setXYZ(i, v.x, v.y, v.z);
+      }
+    }
+    return add(fire, g, stone, at);
+  };
   stoneBlock(CD, RIDGE, 3.6, [X1 - CD / 2, RIDGE / 2, FZ]);
   stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
   // the fireplace proper: a stone surround standing proud of the chimney, the firebox set back between its jambs
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
   stoneBlock(0.28, 0.3, 2.78, [X1 - CD - 0.14, 1.97, FZ]);
-  add(fire, box(0.04, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.01, 1.16, FZ], { cast: false });
+  add(fire, box(0.1, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.04, 1.16, FZ], { cast: false });   // in front of the stones' relief
   // The fire is lit at night. By day it is laid but cold: logs on the grate, a little pale ash.
   add(fire, box(0.5, 0.04, 1.3), std(0x1c1814, { roughness: 1 }), [X1 - CD - 0.14, 0.52, FZ], { cast: false });                      // the grate
   if (night) {
