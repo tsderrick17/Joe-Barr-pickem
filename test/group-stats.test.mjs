@@ -257,7 +257,7 @@ test("a week counts for the streaks once every game in it is final, without wait
   const own = [{ id: "x1", player_id: "ann", game_id: game("s26-w1"), scoring_period_id: "s26-w1", selected_team_id: "fav", result: "win" }];
   const without = weeklyStreaks({ seasons, periods: active, picks: own });
   const withSettled = weeklyStreaks({ seasons, periods: active, picks: own, settledPeriodIds: new Set(["s26-w1"]) });
-  assert.equal(without.has("ann"), false, "an unfinished, unsettled week with one pick graded is not counted: the second pick could still be made");
+  assert.deepEqual([without.get("ann").sweeps.total, without.get("ann").sweeps.current, without.get("ann").noDonut.current], [0, 0, 1], "an unfinished week with one pick graded is not a counted week (the second pick could still be made), but its win already makes it shutout free");
   assert.deepEqual([withSettled.get("ann").sweeps.total, withSettled.get("ann").noDonut.longest], [0, 1]);
 });
 
@@ -291,7 +291,7 @@ test("a week still being played counts for a player once both of their own picks
   ];
   const mid = weeklyStreaks({ seasons, periods, picks });
   assert.deepEqual(mid.get("ann").sweeps, { longest: 2, current: 2, endedAt: { seasonYear: 2026, week: 2 }, total: 2 }, "Ann's decided 2-0 week counts now");
-  assert.equal(mid.get("bob").sweeps.total, 0); assert.equal(mid.get("bob").noDonut.current, 0, "Bob's 0-2 week 1 stands; his week 2 (a win and a pending pick) is left out");
+  assert.equal(mid.get("bob").sweeps.total, 0); assert.deepEqual([mid.get("bob").noDonut.current, mid.get("bob").noDonut.longest], [1, 1], "Bob's 0-2 week 1 stands; his week 2 win already makes it shutout free, though the pending pick keeps it out of the counted weeks");
   assert.equal(mid.has("cat"), false, "a week with a pick still to be graded or made is not counted yet");
   assert.deepEqual([mid.get("dan").sweeps.total, mid.get("dan").sweeps.current, mid.get("dan").noDonut.current], [1, 0, 2], "a 1-1 week extends the shutout-free streak and ends the perfect run");
   assert.deepEqual([mid.get("eve").sweeps.total, mid.get("eve").sweeps.current, mid.get("eve").noDonut.current], [1, 0, 0], "a 0-2 week is a shutout: it ends both streaks");
@@ -301,7 +301,7 @@ test("a week still being played counts for a player once both of their own picks
   // once the whole week is final, the missing pick is a loss and the week counts for everyone whose picks are all graded
   const settled = weeklyStreaks({ seasons, periods, picks, settledPeriodIds: new Set(["w2"]) });
   assert.deepEqual([settled.get("cat").sweeps.total, settled.get("cat").noDonut.current], [0, 0], "Cat's graded loss and her pick not made is a 0-2 week");
-  assert.equal(settled.get("bob").noDonut.current, 0, "a pick that is still pending leaves the week out even after the week settles");
+  assert.equal(settled.get("bob").noDonut.current, 1, "a pending pick leaves the week out of the counted weeks even after the week settles, but its win still keeps it shutout free");
 });
 
 test("Perfect Weeks count every round but the Super Bowl: a regular 2-0 week and a playoff round won pick for pick; the streaks stay regular season", () => {
@@ -355,4 +355,23 @@ test("a loss in a week still being played ends the 2-0 streak at once, though th
   // Without the loss the pending week leaves the streak alone.
   rows.splice(-2); add("w4", "win"); add("w4", "pending");
   assert.equal(weeklyStreaks({ seasons: one, periods: periodsNow, picks: rows }).get("rick").sweeps.current, 3);
+});
+
+test("the first win of a week still being played extends the shutout-free streak at once", () => {
+  const one = [{ id: "s", year: 2026 }];
+  const wk = (n, status) => ({ id: `w${n}`, season_id: "s", display_order: n, period_type: "regular", status, max_picks: 2 });
+  const rows = [];
+  const add = (periodId, result) => rows.push({ id: `${periodId}-${rows.length}`, player_id: "rick", game_id: `g${rows.length}`, scoring_period_id: periodId, selected_team_id: "t", result });
+  add("w1", "win"); add("w1", "loss"); add("w2", "win"); add("w2", "win");
+  const periodsNow = [wk(1, "complete"), wk(2, "complete"), wk(3, "active")];
+  add("w3", "win"); add("w3", "pending");   // a win, the other game not played yet
+  let streak = weeklyStreaks({ seasons: one, periods: periodsNow, picks: rows }).get("rick");
+  assert.deepEqual([streak.noDonut.current, streak.noDonut.longest], [3, 3], "the week 3 win makes three shutout-free weeks now");
+  assert.deepEqual([streak.sweeps.current, streak.sweeps.total], [1, 1], "the week is not yet a 2-0, so the perfect run and total wait");
+  rows.splice(-1);   // a win and the second pick not made yet
+  streak = weeklyStreaks({ seasons: one, periods: periodsNow, picks: rows }).get("rick");
+  assert.equal(streak.noDonut.current, 3, "a win counts before the second pick is even made");
+  // a player whose only week is in play, with a win, appears with a one-week streak
+  const fresh = weeklyStreaks({ seasons: one, periods: [wk(1, "active")], picks: [{ id: "x", player_id: "zac", game_id: "g", scoring_period_id: "w1", selected_team_id: "t", result: "win" }] }).get("zac");
+  assert.deepEqual([fresh.noDonut.current, fresh.sweeps.total], [1, 0]);
 });

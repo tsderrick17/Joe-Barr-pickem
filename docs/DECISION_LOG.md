@@ -21,6 +21,13 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-26 - Shutout Free Weeks count the first win at once
+
+A week's first win already rules out a shutout (0-2), so Shutout Free Weeks in a Row now counts a week still being played the moment the
+player has a win in it, without waiting for the second pick to be made or graded. This mirrors Perfect Weeks, which already ends the moment
+a week in play has a loss. The week still is not a counted week for anything else (Perfect Weeks total, the group's weekly records) until it is
+decided. Reported by the Commissioner: a first win of the week left the streak unchanged.
+
 ## 2026-11-26 - Clubhouse: a real beach outside the glass
 
 - The outside of the clubhouse room is drawn to look real (owner: "the palm trees ... not very convincing. None of the outside is really"). Coconut palms: a grey, weathered trunk ringed where old fronds fell, swollen at its foot and tapering up, a boot of old frond bases, green and brown coconuts, and a crown of long feather fronds (narrow leaflets hung from the midrib in a V, light between them), young ones upright, older ones arching over, one or two dead brown fronds hanging. Sky: fair-weather cumulus, white on top and grey underneath, with haze at the horizon. Sea: wind ripples catching the light; turquoise shallows fading into deep blue with no edge; grainy, rippled sand; a darker band of wet sand and a lacy line of surf at the waterline.

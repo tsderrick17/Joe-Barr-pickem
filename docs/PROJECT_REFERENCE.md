@@ -474,7 +474,8 @@ measure database requests or end-to-end route time.
   perfect week of every round but the Super Bowl: a regular 2-0 week, and a playoff round in which the player won every pick it allowed with no
   loss, 6-0 in the Wild Card round when it has six games, 4-0 in the Divisional, 2-0 in the Conference Championships; a round with fewer playable
   games allows fewer picks), places with ties. Other Stats view is **regular season only**: Shutout Free Weeks in a Row and Perfect Weeks in a Row
-  (best run, current run beneath; regular weeks only), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
+  (best run, current run beneath; regular weeks only; a week still being played extends Shutout Free the moment the player has a win in it, and
+  ends Perfect the moment they have a loss in it), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
   picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. In both views, in every column, a "—" (nothing to
   show yet) is last whichever way it is sorted, below a real 0 or .000 and never tied with one; level half-point rates go to more wins, then
   fewer losses (`compareRows` in `src/lib/trophy-rank.js`). The two views are one two-way switch.
