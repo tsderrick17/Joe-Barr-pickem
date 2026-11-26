@@ -20,7 +20,6 @@
 .dash-arrow.is-bad.is-up { border-bottom-color: var(--dash-s2); }
 .dash-arrow.is-bad.is-down { border-top-color: var(--dash-s2); }
 .dash-meter { background: color-mix(in srgb, var(--dash-c) 16%, transparent); border-radius: 3px; height: 6px; margin-top: 8px; position: relative; }
-.dash-meter.is-s1 { --dash-c: var(--dash-s1); }
 .dash-meter.is-s2 { --dash-c: var(--dash-s2); }
 .dash-meter.is-warn { --dash-c: var(--club-warn); }
 .dash-meter.is-bad { --dash-c: var(--club-alert); }
@@ -47,7 +46,6 @@
 .dash-key i { border-top: 2px solid var(--dash-c); display: inline-block; height: 0; width: 14px; }
 .dash-key i.is-dash { border-top-style: dashed; }
 .dash-key i.is-block { border: 0; border-radius: 2px; background: var(--dash-c); height: 9px; width: 9px; }
-.dash-key i.is-ref { --dash-c: var(--dash-ref); }
 .dash-plot { position: relative; touch-action: pan-y; }
 .dash-plot svg { cursor: crosshair; display: block; overflow: visible; }
 .is-s1 { --dash-c: var(--dash-s1); }
