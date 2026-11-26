@@ -26,6 +26,7 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - A low walnut record cabinet stands against the chimney's near face under the constitution (owner's spot and ask): two rows of square bays packed with LPs on their edges, spines out in their covers' colours, two or three leaning at each bay's end so their covers show (sixteen made-up covers on one sheet, no real words). On top a small record player (walnut plinth, black record with a red label, tone arm) between two walnut bookshelf speakers toed in toward the room. It stands clear of the stones' relief.
 - The neon is a real sign now (owner: "looks flat"): lit tubes (a white core in pink glass with a glint) on a clear acrylic backer held off the walnut by four brass stand-offs, their soft shadow and a pink haze on the wood, and a little real pink light on the walnut round it.
 - On a desktop the Notifications pill sits on the thatch just under the beam, left of the ledge plants (owner, 2026-11-25).
+- The tucked ticket's spacing (owner: "a little sloppy"): each place's mark and words sit centred in its share of the ticket instead of pushed left, the padding above and below is even, and the lamp dot is smaller and closer to its mark.
 
 ## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
 
