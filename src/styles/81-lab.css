@@ -493,9 +493,9 @@
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
 /* All games | Pool action: one touching switch, like the chart's All | 6 Wk, in the left half of the row (owner, 2026-11-25). */
-.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action { border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; gap: 0; justify-self: start; max-width: 50%; overflow: hidden; width: max-content; }
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action { border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; gap: 0; grid-template-columns: 1fr 1fr; justify-self: start; overflow: hidden; width: 50%; }
 .lab-ticket-switch.lab-ticket-action button { min-height: 32px; }
-.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button { border: 0; border-radius: 0; font-size: .7rem; padding: 2px 10px; white-space: nowrap; }
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button { border: 0; border-radius: 0; font-size: .66rem; padding: 2px 4px; white-space: nowrap; }
 .lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button + button { border-left: 1px solid rgba(201, 164, 95, .6); }
 .lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .08em; }
