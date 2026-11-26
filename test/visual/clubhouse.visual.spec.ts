@@ -1379,3 +1379,13 @@ test("the Bowl sheet's win counts are readable: cream figures on navy flaps, nev
   await page.waitForTimeout(1200);
   await expect(ticket.locator(".lab-bowl-sheet")).toHaveScreenshot("clubhouse-bowl-sheet-phone-390.png", { maxDiffPixels: 60 });
 });
+
+test("closing or reloading the clubhouse with bowl picks not saved yet asks the browser's own leave-this-page question", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
+  const asked = new Promise<string>((resolve) => page.once("dialog", (dialog) => { resolve(dialog.type()); void dialog.dismiss(); }));
+  await page.close({ runBeforeUnload: true });
+  expect(await asked).toBe("beforeunload");
+});
