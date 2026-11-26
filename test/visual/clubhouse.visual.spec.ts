@@ -214,7 +214,14 @@ test("a ticket sent says so on the Big Board's bar, with the time it was saved",
 
 test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
-  await expect(page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key")).toContainText("8 AM on game day", { timeout: 30_000 });
+  const key = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key");
+  await expect(key).toContainText("8 AM on game day", { timeout: 30_000 });
+  // two lines at most on a phone (owner, 2026-11-25)
+  const lines = await key.evaluate((node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; });
+  expect(lines).toBeLessThanOrEqual(2);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-form-top-phone-390.png", { maxDiffPixels: 40 });
 });
 
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {

@@ -136,7 +136,7 @@
 
 /* The Slate: the big board at a sportsbook, lit amber lines on black. */
 .lab-bigboard { background: rgb(14 14 12); border: 4px solid rgb(52 50 46); border-radius: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); color: var(--cw-warn); display: grid; font-family: "Courier New", monospace; gap: 10px; margin: 0 auto; max-width: 640px; padding: 12px; width: 100%; }
-.lab-bigboard header { border-bottom: 1px dashed rgba(240, 180, 41, .4); display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; padding-bottom: 8px; }
+.lab-bigboard header { border-bottom: 1px dashed rgba(240, 180, 41, .4); display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; padding-bottom: 6px; }
 .lab-bigboard h3 { font-size: 1.2rem; letter-spacing: .2em; margin: 0; text-shadow: 0 0 6px rgba(240, 180, 41, .3); }
 .lab-bigboard header span { color: var(--cw-gold-lt); font-size: .7rem; font-weight: 700; }
 .lab-bigboard .lab-chips { justify-content: center; }
@@ -409,7 +409,7 @@
 .lab-bigboard.is-tote { background: rgb(8 10 9); border-color: rgb(18 40 30); box-shadow: inset 0 0 0 1px rgba(201, 164, 95, .5), 0 8px 18px rgba(0, 0, 0, .35); }
 
 /* The Window: every pick in one place. The games against the spread, then Survivor's chips on a rack, then one ticket and one Submit. */
-.lab-window { gap: 14px; }
+.lab-window { gap: 10px; }   /* tighter (owner, 2026-11-25: trim excess space) */
 .lab-window-part { display: grid; gap: 6px; }
 .lab-window-part h4 { color: var(--cw-gold-lt); font-size: .8rem; letter-spacing: .16em; margin: 0; }
 .lab-window-part h4 small { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin-left: 6px; }
@@ -492,7 +492,11 @@
 .lab-ticket-switch { display: grid; gap: 8px; grid-auto-columns: 1fr; grid-auto-flow: column; }   /* two or three halves, side by side */
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
-.lab-ticket-switch.lab-ticket-action button { min-height: 44px; }
+/* All games | Pool action: one touching switch, like the chart's All | 6 Wk, in the left half of the row (owner, 2026-11-25). */
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action { border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; gap: 0; justify-self: start; max-width: 50%; overflow: hidden; width: max-content; }
+.lab-ticket-switch.lab-ticket-action button { min-height: 32px; }
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button { border: 0; border-radius: 0; font-size: .7rem; padding: 2px 10px; white-space: nowrap; }
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button + button { border-left: 1px solid rgba(201, 164, 95, .6); }
 .lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .08em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 2px rgba(255, 150, 30, .55), 0 0 6px rgba(255, 140, 30, .18); }
@@ -534,8 +538,8 @@
 .lab-tote-links button i { color: var(--cw-gold-lt); font-style: normal; }
 /* The lamp, one per pick, the same everywhere: dark (no pick), a gold ring (picked, not sent), lit yellow (in), green (won), red
    (lost). Survivor's is a poker chip: the same lamp inside the dashed rim Survivor wears across the pool. */
-.lab-lamp { background: rgb(34 30 22) radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 42%); border: 1px solid rgb(8 10 9); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .35); display: inline-block; flex: none; height: .85rem; width: .85rem; }
-.lab-lamp.is-picked { box-shadow: inset 0 0 0 2.5px rgb(232 184 82), 0 0 3px rgba(255, 176, 60, .3); }
+.lab-lamp { background: rgb(34 30 22) radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 42%); border: 1px solid rgb(8 10 9); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); display: inline-block; flex: none; height: .85rem; width: .85rem; }
+.lab-lamp.is-picked { box-shadow: inset 0 0 0 2.5px rgb(236 228 210); }   /* on the ticket, not sent: a cream ring, so only a lit lamp is gold (owner, 2026-11-25) */
 /* A lit lamp is a small warm bulb behind glass, not a flat dot: a pale hot centre falling off to a deeper amber at its rim, a dark
    bezel round it, and a soft, close halo (no wide glare). Green and red are the same bulb in their colours. */
 .lab-lamp.is-in { background: radial-gradient(circle at 42% 38%, rgb(248 226 160) 0, rgb(236 184 80) 38%, rgb(196 128 30) 78%, rgb(150 92 18) 100%); box-shadow: inset 0 0 0 1px rgba(40, 24, 4, .55), 0 0 2px rgba(255, 176, 60, .22); }
@@ -600,9 +604,9 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-due.is-clear { color: rgba(240, 232, 214, .6); }
 /* The bowl-season moon: a night-sky dial in a soft navy well, five moons waxing round it (dim until the season reaches them, then lit
    in pale gold), the gold track filling behind the needle. */
-.lab-bowl-gauge { background: radial-gradient(ellipse 80% 90% at 50% 100%, rgba(60, 84, 140, .38), rgba(10, 18, 36, .2) 70%, transparent); border-radius: 14px 14px 8px 8px; display: grid; justify-items: center; margin: 0; padding: 2px 4px 4px; width: 7.4rem; }
+.lab-bowl-gauge { background: radial-gradient(ellipse 80% 90% at 50% 100%, rgba(60, 84, 140, .38), rgba(10, 18, 36, .2) 70%, transparent); border-radius: 14px 14px 8px 8px; align-items: center; column-gap: 6px; display: grid; grid-template-columns: auto 5.2rem; margin: 0; padding: 2px 4px; }   /* games left to the left of the dial (owner, 2026-11-25) */
 .lab-bowl-gauge svg { display: block; overflow: visible; width: 100%; }
-.lab-bowl-gauge figcaption { align-items: center; color: rgba(240, 232, 214, .75); display: flex; font-size: .62rem; gap: .4em; justify-content: center; letter-spacing: .14em; margin-top: 2px; white-space: nowrap; }
+.lab-bowl-gauge figcaption { align-items: center; color: rgba(240, 232, 214, .75); display: flex; flex-direction: column; font-size: .56rem; gap: 3px; letter-spacing: .14em; order: -1; white-space: nowrap; }
 /* The games left turn on split-flap tiles, the classic Bowl Card's own, in the ticket's navy and gold. */
 .lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; margin-top: 0; }
 .lab-bowl-gauge .bowl-score-tile.is-large .bowl-flap { height: 1.9rem; width: 1.2rem; }
@@ -929,7 +933,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .clubhouse-page .trophy-table-wrap { --club-paper: #13221e; --club-paper-2: #182a25; --club-line: #2c453d; --club-ink: #efe6d2; --club-muted: #a8b4ab; border: 0; border-radius: 8px; color: var(--club-ink); }
 
 /* What the ticket's line colours mean, while any line can still move. */
-.lab-line-key { color: rgba(246, 242, 232, .82); font-size: .8rem; line-height: 1.4; margin: 0 0 8px; text-align: center; }
+.lab-line-key { color: rgba(246, 242, 232, .82); font-size: .78rem; line-height: 1.35; margin: 0 0 2px; text-align: center; text-wrap: balance; }   /* two lines at most on a phone */
 .lab-line-key b { color: rgb(246 242 232); font-weight: 700; }
 .lab-line-key b.is-gold { color: rgb(240 180 41); }
 

@@ -29,6 +29,9 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - The tucked ticket's spacing (owner: "a little sloppy"): each place's mark and words sit centred in its share of the ticket instead of pushed left, the padding above and below is even, and the lamp dot is smaller and closer to its mark.
 - On the clubhouse Bowl ticket a game's name never wraps onto a second line (owner); the logo pennants are shorter (7.25rem from 9rem) to give the names room, and a name that still does not fit ends in an ellipsis.
 - The Bowl sheet's win counts are cream figures on navy flaps, like the games-left counter: the ticket's cream ink had fallen on cream flaps and they could not be read (owner, 2026-11-25).
+- Your ticket's top is tighter (owner: trim excess space): the line note is two lines at most on a phone ("Gold line: locked. White line: can move until 8 AM on game day."), the gaps under the week row and between sections are smaller, and All games | Pool action is one touching switch like the chart's All | 6 Wk, sized to its words, in the left half of the row.
+- A lamp that is not lit has no gold rim, and a pick on the ticket but not sent shows a cream ring instead of a gold one, so only a lit lamp is gold (owner: the gold outline made him look twice).
+- The Bowl ticket's header is shorter: the games-left counter stands to the left of the dial instead of under it.
 
 ## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
 

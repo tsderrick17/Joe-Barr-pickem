@@ -115,7 +115,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
       <div className="lab-window-scroll">
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
         {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
-        {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked, it won’t change. <b>White line:</b> can still move until 8 AM on game day.</> : <>Lines can still move until 8 AM on game day. Once a line locks it turns gold.</>}</p> : null}
+        {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked. <b>White line:</b> can move until 8 AM on game day.</> : <>Lines can move until 8 AM on game day, then lock in gold.</>}</p> : null}
         <ol>
           {shownGames.map((game) => {
             const locked = game.kickedOff;
