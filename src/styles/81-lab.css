@@ -954,3 +954,13 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-states-ticket { display: grid; }
 .lab-states-step { align-items: center; justify-content: space-between; }
 .lab-states-step span { font-size: .9rem; opacity: .75; }
+
+/* The pinned save bar (owner, 2026-11-25): pinned to the foot of the ticket's scrolling list while picks are waiting, the count of
+   changes beside the button; it slides up when the first change is made. With nothing waiting it rests at the end of the list. */
+.lab-savebar { align-items: center; display: grid; gap: 10px; grid-template-columns: 1fr; }
+.lab-savebar.is-pinned { animation: savebar-up .28s cubic-bezier(.32, .72, 0, 1); background: linear-gradient(180deg, rgba(10, 12, 10, 0), rgb(10 12 10) 28%); bottom: 0; grid-template-columns: auto 1fr; margin-inline: -4px; padding: 14px 4px 8px; position: sticky; z-index: 3; }
+.lab-bowl-ticket .lab-savebar.is-pinned { background: linear-gradient(180deg, rgba(18, 28, 50, 0), rgb(18 28 50) 28%); }
+.lab-savebar-count { color: var(--cw-gold-lt); font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.lab-bowl-ticket .lab-savebar-count { color: var(--bowl-gold-lt); }
+@keyframes savebar-up { from { opacity: 0; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) { .lab-savebar.is-pinned { animation: none; } }

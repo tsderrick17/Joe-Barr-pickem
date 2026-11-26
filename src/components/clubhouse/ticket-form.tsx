@@ -6,6 +6,7 @@ import type { BoardView } from "@/lib/board-view.js";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { gameOf, inOrder, lineOf, WeekChoice, type Ticket } from "@/components/clubhouse/big-board";
 import { Lamp, LAMP_SAYS, lampFor, Logo, type LampState } from "@/components/clubhouse/lamps";
+import { SaveBar } from "@/components/clubhouse/save-bar";
 
 /**
  * Your ticket, opened from your row: the week's games as plain rows, twice. First pick against the spread; then, while you are
@@ -70,6 +71,9 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   ];
   const hasSent = view.mine.picks.length > 0 || Boolean(view.mine.survivor);
   const changed = ordered.join() !== inOrder(view, view.mine.picks).join() || (pickingSurvivor && chip !== view.mine.survivor);
+  // How many picks differ from the ticket as sent: a swap is one change, as is a Survivor team.
+  const sentPicks = inOrder(view, view.mine.picks);
+  const changes = Math.max(ordered.filter((team) => !sentPicks.includes(team)).length, sentPicks.filter((team) => !ordered.includes(team)).length) + (pickingSurvivor && chip !== view.mine.survivor ? 1 : 0);
 
   async function send(): Promise<boolean> {
     setSending(true);
@@ -164,12 +168,15 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
         <dl>
           {lines.map((line) => <div key={line.label}><dt>{line.label}</dt><dd>{line.value ?? "—"}</dd></div>)}
         </dl>
-        <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void send()} type="button">
-          {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
-        </button>
         {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
         <p className="lab-board-note">{view.playoff ? "Pick every game against the spread. Send the whole round at once, and change any pick until its game kicks off." : view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
       </section>
+      {/* The send button rides a bar pinned to the foot of the ticket while there is something to send, so it is never a scroll away. */}
+      <SaveBar changes={changes} pinned={changed}>
+        <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void send()} type="button">
+          {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
+        </button>
+      </SaveBar>
       {/* Below the games and the send button, inside the ticket: Forfeit in the playoffs. */}
       {footer}
       </div>

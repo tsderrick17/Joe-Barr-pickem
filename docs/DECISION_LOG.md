@@ -33,6 +33,7 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - A lamp that is not lit has no gold rim, and a pick on the ticket but not sent shows a cream ring instead of a gold one, so only a lit lamp is gold (owner: the gold outline made him look twice).
 - The Bowl ticket's header is shorter: the games-left counter stands to the left of the dial instead of under it.
 - Picks waiting to be sent or saved on a clubhouse ticket are guarded on every way out: closing the pop-up or going back asks (as before), a link out of the clubhouse asks the same question and then follows it, and closing or reloading the app asks the browser's leave-this-page question (owner, 2026-11-25: picks made in the clubhouse must never go missing on the way to Classic). Both views save Bowl picks through the same POST /api/bowl-pool and read the same entry, so a saved pick shows in both.
+- Save is never a scroll away (owner's pick of four ideas, 2026-11-25): on both clubhouse tickets the Save picks / Submit button rides a bar pinned to the foot of the ticket's list while changes are waiting, with the count of changes beside it ("1 change"), sliding up at the first change; with nothing waiting it rests at the end of the list saying Saved or Submitted.
 
 ## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
 

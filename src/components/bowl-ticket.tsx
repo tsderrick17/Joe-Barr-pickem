@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
+import { SaveBar } from "@/components/clubhouse/save-bar";
 import { Lamp } from "@/components/clubhouse/lamps";
 import PlayerTrophyName from "@/components/player-trophy-name";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
@@ -60,6 +61,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
   const [problem, setProblem] = useState("");
   const open = (game: BowlTicketGame) => !game.locked;
   const changed = view.games.some((game) => open(game) && picks[game.id] !== view.saved[game.id]) || guess !== view.guess;
+  const changes = view.games.filter((game) => open(game) && picks[game.id] !== view.saved[game.id]).length + (guess !== view.guess ? 1 : 0);
   const days = useMemo(() => [...new Set(view.games.map((game) => game.day))], [view.games]);
   const pickedCount = view.games.filter((game) => picks[game.id]).length;
 
@@ -172,10 +174,13 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
             <div><dt>Picked</dt><dd>{pickedCount} of {view.total}</dd></div>
             <div><dt>Still to pick</dt><dd>{view.owed || "None"}</dd></div>
           </dl>
-          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
           {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : savedAt && !changed && !guess && titleGame && !view.tiebreakerLocked ? <p className="lab-window-problem" role="status">Picks saved. Don’t forget your tiebreaker above.</p> : null}
           {onOptOut && view.entryOpen ? <button className="lab-bowl-optout" onClick={onOptOut} type="button">Opt out of the Bowl Pool</button> : null}
         </section>
+        {/* Save rides a bar pinned to the foot of the ticket while there is something to save, so it is never a scroll away. */}
+        <SaveBar changes={changes} pinned={changed}>
+          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
+        </SaveBar>
       </> : tab === "sheet" && view.sheet ? <BowlSheet sheet={view.sheet} /> : (
         <section aria-label="Bowl standings" className="lab-window-part">
           <h4>STANDINGS<small>{view.decided ? `after ${view.decided} of ${view.total} bowls` : "no bowls played yet"}</small></h4>

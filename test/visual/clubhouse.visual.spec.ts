@@ -799,10 +799,10 @@ test("the Bowl tiebreaker sits in the title game's own box, and saving without i
   expect(Math.abs(guess!.x + guess!.width - teams.right)).toBeLessThanOrEqual(1);
   await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
-  await box.getByRole("button", { name: "Save picks" }).click();
+  await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   await expect(box.getByRole("status")).toContainText("Don’t forget your tiebreaker");
-  await expect(box.getByRole("button", { name: /Saved at/ })).toBeVisible();
+  await expect(ticket.getByRole("button", { name: /Saved at/ })).toBeVisible();
 });
 
 test("closing the Bowl ticket with picks not saved asks first", async ({ page }) => {
@@ -1388,4 +1388,30 @@ test("closing or reloading the clubhouse with bowl picks not saved yet asks the 
   const asked = new Promise<string>((resolve) => page.once("dialog", (dialog) => { resolve(dialog.type()); void dialog.dismiss(); }));
   await page.close({ runBeforeUnload: true });
   expect(await asked).toBe("beforeunload");
+});
+
+test("after a change, Save rides a bar pinned to the foot of the ticket, with the count of changes, in view without scrolling", async ({ page }) => {
+  const bowl = bowlRead() as { games: Array<Record<string, unknown>> };
+  // a long list: the open bowl repeated down the days, so the save button would be far below
+  bowl.games = [...bowl.games, ...Array.from({ length: 10 }, (_, i) => ({ ...bowl.games[2], id: `x${i}`, bowl_name: `Extra Bowl ${i + 1}`, kickoff_at: `2026-10-${String(5 + i).padStart(2, "0")}T20:00:00Z` }))];
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  const save = ticket.getByRole("button", { name: "Save picks" });
+  await expect(ticket.locator(".lab-savebar.is-pinned")).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).first().click();
+  await expect(ticket.locator(".lab-savebar.is-pinned")).toContainText("1 change");
+  await expect(save).toBeInViewport();
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-savebar-phone-390.png", { maxDiffPixels: 60 });
+});
+
+test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(form).toBeVisible({ timeout: 30_000 });
+  await form.locator(".lab-window-part .lab-board-cell:not([disabled])").first().click();
+  await expect(form.locator(".lab-savebar.is-pinned")).toContainText("1 change");
+  await expect(form.getByRole("button", { name: /Submit/ })).toBeInViewport();
 });
