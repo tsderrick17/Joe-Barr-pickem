@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin, spineSheet, pageEdges, albumCovers } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin, spineSheet, pageEdges, albumCovers, palmBark, palmFrondSheet, seaRipples, sandGrain, foamBand, seeded } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -338,14 +338,49 @@ export async function buildRoom(q) {
   // A sunny jungle beach: coconut palms leaning every way (the crown heavy with nuts), banana plants and big-leafed undergrowth banked
   // thick along both sides of the patio and past the side windows, jungle-green headlands either side of the bay, white sand, and the
   // water turquoise over the shallows and deepening to blue.
-  const trunkBark = std(0x9a8064, { roughness: 1 }), nut = std(0x5a3a1a, { roughness: 0.8 }), frondDark = leafMat([47, 122, 58], 0.55, 6);
+  // Coconut palms as they grow: a tall ringed trunk, swollen a little at its foot and tapering as it climbs, bending as it leans; at the
+  // top a boot of old frond bases, a cluster of green and brown coconuts, and a crown of long feather fronds (leaflets hung from a
+  // midrib in a V, light showing between them): young ones standing up in the middle, the mature ones arching out and over, the oldest
+  // drooping, and one or two dead ones gone brown and hanging down the trunk. Each palm draws from a counter of its own; the shared one
+  // is still stepped the 57 draws the old palms took, so nothing else in the room moves.
+  const trunkBark = new THREE.MeshStandardMaterial({ ...palmBark([1, 1]), color: 0x9a948a, bumpScale: 4, roughness: 0.95 });
+  const nut = std(0x5a3a1a, { roughness: 0.8 }), nutGreen = std(0x6f7f2e, { roughness: 0.55 }), boot = std(0x6a5038, { roughness: 1 }), frondDark = leafMat([47, 122, 58], 0.55, 6);
+  const frondMat = (sheet) => { const m = new THREE.MeshStandardMaterial({ map: sheet, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.62 }); m.userData.depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: sheet, alphaTest: 0.45 }); return m; };
+  const frondMats = [frondMat(palmFrondSheet(201)), frondMat(palmFrondSheet(202)), frondMat(palmFrondSheet(203))], deadMat = frondMat(palmFrondSheet(204, true));
+  // one frond: along +x, rising from the crown then arching over and down (`hang`), its leaflets hung from the midrib in a V
+  const frondRibbon = (L, HW, arch, hang) => {
+    const NU = 40, NV = 8, pos = [], uvs = [], idx = [];
+    for (let i = 0; i <= NU; i++) {
+      const u = i / NU, y0 = L * (arch * u - (arch + hang) * u * u), w = HW * Math.sin(Math.PI * Math.pow(u * 0.96 + 0.04, 0.75));
+      for (let j = 0; j <= NV; j++) { const v = (j / NV) * 2 - 1; pos.push(u * L, y0 - Math.abs(v) * w * (0.3 + 0.55 * u), v * w); uvs.push(u, (v + 1) / 2); }
+    }
+    for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = i * (NV + 1) + j, c = a + NV + 1; idx.push(a, a + 1, c, a + 1, c + 1, c); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx); geo.computeVertexNormals(); return geo;
+  };
+  const putFrond = (top, yaw, lift, geo, mat) => { const g = new THREE.Group(); g.position.set(...top); g.rotation.set(0, yaw, lift); out.add(g); const m = add(g, geo, mat, [0, 0, 0]); m.customDepthMaterial = mat.userData.depth; };
+  let palmSeed = 300;
   const palm = (x, z, h, lean = 0.3, turn = 0) => {
     const dx = Math.cos(turn) * lean * h * 0.25, dz = -Math.sin(turn) * lean * h * 0.25;
     const trunk = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0, z), new THREE.Vector3(x + dx * 0.9, h * 0.5, z + dz * 0.9), new THREE.Vector3(x + dx * 1.4, h, z + dz * 1.4)]);
-    add(out, new THREE.TubeGeometry(trunk, 20, 0.16, 10), trunkBark, [0, 0, 0]);
     const top = [x + dx * 1.4, h - 0.1, z + dz * 1.4];
-    spray(out, palmLeaf, leafGreen, top, 13, 2.3, [-0.1, 0.9]); spray(out, palmLeaf, frondDark, [top[0], top[1] + 0.1, top[2]], 6, 2.0, [0.5, 1.1]);
-    for (let k = 0; k < 5; k++) { const a = k * 1.3; add(out, new THREE.SphereGeometry(0.13, 12, 10), nut, [top[0] + Math.cos(a) * 0.17, top[1] - 0.12 - (k % 2) * 0.08, top[2] + Math.sin(a) * 0.17]); }
+    for (let k = 0; k < 57; k++) rand();
+    const rnd = seeded(palmSeed += 7);
+    // the trunk: swollen at the foot, tapering up, the bark's rings a hand apart whatever its height
+    const SEG = 160, RAD = 16, tube = new THREE.TubeGeometry(trunk, SEG, 1, RAD), tp = tube.attributes.position, tuv = tube.attributes.uv;
+    for (let i = 0; i <= SEG; i++) {
+      const t = i / SEG, centre = trunk.getPointAt(t), ring = 1 + 0.025 * Math.pow(Math.abs(Math.sin((t * h / 0.18) * Math.PI)), 8), r = (0.17 + 0.08 * (1 - t) + 0.12 * Math.exp(-t * h / 0.35)) * ring;   // each ring a slight ridge, so the outline is stepped like a real trunk
+      for (let j = 0; j <= RAD; j++) { const n = i * (RAD + 1) + j; tp.setXYZ(n, centre.x + (tp.getX(n) - centre.x) * r, centre.y + (tp.getY(n) - centre.y) * r, centre.z + (tp.getZ(n) - centre.z) * r); tuv.setXY(n, j / RAD, t * h / 1.6); }
+    }
+    tube.computeVertexNormals(); add(out, tube, trunkBark, [0, 0, 0]);
+    add(out, new THREE.CylinderGeometry(0.2, 0.16, 0.55, 12), boot, [top[0], top[1] - 0.25, top[2]]);   // the boot of old frond bases
+    for (let k = 0; k < 9; k++) { const a = k * 0.8 + rnd() * 0.4, ring = 0.2 + (k % 3) * 0.04; add(out, new THREE.SphereGeometry(0.12 + rnd() * 0.03, 14, 12), k % 3 ? nutGreen : nut, [top[0] + Math.cos(a) * ring, top[1] - 0.22 - (k % 3) * 0.1, top[2] + Math.sin(a) * ring], { scale: 1.05 }); }
+    const L = 2.6 + h * 0.08, N = 28;
+    for (let k = 0; k < N; k++) {
+      const tier = k % 3, yaw = (k / N) * Math.PI * 2 + rnd() * 0.35, len = L * (tier === 0 ? 0.72 : 0.9 + rnd() * 0.15);
+      const lift = tier === 0 ? 0.55 + rnd() * 0.35 : tier === 1 ? 0.05 + rnd() * 0.3 : -0.35 + rnd() * 0.25;
+      putFrond([top[0], top[1] + (tier === 0 ? 0.08 : 0), top[2]], yaw, lift, frondRibbon(len, 0.5, tier === 0 ? 0.35 : 0.45, tier === 0 ? 0.25 : 0.9 + rnd() * 0.3), frondMats[k % 3]);
+    }
+    for (let k = 0; k < 2; k++) putFrond([top[0], top[1] - 0.2, top[2]], rnd() * Math.PI * 2, -1.25 - rnd() * 0.2, frondRibbon(L * 0.8, 0.3, 0.1, 0.3), deadMat);   // dead fronds hanging down the trunk
   };
   palm(-6.2, ZB - 3.6, 6.2, 0.4, 2.6); palm(6.6, ZB - 4.5, 7.2, 0.5, 0.3); palm(-3.4, ZB - 10, 5.5, 0.35, 1.9); palm(5.0, ZB - 11, 6.4, 0.6, 0.6);
   palm(-1.2, ZB - 15.5, 6.8, 0.7, 1.4); palm(2.4, ZB - 16.5, 5.8, 0.8, 0.2); palm(-8.5, ZB - 9, 7.8, 0.4, 2.2);
@@ -377,10 +412,22 @@ export async function buildRoom(q) {
   }
   // On the sea side the sand runs only a few metres past the wall; past it the sea comes right round the house, turquoise over the
   // shallows, and curves away along the coast to a far headland: a sheer cliff of pale rock with jungle on its top.
-  add(out, box(49, 0.1, 50), std(0xe8d9b4, { roughness: 1 }), [-15.5, -0.09, -12], { cast: false });                                   // white sand, the jungle side and under the house
-  add(out, box(320, 0.05, 320), std(night ? 0x0e2a46 : 0x1f7fb8, { roughness: 0.15 }), [169, -0.32, -60], { cast: false });              // the sea, deep blue, on the sea side
-  add(out, box(5, 0.05, 50), std(night ? 0x123a56 : 0x36c9c6, { roughness: 0.12 }), [11.5, -0.28, -12], { cast: false });            // the shallows along the shore
-  add(out, box(1.2, 0.3, 50), std(0xece0be), [9.4, -0.2, -12], { cast: false });                                                    // the wet edge of the beach
+  // the sea: wind ripples catching the sky, turquoise over the sand of the shallows and deepening out to blue; white sand with its grain
+  // and ripples; a darker band of wet sand at the waterline and a lacy line of surf where each little wave breaks
+  const seaMat = (colour, repeat) => new THREE.MeshStandardMaterial({ ...seaRipples(night, repeat), color: colour, bumpScale: 0.6, roughness: 0.08, metalness: 0.1 });
+  const sandMat = (colour, repeat) => new THREE.MeshStandardMaterial({ ...sandGrain(repeat), color: colour, bumpScale: 1.2, roughness: 1 });
+  const surf = (w, d, [x, y, z], rotY) => { const m = new THREE.MeshBasicMaterial({ map: foamBand(), transparent: true, opacity: night ? 0.25 : 0.85, depthWrite: false, fog: true }); m.map.repeat.set(w / 6, 1); add(out, new THREE.PlaneGeometry(w, d), m, [x, y, z], { cast: false, receive: false, rot: [-Math.PI / 2, 0, rotY] }); };
+  add(out, box(49, 0.1, 50), sandMat(0xffffff, [12, 12]), [-15.5, -0.09, -12], { cast: false });                                   // white sand, the jungle side and under the house
+  add(out, box(320, 0.05, 320), seaMat(night ? 0x8090b0 : 0x6fa6d8, [60, 60]), [169, -0.32, -60], { cast: false });              // the sea, deep blue, on the sea side
+  add(out, box(1.2, 0.3, 50), sandMat(0xbdb6a6, [1, 20]), [9.4, -0.2, -12], { cast: false });                                                    // the wet edge of the beach
+  surf(50, 1.4, [10.2, -0.04, -12], Math.PI / 2);
+  const fade = (w, d, [x, z], rotY, colour, shoreAtPlusY) => {   // the shallows thin out into the deep with no edge: turquoise at the shore, clear by the far side
+    const geo = new THREE.PlaneGeometry(w, d, 1, 24), p = geo.attributes.position, tint = new THREE.Color(colour), rgba = [];
+    for (let i = 0; i < p.count; i++) { const k = p.getY(i) / d + 0.5, fromShore = shoreAtPlusY ? 1 - k : k; rgba.push(tint.r, tint.g, tint.b, 0.9 * Math.pow(1 - fromShore, 1.4)); }
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(rgba, 4));
+    add(out, geo, new THREE.MeshStandardMaterial({ vertexColors: true, bumpMap: seaRipples(night, [w / 6, d / 6]).bumpMap, bumpScale: 0.5, roughness: 0.08, transparent: true, depthWrite: false, side: THREE.DoubleSide }), [x, -0.2, z], { cast: false, receive: false, rot: [-Math.PI / 2, 0, rotY] });
+  };
+  fade(50, 9, [14.0, -12], Math.PI / 2, night ? 0x2a6a80 : 0x46d0c8, true);
   const rock = std(night ? 0x2a2a30 : 0x9c8a72, { roughness: 1 }), rockDark = std(night ? 0x1e1e24 : 0x75664f, { roughness: 1 }), cliffTop = std(night ? 0x0c1e14 : 0x3f7a4a, { roughness: 1 });
   for (const [x, z, w, h, d, turn] of [[130, -98, 30, 13, 14, 0.5], [146, -68, 24, 11, 12, 0.3], [114, -126, 28, 15, 12, 0.8], [158, -42, 20, 9, 10, 0.1]]) {   // far along the coast, low on the horizon
     // a sloping headland, not a wall: narrow at the top, spreading wide to the sea, with a long low shoulder running down into the water
@@ -391,9 +438,10 @@ export async function buildRoom(q) {
     const top = add(out, new THREE.SphereGeometry(1, 20, 10), cliffTop, [x, h - 0.6, z], { cast: false }); top.scale.set(w * 0.3, 2.2, w * 0.3);
     for (let k = 0; k < 12; k++) add(out, new THREE.SphereGeometry(1 + rand() * 1.2, 10, 8), cliffTop, [x + (rand() - 0.5) * w * 0.45, h + 0.6 + rand(), z + (rand() - 0.5) * w * 0.45], { cast: false });
   }
-  add(out, box(49, 0.05, 40), std(night ? 0x0e2a46 : 0x1f7fb8, { roughness: 0.15 }), [-15.5, -0.321, ZB - 46], { cast: false });   // the sea, deep blue
-  add(out, box(49, 0.05, 8), std(night ? 0x123a56 : 0x36c9c6, { roughness: 0.12 }), [-15.5, -0.28, ZB - 24], { cast: false });    // the shallows, turquoise
-  add(out, box(49, 0.4, 2), std(0xece0be), [-15.5, -0.2, ZB - 19.8], { cast: false });                                         // the beach
+  add(out, box(49, 0.05, 40), seaMat(night ? 0x8090b0 : 0x6fa6d8, [10, 8]), [-15.5, -0.321, ZB - 46], { cast: false });   // the sea, deep blue
+  add(out, box(49, 0.4, 2), sandMat(0xbdb6a6, [12, 1]), [-15.5, -0.2, ZB - 19.8], { cast: false });                                         // the beach
+  surf(49, 1.4, [-15.5, 0.01, ZB - 20.9], 0);
+  fade(49, 9, [-15.5, ZB - 25.5], 0, night ? 0x2a6a80 : 0x46d0c8, false);
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night), fog: false }));
   skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
   // the same sky round both sides, so every side window looks out at open air (the sea and its far cliff on one side, the jungle on the other)

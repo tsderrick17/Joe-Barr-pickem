@@ -21,6 +21,11 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-26 - Clubhouse: a real beach outside the glass
+
+- The outside of the clubhouse room is drawn to look real (owner: "the palm trees ... not very convincing. None of the outside is really"). Coconut palms: a grey, weathered trunk ringed where old fronds fell, swollen at its foot and tapering up, a boot of old frond bases, green and brown coconuts, and a crown of long feather fronds (narrow leaflets hung from the midrib in a V, light between them), young ones upright, older ones arching over, one or two dead brown fronds hanging. Sky: fair-weather cumulus, white on top and grey underneath, with haze at the horizon. Sea: wind ripples catching the light; turquoise shallows fading into deep blue with no edge; grainy, rippled sand; a darker band of wet sand and a lacy line of surf at the waterline.
+- Nothing inside the room moved: every new surface draws from its own random counter, and the shared one is still stepped exactly as before, so the tap spots (`src/lib/clubhouse-room.json`) are unchanged.
+
 ## 2026-11-25 - Clubhouse: a bookcase by the fire, a real neon sign, Notifications on the thatch
 
 - A low walnut record cabinet stands against the chimney's near face under the constitution (owner's spot and ask): two rows of square bays packed with LPs on their edges, spines out in their covers' colours, two or three leaning at each bay's end so their covers show (sixteen made-up covers on one sheet, no real words). On top a small record player (walnut plinth, black record with a red label, tone arm) between two walnut bookshelf speakers toed in toward the room. It stands clear of the stones' relief.

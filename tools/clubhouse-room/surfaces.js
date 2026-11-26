@@ -252,9 +252,10 @@ export function sky(night) {
     let s = 11; const star = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
     for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255, 255, 255, ${0.3 + star() * 0.7})`; g.fillRect(star() * 1024, star() * 420, 1 + star(), 1 + star()); }
     for (let i = 0; i < 270; i++) rand();
-  } else for (let k = 0; k < 9; k++) {
-    const cx = rand() * 1024, cy = 330 + rand() * 110, s = 30 + rand() * 40;
-    for (let p = 0; p < 9; p++) { const x = cx + (rand() - 0.5) * s * 3.4, y = cy + (rand() - 0.5) * s * 0.5, r = s * (0.5 + rand() * 0.6), cg = g.createRadialGradient(x, y, 0, x, y, r); cg.addColorStop(0, "rgba(255, 255, 255, .8)"); cg.addColorStop(1, "rgba(255, 255, 255, 0)"); g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r * 2); }
+  } else {
+    // real cumulus from a counter of their own; the shared one is still stepped the 270 draws the old clouds took, so the room is unchanged
+    cumulus(g, 1024, 512); for (let i = 0; i < 270; i++) rand();
+    const haze = g.createLinearGradient(0, 400, 0, 512); haze.addColorStop(0, "rgba(240, 246, 244, 0)"); haze.addColorStop(1, "rgba(240, 246, 244, .55)"); g.fillStyle = haze; g.fillRect(0, 400, 1024, 112);
   }
   return texture(c);
 }
@@ -470,3 +471,102 @@ export function albumCovers() {
   });
   return { map: texture(c), spines };
 }
+
+// A coconut palm's trunk, round its girth (the width) and up its height: grey-tan bark ringed every hand's width with the scars the old
+// fronds left, the rings wavering a little and not quite level, fine fibres running up between them and a slow wash of weathering.
+// The relief presses the rings in.
+export function palmBark(repeat = [1, 6]) {
+  const rnd = stream(61), W = 256, H = 512;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = "rgb(146, 138, 124)"; g.fillRect(0, 0, W, H);
+    for (let k = 0; k < 30; k++) { const x = rnd() * W, y = rnd() * H, r = 20 + rnd() * 50, wash = g.createRadialGradient(x, y, 0, x, y, r); wash.addColorStop(0, `rgba(${rnd() < 0.5 ? "190, 186, 176" : "96, 88, 74"}, .25)`); wash.addColorStop(1, "rgba(0, 0, 0, 0)"); g.fillStyle = wash; g.fillRect(x - r, y - r, r * 2, r * 2); }   // weathering: sun-bleached patches and darker damp ones
+    b.fillStyle = "rgb(150, 150, 150)"; b.fillRect(0, 0, W, H);
+    for (let k = 0; k < 40; k++) { const x = rnd() * W, w = 20 + rnd() * 60; g.fillStyle = `rgba(${rnd() < 0.5 ? "90, 80, 66" : "196, 186, 168"}, ${0.08 + rnd() * 0.1})`; g.fillRect(x, 0, w, H); g.fillRect(x - W, 0, w, H); }
+    for (let k = 0; k < 900; k++) { const x = rnd() * W, y = rnd() * H, h = 6 + rnd() * 30, dark = rnd() < 0.55; g.fillStyle = dark ? `rgba(80, 70, 56, ${0.12 + rnd() * 0.2})` : `rgba(214, 204, 186, ${0.1 + rnd() * 0.18})`; g.fillRect(x, y, 1 + rnd(), h); b.fillStyle = dark ? "rgba(90, 90, 90, .35)" : "rgba(200, 200, 200, .3)"; b.fillRect(x, y, 1, h); }
+    const rings = 9;
+    for (let r = 0; r < rings; r++) {
+      const y0 = (r + 0.3 + rnd() * 0.3) * (H / rings), tilt = (rnd() - 0.5) * 10, wob = 2 + rnd() * 3;
+      const line = (ctx, colour, width, dy) => { ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.beginPath(); for (let x = 0; x <= W; x += 4) { const y = y0 + dy + (x / W - 0.5) * tilt + Math.sin((x / W) * Math.PI * 2 * 2 + r) * wob; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); };
+      line(g, "rgba(200, 192, 176, .35)", 10, -7);   // the lip above the scar catches the light
+      line(g, "rgba(70, 62, 52, .5)", 3, 0);       // the scar itself
+      line(g, "rgba(98, 90, 78, .25)", 8, 5);
+      line(b, "rgba(230, 230, 230, .8)", 8, -6); line(b, "rgba(20, 20, 20, .95)", 5, 0);
+    }
+  }, repeat);
+}
+
+// One coconut frond, flat (along its length the width of the picture, across it the height, the midrib down the middle): long narrow
+// leaflets in pairs, each leaving the rib angled toward the tip, tapering to a point, the odd one shorter or split away so light
+// shows between them. Transparent between the leaflets (alpha). `dead` paints it as an old frond, gone straw and brown.
+export function palmFrondSheet(seed, dead = false) {
+  const rnd = stream(seed), W = 1024, H = 256, c = canvas(W, H), g = c.getContext("2d");
+  const tone = () => dead ? [150 + rnd() * 40, 118 + rnd() * 30, 70 + rnd() * 20] : [40 + rnd() * 26, 96 + rnd() * 34, 34 + rnd() * 18];
+  g.lineCap = "round";
+  for (let i = 0; i < 84; i++) {
+    const u = 0.04 + (i / 84) * 0.94, x0 = u * W, len = Math.sin(Math.PI * Math.pow(u, 0.75)) * (H * 0.5) * (0.82 + rnd() * 0.18);
+    for (const side of [-1, 1]) {
+      if (rnd() < (dead ? 0.22 : 0.03)) continue;   // a gap where a leaflet has torn away
+      const short = rnd() < 0.12 ? 0.55 : 1, l = len * short, sweep = l * (0.55 + u * 0.35), [r, gg, bl] = tone();
+      const x1 = x0 + sweep, y1 = H / 2 + side * l, bend = side * l * 0.18;
+      const grad = g.createLinearGradient(x0, H / 2, x1, y1);
+      grad.addColorStop(0, `rgb(${r * 0.8}, ${gg * 0.85}, ${bl * 0.8})`); grad.addColorStop(0.5, `rgb(${r}, ${gg}, ${bl})`); grad.addColorStop(1, `rgb(${Math.min(255, r * 1.15)}, ${Math.min(255, gg * 1.1)}, ${bl})`);
+      g.strokeStyle = grad;
+      for (const [w, a] of [[15, 1], [10, 1], [5, 1]]) { g.lineWidth = w * (1 - u * 0.4); g.globalAlpha = a; g.beginPath(); g.moveTo(x0, H / 2); g.quadraticCurveTo(x0 + sweep * 0.4, H / 2 + side * l * 0.55 + bend, x1, y1); g.stroke(); }
+      g.globalAlpha = 1; g.strokeStyle = `rgba(${dead ? "220, 200, 150" : "170, 200, 120"}, .45)`; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, H / 2); g.quadraticCurveTo(x0 + sweep * 0.4, H / 2 + side * l * 0.55 + bend, x1, y1); g.stroke();   // its own midrib
+    }
+  }
+  g.strokeStyle = dead ? "rgb(170, 140, 90)" : "rgb(150, 160, 90)"; g.lineWidth = 7; g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke();   // the frond's midrib
+  const t = texture(c); t.premultiplyAlpha = false; return t;
+}
+
+// The sea seen from the beach: small wind ripples catching the sky in thin bright dashes over deeper troughs, laid across the water
+// (the width runs along the shore). Tiles.
+export function seaRipples(night = false, repeat = [1, 1]) {
+  const rnd = stream(67), W = 512, H = 512;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = night ? "rgb(20, 50, 80)" : "rgb(40, 132, 186)"; g.fillRect(0, 0, W, H);
+    b.fillStyle = "rgb(128, 128, 128)"; b.fillRect(0, 0, W, H);
+    for (let k = 0; k < 1400; k++) {
+      const x = rnd() * W, y = rnd() * H, w = 6 + rnd() * 26, h = 1 + rnd() * 2, light = rnd() < 0.5;
+      g.fillStyle = light ? (night ? `rgba(120, 160, 210, ${0.15 + rnd() * 0.2})` : `rgba(200, 236, 250, ${0.18 + rnd() * 0.3})`) : `rgba(10, 40, 80, ${0.12 + rnd() * 0.18})`;
+      g.fillRect(x, y, w, h); g.fillRect(x - W, y, w, h);
+      b.fillStyle = light ? "rgba(255, 255, 255, .5)" : "rgba(0, 0, 0, .5)"; b.fillRect(x, y, w, h + 1); b.fillRect(x - W, y, w, h + 1);
+    }
+  }, repeat);
+}
+
+// The white sand: fine grain, a few shell flecks and soft wind ripples. Tiles.
+export function sandGrain(repeat = [1, 1]) {
+  const rnd = stream(71), W = 256, H = 256;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = "rgb(232, 218, 184)"; g.fillRect(0, 0, W, H); b.fillStyle = "rgb(128, 128, 128)"; b.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 16) for (const [ctx, colour, dy] of [[g, "rgba(196, 178, 140, .35)", 0], [g, "rgba(250, 242, 222, .4)", -3], [b, "rgba(40, 40, 40, .5)", 0], [b, "rgba(220, 220, 220, .5)", -3]]) {
+      ctx.strokeStyle = colour; ctx.lineWidth = 3; ctx.beginPath(); for (let x = 0; x <= W; x += 8) { const yy = y + dy + Math.sin((x / W) * Math.PI * 4 + y) * 3; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); } ctx.stroke();
+    }
+    for (let k = 0; k < 5000; k++) { const v = rnd(); g.fillStyle = v < 0.5 ? `rgba(170, 150, 110, ${0.2 + rnd() * 0.3})` : `rgba(255, 250, 236, ${0.25 + rnd() * 0.35})`; g.fillRect(rnd() * W, rnd() * H, 1, 1); }
+  }, repeat);
+}
+
+// Surf along the waterline: a lacy band of white foam, thick where the wave has just broken and thinning to nothing up the sand and out
+// over the water. Transparent around the foam. The band runs along the width.
+export function foamBand() {
+  const rnd = stream(73), W = 1024, H = 128, c = canvas(W, H), g = c.getContext("2d");
+  for (let k = 0; k < 2200; k++) {
+    const x = rnd() * W, edge = H * (0.45 + Math.sin(x / 70) * 0.08), y = edge + (rnd() - 0.4) * H * 0.5 * rnd(), r = 1 + rnd() * 5;
+    g.fillStyle = `rgba(255, 255, 255, ${0.25 + rnd() * 0.5})`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  const t = texture(c, [6, 1]); return t;
+}
+
+// Fair-weather cumulus for the sky: each cloud a heap of soft puffs, white on top where the sun falls and a cool grey underneath, flat-
+// bottomed, smaller and flatter toward the horizon. Drawn onto the sky's own canvas.
+export function cumulus(g, W, H) {
+  const rnd = stream(79);
+  for (let k = 0; k < 14; k++) {
+    const far = rnd(), cx = rnd() * W, base = H * (0.3 + far * 0.55), s = (1 - far * 0.6) * (40 + rnd() * 36), puffs = 8 + Math.floor(rnd() * 8);
+    const blobs = Array.from({ length: puffs }, () => ({ x: cx + (rnd() - 0.5) * s * 4.2, y: base - rnd() * s * (1.3 - far * 0.6), r: s * (0.45 + rnd() * 0.55) }));
+    for (const { x, y, r } of blobs) { const sh = g.createRadialGradient(x, y + r * 0.35, 0, x, y + r * 0.35, r); sh.addColorStop(0, "rgba(176, 192, 210, .55)"); sh.addColorStop(1, "rgba(176, 192, 210, 0)"); g.fillStyle = sh; g.beginPath(); g.arc(x, y + r * 0.35, r, 0, Math.PI * 2); g.fill(); }   // the cool shade underneath
+    for (const { x, y, r } of blobs) { const lit = g.createRadialGradient(x - r * 0.2, y - r * 0.3, 0, x, y, r); lit.addColorStop(0, "rgba(255, 255, 255, .95)"); lit.addColorStop(0.6, "rgba(246, 250, 255, .7)"); lit.addColorStop(1, "rgba(240, 246, 255, 0)"); g.fillStyle = lit; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+  }
+}
+export const seeded = stream;
