@@ -1341,3 +1341,13 @@ test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick t
   await cells.nth(4).click();
   expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
 });
+
+test("a Bowl game's name never wraps onto a second line, even a long one beside a logo pennant on a phone", async ({ page }) => {
+  const bowl = bowlRead() as { games: Array<Record<string, unknown>> };
+  bowl.games = bowl.games.map((game, index) => ({ ...game, bowl_name: ["CFP First Round 1", "Duke's Mayo Bowl", "Radiance Technologies Independence", "CFP First Round 2"][index % 4] }));
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl });
+  const names = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-name b");
+  await expect(names.first()).toBeVisible({ timeout: 30_000 });
+  const lines = await names.evaluateAll((nodes) => nodes.map((node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; }));
+  expect(lines.every((count) => count <= 1), `every name on one line (${lines.join(", ")})`).toBe(true);
+});
