@@ -114,6 +114,25 @@ export default function ClubhousePage() {
   useEffect(() => { askingRef.current = asking !== null; }, [asking]);
   /** Runs `go` at once, or, while picks are waiting to be sent, asks first. */
   const guarded = useCallback((go: () => void) => { if (unsent.current) setAsking({ go }); else go(); }, []);
+  // Leaving the clubhouse any other way with picks waiting (owner, 2026-11-25: picks made here must never go missing on the way to Classic):
+  // a link out of the page, the header's Classic switch among them, stops and asks the same question; once answered it is followed. Closing
+  // or reloading the app asks the browser's own "leave this page?".
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (!unsent.current || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!link || link.target === "_blank") return;
+      const to = new URL(link.href, window.location.href);
+      if (to.origin !== window.location.origin || to.pathname === window.location.pathname) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setAsking({ go: () => { unsent.current = null; link.click(); } });
+    };
+    const onLeave = (event: BeforeUnloadEvent) => { if (unsent.current) { event.preventDefault(); event.returnValue = ""; } };
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("beforeunload", onLeave);
+    return () => { document.removeEventListener("click", onClick, true); window.removeEventListener("beforeunload", onLeave); };
+  }, []);
   // Closing the board's sheet with picks waiting: the sheet stays up and asks; once answered it slides away on this signal.
   const [deckClose, setDeckClose] = useState(0);
   const holdDeck = useCallback(() => { if (!unsent.current) return true; setAsking({ go: () => setDeckClose((count) => count + 1) }); return false; }, []);

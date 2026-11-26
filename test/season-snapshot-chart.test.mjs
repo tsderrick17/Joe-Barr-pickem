@@ -44,3 +44,12 @@ test("the Season Snapshot's quick choices: Top 5, you and the top five, everyone
   assert.equal(snapshotPreset("none", ranked, null).size, 0);
   assert.equal(SNAPSHOT_ALL_UP_TO, 8, "a pool of eight (today's) still opens with everyone on the chart");
 });
+
+test("Top 5 takes in everyone tied with fifth, and Me + Top 5 does the same", () => {
+  const ranked = ["a", "b", "c", "d", "e", "f", "g", "h"];
+  const totals = { a: 16, b: 15, c: 14, d: 12, e: 11, f: 11, g: 11, h: 9 };
+  assert.deepEqual([...snapshotPreset("top5", ranked, null, totals)], ["a", "b", "c", "d", "e", "f", "g"]);
+  assert.deepEqual([...snapshotPreset("me-top5", ranked, "h", totals)], ["a", "b", "c", "d", "e", "f", "g", "h"]);
+  assert.deepEqual([...snapshotPreset("top5", ranked, null, { ...totals, f: 10, g: 10 })], ["a", "b", "c", "d", "e"]);
+  assert.equal(snapshotPreset("top5", ranked, null).size, 5, "without totals: the first five");
+});

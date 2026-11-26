@@ -318,16 +318,20 @@ export function snapshotAxis(min, max, fromZero) {
 export const SNAPSHOT_ALL_UP_TO = 8;
 
 /**
- * Who a quick choice over the Season Snapshot's key shows.
+ * Who a quick choice over the Season Snapshot's key shows. Top 5 is the top five and anyone tied with fifth (owner, 2026-11-25), so a
+ * tie is never split by the order the key happens to list them in.
  * @param {"top5" | "me-top5" | "all" | "none"} preset
  * @param {string[]} ranked  every player's id, best first
  * @param {string | null | undefined} viewerId  you (added to the top five by "me-top5")
+ * @param {Map<string, number> | Record<string, number>} [totals]  each player's total, to find the ties at fifth
  * @returns {Set<string>}
  */
-export function snapshotPreset(preset, ranked, viewerId) {
+export function snapshotPreset(preset, ranked, viewerId, totals) {
   if (preset === "all") return new Set(ranked);
   if (preset === "none") return new Set();
-  const top = new Set(ranked.slice(0, 5));
+  const totalOf = (id) => (totals instanceof Map ? totals.get(id) : totals?.[id]);
+  const fifth = ranked.length > 5 ? totalOf(ranked[4]) : undefined;
+  const top = new Set(fifth === undefined ? ranked.slice(0, 5) : ranked.filter((id, index) => index < 5 || totalOf(id) === fifth));
   if (preset === "me-top5" && viewerId && ranked.includes(viewerId)) top.add(viewerId);
   return top;
 }

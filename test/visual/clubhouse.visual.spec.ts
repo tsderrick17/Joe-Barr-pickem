@@ -214,7 +214,14 @@ test("a ticket sent says so on the Big Board's bar, with the time it was saved",
 
 test("the ticket says what the line colours mean while a line can still move", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
-  await expect(page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key")).toContainText("8 AM on game day", { timeout: 30_000 });
+  const key = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key");
+  await expect(key).toContainText("8 AM on game day", { timeout: 30_000 });
+  // two lines at most on a phone (owner, 2026-11-25)
+  const lines = await key.evaluate((node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; });
+  expect(lines).toBeLessThanOrEqual(2);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-form-top-phone-390.png", { maxDiffPixels: 40 });
 });
 
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
@@ -792,10 +799,10 @@ test("the Bowl tiebreaker sits in the title game's own box, and saving without i
   expect(Math.abs(guess!.x + guess!.width - teams.right)).toBeLessThanOrEqual(1);
   await expect(box.getByRole("textbox", { name: /Tiebreaker/ })).toHaveCount(0);
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
-  await box.getByRole("button", { name: "Save picks" }).click();
+  await ticket.getByRole("button", { name: "Save picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   await expect(box.getByRole("status")).toContainText("Don’t forget your tiebreaker");
-  await expect(box.getByRole("button", { name: /Saved at/ })).toBeVisible();
+  await expect(ticket.getByRole("button", { name: /Saved at/ })).toBeVisible();
 });
 
 test("closing the Bowl ticket with picks not saved asks first", async ({ page }) => {
@@ -1340,4 +1347,71 @@ test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick t
   await form.getByRole("button", { name: /Pick’em/ }).click(); await felt();
   await cells.nth(4).click();
   expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
+});
+
+test("a Bowl game's name never wraps onto a second line, even a long one beside a logo pennant on a phone", async ({ page }) => {
+  const bowl = bowlRead() as { games: Array<Record<string, unknown>> };
+  bowl.games = bowl.games.map((game, index) => ({ ...game, bowl_name: ["CFP First Round 1", "Duke's Mayo Bowl", "Radiance Technologies Independence", "CFP First Round 2"][index % 4] }));
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl });
+  const names = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-name b");
+  await expect(names.first()).toBeVisible({ timeout: 30_000 });
+  const lines = await names.evaluateAll((nodes) => nodes.map((node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; }));
+  expect(lines.every((count) => count <= 1), `every name on one line (${lines.join(", ")})`).toBe(true);
+});
+
+test("the Bowl sheet's win counts are readable: cream figures on navy flaps, never cream on cream", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
+  const tile = ticket.locator(".lab-bowl-sheet-rec .bowl-score-tile").first();
+  await expect(tile).toBeVisible();
+  // The figures stand out from their flaps: a contrast of at least 7 to 1 (cream on cream was about 1.1).
+  const contrast = await tile.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const rgb = (value: string) => { const v = value.trim(); if (v.startsWith("#")) { const h = v.length === 4 ? v.slice(1).split("").map((c) => c + c).join("") : v.slice(1, 7); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); } return (v.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number); };
+    const lum = ([r, g, b]: number[]) => { const f = (c: number) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const [a, b] = [lum(rgb(style.getPropertyValue("--flap-ink"))), lum(rgb(style.getPropertyValue("--flap-bg")))];
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  });
+  expect(contrast).toBeGreaterThan(7);
+  await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.waitForTimeout(1200);
+  await expect(ticket.locator(".lab-bowl-sheet")).toHaveScreenshot("clubhouse-bowl-sheet-phone-390.png", { maxDiffPixels: 60 });
+});
+
+test("closing or reloading the clubhouse with bowl picks not saved yet asks the browser's own leave-this-page question", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).click();
+  const asked = new Promise<string>((resolve) => page.once("dialog", (dialog) => { resolve(dialog.type()); void dialog.dismiss(); }));
+  await page.close({ runBeforeUnload: true });
+  expect(await asked).toBe("beforeunload");
+});
+
+test("after a change, Save rides a bar pinned to the foot of the ticket, with the count of changes, in view without scrolling", async ({ page }) => {
+  const bowl = bowlRead() as { games: Array<Record<string, unknown>> };
+  // a long list: the open bowl repeated down the days, so the save button would be far below
+  bowl.games = [...bowl.games, ...Array.from({ length: 10 }, (_, i) => ({ ...bowl.games[2], id: `x${i}`, bowl_name: `Extra Bowl ${i + 1}`, kickoff_at: `2026-10-${String(5 + i).padStart(2, "0")}T20:00:00Z` }))];
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  const save = ticket.getByRole("button", { name: "Save picks" });
+  await expect(ticket.locator(".lab-savebar.is-pinned")).toHaveCount(0);
+  await ticket.getByRole("button", { name: "Arizona -2.5" }).first().click();
+  await expect(ticket.locator(".lab-savebar.is-pinned")).toContainText("1 change");
+  await expect(save).toBeInViewport();
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-savebar-phone-390.png", { maxDiffPixels: 60 });
+});
+
+test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  await expect(form).toBeVisible({ timeout: 30_000 });
+  await form.locator(".lab-window-part .lab-board-cell:not([disabled])").first().click();
+  await expect(form.locator(".lab-savebar.is-pinned")).toContainText("1 change");
+  await expect(form.getByRole("button", { name: /Submit/ })).toBeInViewport();
 });

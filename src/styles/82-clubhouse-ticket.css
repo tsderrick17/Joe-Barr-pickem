@@ -94,9 +94,11 @@
 /* Tucked, the heading leaves the flow (so the fold can fade it where it stood) and stays out of sight and out of reach. */
 .slip.is-tucked .slip-head { left: 16px; opacity: 0; pointer-events: none; position: absolute; right: 14px; top: 13px; }
 .slip.is-tucked .slip-places { margin-top: 2px; }
-.slip.is-tucked .slip-body { padding-bottom: 8px; padding-top: 12px; }
-.club-ticket-dock .slip.is-tucked .slip-body { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
-.slip.is-tucked .slip-place { column-gap: 6px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; }
+.slip.is-tucked .slip-body { padding-bottom: 10px; padding-top: 10px; }
+.club-ticket-dock .slip.is-tucked .slip-body { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+/* Tucked, each place is its mark and words side by side, the pair centred in its share of the ticket (not pushed to the left). */
+.slip.is-tucked .slip-place { align-items: center; column-gap: 8px; grid-template-columns: auto minmax(0, max-content); justify-content: center; justify-items: start; text-align: left; }
+.slip.is-tucked .slip-mark .lab-lamp { height: .5rem; right: -4px; top: -2px; width: .5rem; }
 .slip.is-tucked .slip-words { justify-items: start; }
 .slip.is-tucked .slip-stub { gap: 1px; padding-block: 6px; }
 .slip.is-tucked .slip-stub i { display: none; }

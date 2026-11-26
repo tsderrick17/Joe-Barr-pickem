@@ -400,7 +400,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
     if (showPlayoffs) return new Set(standings.filter((player) => player.eliminated).map((player) => player.id));
     // A big pool starts on its top five (and you), so the chart opens readable; a pool of eight or fewer shows everyone.
     if (standings.length <= SNAPSHOT_ALL_UP_TO) return new Set<string>();
-    const shown = snapshotPreset("me-top5", [...standings].sort((a, b) => b.wins - a.wins).map((player) => player.id), viewerId);
+    const shown = snapshotPreset("me-top5", [...standings].sort((a, b) => b.wins - a.wins).map((player) => player.id), viewerId, Object.fromEntries(standings.map((player) => [player.id, player.wins])));
     return new Set(standings.map((player) => player.id).filter((id) => !shown.has(id)));
   });
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -430,7 +430,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
     .sort((a, b) => b.total - a.total || a.order - b.order);
   // Quick choices over the key: the top five on the chart, you and the top five (when you are not already in it), everyone, nobody.
   const rankedNow = keyRows.map(({ player }) => player.id);
-  const meOutsideTop = Boolean(viewerId && rankedNow.includes(viewerId) && !rankedNow.slice(0, 5).includes(viewerId));
+  const meOutsideTop = Boolean(viewerId && rankedNow.includes(viewerId) && !snapshotPreset("top5", rankedNow, null, chartTotals).has(viewerId));
   const presets: Array<{ key: SnapshotPreset; label: string }> = [
     ...(standings.length > 5 ? [{ key: "top5" as const, label: "Top 5" }] : []),
     ...(meOutsideTop ? [{ key: "me-top5" as const, label: "Me + Top 5" }] : []),
@@ -473,7 +473,7 @@ function SnapshotView({ standings, snapshot, isPlayoff, range = "all", view, bow
       })}
       <div aria-label="Players to show" className="season-snapshot-presets" role="group">
         {presets.map(({ key, label }) => {
-          const shown = snapshotPreset(key, keyRows.map(({ player }) => player.id), viewerId);
+          const shown = snapshotPreset(key, keyRows.map(({ player }) => player.id), viewerId, chartTotals);
           const on = shown.size === visible.length && visible.every((player) => shown.has(player.id));
           return <button aria-pressed={on} className="season-snapshot-show-all" key={key} onClick={() => chooseHidden(new Set(standings.map((player) => player.id).filter((id) => !shown.has(id))))} type="button">{label}</button>;
         })}
