@@ -607,6 +607,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-gauge .bowl-score-tile.is-large { --flap-bg: rgb(15 24 48); --flap-ink: rgb(230 214 180); --flap-edge: rgb(179 139 77); --flap-seam: rgba(255, 255, 255, .18); font-size: .85rem; letter-spacing: 0; margin-top: 0; }
 .lab-bowl-gauge .bowl-score-tile.is-large .bowl-flap { height: 1.9rem; width: 1.2rem; }
 .lab-bowl-gauge .bowl-score-tile.is-large .bowl-flap-half > span { font-size: 1.4rem; }
+/* The sheet's win counts: navy flaps with cream figures, like the games-left counter (the ticket's cream ink once fell on cream flaps). */
+.lab-bowl-sheet-rec .bowl-score-tile { --flap-bg: rgb(15 24 48); --flap-edge: rgba(179, 139, 77, .75); --flap-ink: rgb(240 232 214); --flap-seam: rgba(255, 255, 255, .14); }
 .lab-bowl-ticket .lab-ticket-switch.lab-ticket-action button { min-height: 30px; padding-block: 2px; }
 .lab-bowl-gauge-track { fill: none; stroke-linecap: round; stroke-width: 5; stroke: rgba(240, 232, 214, .12); }
 .lab-bowl-gauge-bezel { fill: none; stroke: rgba(226, 182, 70, .55); stroke-width: .8; }
@@ -641,8 +643,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-bowl-game.is-owed { background: linear-gradient(90deg, rgba(179, 139, 77, .14), transparent 60%); border-left-color: var(--bowl-slip-gold); }
 .lab-bowl-name { align-items: center; display: flex; gap: 10px; grid-column: 1 / -1; min-width: 0; }
 .lab-bowl-name > span:last-child { display: grid; min-width: 0; }
-.lab-bowl-round { color: var(--bowl-slip-gold); font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }   /* which playoff round a bowl hosts */
-.lab-bowl-name b { color: var(--bowl-ink); font-size: .82rem; letter-spacing: .06em; }
+.lab-bowl-round { color: var(--bowl-slip-gold); font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .14em; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }   /* which playoff round a bowl hosts */
+.lab-bowl-name b { color: var(--bowl-ink); font-size: .82rem; letter-spacing: .06em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* a game's name never wraps (owner, 2026-11-25) */
 .lab-bowl-name small { color: rgba(240, 232, 214, .6); font-family: Georgia, serif; font-size: .7rem; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lab-bowl-game.is-owed .lab-bowl-name small { color: var(--bowl-gold-lt); font-weight: 700; }
 .lab-bowl-game.is-missed .lab-bowl-name small { color: rgb(236 150 132); }
@@ -658,7 +660,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-flag-cloth { fill: rgb(30 46 80); stroke: rgba(179, 139, 77, .8); stroke-width: 1.2; }
 .lab-bowl-flag-hoist { fill: var(--bowl-slip-gold); }
 .lab-bowl-flag-name { dominant-baseline: central; fill: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; letter-spacing: .04em; }
-.lab-bowl-flag.is-logo { width: 9rem; }
+.lab-bowl-flag.is-logo { width: 7.25rem; }   /* shorter (owner, 2026-11-25), so every game's name has the room for one line */
 /* the logo sits on a cream patch, so a dark logo reads on any banner */
 .lab-bowl-flag-patch { fill: rgb(248 243 230); stroke: rgba(20, 30, 50, .18); stroke-width: .8; }
 /* A logo pennant: felt in the bowl's colour with a soft shadow on the ticket, a fine stitch line round its edge, a round pole. */

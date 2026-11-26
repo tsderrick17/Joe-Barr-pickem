@@ -27,6 +27,8 @@ and add a row above. (It is read at the start of every change, so short is cheap
 - The neon is a real sign now (owner: "looks flat"): lit tubes (a white core in pink glass with a glint) on a clear acrylic backer held off the walnut by four brass stand-offs, their soft shadow and a pink haze on the wood, and a little real pink light on the walnut round it.
 - On a desktop the Notifications pill sits on the thatch just under the beam, left of the ledge plants (owner, 2026-11-25).
 - The tucked ticket's spacing (owner: "a little sloppy"): each place's mark and words sit centred in its share of the ticket instead of pushed left, the padding above and below is even, and the lamp dot is smaller and closer to its mark.
+- On the clubhouse Bowl ticket a game's name never wraps onto a second line (owner); the logo pennants are shorter (7.25rem from 9rem) to give the names room, and a name that still does not fit ends in an ellipsis.
+- The Bowl sheet's win counts are cream figures on navy flaps, like the games-left counter: the ticket's cream ink had fallen on cream flaps and they could not be read (owner, 2026-11-25).
 
 ## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
 

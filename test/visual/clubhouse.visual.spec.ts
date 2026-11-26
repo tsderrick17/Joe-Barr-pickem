@@ -1351,3 +1351,24 @@ test("a Bowl game's name never wraps onto a second line, even a long one beside 
   const lines = await names.evaluateAll((nodes) => nodes.map((node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; }));
   expect(lines.every((count) => count <= 1), `every name on one line (${lines.join(", ")})`).toBe(true);
 });
+
+test("the Bowl sheet's win counts are readable: cream figures on navy flaps, never cream on cream", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await expect(ticket).toBeVisible({ timeout: 30_000 });
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click();
+  const tile = ticket.locator(".lab-bowl-sheet-rec .bowl-score-tile").first();
+  await expect(tile).toBeVisible();
+  // The figures stand out from their flaps: a contrast of at least 7 to 1 (cream on cream was about 1.1).
+  const contrast = await tile.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const rgb = (value: string) => { const v = value.trim(); if (v.startsWith("#")) { const h = v.length === 4 ? v.slice(1).split("").map((c) => c + c).join("") : v.slice(1, 7); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); } return (v.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number); };
+    const lum = ([r, g, b]: number[]) => { const f = (c: number) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const [a, b] = [lum(rgb(style.getPropertyValue("--flap-ink"))), lum(rgb(style.getPropertyValue("--flap-bg")))];
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  });
+  expect(contrast).toBeGreaterThan(7);
+  await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.waitForTimeout(1200);
+  await expect(ticket.locator(".lab-bowl-sheet")).toHaveScreenshot("clubhouse-bowl-sheet-phone-390.png", { maxDiffPixels: 60 });
+});
