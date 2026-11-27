@@ -505,31 +505,43 @@ test("Pool stats: the names show the league or one player's own stats", async ({
   await expect(section.locator(".pool-stats-tiles").first()).not.toContainText("Perfect weeks");
   await expect(section.getByText("Coin flip", { exact: true })).toHaveCount(0);   // the .500 line has no name on it
   await expect(section.getByRole("heading", { name: "Hit rate by season" })).toBeVisible();   // the league has its seasons too
+  // Two team tables share the sort buttons' look: the teams picked, and under it the teams faded (picked against).
+  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("button", { name: /^Picked/ }) });
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
-  await section.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
+  await teamBlock.getByRole("button", { name: /^Hit rate/ }).click();   // the same five-team table, now the five with the best hit rate
   await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();
-  await section.getByRole("button", { name: /^Picked/ }).click();
+  await teamBlock.getByRole("button", { name: /^Picked/ }).click();
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   // Pressing the chosen column again turns the table over: the five least picked, then the five with the lowest hit rate; once more turns it back.
-  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.locator("button.pool-sort") });
   const teamRows = teamBlock.locator("tbody th");
   await expect(teamRows.first()).toHaveText("Kansas City Chiefs");
   await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▼");
-  await section.getByRole("button", { name: /^Picked/ }).click();
+  await teamBlock.getByRole("button", { name: /^Picked/ }).click();
   await expect(section.getByRole("heading", { name: "Least picked teams" })).toBeVisible();
   await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▲");
   await expect(teamBlock.locator("th[aria-sort=ascending]")).toHaveCount(1);
   await expect(teamRows).toHaveText(["Detroit Lions", "San Francisco 49ers", "Philadelphia Eagles", "Buffalo Bills", "Kansas City Chiefs"]);
-  await section.getByRole("button", { name: /^Picked/ }).click();
+  await teamBlock.getByRole("button", { name: /^Picked/ }).click();
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
   await expect(teamBlock.getByRole("button", { name: /^Picked/ })).toContainText("▼");
-  await section.getByRole("button", { name: /^Hit rate/ }).click();
+  await teamBlock.getByRole("button", { name: /^Hit rate/ }).click();
   await expect(section.getByRole("heading", { name: "Best hit rate teams" })).toBeVisible();   // another column starts at the top again
-  await section.getByRole("button", { name: /^Hit rate/ }).click();
+  await teamBlock.getByRole("button", { name: /^Hit rate/ }).click();
   await expect(section.getByRole("heading", { name: "Lowest hit rate teams" })).toBeVisible();
   await expect(teamRows).toHaveText(["San Francisco 49ers", "Philadelphia Eagles", "Detroit Lions", "Buffalo Bills", "Kansas City Chiefs"]);
-  await section.getByRole("button", { name: /^Picked/ }).click();   // back to Picked: highest first
+  await teamBlock.getByRole("button", { name: /^Picked/ }).click();   // back to Picked: highest first
   await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();
+  // Under it, the same table for the teams faded: its own sort, its own switch.
+  const fadedBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("button", { name: /^Faded/ }) });
+  await expect(section.getByRole("heading", { name: "Most faded teams" })).toBeVisible();
+  await expect(fadedBlock.locator("tbody th").first()).toHaveText("New England Patriots");
+  await fadedBlock.getByRole("button", { name: /^Hit rate/ }).click();
+  await expect(section.getByRole("heading", { name: "Best teams to fade" })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Most picked teams" })).toBeVisible();   // the picked table keeps its own sort
+  await fadedBlock.getByRole("button", { name: /^Hit rate/ }).click();
+  await expect(section.getByRole("heading", { name: "Worst teams to fade" })).toBeVisible();
+  await fadedBlock.getByRole("button", { name: /^Faded/ }).click();
+  await expect(section.getByRole("heading", { name: "Most faded teams" })).toBeVisible();
   await names.getByRole("button", { name: "Connor" }).click();
   await expect(section.locator(".pool-stats-tiles").first()).toContainText("644–466");
   await expect(section.getByRole("heading", { name: "What Connor picks" })).toBeVisible();
@@ -550,7 +562,10 @@ test("Pool stats: the splits and teams tables each switch between all-time and t
   await page.goto("/admin/stats");
   const section = page.locator("[aria-labelledby=pool-stats-title]");
   const splitsBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /^What .* picks$/ }) });
-  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /teams$/ }) });
+  // Found by title, since an empty table has no sort buttons.
+  const teamBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /picked teams$|hit rate teams$/ }) });
+  const fadedBlock = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: /faded teams$|to fade$/ }) });
+  const fadedSwitch = fadedBlock.getByRole("group", { name: /all-time or this season/ });
   const splitsSwitch = splitsBlock.getByRole("group", { name: /all-time or this season/ });
   const teamsSwitch = teamBlock.getByRole("group", { name: /all-time or this season/ });
   await expect(splitsSwitch.getByRole("button", { name: "All-time" })).toHaveAttribute("aria-pressed", "true", { timeout: 30_000 });
@@ -565,11 +580,15 @@ test("Pool stats: the splits and teams tables each switch between all-time and t
   await teamsSwitch.getByRole("button", { name: "This season" }).click();
   await expect(teamBlock.locator("tbody th")).toHaveText(["Buffalo Bills", "Kansas City Chiefs", "Las Vegas Raiders", "Detroit Lions", "Philadelphia Eagles"]);
   await expect(splitsBlock.locator("tbody tr").first()).toContainText("1270–1048");   // the other table keeps its own choice
+  await expect(fadedBlock.locator("tbody th")).toHaveCount(5);   // so does the faded table under it
+  await fadedSwitch.getByRole("button", { name: "This season" }).click();
+  await expect(fadedBlock.locator("tbody th")).toHaveText(["New England Patriots", "New York Jets", "Carolina Panthers", "Las Vegas Raiders"]);
   await splitsSwitch.getByRole("button", { name: "This season" }).click();
   await expect(splitsBlock.locator("tbody tr").first()).toContainText("640–505");
   await section.locator(".dash-pair").screenshot({ path: test.info().outputPath("pool-stats-this-season.png") });
   await section.getByRole("group", { name: "Show" }).getByRole("button", { name: "Rick" }).click();
   await expect(teamBlock.getByText("No graded picks this season yet.")).toBeVisible();
+  await expect(fadedBlock.getByText("No graded picks this season yet.")).toBeVisible();
 });
 
 // Pool stats: the teams, splits and seasons tables fit their cards at every width. A card scrolls sideways only when it truly cannot fit.
@@ -584,7 +603,7 @@ for (const width of [390, 560, 768, 1280]) {
     const overflowing = await section.locator(".pool-table-wrap").evaluateAll((wraps) => wraps.filter((wrap) => wrap.scrollWidth > wrap.clientWidth + 1).length);
     expect(overflowing, "no table wider than its card").toBe(0);
     // The teams and splits tables show every row: no scroll bar, at any width.
-    for (const heading of ["Most picked teams", "What the league picks"]) {
+    for (const heading of ["Most picked teams", "Most faded teams", "What the league picks"]) {
       const wrap = section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: heading }) }).locator(".pool-table-wrap");
       const taller = await wrap.evaluate((element) => element.scrollHeight - element.clientHeight);
       expect(taller, `${heading}: nothing to scroll`).toBeLessThanOrEqual(1);

@@ -42,6 +42,23 @@ function runs(weeks, good) {
 }
 
 /**
+ * The four five-team lists of a team table (most, least, best hit rate, lowest hit rate) from a map of teamId -> { wins, losses }, each team's
+ * share measured against `total` graded picks. Used for the teams picked and the teams faded (picked against).
+ */
+function fiveOf(byTeam, total, teamById) {
+  const all = [...byTeam]
+    .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
+    .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
+  return {
+    all,
+    teams: all.slice(0, 5),
+    teamsByHitRate: [...all].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5),
+    teamsLeastPicked: [...all].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5),
+    teamsByLowestHitRate: [...all].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5),
+  };
+}
+
+/**
  * Record, pushes, seasons and favorite/underdog and home/road splits over a set of picks (the whole pool's, or one player's).
  * Only graded picks count; a push is a loss.
  */
@@ -51,7 +68,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   const bucket = () => ({ wins: 0, losses: 0 });
   const netBySeason = new Map();
   const side = { favorite: bucket(), underdog: bucket(), pickem: bucket() }, venue = { home: bucket(), away: bucket() };
-  const bySeason = new Map(), byTeam = new Map();
+  const bySeason = new Map(), byTeam = new Map(), byFaded = new Map();
   for (const pick of subset) {
     if (!isDecided(pick)) continue;
     const period = periodById.get(pick.scoring_period_id), game = gameById.get(pick.game_id), line = lineByGame.get(pick.game_id);
@@ -61,6 +78,9 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     if (year !== undefined) { const season = bySeason.get(year) ?? bucket(); season[won ? "wins" : "losses"] += 1; bySeason.set(year, season); }
     pickedGames.add(pick.game_id);
     { const team = byTeam.get(pick.selected_team_id) ?? bucket(); team[won ? "wins" : "losses"] += 1; byTeam.set(pick.selected_team_id, team); }
+    // The team picked against (faded): the other side of the game. Its record is the picks' own: a win means fading it paid off.
+    const faded = game ? (pick.selected_team_id === game.home_team_id ? game.away_team_id : pick.selected_team_id === game.away_team_id ? game.home_team_id : null) : null;
+    if (faded) { const team = byFaded.get(faded) ?? bucket(); team[won ? "wins" : "losses"] += 1; byFaded.set(faded, team); }
     if (game && line && Number.isInteger(game.home_score) && Number.isInteger(game.away_score)) {
       const margin = pick.selected_team_id === game.home_team_id ? game.home_score - game.away_score : game.away_score - game.home_score;
       const adjusted = margin + (pick.selected_team_id === line.favorite_team_id ? -line.locked_spread : line.locked_spread);
@@ -76,13 +96,9 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   const share = (bucketRecord, whole) => ({ ...withRate(bucketRecord), share: rate(bucketRecord.wins + bucketRecord.losses, whole) });
   const sideTotal = Object.values(side).reduce((sum, item) => sum + item.wins + item.losses, 0);
   const venueTotal = Object.values(venue).reduce((sum, item) => sum + item.wins + item.losses, 0);
-  const everyTeam = [...byTeam]
-    .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
-    .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
-  const teams = everyTeam.slice(0, 5);
-  const teamsByHitRate = [...everyTeam].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
-  const teamsLeastPicked = [...everyTeam].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
-  const teamsByLowestHitRate = [...everyTeam].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
+  const { all: everyTeam, teams, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate } = fiveOf(byTeam, total, teamById);
+  const fadedLists = fiveOf(byFaded, total, teamById);
+  const faded = { teams: fadedLists.teams, teamsByHitRate: fadedLists.teamsByHitRate, teamsLeastPicked: fadedLists.teamsLeastPicked, teamsByLowestHitRate: fadedLists.teamsByLowestHitRate };
   const tiedForMost = everyTeam.length ? everyTeam.filter((team) => team.picks === everyTeam[0].picks).length : 0;   // how many teams share the top spot
   return {
     record: { ...withRate({ wins, losses }), net, pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
@@ -90,6 +106,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     teamsByHitRate,
     teamsLeastPicked,
     teamsByLowestHitRate,
+    faded,
     mostPicked: teams[0] ?? null,
     mostPickedTied: tiedForMost,   // 1 when one team leads; more when teams tie for the most picks
     bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record), net: netBySeason.get(year) ?? 0 })),
@@ -244,8 +261,8 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
   const currentSeason = seasons.reduce((newest, season) => (!newest || season.year > newest.year ? season : newest), null);
   const inCurrentSeason = (pick) => Boolean(currentSeason) && periodById.get(pick.scoring_period_id)?.season_id === currentSeason.id;
   const thisSeasonOf = (subset) => {
-    const { splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate } = recordsFor(subset.filter(inCurrentSeason), lookups);
-    return { seasonYear: currentSeason?.year ?? null, splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate };
+    const { splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate, faded } = recordsFor(subset.filter(inCurrentSeason), lookups);
+    return { seasonYear: currentSeason?.year ?? null, splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate, faded };
   };
 
   // Each player's own full set: the same record, histogram and splits from just their picks.

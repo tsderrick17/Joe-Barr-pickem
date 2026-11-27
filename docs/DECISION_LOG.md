@@ -21,6 +21,13 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-26 - Pool stats: Most faded teams
+
+Directly under Most picked teams (right column from 900px, stacked on a phone) is the same table for the teams faded: the team on the other side
+of each graded pick. Its record is the picks' own, so a high hit rate means fading that team paid off. Share is of all graded picks, like
+Most picked. It has its own sort (Faded or Hit rate, pressed again to turn it over: Most / Least faded teams, Best / Worst teams to fade) and
+its own All-time / This season switch. Requested by the Commissioner.
+
 ## 2026-11-26 - Shutout Free Weeks count the first win at once
 
 A week's first win already rules out a shutout (0-2), so Shutout Free Weeks in a Row now counts a week still being played the moment the

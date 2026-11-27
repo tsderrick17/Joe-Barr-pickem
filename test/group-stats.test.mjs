@@ -212,6 +212,28 @@ test("the five teams with the best hit rate come beside the five most picked, ti
   assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).teamsByHitRate, []);
 });
 
+test("the faded teams are the other side of each pick, with the picks' own record, in the same four lists, all-time and this season", () => {
+  const stats = buildGroupStats({
+    players, seasons, periods,
+    games: [{ id: "a", home_team_id: "x", away_team_id: "y", home_score: 20, away_score: 10 }, { id: "b", home_team_id: "z", away_team_id: "w", home_score: 20, away_score: 10 }],
+    lines: [{ game_id: "a", favorite_team_id: "x", locked_spread: 3 }, { game_id: "b", favorite_team_id: "z", locked_spread: 3 }],
+    picks: [
+      { id: "1", player_id: "ann", game_id: "a", scoring_period_id: "s25-w1", selected_team_id: "x", result: "win" },    // fades y, and it paid off
+      { id: "2", player_id: "bob", game_id: "a", scoring_period_id: "s25-w1", selected_team_id: "x", result: "win" },    // fades y again
+      { id: "3", player_id: "ann", game_id: "b", scoring_period_id: "s25-w1", selected_team_id: "w", result: "loss" },   // fades z, and it did not
+      { id: "4", player_id: "bob", game_id: "b", scoring_period_id: "s25-w1", selected_team_id: "z", result: "pending" }, // not graded: not counted
+    ],
+    teams: [{ id: "x", full_name: "X", abbreviation: "X" }, { id: "y", full_name: "Y", abbreviation: "Y" }, { id: "z", full_name: "Z", abbreviation: "Z" }, { id: "w", full_name: "W", abbreviation: "W" }],
+  });
+  assert.deepEqual(stats.faded.teams.map(({ teamId, wins, losses, share }) => [teamId, wins, losses, Number(share.toFixed(3))]), [["y", 2, 0, 0.667], ["z", 0, 1, 0.333]], "y faded twice (2-0), z once (0-1), share of the graded picks");
+  assert.deepEqual(stats.faded.teamsLeastPicked.map((team) => team.teamId), ["z", "y"]);
+  assert.deepEqual(stats.faded.teamsByHitRate.map((team) => team.teamId), ["y", "z"]);
+  assert.deepEqual(stats.faded.teamsByLowestHitRate.map((team) => team.teamId), ["z", "y"]);
+  assert.deepEqual(stats.players.find((player) => player.playerId === "bob").faded.teams.map((team) => team.teamId), ["y"], "each player has their own");
+  assert.ok(stats.thisSeason.faded, "the This season switch has the faded lists too");
+  assert.deepEqual(buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] }).faded.teams, []);
+});
+
 test("a team missing from the list still counts, under a plain name, and nobody with no graded picks has a most picked team", () => {
   assert.equal(stats.mostPicked.name, "Unknown team");
   const empty = buildGroupStats({ players: [], seasons: [], periods: [], games: [], lines: [], picks: [] });

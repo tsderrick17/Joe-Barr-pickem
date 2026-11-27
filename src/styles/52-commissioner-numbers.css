@@ -108,7 +108,7 @@
 .dash-chips button { background: var(--club-paper); border: 1px solid var(--club-line); border-radius: 999px; cursor: pointer; flex: none; font-size: 13px; font-weight: 700; min-height: 44px; padding: 0 14px; }
 .dash-chips button[aria-pressed="true"] { background: var(--cw-green); border-color: var(--cw-green); color: var(--cw-cream); }
 .dash-pair { display: grid; gap: 12px; }
-@media (min-width: 900px) { .dash-pair { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 900px) { .dash-pair { grid-template-columns: 1fr 1fr; } .pool-stats-under { grid-column: 2; } }
 /* The heavier line keeps the row the same height (one pixel less padding), so side-by-side tables stay level row for row. */
 .dash-table tr.dash-break > * { border-top: 2px solid var(--club-line); padding-top: 8px; }
 .dash-table .pool-sort { color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; margin-block: -9px; min-height: 32px; text-transform: inherit; }
