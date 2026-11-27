@@ -230,6 +230,12 @@ const byHitRate = (teams) => [...teams].sort((a, b) => b.hitRate - a.hitRate || 
 /** The same table turned over: the five least picked (ties by name) and the five with the lowest hit rate (ties to the team picked more often). */
 const byLeastPicked = (teams) => [...teams].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
 const byLowestHitRate = (teams) => [...teams].sort((a, b) => a.hitRate - b.hitRate || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
+/** The four lists of a team table, for the faded teams (picked against). */
+const listsOf = (teams) => ({ teams, teamsByHitRate: byHitRate(teams), teamsLeastPicked: byLeastPicked(teams), teamsByLowestHitRate: byLowestHitRate(teams) });
+const leagueFaded = [
+  teamPicked("ne", "New England Patriots", "NE", 214, 168, 0.085), teamPicked("nyj", "New York Jets", "NYJ", 190, 171, 0.08),
+  teamPicked("car", "Carolina Panthers", "CAR", 181, 150, 0.074), teamPicked("lv", "Las Vegas Raiders", "LV", 160, 162, 0.072), teamPicked("ten", "Tennessee Titans", "TEN", 150, 131, 0.063),
+];
 const leagueTeams = [
   teamPicked("kc", "Kansas City Chiefs", "KC", 236, 190, 0.095), teamPicked("buf", "Buffalo Bills", "BUF", 211, 176, 0.086),
   teamPicked("phi", "Philadelphia Eagles", "PHI", 198, 171, 0.082), teamPicked("sf", "San Francisco 49ers", "SF", 187, 169, 0.079), teamPicked("det", "Detroit Lions", "DET", 176, 150, 0.073),
@@ -243,6 +249,7 @@ export const POOL_STATS = {
   teamsByHitRate: byHitRate(leagueTeams),
   teamsLeastPicked: byLeastPicked(leagueTeams),
   teamsByLowestHitRate: byLowestHitRate(leagueTeams),
+  faded: listsOf(leagueFaded),
   mostPicked: leagueTeams[0],
   mostPickedTied: 1,
   bySeason: [{ seasonYear: 2026, ...bucket(1190, 1013), net: 402.5 }, { seasonYear: 2025, ...bucket(1228, 1064), net: 734 }],
@@ -256,7 +263,7 @@ export const POOL_STATS = {
   thisSeason: (() => {
     const teams = [teamPicked("buf", "Buffalo Bills", "BUF", 118, 84, 0.092), teamPicked("kc", "Kansas City Chiefs", "KC", 101, 96, 0.089), teamPicked("lv", "Las Vegas Raiders", "LV", 88, 92, 0.082), teamPicked("det", "Detroit Lions", "DET", 90, 70, 0.073), teamPicked("phi", "Philadelphia Eagles", "PHI", 77, 75, 0.069)];
     return {
-      seasonYear: 2026, teams, teamsByHitRate: byHitRate(teams), teamsLeastPicked: byLeastPicked(teams), teamsByLowestHitRate: byLowestHitRate(teams),
+      seasonYear: 2026, teams, teamsByHitRate: byHitRate(teams), teamsLeastPicked: byLeastPicked(teams), teamsByLowestHitRate: byLowestHitRate(teams), faded: listsOf(leagueFaded.slice(0, 4)),
       splits: { side: { favorite: split(640, 505, 0.52), underdog: split(512, 470, 0.446), pickem: split(38, 38, 0.034) }, venue: { home: split(600, 500, 0.5), away: split(590, 513, 0.5) } },
     };
   })(),
@@ -274,6 +281,7 @@ export const POOL_STATS = {
       teamsByHitRate: byHitRate(teams),
       teamsLeastPicked: byLeastPicked(teams),
       teamsByLowestHitRate: byLowestHitRate(teams),
+      faded: listsOf(leagueFaded.slice(1, 4)),
       mostPicked: teams[0],
       mostPickedTied: playerId === "p4" ? 3 : 1,   // Rick has three teams tied for his most picked
       bySeason: [{ seasonYear: 2026, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)), net: NET_PTS[playerId] * 0.4 }, { seasonYear: 2025, ...bucket(Math.round(record.wins * 0.5), Math.round(record.losses * 0.5)), net: NET_PTS[playerId] * 0.6 }],
@@ -285,8 +293,8 @@ export const POOL_STATS = {
       graded: record.picks,
       // Rick has no graded pick this season yet: his teams table says so.
       thisSeason: playerId === "p4"
-        ? { seasonYear: 2026, teams: [], teamsByHitRate: [], teamsLeastPicked: [], teamsByLowestHitRate: [], splits: { side: { favorite: NONE, underdog: NONE, pickem: NONE }, venue: { home: NONE, away: NONE } } }
-        : { seasonYear: 2026, teams: teams.slice(0, 2), teamsByHitRate: byHitRate(teams.slice(0, 2)), teamsLeastPicked: byLeastPicked(teams.slice(0, 2)), teamsByLowestHitRate: byLowestHitRate(teams.slice(0, 2)), splits: { side: { favorite: split(60, 40, 0.5), underdog: split(48, 46, 0.47), pickem: split(3, 3, 0.03) }, venue: { home: split(55, 45, 0.5), away: split(56, 44, 0.5) } } },
+        ? { seasonYear: 2026, teams: [], teamsByHitRate: [], teamsLeastPicked: [], teamsByLowestHitRate: [], faded: listsOf([]), splits: { side: { favorite: NONE, underdog: NONE, pickem: NONE }, venue: { home: NONE, away: NONE } } }
+        : { seasonYear: 2026, teams: teams.slice(0, 2), teamsByHitRate: byHitRate(teams.slice(0, 2)), teamsLeastPicked: byLeastPicked(teams.slice(0, 2)), teamsByLowestHitRate: byLowestHitRate(teams.slice(0, 2)), faded: listsOf(leagueFaded.slice(2, 4)), splits: { side: { favorite: split(60, 40, 0.5), underdog: split(48, 46, 0.47), pickem: split(3, 3, 0.03) }, venue: { home: split(55, 45, 0.5), away: split(56, 44, 0.5) } } },
     };
   }),
 };
