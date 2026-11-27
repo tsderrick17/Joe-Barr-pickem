@@ -54,6 +54,19 @@ test("playoff plans use kickoff reveals and one recap per game day", () => {
   assert.equal(schedule.filter((item) => item.templateId === "featured_window_reveal").length, 0);
 });
 
+test("Friday, Saturday and Christmas games get a featured reveal at kickoff; Sunday afternoon windows keep their own", () => {
+  const schedule = buildEmailPlanSchedule(period, [
+    game("black-friday", "2026-11-27T20:00:00.000Z"),
+    game("sat", "2026-12-19T21:30:00.000Z"),
+    game("christmas", "2026-12-25T18:00:00.000Z"),
+    game("sun-early", "2026-12-20T18:00:00.000Z"),
+    game("sun-late", "2026-12-20T21:25:00.000Z"),
+  ]);
+  const featured = schedule.filter((item) => item.templateId === "featured_window_reveal");
+  assert.deepEqual(featured.map((item) => item.sourceGameIds[0]), ["black-friday", "sat", "christmas"]);
+  assert.equal(featured[0].scheduledFor, "2026-11-27T20:00:00.000Z");
+});
+
 test("cancelled games do not create email occurrences", () => {
   assert.deepEqual(buildEmailPlanSchedule(period, [game("cancelled", "2026-09-13T17:00:00.000Z", { status: "cancelled" })]), []);
 });

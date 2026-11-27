@@ -118,9 +118,12 @@ export function buildEmailPlanSchedule(period, rawGames) {
     }
   } else {
     for (const [kickoff, windowGames] of kickoffGroups) {
+      // Every kickoff gets a reveal except the Sunday afternoon windows, which have their own (sunday_early_reveal and
+      // sunday_late_reveal). Friday (Black Friday, Christmas), Saturday (late season) and Tuesday games count too: a weekday
+      // list here once left the Black Friday game with no reveal at all.
       const featured = windowGames.filter((game) => {
         const parts = easternParts(game.kickoff_at);
-        return game.is_international || ["Wednesday", "Thursday", "Monday"].includes(parts.weekday) || (parts.weekday === "Sunday" && parts.hour >= 20);
+        return game.is_international || parts.weekday !== "Sunday" || parts.hour < 12 || parts.hour >= 20;
       });
       if (featured.length) result.push(candidate(period, "featured_window_reveal", "featured_window_reveal", "all_active", kickoff, kickoff, featured.map((game) => game.id)));
     }
