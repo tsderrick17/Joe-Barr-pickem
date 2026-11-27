@@ -222,12 +222,14 @@ const nickname = (name: string) => (name === "Unknown team" || !name.includes(" 
  * `column` names the share column: Picked, or Picked against for the teams picked against (whose record is the record of the picks against them).
  */
 function TeamsTable({ teams, sort, descending, onSort, column = "Picked" }: { teams: TeamPicked[]; sort: TeamSort; descending: boolean; onSort: (sort: TeamSort) => void; column?: string }) {
-  const head = (key: TeamSort, label: string) => <th aria-sort={sort === key ? (descending ? "descending" : "ascending") : "none"} className="is-num" scope="col">
-    <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? (descending ? " ▼" : " ▲") : ""}</span></button>
+  // The sort headers may take two lines (Picked / against, Hit / rate) and the share column is the same width in both team tables, so team
+  // names get the same room, and as much of it as a phone allows, in both.
+  const head = (key: TeamSort, label: string) => <th aria-sort={sort === key ? (descending ? "descending" : "ascending") : "none"} className={key === "picked" ? "is-num pool-wrap pool-share" : "is-num pool-wrap pool-rate"} scope="col">
+    <button className="pool-sort" onClick={() => onSort(key)} type="button">{label}<span aria-hidden="true">{sort === key ? (descending ? " ▼" : " ▲") : ""}</span></button>
   </th>;
   return <div className="pool-table-wrap">
     <table className="dash-table">
-      <thead><tr><th scope="col">Team</th>{head("picked", column)}<th className="is-num" scope="col">Record</th>{head("rate", "Hit rate")}</tr></thead>
+      <thead><tr><th scope="col">Team</th>{head("picked", column)}<th className="is-num pool-record" scope="col">Record</th>{head("rate", "Hit rate")}</tr></thead>
       <tbody>
         {teams.map((team) => <tr key={team.teamId}>
           <th scope="row"><span className="pool-team-full">{team.name}</span><span className="pool-team-short">{nickname(team.name)}</span></th>

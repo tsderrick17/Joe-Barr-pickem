@@ -112,6 +112,10 @@
 /* Wide enough for all three tables in one row: each card's title and table share rows with its neighbours, so headers and rows sit level.
    To fit a third of the width: the title on its own line with the switch under it, two-line column names, and teams by nickname. */
 .pool-team-short { display: none; }
+.dash-table thead th.pool-wrap { letter-spacing: .05em; white-space: normal; }
+.dash-table thead th.pool-share { width: 6.9em; }
+.dash-table thead th.pool-record { width: 5.4em; }
+.dash-table thead th.pool-rate { width: 4.6em; }
 @media (min-width: 1200px) {
   .dash-pair.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto; }
   .dash-pair.is-three > .dash-card { align-content: start; display: grid; grid-row: span 2; grid-template-rows: subgrid; }
