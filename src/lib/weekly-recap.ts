@@ -9,6 +9,7 @@ import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/li
 import { readAllPages } from "@/lib/read-all-pages";
 import { onlyRowsWithPublicPicks, publicPickLabel, revealPickLabels, type LockedGameLine } from "@/lib/reveal-rows";
 import { dateFormat } from "./date-format.js";
+import { isFeaturedKickoff as isFeaturedGame } from "@/lib/email-plan-schedule.js";
 
 export type WeeklyRecapSnapshot = {
   kind: "weekly_recap";
@@ -529,13 +530,6 @@ async function revealSurvivorPicks(periodId: string, startedGameIds: string[], p
     if (!name || !team) return [];
     return [{ name, pick: `${team}${pick.result === "win" ? " W" : pick.result === "loss" ? " L" : ""}` }];
   }).sort((first, second) => first.name.localeCompare(second.name));
-}
-
-function isFeaturedGame(game: { is_international: boolean; kickoff_at: string }) {
-  if (game.is_international) return true;
-  const weekday = easternWeekday(game.kickoff_at);
-  const hour = easternHour(game.kickoff_at);
-  return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
 }
 
 export async function ensureFeaturedWindowRevealSnapshot(reminderId: string, existing: unknown, { persist = true } = {}) {
