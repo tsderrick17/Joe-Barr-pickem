@@ -28,7 +28,8 @@ Picked against. From 1200px the three tables (What the league picks, Most picked
 column names and teams by nickname (Chiefs, 49ers) so every row stays one line and the three line up; 900-1199px it sits under Most picked in
 the right column; stacked on a phone. Its record is the picks' own, so a high hit rate means fading that team paid off. Share is of all graded picks, like
 Most picked. It has its own sort (Faded or Hit rate, pressed again to turn it over: Most / Least faded teams, Best / Worst teams to fade) and
-its own All-time / This season switch. Requested by the Commissioner.
+its own All-time / This season switch. Both team tables use the same fixed widths for every column but Team (Picked against and
+Hit rate may take two lines), so a team name wraps in one only where it would in the other. Requested by the Commissioner.
 
 ## 2026-11-26 - Shutout Free Weeks count the first win at once
 

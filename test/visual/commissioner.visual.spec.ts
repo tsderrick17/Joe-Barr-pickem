@@ -612,6 +612,20 @@ for (const width of [390, 560, 768, 1280]) {
   });
 }
 
+// On a phone the two team tables give team names the same room, so a name wraps in one only if it would in the other.
+test("Pool stats: the picked and faded tables give team names the same width on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.goto("/admin/stats");
+  const section = page.locator("[aria-labelledby=pool-stats-title]");
+  await expect(section.getByRole("heading", { name: "Most faded teams" })).toBeVisible({ timeout: 30_000 });
+  const teamWidth = (heading: RegExp) => section.locator(".pool-stats-block").filter({ has: page.getByRole("heading", { name: heading }) }).locator("thead th").first().evaluate((th) => Math.round(th.getBoundingClientRect().width));
+  const picked = await teamWidth(/picked teams$/), faded = await teamWidth(/faded teams$/);
+  expect(faded, "the Team column is the same width in both").toBe(picked);
+  await section.locator(".dash-pair").screenshot({ path: test.info().outputPath("pool-stats-phone-teams.png") });
+});
+
 // Pool stats on a wide screen: the splits, teams and faded teams tables sit three across and line up exactly, header and every row, for the
 // league and for a player (the sort buttons never make a header taller; the heavier line before Home never pushes a row down; teams go by
 // nickname so no row wraps).
