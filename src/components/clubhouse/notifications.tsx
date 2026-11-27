@@ -27,7 +27,7 @@ const GROUPS: Array<{ title: string; note?: string; rows: Array<{ key: keyof Not
   { title: "Pick reveals", note: "After kickoff, only when someone picked a game in that window.", rows: [
     { key: "sundayEarlyReveal", title: "Sunday early window", note: "When the early games kick off." },
     { key: "sundayLateReveal", title: "Sunday late window", note: "When the late games kick off." },
-    { key: "featuredWindowReveal", title: "Primetime and International", note: "At kickoff of those games." },
+    { key: "featuredWindowReveal", title: "Primetime and International", note: "At kickoff, Friday and Saturday games too." },
   ] },
   { title: "Recaps & playoffs", rows: [
     { key: "weeklyRecap", title: "Weekly recap", note: "Tuesday morning: results and standings." },

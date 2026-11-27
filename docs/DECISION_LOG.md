@@ -560,3 +560,7 @@ Dragging the clubhouse ticket to tuck it away is replaced by a small arrow tab o
 
 The Bowl Pool pop-up's heading is compact (no row of stars, a smaller title, counts and dial, a slimmer Picks/Sheet switch): the first game day starts about 65px higher on a phone. The earlier smaller-tile note is superseded: the games-left tile shrank by its flap size (1.9rem by 1.2rem), not its font.
 
+
+## 2026-11-27 - Every non-Sunday-afternoon kickoff gets a public pick reveal
+
+The Black Friday game sent no reveal email because the featured reveal was planned only for Wednesday, Thursday, Monday, Sunday night and International games. It now covers every kickoff outside the two Sunday afternoon windows (which keep their own reveals): Friday, Saturday, Tuesday and holiday games included. The notification wording says so.
