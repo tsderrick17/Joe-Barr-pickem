@@ -23,8 +23,10 @@ and add a row above. (It is read at the start of every change, so short is cheap
 
 ## 2026-11-26 - Pool stats: Most faded teams
 
-Directly under Most picked teams (right column from 900px, stacked on a phone) is the same table for the teams faded: the team on the other side
-of each graded pick. Its record is the picks' own, so a high hit rate means fading that team paid off. Share is of all graded picks, like
+Beside Most picked teams is the same table for the teams faded: the team on the other side of each graded pick, its share column named
+Picked against. From 1200px the three tables (What the league picks, Most picked, Most faded) sit in one row, each title over its switch, two-line
+column names and teams by nickname (Chiefs, 49ers) so every row stays one line and the three line up; 900-1199px it sits under Most picked in
+the right column; stacked on a phone. Its record is the picks' own, so a high hit rate means fading that team paid off. Share is of all graded picks, like
 Most picked. It has its own sort (Faded or Hit rate, pressed again to turn it over: Most / Least faded teams, Best / Worst teams to fade) and
 its own All-time / This season switch. Requested by the Commissioner.
 

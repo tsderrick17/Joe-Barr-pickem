@@ -96,7 +96,7 @@ export default function PoolStats() {
           <WeeksChart label={`${whose} weekly records`} weeks={view.weeks} />
         </div>
 
-        <div className="dash-pair">
+        <div className={`dash-pair${view.faded?.teams.length ? " is-three" : ""}`}>
           <div className="dash-card pool-stats-block">
             <CardHead right={spanSwitch(`What ${who} picks: all-time or this season`, splitsSpan, setSplitsSpan)} title={`What ${who} picks`} />
             <SplitsTable splits={(splitsView ?? view).splits} />
@@ -116,7 +116,7 @@ export default function PoolStats() {
               title={fadedSort.key === "picked" ? (fadedSort.descending ? "Most faded teams" : "Least faded teams") : (fadedSort.descending ? "Best teams to fade" : "Worst teams to fade")}
             />
             {fadedView.teams.length
-              ? <TeamsTable column="Faded" descending={fadedSort.descending} onSort={chooseFadedSort} sort={fadedSort.key} teams={fadedSort.key === "picked" ? (fadedSort.descending ? fadedView.teams : fadedView.teamsLeastPicked) : (fadedSort.descending ? fadedView.teamsByHitRate : fadedView.teamsByLowestHitRate)} />
+              ? <TeamsTable column="Picked against" descending={fadedSort.descending} onSort={chooseFadedSort} sort={fadedSort.key} teams={fadedSort.key === "picked" ? (fadedSort.descending ? fadedView.teams : fadedView.teamsLeastPicked) : (fadedSort.descending ? fadedView.teamsByHitRate : fadedView.teamsByLowestHitRate)} />
               : <p className="dash-empty">No graded picks this season yet.</p>}
           </div> : null}
         </div>
@@ -213,10 +213,13 @@ function SplitsTable({ splits }: { splits: Splits }) {
   </div>;
 }
 
+/** A team's nickname (Chiefs, 49ers), for the three tables side by side on a wide screen. */
+const nickname = (name: string) => (name === "Unknown team" || !name.includes(" ") ? name : name.slice(name.lastIndexOf(" ") + 1));
+
 /**
  * Five teams, with how much of the picking each took and how it did. Picked and Hit rate are buttons: they choose which five (most picked, or best
  * hit rate). Pressing the column that is already chosen turns it over, to the least picked or the lowest hit rate (▲); pressing it again turns it back (▼).
- * `column` names the share column: Picked, or Faded for the teams picked against (whose record is the record of the picks against them).
+ * `column` names the share column: Picked, or Picked against for the teams picked against (whose record is the record of the picks against them).
  */
 function TeamsTable({ teams, sort, descending, onSort, column = "Picked" }: { teams: TeamPicked[]; sort: TeamSort; descending: boolean; onSort: (sort: TeamSort) => void; column?: string }) {
   const head = (key: TeamSort, label: string) => <th aria-sort={sort === key ? (descending ? "descending" : "ascending") : "none"} className="is-num" scope="col">
@@ -227,7 +230,7 @@ function TeamsTable({ teams, sort, descending, onSort, column = "Picked" }: { te
       <thead><tr><th scope="col">Team</th>{head("picked", column)}<th className="is-num" scope="col">Record</th>{head("rate", "Hit rate")}</tr></thead>
       <tbody>
         {teams.map((team) => <tr key={team.teamId}>
-          <th scope="row">{team.name}</th>
+          <th scope="row"><span className="pool-team-full">{team.name}</span><span className="pool-team-short">{nickname(team.name)}</span></th>
           <td className="is-num">{percent(team.share)}</td>
           <td className="is-num">{team.wins}–{team.losses}</td>
           <td className="is-num">{formatAverage(team.hitRate)}</td>
