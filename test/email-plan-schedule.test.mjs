@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildEmailPlanSchedule } from "../src/lib/email-plan-schedule.js";
+import { buildEmailPlanSchedule, isFeaturedKickoff } from "../src/lib/email-plan-schedule.js";
 import { readFile } from "node:fs/promises";
 
 const period = { id: "week-1", period_type: "regular" };
@@ -65,6 +65,16 @@ test("Friday, Saturday and Christmas games get a featured reveal at kickoff; Sun
   const featured = schedule.filter((item) => item.templateId === "featured_window_reveal");
   assert.deepEqual(featured.map((item) => item.sourceGameIds[0]), ["black-friday", "sat", "christmas"]);
   assert.equal(featured[0].scheduledFor, "2026-11-27T20:00:00.000Z");
+});
+
+test("the send check and the reveal snapshot use the same featured rule as the plan", async () => {
+  assert.equal(isFeaturedKickoff({ is_international: false, kickoff_at: "2026-11-27T20:00:00.000Z" }), true);
+  assert.equal(isFeaturedKickoff({ is_international: false, kickoff_at: "2026-12-20T18:00:00.000Z" }), false);
+  for (const file of ["../src/lib/reminder-readiness.ts", "../src/lib/weekly-recap.ts"]) {
+    const source = await readFile(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /isFeaturedKickoff.*from "@\/lib\/email-plan-schedule\.js"/);
+    assert.doesNotMatch(source, /weekday === "Thursday"/);
+  }
 });
 
 test("cancelled games do not create email occurrences", () => {
