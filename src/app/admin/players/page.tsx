@@ -211,6 +211,15 @@ export default function PlayerManagementPage() {
       <div className="mx-auto max-w-5xl">
         <div className="players-layout">
           <section className="players-add">
+            <div aria-label="Clubhouse for everyone" className="mb-6 desk-panel p-3" role="group">
+              <p className="text-sm font-bold tracking-wide">CLUBHOUSE FOR EVERYONE · {clubhouseOpen ? "ON" : "OFF"}</p>
+              <p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{clubhouseOpen ? "Every player has the light switch in the header and can use the clubhouse." : "Only you and the players you let in (Clubhouse On on their card) have it. Turn this on to launch it for everyone."}</p>
+              <button className="desk-button mt-2" onClick={() => { if (launchArmed) void setClubhouseForAll(!clubhouseOpen); else setLaunchArmed(true); }} type="button">
+                {launchArmed ? (clubhouseOpen ? "Tap again to close it to everyone" : "Tap again to open it to everyone") : clubhouseOpen ? "Close to everyone" : "Open to everyone"}
+              </button>
+              {launchArmed ? <button className="desk-button mt-2 ml-2" onClick={() => setLaunchArmed(false)} type="button">Cancel</button> : null}
+            </div>
+
             <h2 className="font-serif text-3xl font-bold">
               Add a Player
             </h2>
@@ -218,15 +227,6 @@ export default function PlayerManagementPage() {
             <p className="mt-2 text-(color:--themed-text-29)">
               Give each player their own four-digit PIN. Add a last initial only when two players share a first name.
             </p>
-
-            <div aria-label="Clubhouse for everyone" className="mt-4 desk-panel p-3" role="group">
-              <p className="text-sm font-bold tracking-wide">CLUBHOUSE FOR EVERYONE · {clubhouseOpen ? "ON" : "OFF"}</p>
-              <p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{clubhouseOpen ? "Every player has the light switch in the header and can use the clubhouse." : "Only you and the players you let in (Clubhouse On below) have it. Turn this on to launch it for everyone."}</p>
-              <button className="desk-button mt-2" onClick={() => { if (launchArmed) void setClubhouseForAll(!clubhouseOpen); else setLaunchArmed(true); }} type="button">
-                {launchArmed ? (clubhouseOpen ? "Tap again to close it to everyone" : "Tap again to open it to everyone") : clubhouseOpen ? "Close to everyone" : "Open to everyone"}
-              </button>
-              {launchArmed ? <button className="desk-button mt-2 ml-2" onClick={() => setLaunchArmed(false)} type="button">Cancel</button> : null}
-            </div>
 
             <form
               className="mt-4 desk-rule-y py-4"
