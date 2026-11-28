@@ -840,6 +840,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-survivor-scroll, .lab-window-scroll, .lab-rules-body),
   .clubhouse-page .cw-sheet-body > .lab-wall-table,
   .clubhouse-page .cw-sheet-body > .lab-bigboard > .lab-ticket-switches { padding-right: 0; }
+  .clubhouse-page .cw-sheet-body .lab-window-scroll .lab-savebar.is-pinned { margin-right: 0; }   /* no gutter to reach into: it stops at the edge */
 }
 /* The sheets scroll up and down only: nothing in them (the pinned Save bar reaches 4px past its edges) can slide them sideways (owner, 2026-11-28). Survivor keeps its own sideways scroll for the weeks. */
 .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-window-scroll, .lab-rules-body) { overflow-x: hidden; }

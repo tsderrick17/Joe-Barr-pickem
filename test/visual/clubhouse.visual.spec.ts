@@ -1603,6 +1603,7 @@ test.describe("on a touch phone", () => {
     await expect(ticket.locator(".lab-savebar.is-pinned")).toBeVisible();
     const scroll = page.locator(".cw-sheet-body .lab-window-scroll").first();
     const slid = await scroll.evaluate((node) => { node.scrollLeft = 60; return { left: node.scrollLeft, wider: node.scrollWidth - node.clientWidth }; });
+    expect(slid.wider, "nothing reaches past the sides").toBeLessThanOrEqual(0);
     expect(slid.left).toBe(0);
   });
 
