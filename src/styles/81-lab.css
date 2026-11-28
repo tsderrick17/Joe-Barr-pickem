@@ -150,7 +150,7 @@
 .lab-bigboard .lab-chips button[aria-pressed="true"] { background: var(--cw-gold); border-color: var(--cw-gold); color: rgb(14 14 12); }
 .lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
 .lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px 8px; grid-template-columns: 1fr 1fr; padding: 8px 0 10px; }
-.lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+.lab-board-time { color: rgb(240 186 64); font-size: .74rem; font-weight: 700; grid-column: 1 / -1; letter-spacing: .1em; }
 /* a game abroad: a red pin and its city and country at the right end of the time line */
 .lab-board-venue { color: rgba(246, 242, 232, .78); float: right; letter-spacing: .04em; margin-left: 8px; white-space: nowrap; }
 .lab-board-at { display: none; }
@@ -161,17 +161,17 @@
 /* A line that can still move is white; once it is final (locked) it turns gold. */
 .lab-board-line { color: rgb(246 242 232); font-size: 1.05rem; font-weight: 700; text-align: right; }
 .lab-board-line.is-final { color: rgb(240 180 41); text-shadow: 0 0 3px rgba(240, 180, 41, .22); }
-.lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .12); color: rgba(240, 233, 214, .7); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
-.lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
-.lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .16); color: rgb(236 230 214); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
+.lab-board-final b { font-size: 1.1rem; letter-spacing: .06em; }
+.lab-board-final em { font-size: .72rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
 .lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
 .lab-board-final em i { font-style: normal; }
 .lab-board-final em.is-stacked { display: flex; flex-direction: column; gap: 3px; }   /* three or more names: one per line, never a stray name on a second line */
 .lab-board-final em.is-stacked i { display: none; }
-.lab-board-final em u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.lab-board-cell.is-locked { opacity: .55; }
+.lab-board-final em u { text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.lab-board-cell.is-locked { background: rgb(17 17 15); }   /* a game under way or done: a shade darker, never faded, so its words and numbers stay easy to read */
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }
 /* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, and stays: a single line,
    no second rule. Nothing repeats; reduced motion shows the line at once. */

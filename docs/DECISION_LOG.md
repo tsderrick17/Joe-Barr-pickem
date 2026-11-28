@@ -593,3 +593,7 @@ Under each side of a played or live game on the clubhouse ticket, up to two name
 ## 2026-11-27 - Bowl sheet: dates centred over the first bowl in view, and a Tiebreaker column
 
 On the clubhouse Bowl sheet each day's date sits centred over its first bowl, and stays centred over the first of that day's bowls in view as the sheet slides sideways. A last column, as on the classic Bowl Card, shows each player's tiebreaker guess (total points in the title game; a dash for none yet) (owner).
+
+## 2026-11-27 - Ticket legibility: games under way are no longer faded
+
+On the clubhouse ticket (and the Bowl ticket, which shares its boxes) a game that has kicked off is no longer faded to half strength; its box is a shade darker instead, and its words and numbers keep full brightness. The kickoff line is brighter and a little bigger, the final score a little bigger, and the names under each team bigger, brighter and more firmly underlined, so they read easily for every eye (owner asked for brighter, sharper, more legible text).
