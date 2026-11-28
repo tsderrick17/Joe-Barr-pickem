@@ -733,10 +733,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-sheet thead th { background: rgb(18 28 50); border-bottom: 0; }
 .lab-bowl-sheet thead th:is(.lab-bowl-sheet-rec, .lab-bowl-sheet-name) { box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35); vertical-align: bottom; z-index: 1; }
 .lab-bowl-sheet thead th.lab-bowl-sheet-name { box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35), 4px 0 6px -4px rgba(0, 0, 0, .6); }
-/* each day over its bowls, as the classic Bowl Card clumps them, with a fine gold rule down the left of every day */
-.lab-bowl-sheet thead th.lab-bowl-sheet-day { border-bottom: 1px solid rgba(179, 139, 77, .3); color: var(--bowl-gold-lt); font-size: .6rem; letter-spacing: .14em; padding-block: 4px 3px; }
-/* a day's label rides along its band as the bowls scroll by, just right of the held columns, so a long day never hides its date */
-.lab-bowl-sheet thead th.lab-bowl-sheet-day { overflow: visible; text-align: left; }
+/* each day over its bowls, as the classic Bowl Card clumps them, with a fine gold rule down the left of every day; the day's label rides along its band as the bowls scroll by, just right of the held columns, so a long day never hides its date */
+.lab-bowl-sheet thead th.lab-bowl-sheet-day { border-bottom: 1px solid rgba(179, 139, 77, .3); color: var(--bowl-gold-lt); font-size: .6rem; letter-spacing: .14em; overflow: visible; padding-block: 4px 3px; text-align: left; }
 .lab-bowl-sheet thead th.lab-bowl-sheet-day > span { display: inline-block; left: calc(8.7rem + 6px); letter-spacing: inherit; position: sticky; }
 .lab-bowl-sheet .is-day-start { border-left: 1px solid rgba(179, 139, 77, .3); }
 /* the bowl names, centred on one line with each other however many lines each takes */
