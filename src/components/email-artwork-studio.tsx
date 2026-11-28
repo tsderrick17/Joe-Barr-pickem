@@ -16,6 +16,8 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   const [overrides, setOverrides] = useState<Record<string, Draft>>({});
   const [preview, setPreview] = useState<Preview | null>(null);
   const [busy, setBusy] = useState(false);
+  // Saving or sending holds every control; a preview still drawing does not hold the Email type chips (a new choice replaces it).
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [phone, setPhone] = useState(true);
@@ -73,7 +75,7 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   }
 
   async function save() {
-    setBusy(true); setError(""); setMessage("");
+    setSaving(true); setError(""); setMessage("");
     try {
       const response = await fetchWithSession("/api/admin/reminder-templates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: templateId, title: draft.title, message: draft.body }) });
       const result = await response.json();
@@ -82,18 +84,18 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
       setMessage("Saved for future emails. Already queued wording and sent receipts are unchanged.");
       onSaved();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Changes could not be saved."); }
-    finally { setBusy(false); }
+    finally { setSaving(false); }
   }
 
   async function sendTest() {
-    setBusy(true); setError(""); setMessage("");
+    setSaving(true); setError(""); setMessage("");
     try {
       const response = await fetchWithSession("/api/admin/reminders/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ template: templateId }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "The test could not be sent.");
       setMessage(result.message);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "The test could not be sent."); }
-    finally { setBusy(false); }
+    finally { setSaving(false); }
   }
 
   function edit(values: Partial<Draft>) { generation.current++; setDraft((current) => ({ ...current, ...values })); setDirty(true); setMessage(""); }
@@ -101,13 +103,13 @@ export function EmailArtworkStudio({ reminderId, onCloseReceipt, onSaved }: { re
   return <section id="email-artwork-studio" className="desk-rule-bottom py-8">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black tracking-[.14em] text-[#007e72]">REVIEW BEFORE DELIVERY</p><h2 className="mt-1 font-serif text-2xl font-bold">Email image studio</h2><p className="mt-2 max-w-2xl text-sm text-(color:--themed-text-29)">See the actual generated images inside the email. Adjust the wording, refresh the preview, then save.</p></div>{reminderId ? <button type="button" className="min-h-11 font-bold underline" onClick={onCloseReceipt}>Back to template editor</button> : null}</div>
     {!reminderId ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
-      <div className="text-sm font-bold sm:col-span-2"><span id="email-type-label">Email type</span><ChoiceChips disabled={busy} label="Email type" onChange={choose} options={reminderTemplates.map((item) => ({ value: item.id, label: item.label }))} value={templateId} /></div>
-      {fixedWording ? <div className="text-sm sm:col-span-2"><p className="font-bold">Email subject</p><p className="mt-1">{preview?.subject ?? "…"}</p><p className="mt-3 font-bold">Phone notification</p><p className="mt-1">{preview?.phone ? `${preview.phone.title}: ${preview.phone.body}` : "…"}</p><p className="mt-3 text-xs text-(color:--themed-text-28)">This message goes out once, on its own. Its words are written in the app and fill in from the real first game, so they are not edited here. Look it over, then send it to yourself.</p></div> : <><label className="text-sm font-bold sm:col-span-2">Subject<input className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={80} disabled={busy} value={draft.title} onChange={(event) => edit({ title: event.target.value })} /></label>
-      <label className="text-sm font-bold sm:col-span-2">Message<textarea className="mt-2 min-h-24 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={220} disabled={busy} value={draft.body} onChange={(event) => edit({ body: event.target.value })} /></label>
+      <div className="text-sm font-bold sm:col-span-2"><span id="email-type-label">Email type</span><ChoiceChips disabled={saving} label="Email type" onChange={choose} options={reminderTemplates.map((item) => ({ value: item.id, label: item.label }))} value={templateId} /></div>
+      {fixedWording ? <div className="text-sm sm:col-span-2"><p className="font-bold">Email subject</p><p className="mt-1">{preview?.subject ?? "…"}</p><p className="mt-3 font-bold">Phone notification</p><p className="mt-1">{preview?.phone ? `${preview.phone.title}: ${preview.phone.body}` : "…"}</p><p className="mt-3 text-xs text-(color:--themed-text-28)">This message goes out once, on its own. Its words are written in the app and fill in from the real first game, so they are not edited here. Look it over, then send it to yourself.</p></div> : <><label className="text-sm font-bold sm:col-span-2">Subject<input className="mt-2 min-h-11 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={80} disabled={busy || saving} value={draft.title} onChange={(event) => edit({ title: event.target.value })} /></label>
+      <label className="text-sm font-bold sm:col-span-2">Message<textarea className="mt-2 min-h-24 w-full border border-zinc-400 bg-(color:--themed-bg-26) p-2 font-normal" maxLength={220} disabled={busy || saving} value={draft.body} onChange={(event) => edit({ body: event.target.value })} /></label>
       <p className="text-xs text-(color:--themed-text-28) sm:col-span-2">Keep week/date placeholders for automatic subjects. Standings and selections come from saved game data; correct results through Grading.</p></>}
     </div> : null}
-    <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy} className="min-h-11 desk-button px-4 font-bold disabled:opacity-50" onClick={() => void render(templateId, draft, reminderId)}>{busy ? "Rendering images…" : "Refresh preview"}</button>{!reminderId && !fixedWording ? <button type="button" disabled={busy || dirty || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void save()}>Save email changes</button> : null}{fixedWording ? <button type="button" disabled={busy || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void sendTest()}>Send this to my email and phone</button> : null}</div>
-    {!reminderId && !fixedWording ? <button type="button" disabled={busy} className="mt-2 min-h-11 text-sm font-bold underline disabled:opacity-50" onClick={() => { const original = reminderTemplates.find((item) => item.id === templateId)!; edit({ title: original.title, body: original.body }); }}>Use default wording</button> : null}
+    <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy || saving} className="min-h-11 desk-button px-4 font-bold disabled:opacity-50" onClick={() => void render(templateId, draft, reminderId)}>{busy ? "Rendering images…" : "Refresh preview"}</button>{!reminderId && !fixedWording ? <button type="button" disabled={busy || saving || dirty || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void save()}>Save email changes</button> : null}{fixedWording ? <button type="button" disabled={busy || saving || !preview} className="min-h-11 bg-[#007e72] px-4 font-bold text-white disabled:opacity-50" onClick={() => void sendTest()}>Send this to my email and phone</button> : null}</div>
+    {!reminderId && !fixedWording ? <button type="button" disabled={busy || saving} className="mt-2 min-h-11 text-sm font-bold underline disabled:opacity-50" onClick={() => { const original = reminderTemplates.find((item) => item.id === templateId)!; edit({ title: original.title, body: original.body }); }}>Use default wording</button> : null}
     {dirty ? <p className="mt-3 text-sm font-semibold text-(color:--themed-text-21)">Changes are not previewed yet. Refresh to review them before saving.</p> : null}
     {message ? <p role="status" className="mt-3 text-sm font-semibold text-green-800">{message}</p> : null}
     {error ? <p role="alert" className="mt-3 text-sm font-semibold text-red-800">{error}</p> : null}

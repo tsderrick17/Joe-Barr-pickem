@@ -129,6 +129,28 @@ for (const { theme, label, width } of shots()) {
   });
 }
 
+// A preview still drawing never holds the Email type chips: with the first email's images slow to arrive, another email can be chosen and shows.
+test("Commissioner email studio switches email while a preview is still drawing", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  await page.route("**/api/admin/reminder-templates", (route) => route.fulfill({ json: { templates: [] } }));
+  await page.route("**/api/admin/reminders/preview", async (route) => {
+    const { templateId } = route.request().postDataJSON();
+    if (templateId !== "bowl_pool_open") return;   // never answers: the first preview is still drawing
+    return route.fulfill({ json: BOWL_OPENING_PREVIEW });
+  });
+  await page.goto("/admin/reminders");
+  await page.getByRole("button", { name: "Open email image studio" }).click({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Rendering images…" })).toBeVisible({ timeout: 30_000 });
+  const chip = page.getByRole("group", { name: "Email type" }).getByRole("button", { name: /Bowl Pool opening announcement/ });
+  await expect(chip).toBeEnabled();
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect(page.frameLocator("iframe").getByRole("heading", { name: "The Bowl Pool is open" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Refresh preview" })).toBeEnabled();
+});
+
 // The score-polling chart (Odds credits page): the first nine windows in percentages, with the emergency windows as one count.
 for (const [label, width] of [["phone-390", 390], ["desktop-1280", 1280]] as const) {
   test(`Commissioner polling chart day at ${label}`, async ({ page }) => {

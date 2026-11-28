@@ -644,3 +644,7 @@ The ticket's week is the Big Board's own bubble: the same words, size and place 
 ## 2026-11-28 - Clubhouse launch switch
 
 The clubhouse is ready to open to every player with one switch: Clubhouse for everyone on `/admin/players` (two taps, audited as clubhouse_opened_to_all / clubhouse_closed_to_all, stored in the one-row `pool_settings` table). It ships OFF. When on, every player's profile carries clubhouseAccess, so the header light switch appears for all and `/clubhouse` lets them in; the classic pages stay the default for each device until its player flips the switch. The per-player beta switch still works. If the setting cannot be read it reads as closed, so a fault never opens it by accident (owner, 2026-11-28).
+
+## 2026-11-28 - Email studio: switch email while a preview draws
+
+The Email type chips no longer lock while a preview's images are drawing (a slow render could hold them up to a minute). Choosing another email replaces the preview being drawn; only Save and Send hold the chips. Test: "Commissioner email studio switches email while a preview is still drawing".
