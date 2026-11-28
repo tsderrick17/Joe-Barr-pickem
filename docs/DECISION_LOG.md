@@ -589,3 +589,7 @@ From Dec 7, while Survivor is still being played, the poker table keeps Survivor
 ## 2026-11-27 - Names under a team's score: all on one line, or one per line
 
 Under each side of a played or live game on the clubhouse ticket, up to two names stay on one line ("RON · CONNOR"); three or more stack one per line, so a lone name is never left on a second line by itself (owner).
+
+## 2026-11-27 - Bowl sheet: dates centred over the first bowl in view, and a Tiebreaker column
+
+On the clubhouse Bowl sheet each day's date sits centred over its first bowl, and stays centred over the first of that day's bowls in view as the sheet slides sideways. A last column, as on the classic Bowl Card, shows each player's tiebreaker guess (total points in the title game; a dash for none yet) (owner).

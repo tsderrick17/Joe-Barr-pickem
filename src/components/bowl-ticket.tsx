@@ -29,7 +29,7 @@ export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | nu
 export type BowlSheetData = {
   games: Array<{ id: string; name: string; day: string; locked: boolean; matchup: Array<{ team: string; line: string }> }>;
   todayIndex: number;
-  rows: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
+  rows: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; place: number; tied: boolean; tiebreaker?: number | null; you: boolean; cells: BowlSheetCell[] }>;
 };
 
 /**
@@ -234,8 +234,8 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
   return (
     <section aria-label="Bowl sheet" className="lab-window-part lab-bowl-sheet">
       <div aria-label="Bowl sheet, scrolls sideways" className="lab-bowl-sheet-scroll" ref={scroller} role="region" tabIndex={0}>
-        <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem)` }}>
-          <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}</colgroup>
+        <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem + 6.2rem)` }}>
+          <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}<col className="lab-bowl-sheet-col-tb" /></colgroup>
           <thead>
             {/* Three heading rows: each day over its bowls (as the classic Bowl Card clumps them), the bowl names (centred on one line with
                 each other however many lines each takes), then each bowl's schools and spreads. */}
@@ -243,6 +243,8 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
               <th className="lab-bowl-sheet-rec" rowSpan={3} scope="col">Wins</th>
               <th className="lab-bowl-sheet-name" rowSpan={3} scope="col">Player</th>
               {days.map((day) => <th className="lab-bowl-sheet-day is-day-start" colSpan={day.count} key={day.start} scope="colgroup"><span>{day.label}</span></th>)}
+              {/* Last, as on the classic Bowl Card: each player's guess of the total points in the title game. */}
+              <th className="lab-bowl-sheet-tb" rowSpan={3} scope="col">Tiebreaker</th>
             </tr>
             <tr>
               {sheet.games.map((game, index) => <th className={`lab-bowl-sheet-game${dayStart.has(index) ? " is-day-start" : ""}`} key={game.id} scope="col">{game.name}</th>)}
@@ -257,6 +259,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
                 <td className="lab-bowl-sheet-rec"><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled value={row.wins} /></td>
                 <th className="lab-bowl-sheet-name" scope="row"><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
                 {row.cells.map((value, index) => <td className={dayStart.has(index) ? "is-day-start" : undefined} key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
+                <td aria-label={`${row.name}, tiebreaker: ${row.tiebreaker ?? "none yet"}`} className="lab-bowl-sheet-tb">{row.tiebreaker ?? "—"}</td>
               </tr>
             ))}
           </tbody>
