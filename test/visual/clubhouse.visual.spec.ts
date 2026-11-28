@@ -1435,3 +1435,19 @@ test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ p
   await expect(form.locator(".lab-savebar.is-pinned")).toContainText("1 change");
   await expect(form.getByRole("button", { name: /Submit/ })).toBeInViewport();
 });
+
+for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
+  test(`the All games / Pool action switch is exactly as wide as the game box under it (one team's box on a phone, one game on a desktop), ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size, scenarios: ["live-mixed-locks"], at: "/clubhouse#slate" });
+    const form = page.getByRole("dialog", { name: "Your ticket" });
+    await expect(form.locator(".lab-ticket-action")).toBeVisible({ timeout: 30_000 });
+    // On a phone a game's two teams fill the row, so the switch matches one team's box; on a desktop two games share a row, so it matches one game.
+    const under = label === "phone-390" ? ".lab-window-part .lab-board-cell" : ".lab-window-part > ol > li";
+    const edges = await form.evaluate((node, below) => [".lab-ticket-action", below].map((selector) => {
+      const box = node.querySelector(selector)!.getBoundingClientRect();
+      return [box.left, box.right];
+    }), under);
+    expect(Math.abs(edges[0][0] - edges[1][0])).toBeLessThan(1);   // starts where the box starts
+    expect(Math.abs(edges[0][1] - edges[1][1])).toBeLessThan(1);   // and ends where it ends
+  });
+}
