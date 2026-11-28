@@ -593,3 +593,7 @@ Under each side of a played or live game on the clubhouse ticket, up to two name
 ## 2026-11-27 - Bowl sheet: dates centred over the first bowl in view, and a Tiebreaker column
 
 On the clubhouse Bowl sheet each day's date sits centred over its first bowl, and stays centred over the first of that day's bowls in view as the sheet slides sideways. A last column, as on the classic Bowl Card, shows each player's tiebreaker guess (total points in the title game; a dash for none yet) (owner).
+
+## 2026-11-27 - Big Board: even margins on a phone
+
+On a touch phone the scrollbar floats over the page, so the clubhouse Big Board no longer keeps a 14px gutter for it on the right; its columns widen so the rows sit as far from the board's right edge as from its left (owner). A mouse-driven screen keeps the gutter for its scrollbar.
