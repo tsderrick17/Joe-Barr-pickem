@@ -613,3 +613,20 @@ On a touch phone the scrollbar floats over the page, so the clubhouse Big Board 
 ## 2026-11-27 - Clubhouse sheets: even margins on a phone
 
 The touch-phone rule from the Big Board now covers every clubhouse sheet that scrolls (the ticket, Survivor, the Bowl sheet, the rules, the wall table): no 14px scrollbar gutter on the right, so the games sit as far from the sheet's right edge as from its left (owner: "I prefer symmetry"). A mouse-driven screen keeps the gutter for its scrollbar.
+
+## 2026-11-27 - Clubhouse accents: one green and red, your row, soft tiles, lit lamps, gold sent picks
+
+Owner-picked accents across the clubhouse boards and ticket:
+- One win green (rgb 95 211 154) and one loss red (rgb 217 88 74) everywhere in the clubhouse (Big Board picks, Survivor rings, Bowl sheet, room screen).
+- Your row on the Big Board (week and playoff faces) and the Survivor table: a warm tint with a gold edge at its left.
+- Board cells are soft rounded tiles in the dark board colour, the felt showing between them.
+- The line beside a Big Board pick is the pick's own colour, a touch softer.
+- Survivor: once a player is out, the weeks after are blank, not empty boxes; a loss is a thin, crisp red slash over the logo in full colour.
+- Big Board lamps read as small bulbs: a pick in (hidden until kickoff) glows warm; no pick is a dark, recessed socket.
+- Your PICK still owed on the board breathes a soft gold glow every few seconds (still for reduced motion).
+- Ticket: a pick that is sent is filled gold with dark text; right after Submit the gold sweeps in from the left, and the ticket stays open (it no longer jumps to the Big Board).
+- A final score is underlined green on the side that covered and red on the side that did not.
+
+## 2026-11-27 - Ticket: the week bubble where the Big Board's is
+
+The ticket's week is the Big Board's own bubble: the same words, size and place at the top right (a phone test holds it to the pixel), with no arrows either side; your lamps move to the left. On a computer the ticket is wider than the board, so the bubble sits at the ticket's own right edge.
