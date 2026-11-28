@@ -597,3 +597,7 @@ On the clubhouse Bowl sheet each day's date sits centred over its first bowl, an
 ## 2026-11-27 - Ticket legibility: games under way are no longer faded
 
 On the clubhouse ticket (and the Bowl ticket, which shares its boxes) a game that has kicked off is no longer faded to half strength; its box is a shade darker instead, and its words and numbers keep full brightness. The kickoff line is brighter and a little bigger, the final score a little bigger, and the names under each team bigger, brighter and more firmly underlined, so they read easily for every eye (owner asked for brighter, sharper, more legible text).
+
+## 2026-11-27 - Clubhouse ticket: a full ticket asks which pick to replace
+
+As on the Slate, tapping another team when both picks are already on the clubhouse ticket no longer just buzzes: a prompt pinned with the send button says "Picks are full · Replace which one with LAR -3?" with a button for each pick whose game has not kicked off, and Cancel. If every pick's game has kicked off, the tap only buzzes. The ticket's date and time lines are a step bigger again (owner).

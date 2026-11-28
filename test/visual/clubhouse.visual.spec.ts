@@ -1548,3 +1548,37 @@ test("in bowl season the Bowl Pool's plate tells a player without a seat to clai
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
 });
+
+test("on a full ticket, tapping another team asks which pick it replaces, as the Slate does", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const games = form.locator("ol > li");
+  await expect(games.first()).toBeVisible({ timeout: 30_000 });
+  const team = (game: number) => games.nth(game).locator(".lab-board-cell").first();
+  await team(0).click();
+  await team(1).click();
+  const first = (await team(0).locator(".lab-board-team").innerText()).trim(), second = (await team(1).locator(".lab-board-team").innerText()).trim();
+  // The last pick moves the ticket on to Survivor when it is still to do: back to Pick’em.
+  const back = form.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /Pick’em/ });
+  if (await back.count()) await back.click();
+  const third = (await team(2).locator(".lab-board-team").innerText()).trim();
+  await team(2).click();
+  const prompt = form.locator(".lab-ticket-swap");
+  await expect(prompt).toContainText(`Replace which one with ${third}`);
+  await expect(prompt.locator(".lab-ticket-swap-choices button")).toHaveCount(2);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-swap-phone-390.png", { maxDiffPixels: 60 });
+  // Choosing the first pick puts the new team in its place; the prompt goes.
+  await prompt.locator(".lab-ticket-swap-choices button").filter({ hasText: first }).click();
+  await expect(prompt).toHaveCount(0);
+  await expect(team(2)).toHaveAttribute("aria-pressed", "true");
+  await expect(team(0)).toHaveAttribute("aria-pressed", "false");
+  await expect(team(1)).toHaveAttribute("aria-pressed", "true");
+  expect(second).not.toBe("");
+  // Cancel leaves the ticket as it was.
+  await team(0).click();
+  await form.locator(".lab-ticket-swap-cancel").click();
+  await expect(prompt).toHaveCount(0);
+  await expect(team(0)).toHaveAttribute("aria-pressed", "false");
+});

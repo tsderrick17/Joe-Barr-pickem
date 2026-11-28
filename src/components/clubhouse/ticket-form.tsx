@@ -34,6 +34,8 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const [chip, setChip] = useState(view.mine.survivor);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState("");
+  // A full ticket asked to take one more team: which team, until the player says which pick it replaces (or cancels).
+  const [swap, setSwap] = useState<string | null>(null);
   const survivor = view.survivor;
   const pickingSurvivor = survivor.playing;
   // The ticket opens on Pick'em, or on Survivor when the Survivor table's Pick button brought the player here.
@@ -45,8 +47,13 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
     const game = view.games.find((item) => item.id === gameId)!;
     const other = team === game.home ? game.away : game.home;
     // The same feels as the Slate: a pick ticks, taking one back is lighter, a full ticket warns.
-    if (picks.includes(team)) { haptic("lightTick"); setPicks(picks.filter((pick) => pick !== team)); return; }
-    if (picks.length >= cap && !picks.includes(other)) { haptic("warning"); return; }
+    if (picks.includes(team)) { haptic("lightTick"); setSwap(null); setPicks(picks.filter((pick) => pick !== team)); return; }
+    // A full ticket, as on the Slate: it asks which pick the new team replaces (only a pick whose game has not kicked off can go).
+    if (picks.length >= cap && !picks.includes(other)) {
+      if (picks.some((pick) => !gameOf(view, pick).kickedOff)) { haptic("tick"); setSwap(team); } else haptic("warning");
+      return;
+    }
+    setSwap(null);
     const next = [...picks.filter((pick) => pick !== other), team];
     haptic("tick");
     setPicks(next);
@@ -55,6 +62,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   };
 
   const ordered = inOrder(view, picks);
+  const replace = (out: string) => { if (!swap) return; haptic("tick"); setPicks([...picks.filter((pick) => pick !== out), swap]); setSwap(null); };
   // A playoff round names each line by its game (a pick for every game); a regular week by Pick 1 and Pick 2.
   const lines = view.playoff
     ? view.games.map((game) => { const team = picks.find((pick) => pick === game.away || pick === game.home); return { label: `${game.away} @ ${game.home}`, value: team ? `${team} ${lineOf(view, team)}` : null }; })
@@ -175,7 +183,16 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
         <p className="lab-board-note">{view.playoff ? "Pick every game against the spread. Send the whole round at once, and change any pick until its game kicks off." : view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
       </section>
       {/* The send button rides a bar pinned to the foot of the ticket while there is something to send, so it is never a scroll away. */}
-      <SaveBar changes={changes} pinned={changed}>
+      <SaveBar changes={changes} pinned={changed || Boolean(swap)} prompt={swap ? (
+        <div className="lab-ticket-swap" role="alert">
+          <span>Picks are full</span>
+          <button className="lab-ticket-swap-cancel" onClick={() => { haptic("lightTick"); setSwap(null); }} type="button">Cancel</button>
+          <p>Replace which one with {swap} {lineOf(view, swap)}?</p>
+          <div className="lab-ticket-swap-choices">
+            {ordered.filter((pick) => !gameOf(view, pick).kickedOff).map((pick) => <button key={pick} onClick={() => replace(pick)} type="button">{pick} {lineOf(view, pick)}</button>)}
+          </div>
+        </div>
+      ) : null}>
         <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void send()} type="button">
           {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
         </button>
