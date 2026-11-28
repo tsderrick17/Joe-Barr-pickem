@@ -11,59 +11,55 @@ const runbook = [
 // Every clause states something the site does today; change the rule in the code and its clause here together.
 export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: string; clauses: string[] }> }> = [
   {
-    part: "THE BASICS",
+    part: "1 · PICK’EM",
     articles: [
-      { title: "Article I · How it works", clauses: [
+      { title: "Article I · Your weekly picks", clauses: [
         "Every week of the regular season you pick 2 games against the spread, from any games that week.",
-        "In the playoffs you pick every game: 6 in the Wild Card round, 4 in the Divisional round, the 2 Conference Championships and the Super Bowl.",
-        "The Standings are based on winning picks. Whoever has the most wins at the end of the season is the champion.",
-        "You are also in Survivor all regular season, and in December you can join the Bowl Pool.",
+        "Tap a team, then tap SUBMIT. Nothing counts until you submit. You can change a pick until its game kicks off; each game locks on its own.",
+        "Nobody sees your pick until its game kicks off. You can always see your own.",
       ] },
-      { title: "Article II · Making your picks", clauses: [
-        "Tap a team, then tap SUBMIT. Nothing is saved until you tap SUBMIT.",
-        "You can change a pick any time before that game kicks off. Each game locks on its own, so an early game never closes the rest.",
-        "Nobody sees your pick until that game kicks off. You can always see your own.",
+      { title: "Article II · The lines", clauses: [
+        "The favorite has to win by more than the line. The underdog covers by winning, or by losing by less than the line.",
+        "Lines lock at 8:00 AM Eastern on game day. A game played overseas on a Sunday morning locks at 6:00 PM Eastern the night before.",
+        "Your pick is graded on the locked line, even if you picked before it moved.",
       ] },
-      { title: "Article III · The lines", clauses: [
-        "You pick against the spread. The favorite has to win by more than the line. The underdog covers by winning, or by losing by less than the line.",
-        "On the Slate the favorite is on the left and the home team is in CAPITALS.",
-        "Lines lock at 8:00 AM Eastern on game day. Before that the line is black and can still move. Once it locks it turns teal and never changes.",
-        "Early line lock: a game played overseas that kicks off Sunday morning has its line lock at 6:00 PM Eastern on Saturday, the night before.",
-        "Your pick is graded on the locked teal line, even if you picked earlier.",
+      { title: "Article III · Winning", clauses: [
+        "Only wins count. A loss, a push (the margin lands exactly on the line) or a pick you never made scores nothing.",
+        "Most wins after the Super Bowl is the champion. There is no tiebreaker: players tied for the most wins are co-champions.",
+        "The champion wears the trophy beside their name until the next one is crowned, and every champion is kept in the Trophy Room.",
       ] },
-      { title: "Article IV · Winning", clauses: [
-        "Only wins count. A loss, a push (the margin lands exactly on the line) or a pick you never made does not.",
-        "Results post on their own shortly after each game ends, and the Standings update with them.",
-        "There is no tiebreaker. Players tied for the most wins after the Super Bowl are co-champions.",
-        "The champion wears the trophy beside their name until the next champion is crowned, and every champion is kept in the Trophy Room.",
+      { title: "Article IV · The playoffs", clauses: [
+        "You pick every game: 6 in the Wild Card round, 4 in the Divisional round, the 2 Conference Championships and the Super Bowl. Playoff wins add to your season total.",
+        "Send a whole round at once if you like, and change any pick until its game kicks off.",
+        "You stay in while you can still catch the leader: your wins plus the games left must reach the leader’s wins. It is checked the morning of each playoff game day, and if you are in that morning you play every game that day.",
+        "Once you can no longer catch the leader you are out. To bow out early, Forfeit is at the bottom of your picks; it asks 3 times and cannot be undone.",
+        "The morning after each playoff game day, a note in the chat shows the race: games left, the leader, how far back everyone is and who is out. It never shows picks.",
       ] },
     ],
   },
   {
-    part: "THE CONTESTS",
+    part: "2 · SURVIVOR",
     articles: [
-      { title: "Article V · The playoffs", clauses: [
-        "You can submit a whole round at once and change any pick until its game kicks off. Playoff wins add to your season total.",
-        "You stay in the race as long as you can still catch the leader: your wins plus the games left must reach the leader's wins.",
-        "That is checked the morning of each playoff game day. If you are in that morning, you play every game that day.",
-        "Once you can no longer catch the leader you are out.",
-        "If you want to bow out, Forfeit is at the bottom of the Slate. It asks you to confirm 3 times and cannot be undone.",
-        "The morning after each playoff game day, a note in the chat shows the race: games left, the leader, how far back everyone is and who is out. It never shows picks.",
-      ] },
-      { title: "Article VI · Survivor", clauses: [
+      { title: "Article V · Survivor", clauses: [
         "Everyone is in. Survivor runs through the regular season only.",
-        "Each week pick one team to win its game outright. There is no spread.",
-        "You can use each team only once all season.",
+        "Each week pick one team to win its game outright. There is no spread, and you can use each team only once all season.",
         "Win and you move on. A loss, a tie or a missed week and you are out.",
-        "If your team's game is postponed or cancelled, that team is not used up, and you can pick another team that week.",
+        "Your pick is hidden until its game kicks off, like Pick’em.",
+        "If your team’s game is postponed or cancelled, that team is not used up, and you can pick another team that week.",
         "The last player standing wins. If everyone left goes out the same week, they share the title.",
       ] },
-      { title: "Article VII · The Bowl Pool", clauses: [
+    ],
+  },
+  {
+    part: "3 · THE BOWL POOL",
+    articles: [
+      { title: "Article VI · Joining and picking", clauses: [
         "The Bowl Pool is optional. It opens the day after Selection Sunday. Claim your seat before the first bowl kicks off; you can opt out only until then.",
-        "Pick every bowl and College Football Playoff game against the spread, through the National Championship.",
-        "Save your picks a few at a time if you like. Each game locks at its own kickoff.",
-        "Lines lock at 8:00 AM Eastern on game day. A whole-number line moves half a point up so no game can push.",
-        "A game you did not pick is a loss.",
+        "Pick every bowl and College Football Playoff game against the spread, through the National Championship. Save a few at a time if you like; each game locks at its own kickoff.",
+        "Lines lock at 8:00 AM Eastern on game day. A whole-number line moves half a point so no game can push.",
+      ] },
+      { title: "Article VII · Winning", clauses: [
+        "Most wins takes the Bowl Pool. A game you did not pick is a loss.",
         "The tiebreaker is your guess of the total points both teams score in the National Championship. If players tie on wins, the closest guess wins, over or under. Skip the guess and you lose a tie to anyone who guessed.",
       ] },
     ],
@@ -73,17 +69,14 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
     articles: [
       { title: "Article VIII · When a game moves", clauses: [
         "If a game only moves to a new time, your pick stays and the game locks at its new kickoff.",
-        "If a game is postponed or cancelled, your pick on it is cleared. Pick any other game still open that week.",
+        "If a game is postponed or cancelled, your Pick’em pick on it is cleared. Pick any other game still open that week.",
       ] },
       { title: "Article IX · Emails and reminders", clauses: [
-        "Choose how much email you get in Notifications (Essentials, Regular or Full Card) and turn any single email on or off.",
-        "Reminders go out Sunday at 11:00 AM and 3:00 PM Eastern and before the Sunday and Monday night games, and only if you still have a pick to make.",
-        "The weekly recap arrives Tuesday morning.",
-        "Add the pool to your phone's Home Screen and turn on notifications to get the same messages on your phone.",
+        "Choose how much email you get in Notifications (Essentials, Regular or Full Card) and turn any single email on or off. Add the pool to your phone’s Home Screen and turn on notifications to get the same messages there.",
+        "Reminders go out Sunday at 11:00 AM and 3:00 PM Eastern and before the Sunday and Monday night games, only if you still have a pick to make. The weekly recap arrives Tuesday morning.",
       ] },
       { title: "Article X · The Commissioner", clauses: [
-        "The Commissioner plays by the same rules as everyone else.",
-        "The Commissioner can fix a wrong score or handle a postponed game, but can never make or change your pick.",
+        "The Commissioner plays by the same rules as everyone else, and can fix a wrong score or handle a postponed game but can never make or change your pick.",
         "Every change the Commissioner makes is kept on the record.",
       ] },
     ],

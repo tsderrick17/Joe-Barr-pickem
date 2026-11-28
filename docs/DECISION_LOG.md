@@ -635,6 +635,12 @@ Owner-picked accents across the clubhouse boards and ticket:
 
 The ticket's week is the Big Board's own bubble: the same words, size and place at the top right (a phone test holds it to the pixel), with no arrows either side; your lamps move to the left. On a computer the ticket is wider than the board, so the bubble sits at the ticket's own right edge.
 
+## 2026-11-28 - Constitution by pool; Notifications green by night; bigger ticket logos
+
+- The Pool Constitution is regrouped so each pool is its own part: 1 · Pick'em (weekly picks, lines, winning, the playoffs), 2 · Survivor, 3 · The Bowl Pool (joining and picking, winning), then Good to know (games that move, emails, the Commissioner). Clauses are merged and shortened where they said the same thing; Slate-only details (left/right, CAPITALS, line colours) are dropped. Ten articles still, every rule unchanged (owner).
+- The Notifications sheet stays cream by night, so its green ticks ("You're using the app", "Notifications are on") stay dark green instead of night mode's mint, which could not be read on cream (owner).
+- Team logos on the clubhouse ticket are 32px (were 24px), in the room the row already had: no row grows (a test holds both).
+
 ## 2026-11-28 - Clubhouse launch switch
 
 The clubhouse is ready to open to every player with one switch: Clubhouse for everyone on `/admin/players` (two taps, audited as clubhouse_opened_to_all / clubhouse_closed_to_all, stored in the one-row `pool_settings` table). It ships OFF. When on, every player's profile carries clubhouseAccess, so the header light switch appears for all and `/clubhouse` lets them in; the classic pages stay the default for each device until its player flips the switch. The per-player beta switch still works. If the setting cannot be read it reads as closed, so a fault never opens it by accident (owner, 2026-11-28).

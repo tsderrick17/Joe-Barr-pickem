@@ -426,6 +426,14 @@ for (const [label, size, theme] of [["phone-390", SIZES["phone-390"], "day"], ["
   });
 }
 
+test("by night the Notifications sheet stays cream, so its green ticks (“You’re using the app”, “Notifications are on”) stay dark green, never mint on cream", async ({ page }) => {
+  await openClubhouse(page, { at: "/clubhouse#notifications", theme: "night" });
+  const phone = page.getByRole("dialog", { name: "Notifications" }).locator(".club-notify-phone");
+  await expect(phone).toBeVisible({ timeout: 30_000 });
+  const ink = await phone.evaluate((node) => { const tick = document.createElement("p"); tick.className = "text-green-800"; node.append(tick); const color = getComputedStyle(tick).color; tick.remove(); return color; });
+  expect(ink).toBe("rgb(28, 98, 56)");
+});
+
 test("Notifications reads like a phone's settings: a switch for pool emails, the plan in three plain choices, every email folded under Choose each email, and Save", async ({ page }) => {
   await openClubhouse(page, { at: "/clubhouse#notifications", theme: "day" });
   const sheet = page.getByRole("dialog", { name: "Notifications" });
@@ -1675,6 +1683,10 @@ test("the ticket's week bubble sits exactly where the Big Board's does, the same
   const onTicket = await ticketWeek.evaluate(look);
   const lamps = await page.getByRole("dialog", { name: "Your ticket" }).getByRole("list", { name: "Your picks" }).boundingBox();
   expect(lamps!.x).toBeLessThan(onTicket.x);
+  // The bigger logos (32px) fit the row the game already had: no row grows (owner, 2026-11-28).
+  const cells = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-window-part .lab-board-cell");
+  const sizes = await cells.evaluateAll((nodes) => nodes.map((node) => ({ cell: Math.round(node.getBoundingClientRect().height), logo: (node.querySelector(".lab-room-logo") as HTMLElement).offsetHeight })));
+  for (const size of sizes) expect(size).toEqual({ cell: 50, logo: 32 });
   await deck.getByRole("button", { name: "Big Board" }).click();
   const onBoard = await page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-week").evaluate(look);
   expect(onTicket).toEqual(onBoard);
