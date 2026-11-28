@@ -106,7 +106,7 @@ export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem
       window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
       onSaved?.();
       await onChanged();   // the board and the room's ticket read again, so the pick shows at once
-      onSent();
+      // The ticket stays open after a send (owner, 2026-11-27): the picks fill with gold where they are.
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) { window.location.replace("/login"); return ""; }
       haptic("warning");

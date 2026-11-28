@@ -83,7 +83,7 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
                       const pick = row.picks[index];
                       const result = pick ? mark(pick.resultMark) : null;
                       return (
-                        <td key={index}>
+                        <td className={out && !pick ? "is-blank" : undefined} key={index}>
                           {pick?.abbreviation
                             ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><Logo team={pick.abbreviation} /></span>
                             : pick?.isHidden ? <HiddenPick label="Selection submitted and hidden until kickoff" survivor /> : null}

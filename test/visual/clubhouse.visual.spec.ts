@@ -144,11 +144,19 @@ test("a pick sent from the ticket is the real pick: the same POST the Slate make
   await expect(form).toBeVisible();
   await expect(form.getByRole("button", { name: /Submit picks/ })).toBeDisabled();   // nothing picked yet
   const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
-  await cells.nth(0).click();
-  await cells.nth(2).click();
+  // The two picks the next read has (LAR and TEN), so the ticket shows them as sent.
+  await cells.filter({ has: page.locator(".lab-board-team", { hasText: /^LAR$/ }) }).click();
+  await cells.filter({ has: page.locator(".lab-board-team", { hasText: /^TEN$/ }) }).click();
   await form.getByRole("button", { name: /Submit picks/ }).click();
-  await expect(form).toHaveCount(0);   // the ticket closes; the board under it stays and shows the pick
+  // The ticket stays open (owner, 2026-11-27): the two picks fill with gold where they are.
+  await form.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /Pick’em/ }).click();   // the second pick moved the ticket on to Survivor
+  await expect(form.locator(".lab-board-cell.is-sent")).toHaveCount(2);
+  await expect(form.locator(".lab-window.is-just-sent")).toHaveCount(1);
   expect(sent).toHaveLength(1);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-sent-gold-phone-390.png", { maxDiffPixels: 60 });
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Big Board" }).click();
   await expect(page.getByRole("dialog", { name: "The Big Board" }).getByRole("button", { name: /Pick 1: .* Open your ticket/ })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -206,9 +214,13 @@ test("a ticket sent says so on the Big Board's bar, with the time it was saved",
   await page.getByRole("button", { name: /YOUR TICKET/ }).click({ timeout: 30_000 });
   const form = page.getByRole("dialog", { name: "Your ticket" });
   const cells = form.locator(".lab-window-part .lab-board-cell:not([disabled])");
-  await cells.nth(0).click();
-  await cells.nth(2).click();
+  // The two picks the next read has (LAR and TEN), so the ticket shows them as sent.
+  await cells.filter({ has: page.locator(".lab-board-team", { hasText: /^LAR$/ }) }).click();
+  await cells.filter({ has: page.locator(".lab-board-team", { hasText: /^TEN$/ }) }).click();
   await form.getByRole("button", { name: /Submit picks/ }).click();
+  await form.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /Pick’em/ }).click();   // the second pick moved the ticket on to Survivor
+  await expect(form.locator(".lab-board-cell.is-sent")).toHaveCount(2);
+  await page.getByRole("navigation", { name: "Board" }).getByRole("button", { name: "Big Board" }).click();
   await expect(page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-ticket")).toContainText(/PICKS SAVED.*Saved\s*\d{1,2}:\d{2} [AP]M/);
 });
 
@@ -1638,4 +1650,32 @@ test.describe("on a touch phone", () => {
     await page.evaluate(() => document.fonts.ready);
     await expect(page).toHaveScreenshot("clubhouse-ticket-touch-phone-390.png", { maxDiffPixels: 60 });
   });
+});
+
+test("the Survivor table: your row tinted with a gold edge, a loss a thin slash over the logo, the weeks after a player is out left blank", async ({ page }) => {
+  await openClubhouse(page, { homeExtra: { survivorRows: homeResponse("regular-out").survivorRows } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await room.getByRole("button", { name: "Survivor", exact: true }).click({ timeout: 30_000 });
+  const table = page.locator(".lab-survivor-scroll");
+  await expect(table.locator("tr.is-you")).toHaveCount(1);
+  await expect(table.locator("tr.is-you td.is-blank").first()).toBeVisible();
+  await expect(table.locator("tr.is-out td.is-blank")).not.toHaveCount(0);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-survivor-table-out-phone-390.png", { maxDiffPixels: 60 });
+});
+
+// On a phone, where the ticket and the board are the same width (a computer's wider ticket keeps the bubble at its own right edge).
+test("the ticket's week bubble sits exactly where the Big Board's does, the same size, with your lamps on the left", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-picked"], at: "/clubhouse#slate" });
+  const deck = page.getByRole("navigation", { name: "Board" });
+  const ticketWeek = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-tote-week");
+  await expect(ticketWeek).toBeVisible({ timeout: 30_000 });
+  const look = (node: Element) => { const box = node.getBoundingClientRect(), text = getComputedStyle(node.querySelector("span")!); return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width), h: Math.round(box.height), font: `${text.fontFamily} ${text.fontSize} ${text.fontWeight} ${text.letterSpacing}` }; };
+  const onTicket = await ticketWeek.evaluate(look);
+  const lamps = await page.getByRole("dialog", { name: "Your ticket" }).getByRole("list", { name: "Your picks" }).boundingBox();
+  expect(lamps!.x).toBeLessThan(onTicket.x);
+  await deck.getByRole("button", { name: "Big Board" }).click();
+  const onBoard = await page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-week").evaluate(look);
+  expect(onTicket).toEqual(onBoard);
 });
