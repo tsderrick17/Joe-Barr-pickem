@@ -299,6 +299,9 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   const survivorActive = feed.survivorActive ?? !feed.survivorOver;
   const table: "survivor" | "bowl" | null = survivorActive ? "survivor" : feed.bowl ? "bowl" : null;
   const taken = table === "bowl";
+  // Bowl season while Survivor is still being played: the table stays Survivor's, and a second plate, the Bowl Pool's in its navy and
+  // gold, hangs right below Survivor's, so the Bowl Pool (and a seat to claim) is never hidden in the room.
+  const both = survivorActive && Boolean(feed.bowl);
   const spots = SPOTS.flatMap((item) => {
     if (item.spot === "survivor") return table === null ? [] : taken ? [{ ...item, room: "bowl" as Room, name: "Bowl Pool" }] : [item];
     return [item];
@@ -339,6 +342,20 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>
         );
+        if (spot === "survivor" && both && at && !free) {
+          const stackStyle = { left: `${(at.x + at.w * .27) * 100}%`, top: `${(at.y + at.h * .32) * 100}%` } as CSSProperties;
+          const bowlPlate = (
+            <span className={`lab-room-tag is-bowl-pool${news.bowl ? " has-news" : ""}`}>
+              <b aria-hidden="true">Bowl Pool<i /></b>{news.bowl ? <small aria-hidden="true">{news.bowl}</small> : null}
+            </span>
+          );
+          return (
+            <div className="lab-room-plates" key={spot} style={stackStyle}>
+              <button aria-label={name} className="lab-room-plates-item is-survivor" onClick={() => { haptic("tick"); onSpot?.(spot, next, ticket); }} type="button">{plate}</button>
+              <button aria-label="Bowl Pool" className="lab-room-plates-item is-bowl" onClick={() => { haptic("tick"); onSpot?.("bowl", "bowl", ticket); }} type="button">{bowlPlate}</button>
+            </div>
+          );
+        }
         const href = hrefFor?.(spot) ?? null;
         // A button that stands by itself in the picture, not over a thing in it; or placed by its corner over the thing, with no
         // transform (a transform would trap each label under the spots drawn after it).

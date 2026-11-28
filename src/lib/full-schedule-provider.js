@@ -1,4 +1,5 @@
 import { easternDateTimeToUtc, getLineLock, getWeekStartKey, getWeekWindow } from "./schedule-time.js";
+import { overseasVenue } from "./international-venues.js";
 
 export const NFLVERSE_SCHEDULE_URL =
   "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv";
@@ -110,6 +111,11 @@ export function parseNflverseRegularSeason(csv, seasonYear, { allowWeekGameweekD
       lineLockAt: lineLock.lineLockAt,
       isInternational: lineLock.isInternational,
       gameweekKey: getWeekStartKey(kickoff),
+      // Where a game abroad is played, from the feed's stadium (an older feed without the column simply has none); a neutral-site
+      // game is also looked up on ESPN by its ESPN id (see game-venues.ts), which places a stadium not on the list.
+      venue: overseasVenue(value(row, "stadium")),
+      neutral: value(row, "location") === "Neutral",
+      espnId: value(row, "espn") || null,
     }];
   });
 

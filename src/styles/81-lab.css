@@ -108,6 +108,12 @@
 .lab-room-tag.is-bowl-pool i { background: rgb(226 182 70); color: rgb(14 28 62); }
 .lab-room-tag.is-above { bottom: calc(100% + 2px); }
 .lab-room-tag.is-below { top: calc(100% + 2px); }
+/* Survivor's plate with the Bowl Pool's right below it (bowl season while Survivor runs): one column, centred where Survivor's plate
+   alone would sit, each plate its own button. */
+.lab-room-plates { align-items: center; display: flex; flex-direction: column; gap: 4px; position: absolute; transform: translate(-50%, -1.3rem); z-index: 1; }
+.lab-room-plates-item { background: none; border: 0; cursor: pointer; padding: 0; }
+.lab-room-plates-item .lab-room-tag { display: block; left: auto; position: relative; top: auto; transform: none; }
+.lab-room-plates-item:active .lab-room-tag { opacity: .85; }
 /* The poker table's plate (Survivor, then the Bowl Pool) sits up in the table's near rail, in the gap between the two chairs, not hanging under it. */
 .lab-room-spot.is-survivor .lab-room-tag { left: 27%; top: 32%; transform: translate(-50%, -50%); }
 .lab-room-tag b { align-items: center; display: inline-flex; gap: 4px; }
@@ -145,6 +151,8 @@
 .lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
 .lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px 8px; grid-template-columns: 1fr 1fr; padding: 8px 0 10px; }
 .lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+/* a game abroad: a red pin and its city and country at the right end of the time line */
+.lab-board-venue { color: rgba(246, 242, 232, .78); float: right; letter-spacing: .04em; margin-left: 8px; white-space: nowrap; }
 .lab-board-at { display: none; }
 .lab-board-cell { align-content: start; align-items: center; align-self: stretch; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 2px; color: inherit; cursor: pointer; display: grid; font: inherit; gap: 2px 6px; grid-template-columns: 1fr auto; grid-template-rows: minmax(calc(3.1rem - 14px), auto); min-height: 3.1rem; padding: 6px 9px; position: relative; text-align: left; }
 .lab-board-cell:disabled { cursor: default; }

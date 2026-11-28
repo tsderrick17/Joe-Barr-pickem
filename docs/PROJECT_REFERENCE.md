@@ -497,7 +497,17 @@ across daylight-saving changes.
    loaded, picks may be made immediately.
 2. Preliminary schedule and spread refreshes run before games lock. Each game
    carries its own kickoff and line-lock timestamps; international games can
-   therefore lock earlier without special commissioner action.
+   therefore lock earlier without special commissioner action. A game played
+   abroad also carries its city and country (games.venue_city, venue_country),
+   saved after every schedule import (the season bootstrap) and reconciliation.
+   Every game the feed marks neutral-site is looked up on ESPN by its ESPN id
+   (ESPN's venue city and country), so a new city abroad is picked up with no
+   change here, and a feed that names the wrong stadium is corrected; ESPN is
+   asked once per game (not again once a place is saved). When ESPN cannot be
+   reached, the feed's stadium name is matched against the list in
+   `src/lib/international-venues.js`; a neutral-site game neither can place is
+   listed in the run's `venuesUnplaced`. It is shown only (a pin on the
+   clubhouse ticket); it never decides a lock, a grade or a week.
 3. Official lines lock at their configured time. Picks remain editable until
    kickoff, not merely until the line locks.
    If the provider is unavailable, the most recent preliminary line may lock

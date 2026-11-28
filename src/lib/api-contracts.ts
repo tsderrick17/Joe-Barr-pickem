@@ -16,6 +16,9 @@ export type SlateGame = {
   kickoffAt: string;
   lineLockAt: string;
   isInternational: boolean;
+  /** Where a game abroad is played ("London", "England"); null at home. */
+  venueCity?: string | null;
+  venueCountry?: string | null;
   awayTeam: string;
   homeTeam: string;
   awayTeamAbbreviation: string;

@@ -244,6 +244,22 @@ test("with a line locked, the key gives each colour its own line, the label besi
   await expect(key).toHaveScreenshot("clubhouse-ticket-line-key-locked-phone-390.png", { maxDiffPixels: 20 });
 });
 
+test("a game abroad shows a red pin with its city and country on the ticket's time line", async ({ page }) => {
+  // The Sunday 9:30 AM game, played in London.
+  const abroad = (response: BoardRead) => ({ ...response, games: response.games.map((game) => (game.awayTeamAbbreviation === "IND" ? { ...game, venueCity: "London", venueCountry: "England" } : game)) });
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate", shapeBoard: abroad });
+  const games = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-window-part li");
+  const london = games.filter({ hasText: "IND" });
+  await expect(london.locator(".lab-board-time")).toContainText("📍 London, England", { timeout: 30_000 });
+  await expect(games.filter({ hasText: "PIT" }).locator(".lab-board-venue")).toHaveCount(0);   // a game at home: no pin
+  // On the time line itself, not a line of its own.
+  const level = await london.locator(".lab-board-time").evaluate((line) => Math.abs(line.querySelector(".lab-board-venue")!.getBoundingClientRect().top - line.getBoundingClientRect().top) < 3);
+  expect(level).toBe(true);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(london).toHaveScreenshot("clubhouse-ticket-game-abroad-phone-390.png", { maxDiffPixels: 20 });
+});
+
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
   await openClubhouse(page, { at: "/board" });
   const nav = page.getByRole("navigation", { name: "Account navigation" });
@@ -361,6 +377,27 @@ for (const [phase, homeExtra, table] of [
     await expect(tabs.getByRole("button")).toHaveText(["Bowl Pool", "Survivor", "Ticket", "Big Board"], { timeout: 30_000 });
   });
 }
+
+test("in bowl season while Survivor still runs, the Bowl Pool's plate hangs right below Survivor's and opens the Bowl Pool", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlRead(false), homeExtra: { serverTime: "2026-12-10T18:00:00Z" } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  const survivor = room.getByRole("button", { name: "Survivor", exact: true });
+  const bowl = room.getByRole("button", { name: "Bowl Pool", exact: true });
+  await expect(bowl).toBeVisible({ timeout: 30_000 });
+  await expect(survivor).toHaveCount(1);
+  await expect(bowl.locator("small")).toHaveText("Claim your seat");
+  // One column: the Bowl Pool's plate right below Survivor's, centred on it.
+  const [top, below] = await Promise.all([survivor.boundingBox(), bowl.boundingBox()]);
+  expect(below!.y).toBeGreaterThan(top!.y + top!.height - 1);
+  expect(below!.y - (top!.y + top!.height)).toBeLessThan(10);
+  expect(Math.abs((below!.x + below!.width / 2) - (top!.x + top!.width / 2))).toBeLessThan(2);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-room-survivor-and-bowl-phone-390.png", { maxDiffPixels: 300 });
+  await bowl.click();
+  await expect(page).toHaveURL(/\/clubhouse#bowl$/);
+  await expect(page.getByRole("dialog", { name: "Bowl Pool" })).toBeVisible();
+});
 
 for (const [label, size, theme] of [["phone-390", SIZES["phone-390"], "day"], ["phone-390", SIZES["phone-390"], "night"], ["desktop-1280", SIZES["desktop-1280"], "day"]] as const) {
   test(`the Notifications pop-up looks like the clubhouse, at ${label} by ${theme}`, async ({ page }) => {
