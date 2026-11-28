@@ -596,10 +596,13 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
    Every bowl flies a pennant: gold while you owe its pick, navy once picked, grey when it kicked off without one. The header's gauge
    shows how much of bowl season is played. */
 .lab-bigboard.lab-bowl-ticket { gap: 6px; --bowl-ink: rgb(240 232 214); --bowl-gold-lt: rgb(222 192 136); background: rgb(18 28 50); border-color: rgb(12 19 36); box-shadow: inset 0 0 0 1px rgba(179, 139, 77, .6), 0 8px 18px rgba(0, 0, 0, .35); color: var(--bowl-gold-lt); font-family: var(--font-graduate), Georgia, serif; }
-.lab-bowl-ticket .lab-bowl-head { align-items: center; border-bottom: 1px solid rgba(179, 139, 77, .5); display: grid; padding: 0 0 6px; gap: 8px; grid-template-columns: 1fr auto; }
-.lab-bowl-title { display: grid; gap: 4px; justify-items: start; }
-.lab-bowl-title p { color: var(--bowl-slip-gold); font-size: .62rem; letter-spacing: .4em; margin: 0; }
-.lab-bowl-title h3 { color: var(--bowl-ink); font-size: 1.15rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
+.lab-bowl-ticket .lab-bowl-head { align-items: center; border-bottom: 1px solid rgba(179, 139, 77, .5); column-gap: 10px; display: grid; grid-template-areas: "title dial" "counts dial"; grid-template-columns: minmax(0, 1fr) auto; padding: 0 0 6px; row-gap: 3px; }
+.lab-bowl-ticket .lab-bowl-head > h3 { grid-area: title; }
+.lab-bowl-ticket .lab-bowl-head > .lab-bowl-counts { grid-area: counts; }
+.lab-bowl-ticket .lab-bowl-head > .lab-bowl-gauge { grid-area: dial; }
+/* the dial with no caption: small, no glow of its own, so the figures and the dial read as one block */
+.lab-bowl-gauge.is-bare { background: none; display: block; padding: 0; width: 4.6rem; }
+.lab-bowl-head > h3 { color: var(--bowl-ink); font-size: 1.15rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
 .lab-bowl-due { align-items: center; color: var(--bowl-gold-lt); display: inline-flex; font-size: .72rem; gap: 6px; letter-spacing: .12em; }
 .lab-bowl-due.is-clear { color: rgba(240, 232, 214, .6); }
 /* The bowl-season moon: a night-sky dial in a soft navy well, five moons waxing round it (dim until the season reaches them, then lit
@@ -622,7 +625,9 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-gauge-tick.is-passed { stroke: rgba(240, 210, 140, .75); }
 .lab-bowl-gauge-pin { fill: rgb(18 28 50); }
 /* Your picks under the title: two figures, how many to make (gold) and how many are in. */
-.lab-bowl-counts { display: flex; gap: 14px; margin: 2px 0 0; }
+.lab-bowl-counts { display: flex; gap: 14px; margin: 0; }
+.lab-bowl-counts > .is-left { border-left: 1px solid rgba(179, 139, 77, .35); padding-left: 14px; }   /* the season's figure, set off from your own */
+.lab-bowl-counts > .is-clear dd { color: rgba(240, 232, 214, .7); font-size: .9rem; line-height: 1.33; }
 .lab-bowl-counts > div { display: grid; gap: 1px; }
 .lab-bowl-counts dt { color: rgba(240, 232, 214, .6); font-size: .58rem; letter-spacing: .16em; order: 2; text-transform: uppercase; }
 .lab-bowl-counts dd { color: var(--bowl-ink); font-family: var(--font-graduate), Georgia, serif; font-size: 1.2rem; line-height: 1; margin: 0; }
@@ -697,7 +702,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* The Bowl sheet: everyone's picks on every bowl, scrolling sideways under held record and name columns. */
 .lab-bowl-sheet-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding: 0 0 6px; scroll-padding-left: 8.7rem; scroll-snap-type: x mandatory; scrollbar-color: rgba(179, 139, 77, .5) transparent; scrollbar-width: thin; }
 .lab-bowl-sheet table { border-collapse: separate; border-spacing: 0; min-width: 100%; table-layout: fixed; }   /* every bowl column the same width */
-.lab-bowl-sheet :is(th, td):nth-child(n+3) { scroll-snap-align: start; }   /* a swipe stops with a bowl's column framed just past the held record and name, as on the Bowl Card */
+.lab-bowl-sheet :is(thead th.lab-bowl-sheet-game, tbody td:nth-child(n+3)) { scroll-snap-align: start; }   /* a swipe stops with a bowl's column framed just past the held record and name, as on the Bowl Card */
 .lab-bowl-sheet-col-rec { width: 3.2rem; }
 .lab-bowl-sheet-col-name { width: 5.5rem; }
 .lab-bowl-sheet-col-game { width: 6.6rem; }
@@ -724,8 +729,19 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 /* The bowls' heading row (names, matchups, spreads, days) stays in sight down a long list of players. In the clubhouse the sheet's own
    scroller takes over the ticket's vertical scroll, so one box scrolls both ways: the heading row holds at its top and the record and name
    columns at its left, with the corner over both. */
-.lab-bowl-sheet thead th { background: rgb(18 28 50); box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35); position: sticky; top: 0; z-index: 2; }
-.lab-bowl-sheet thead th:is(.lab-bowl-sheet-rec, .lab-bowl-sheet-name) { z-index: 3; }
+.lab-bowl-sheet thead { position: sticky; top: 0; z-index: 2; }
+.lab-bowl-sheet thead th { background: rgb(18 28 50); border-bottom: 0; }
+.lab-bowl-sheet thead th:is(.lab-bowl-sheet-rec, .lab-bowl-sheet-name) { box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35); vertical-align: bottom; z-index: 1; }
+.lab-bowl-sheet thead th.lab-bowl-sheet-name { box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35), 4px 0 6px -4px rgba(0, 0, 0, .6); }
+/* each day over its bowls, as the classic Bowl Card clumps them, with a fine gold rule down the left of every day */
+.lab-bowl-sheet thead th.lab-bowl-sheet-day { border-bottom: 1px solid rgba(179, 139, 77, .3); color: var(--bowl-gold-lt); font-size: .6rem; letter-spacing: .14em; padding-block: 4px 3px; }
+/* a day's label rides along its band as the bowls scroll by, just right of the held columns, so a long day never hides its date */
+.lab-bowl-sheet thead th.lab-bowl-sheet-day { overflow: visible; text-align: left; }
+.lab-bowl-sheet thead th.lab-bowl-sheet-day > span { display: inline-block; left: calc(8.7rem + 6px); letter-spacing: inherit; position: sticky; }
+.lab-bowl-sheet .is-day-start { border-left: 1px solid rgba(179, 139, 77, .3); }
+/* the bowl names, centred on one line with each other however many lines each takes */
+.lab-bowl-sheet thead th.lab-bowl-sheet-game { line-height: 1.25; padding-block: 4px 0; vertical-align: middle; white-space: normal; }
+.lab-bowl-sheet thead th.lab-bowl-sheet-lines { box-shadow: inset 0 -1px 0 rgba(179, 139, 77, .35); padding-block: 0 4px; vertical-align: top; }
 .clubhouse-page .cw-sheet-body > .lab-bigboard > .lab-window-scroll:has(> .lab-bowl-sheet) { display: flex; flex-direction: column; overflow: hidden; padding-right: 0; }
 .lab-window-scroll > .lab-bowl-sheet { display: flex; flex-direction: column; min-height: 0; }
 .lab-window-scroll > .lab-bowl-sheet > .lab-bowl-sheet-scroll { flex: 0 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }

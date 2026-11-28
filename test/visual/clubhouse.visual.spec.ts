@@ -884,13 +884,13 @@ test("the Bowl sheet stops with a game column framed beside the player columns, 
   const scroller = ticket.locator(".lab-bowl-sheet-scroll");
   await expect(scroller).toBeVisible();
   expect(await scroller.evaluate((node) => getComputedStyle(node).scrollSnapType)).toContain("mandatory");
-  expect(await scroller.locator("thead th").nth(2).evaluate((node) => getComputedStyle(node).scrollSnapAlign)).toBe("start");
+  expect(await scroller.locator("thead th.lab-bowl-sheet-game").first().evaluate((node) => getComputedStyle(node).scrollSnapAlign)).toBe("start");
   // Let go anywhere and it settles on a column's left edge (just past the held columns).
   await scroller.evaluate((node) => node.scrollTo({ left: 37, behavior: "instant" }));
   await page.waitForTimeout(600);
   const gap = await scroller.evaluate((node) => {
-    const held = node.querySelectorAll("thead th")[2] as HTMLElement;
-    const heads = [...node.querySelectorAll("thead th")].slice(2) as HTMLElement[];
+    const heads = [...node.querySelectorAll("thead th.lab-bowl-sheet-game")] as HTMLElement[];
+    const held = heads[0];
     return Math.min(...heads.map((th) => Math.abs(th.offsetLeft - held.offsetLeft - node.scrollLeft)));
   });
   expect(gap).toBeLessThan(2);
@@ -1418,13 +1418,19 @@ test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ p
 
 test("the Bowl sheet's heading row (bowls, schools and spreads) stays in sight while a long list of players scrolls under it", async ({ page }) => {
   const read = bowlRead();
+  // A day with three bowls, names of one, two and three lines, so the day's band and the centred names are both in the picture.
+  const team = (id: string, name: string) => ({ id, full_name: name, short_name: name });
+  read.games.splice(3, 0,
+    { id: "g5", bowl_name: "Gasparilla Bowl", kickoff_at: "2026-10-02T23:00:00Z", status: "scheduled", venue_city: "Tampa", venue_state: "FL", away_team_id: "a5", home_team_id: "h5", awayTeam: team("a5", "Memphis"), homeTeam: team("h5", "Florida"), line: { favorite_team_id: "h5", locked_spread: 6.5 } },
+    { id: "g6", bowl_name: "Salute to Veterans Bowl", kickoff_at: "2026-10-03T01:00:00Z", status: "scheduled", venue_city: "Montgomery", venue_state: "AL", away_team_id: "a6", home_team_id: "h6", awayTeam: team("a6", "Toledo"), homeTeam: team("h6", "Rice"), line: { favorite_team_id: "a6", locked_spread: 3 } },
+  );
   read.standings = ["Tyler", "Gary", "Rick", "Zac", "Al", "Connor", "John", "Shane O", "Ron", "Steve", "Mike", "Dave", "Bill", "Jim"].map((name, index) => ({ playerId: index === 0 ? "p2" : `x${index}`, playerName: name, wins: 0, losses: 0 }));
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: read });
   const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
   await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
   const scroller = ticket.locator(".lab-bowl-sheet-scroll");
   await expect(scroller.locator("tbody tr")).toHaveCount(14);
-  await scroller.evaluate((node) => node.scrollTo({ top: 400, left: 200, behavior: "instant" }));
+  await scroller.evaluate((node) => node.scrollTo({ top: 400, left: (node.querySelectorAll("thead th.lab-bowl-sheet-game")[2] as HTMLElement).offsetLeft - (node.querySelector("thead th.lab-bowl-sheet-game") as HTMLElement).offsetLeft, behavior: "instant" }));
   await page.waitForTimeout(700);
   const held = await scroller.evaluate((node) => {
     const box = node.getBoundingClientRect(), head = node.querySelector("thead th")!.getBoundingClientRect();
