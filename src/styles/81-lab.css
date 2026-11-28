@@ -778,7 +778,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-tote th.lab-tote-game span + span::before { content: "@"; display: block; opacity: .6; }
 .lab-tote-name small { color: rgba(240, 236, 226, .6); display: block; font-size: .56rem; font-weight: 800; letter-spacing: .12em; line-height: 1.2; }
 .lab-tote tr.is-out .lab-tote-player { color: rgba(240, 236, 226, .45); }   /* out of the race: dimmed, not crossed off */
-.lab-tote tr.is-out .lab-tote-wins, .lab-tote tr.is-out .lab-tote-logo { opacity: .5; }
+.lab-tote tr.is-out .lab-tote-wins, .lab-tote tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }   /* the loss that put a player out keeps its logo in full colour */
 .lab-tote-race { color: rgb(240 236 226); font-size: .74rem; font-weight: 700; letter-spacing: .04em; margin: 0 4px 6px; }
 .lab-tote-owed-ring { animation: owed-breathe 2.6s ease-in-out infinite; border: 1.5px dashed rgb(255 176 46); border-radius: 50%; color: rgb(255 176 46); display: inline-grid; font-size: .44rem; font-weight: 900; height: 26px; letter-spacing: .04em; place-items: center; vertical-align: middle; width: 26px; }
 
@@ -1031,7 +1031,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-tote tbody tr.is-you > :first-child { box-shadow: inset 3px 0 0 var(--cw-gold); }
 .lab-survivor-scroll tr.is-you > .lab-survivor-status { box-shadow: -8px 0 0 rgb(18 40 30), inset 3px 0 0 var(--cw-gold); }
 /* Survivor: once a player is out, the weeks after are left blank, not empty boxes still to fill. */
-.lab-survivor-scroll td.is-blank { background: transparent; }
+.lab-survivor-scroll tbody td.is-blank { background: transparent; }
 /* Big Board lamps are small bulbs: lit (a pick is in, hidden until kickoff) with a soft warm glow; unlit, a dark socket. */
 .lab-tote .lab-tote-cover .lab-lamp { height: 1rem; width: 1rem; }
 .lab-tote .lab-tote-cover .lab-lamp.is-in { box-shadow: inset 0 0 0 1px rgba(40, 24, 4, .55), 0 0 6px 1px rgba(255, 176, 60, .45); }

@@ -1635,3 +1635,16 @@ test.describe("on a touch phone", () => {
     await expect(page).toHaveScreenshot("clubhouse-ticket-touch-phone-390.png", { maxDiffPixels: 60 });
   });
 });
+
+test("the Survivor table: your row tinted with a gold edge, a loss a thin slash over the logo, the weeks after a player is out left blank", async ({ page }) => {
+  await openClubhouse(page, { homeExtra: { survivorRows: homeResponse("regular-out").survivorRows } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await room.getByRole("button", { name: "Survivor", exact: true }).click({ timeout: 30_000 });
+  const table = page.locator(".lab-survivor-scroll");
+  await expect(table.locator("tr.is-you")).toHaveCount(1);
+  await expect(table.locator("tr.is-you td.is-blank").first()).toBeVisible();
+  await expect(table.locator("tr.is-out td.is-blank")).not.toHaveCount(0);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-survivor-table-out-phone-390.png", { maxDiffPixels: 60 });
+});
