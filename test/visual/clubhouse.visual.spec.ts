@@ -1381,7 +1381,7 @@ test("by night the clubhouse's Claim your seat ticket takes the Bowl Pool's nigh
   await expect(page).toHaveScreenshot("clubhouse-bowl-claim-night-phone-390.png", { maxDiffPixels: 40 });
 });
 
-test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick warns", async ({ page }) => {
+test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick ticks and asks which pick it replaces", async ({ page }) => {
   await page.addInitScript(() => {
     const vibrations: number[][] = [];
     (window as unknown as { vibrations: number[][] }).vibrations = vibrations;
@@ -1403,7 +1403,8 @@ test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick t
   await cells.nth(0).click(); await cells.nth(2).click(); await felt();
   await form.getByRole("button", { name: /Pick’em/ }).click(); await felt();
   await cells.nth(4).click();
-  expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
+  expect(await felt()).toEqual([[10]]);   // tick: the ticket is full, so it asks which pick to replace (as the Slate does)
+  await expect(form.locator(".lab-ticket-swap")).toBeVisible();
 });
 
 test("a Bowl game's name never wraps onto a second line, even a long one beside a logo pennant on a phone", async ({ page }) => {
