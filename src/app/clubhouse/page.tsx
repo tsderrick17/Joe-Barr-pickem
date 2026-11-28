@@ -376,7 +376,7 @@ export default function ClubhousePage() {
       /> : null}
       {popup("snapshot") ? <Sheet bare onClose={() => leave("snapshot")} open title="Season Snapshot"><div className="club-snapshot is-chalkboard pickem-ledger">
         {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} chalk isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} viewerId={room.home.viewerPlayerId ?? null} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
-      </div></Sheet> : null}
+      </div><div aria-hidden="true" className="club-chalk-tray"><i className="is-stick" /><i className="is-stick is-short" /><i className="is-eraser" /></div></Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
       {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><ClubNotifications /></Sheet> : null}

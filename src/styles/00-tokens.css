@@ -148,6 +148,10 @@
   /* Your ticket in the clubhouse: cream card, a touch warmer and dimmer by night so it does not glare off the dark room. */
   --ticket-card: rgb(248 243 231);
   --ticket-card-2: rgb(238 229 209);
+  /* Clubhouse depth (83-clubhouse-depth.css): letterpress and engraved-rule light on the rule book's paper, and the lamp light under an open sheet. */
+  --depth-press-light: rgba(255, 255, 255, .85);
+  --depth-press-dark: rgba(70, 46, 12, .22);
+  --depth-pool: rgba(255, 204, 130, .07);
   --club-paper-2: #f7f1e4;
   --club-line: #e3dac8;
   --club-ink: #1f1b16;
@@ -361,6 +365,9 @@ html[data-theme="night"] {
   --club-paper: #13221e;
   --ticket-card: rgb(234 225 204);
   --ticket-card-2: rgb(222 210 185);
+  --depth-press-light: rgba(255, 255, 255, .07);
+  --depth-press-dark: rgba(0, 0, 0, .55);
+  --depth-pool: rgba(255, 190, 110, .16);
   --club-paper-2: #182a25;
   --club-line: #2c453d;
   --club-ink: #efe6d2;

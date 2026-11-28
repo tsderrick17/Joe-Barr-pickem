@@ -2,8 +2,9 @@
 
 import { haptic } from "@/lib/haptics-client";
 import { useLayoutEffect, useRef } from "react";
-import { HiddenPick, Logo } from "@/components/clubhouse/lamps";
+import { HiddenPick } from "@/components/clubhouse/lamps";
 import PlayerTrophyName from "@/components/player-trophy-name";
+import SurvivorPokerChip from "@/components/survivor-poker-chip";
 import type { StandingsResponse } from "@/lib/api-contracts";
 
 /**
@@ -85,7 +86,7 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
                       return (
                         <td className={out && !pick ? "is-blank" : undefined} key={index}>
                           {pick?.abbreviation
-                            ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><Logo team={pick.abbreviation} /></span>
+                            ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo lab-survivor-chip${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><SurvivorPokerChip abbreviation={pick.abbreviation} size="table" teamName={pick.label ?? pick.abbreviation} /></span>
                             : pick?.isHidden ? <HiddenPick label="Selection submitted and hidden until kickoff" survivor /> : null}
                         </td>
                       );

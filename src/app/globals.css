@@ -21,6 +21,7 @@
 @import "../styles/80-commissioner-assets.css";
 @import "../styles/81-lab.css";
 @import "../styles/82-clubhouse-ticket.css";
+@import "../styles/83-clubhouse-depth.css";
 
 @theme inline {
   --color-background: var(--background);

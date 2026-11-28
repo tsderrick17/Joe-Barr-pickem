@@ -648,3 +648,7 @@ The clubhouse is ready to open to every player with one switch: Clubhouse for ev
 ## 2026-11-28 - Email studio: switch email while a preview draws
 
 The Email type chips no longer lock while a preview's images are drawing (a slow render could hold them up to a minute). Choosing another email replaces the preview being drawn; only Save and Send hold the chips. Test: "Commissioner email studio switches email while a preview is still drawing".
+
+## 2026-11-28 - Clubhouse depth
+
+Owner approved the depth ideas (mock-up review): one lamp up and to the left gives every clubhouse sheet the same two-part shadow and a lit top edge; the ticket, Notifications and the rule book get a fine card-stock grain (never the plaques, which get two brass screws instead); the Big Board is a framed board with corner rivets and sunken panels (no split-flap seam: split flaps stay the Bowl Pool's); the Survivor table is felt in a wood rail and shows the pool's own poker chips, the logo filling the face; the Bowl Pool gets a linen weave, a gold-leaf title and raised pennants; the chalkboard is a mitred walnut frame with a chalk tray (two sticks, an eraser); rules are engraved in two tones (no brass corner brackets); the ticket's round cuts are shaded half circles at the card edge with a crease by the perforation; the rule book's headings are pressed (no drop capitals); LIVE is a lit sign; the room blurs and dims behind an open sheet with a pool of lamp light. All in `src/styles/83-clubhouse-depth.css`, no pictures.

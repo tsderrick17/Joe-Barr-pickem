@@ -321,6 +321,11 @@
 }
 .survivor-poker-chip-slate { height: 100%; width: 100%; }
 .survivor-poker-chip-wrap-ticket { height: 4.55rem; width: 4.55rem; --chip-t: .39rem; }
+/* The clubhouse Survivor table: a small chip whose face is nearly all logo, so the team reads as large as the logo it replaces. */
+.survivor-poker-chip-wrap-table { height: 100%; width: 100%; --chip-t: .2rem; }
+.survivor-poker-chip-wrap-table .survivor-poker-chip-ground-shadow, .survivor-poker-chip-table .survivor-poker-chip-side::before { display: none; }
+.survivor-poker-chip-table .survivor-poker-chip-face { inset: 3px; }
+.survivor-poker-chip-table .survivor-poker-chip-face img { height: 82%; width: 82%; }
 .survivor-poker-chip-ticket { height: 100%; transform: rotate(-7deg); width: 100%; }
 .survivor-poker-chip.is-unavailable { filter: grayscale(1); opacity: .44; }
 
