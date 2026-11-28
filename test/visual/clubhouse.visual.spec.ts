@@ -224,6 +224,23 @@ test("the ticket says what the line colours mean while a line can still move", a
   await expect(page).toHaveScreenshot("clubhouse-ticket-form-top-phone-390.png", { maxDiffPixels: 40 });
 });
 
+test("with a line locked, the key gives each colour its own line, the label beside its words", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["live-mixed-locks"], at: "/clubhouse#slate" });
+  const key = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key");
+  await expect(key).toContainText("White line:", { timeout: 30_000 });
+  // Each label starts the line its words are on: never a label left at the end of one line with its words on the next.
+  const apart = await key.locator("b").evaluateAll((labels) => labels.map((label) => {
+    const range = document.createRange();
+    const words = label.parentElement!.lastChild!;   // the words after the label (its own text node)
+    range.setStart(words, 0); range.setEnd(words, 1);
+    return Math.abs(range.getBoundingClientRect().top - label.getBoundingClientRect().top) > 4;
+  }));
+  expect(apart).toEqual([false, false]);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(key).toHaveScreenshot("clubhouse-ticket-line-key-locked-phone-390.png", { maxDiffPixels: 20 });
+});
+
 test("the switch is a mode: up, opening the app lands in the clubhouse; down, it does not", async ({ page }) => {
   await openClubhouse(page, { at: "/board" });
   const nav = page.getByRole("navigation", { name: "Account navigation" });

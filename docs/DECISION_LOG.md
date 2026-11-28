@@ -564,3 +564,7 @@ The Bowl Pool pop-up's heading is compact (no row of stars, a smaller title, cou
 ## 2026-11-27 - Every non-Sunday-afternoon kickoff gets a public pick reveal
 
 The Black Friday game sent no reveal email because the featured reveal was planned only for Wednesday, Thursday, Monday, Sunday night and International games. It now covers every kickoff outside the two Sunday afternoon windows (which keep their own reveals): Friday, Saturday, Tuesday and holiday games included. The notification wording says so.
+
+## 2026-11-27 - The ticket's line key: one colour a line, each beside its words
+
+With a line locked, the key on Your ticket reads as two lines, "Gold line: locked." over "White line: moves until 8 AM on game day.", so a label is never left at the end of one line with its words on the next (owner). Still two lines at most on a phone.

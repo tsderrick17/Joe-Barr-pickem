@@ -934,6 +934,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 
 /* What the ticket's line colours mean, while any line can still move. */
 .lab-line-key { color: rgba(246, 242, 232, .82); font-size: .78rem; line-height: 1.35; margin: 0 0 2px; text-align: center; text-wrap: balance; }   /* two lines at most on a phone */
+.lab-line-key > span { display: block; }   /* one key a line, each colour beside its own words */
 .lab-line-key b { color: rgb(246 242 232); font-weight: 700; }
 .lab-line-key b.is-gold { color: rgb(240 180 41); }
 
