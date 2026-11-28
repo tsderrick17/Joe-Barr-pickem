@@ -601,3 +601,7 @@ On the clubhouse ticket (and the Bowl ticket, which shares its boxes) a game tha
 ## 2026-11-27 - Clubhouse ticket: a full ticket asks which pick to replace
 
 As on the Slate, tapping another team when both picks are already on the clubhouse ticket no longer just buzzes: a prompt pinned with the send button says "Picks are full · Replace which one with LAR -3?" with a button for each pick whose game has not kicked off, and Cancel. If every pick's game has kicked off, the tap only buzzes. The ticket's date and time lines are a step bigger again (owner).
+
+## 2026-11-27 - Ticket time line: red LIVE, then FINAL, instead of "Kicked off"
+
+On the clubhouse ticket a game being played shows a red LIVE badge beside its kickoff time (as the Slate does) and a FINAL badge once decided, in place of "· KICKED OFF". The Bowl ticket's game under way shows the same red LIVE badge (owner).

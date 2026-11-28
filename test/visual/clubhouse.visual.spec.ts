@@ -349,6 +349,10 @@ test("a finished game on the ticket shows each side's final score and who covere
   // A game that has kicked off but is not final shows no score, only who took each side.
   const live = form.locator("ol > li").nth(2);
   await expect(live.locator(".lab-board-final b")).toHaveCount(0);
+  // The time line says how each game stands: a red LIVE badge while it is played, FINAL once decided (no "Kicked off").
+  await expect(live.locator(".lab-board-time .lab-board-status.is-live")).toHaveText("Live");
+  await expect(first.locator(".lab-board-time .lab-board-status.is-final")).toHaveText("Final");
+  await expect(form).not.toContainText("KICKED OFF");
   await expect(live.locator(".lab-board-final.is-live")).toHaveText(["MIKE · PAT", "DANA · SAM"]);
   await live.scrollIntoViewIfNeeded();
   await page.evaluate(() => document.fonts.ready);
