@@ -686,3 +686,23 @@ test("a player's card turns the clubhouse beta on and off for that one player, a
   await page.getByRole("button", { name: "Clubhouse for Zac" }).click();
   await expect.poll(() => sent).toEqual([{ playerId: "p4", clubhouseAccess: true }]);
 });
+
+test("the clubhouse launch switch starts OFF and takes two taps to open the clubhouse to every player", async ({ page }) => {
+  await signIn(page, "day");
+  await serve(page, "healthy");
+  const sent: unknown[] = [];
+  await page.route("**/api/admin/players", async (route) => {
+    if (route.request().method() === "PATCH") { sent.push(route.request().postDataJSON()); return route.fulfill({ json: { clubhouseOpen: true } }); }
+    return route.fallback();
+  });
+  await page.goto("/admin/players");
+  const launch = page.getByRole("group", { name: "Clubhouse for everyone" });
+  await expect(launch).toContainText("CLUBHOUSE FOR EVERYONE · OFF", { timeout: 30_000 });
+  await launch.getByRole("button", { name: "Open to everyone" }).click();
+  expect(sent).toEqual([]);   // the first tap only asks
+  await launch.getByRole("button", { name: "Cancel" }).click();
+  await launch.getByRole("button", { name: "Open to everyone" }).click();
+  await launch.getByRole("button", { name: "Tap again to open it to everyone" }).click();
+  await expect.poll(() => sent).toEqual([{ clubhouseOpen: true }]);
+  await expect(launch).toContainText("CLUBHOUSE FOR EVERYONE · ON");
+});
