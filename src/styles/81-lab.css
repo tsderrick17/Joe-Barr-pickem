@@ -600,8 +600,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-bowl-head > h3 { grid-area: title; }
 .lab-bowl-ticket .lab-bowl-head > .lab-bowl-counts { grid-area: counts; }
 .lab-bowl-ticket .lab-bowl-head > .lab-bowl-gauge { grid-area: dial; }
-/* the dial with no caption: small, no glow of its own, so the figures and the dial read as one block */
-.lab-bowl-gauge.is-bare { background: none; display: block; padding: 0; width: 4.6rem; }
+/* the dial with no caption, no glow of its own, so the figures and the dial read as one block */
+.lab-bowl-gauge.is-bare { align-self: start; background: none; display: block; margin-top: 3px; padding: 0; width: 108px; }   /* as tall as the words beside it: its top moon level with the title's capitals, its hub level with the foot of the figures' labels */
 .lab-bowl-head > h3 { color: var(--bowl-ink); font-size: 1.15rem; letter-spacing: .14em; text-shadow: none; text-transform: uppercase; }
 .lab-bowl-due { align-items: center; color: var(--bowl-gold-lt); display: inline-flex; font-size: .72rem; gap: 6px; letter-spacing: .12em; }
 .lab-bowl-due.is-clear { color: rgba(240, 232, 214, .6); }
