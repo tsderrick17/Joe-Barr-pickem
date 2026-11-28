@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
 import { SaveBar } from "@/components/clubhouse/save-bar";
 import { Lamp } from "@/components/clubhouse/lamps";
@@ -86,15 +86,15 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
   useEffect(() => () => onDirty?.(null), [onDirty]);
   const titleGame = view.games.find((game) => game.tiebreaker) ?? null;
 
-  const caption = (game: BowlTicketGame) => {
+  const caption = (game: BowlTicketGame): ReactNode => {
     if (game.note) return game.note.toUpperCase();
     if (game.state === "missed") return "MISSED · COUNTS AS A LOSS";
     if (game.final) return "FINAL";
-    if (game.locked) return "KICKED OFF";
+    if (game.locked) return <span className="lab-board-status is-live">Live</span>;   // the red LIVE badge, as on the Slate
     return game.time;
   };
   // Where it is played (city, state) rides on the same small line as the time, so a row never grows taller for it.
-  const withPlace = (game: BowlTicketGame) => (game.place && !game.note && game.state !== "missed" ? `${caption(game)} · ${game.place}` : caption(game));
+  const withPlace = (game: BowlTicketGame) => (game.place && !game.note && game.state !== "missed" ? <>{caption(game)} · {game.place}</> : caption(game));
 
   return (
     <div className="lab-bigboard lab-window lab-bowl-ticket trace-gilt">

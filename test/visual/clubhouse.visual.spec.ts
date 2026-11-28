@@ -349,6 +349,10 @@ test("a finished game on the ticket shows each side's final score and who covere
   // A game that has kicked off but is not final shows no score, only who took each side.
   const live = form.locator("ol > li").nth(2);
   await expect(live.locator(".lab-board-final b")).toHaveCount(0);
+  // The time line says how each game stands: a red LIVE badge while it is played, FINAL once decided (no "Kicked off").
+  await expect(live.locator(".lab-board-time .lab-board-status.is-live")).toHaveText("Live");
+  await expect(first.locator(".lab-board-time .lab-board-status.is-final")).toHaveText("Final");
+  await expect(form).not.toContainText("KICKED OFF");
   await expect(live.locator(".lab-board-final.is-live")).toHaveText(["MIKE · PAT", "DANA · SAM"]);
   await live.scrollIntoViewIfNeeded();
   await page.evaluate(() => document.fonts.ready);
@@ -1381,7 +1385,7 @@ test("by night the clubhouse's Claim your seat ticket takes the Bowl Pool's nigh
   await expect(page).toHaveScreenshot("clubhouse-bowl-claim-night-phone-390.png", { maxDiffPixels: 40 });
 });
 
-test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick warns", async ({ page }) => {
+test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick ticks, taking it back is lighter, a third pick ticks and asks which pick it replaces", async ({ page }) => {
   await page.addInitScript(() => {
     const vibrations: number[][] = [];
     (window as unknown as { vibrations: number[][] }).vibrations = vibrations;
@@ -1403,7 +1407,8 @@ test("the clubhouse ticket gives the Slate's feels on an Android phone: a pick t
   await cells.nth(0).click(); await cells.nth(2).click(); await felt();
   await form.getByRole("button", { name: /Pick’em/ }).click(); await felt();
   await cells.nth(4).click();
-  expect(await felt()).toEqual([[50, 70, 50]]);   // warning: the ticket is full
+  expect(await felt()).toEqual([[10]]);   // tick: the ticket is full, so it asks which pick to replace (as the Slate does)
+  await expect(form.locator(".lab-ticket-swap")).toBeVisible();
 });
 
 test("a Bowl game's name never wraps onto a second line, even a long one beside a logo pennant on a phone", async ({ page }) => {
@@ -1547,6 +1552,40 @@ test("in bowl season the Bowl Pool's plate tells a player without a seat to clai
   await page.getByRole("button", { name: /Claim your seat/i }).click();
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
+});
+
+test("on a full ticket, tapping another team asks which pick it replaces, as the Slate does", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+  const form = page.getByRole("dialog", { name: "Your ticket" });
+  const games = form.locator("ol > li");
+  await expect(games.first()).toBeVisible({ timeout: 30_000 });
+  const team = (game: number) => games.nth(game).locator(".lab-board-cell").first();
+  await team(0).click();
+  await team(1).click();
+  const first = (await team(0).locator(".lab-board-team").innerText()).trim(), second = (await team(1).locator(".lab-board-team").innerText()).trim();
+  // The last pick moves the ticket on to Survivor when it is still to do: back to Pick’em.
+  const back = form.getByRole("group", { name: "What to pick" }).getByRole("button", { name: /Pick’em/ });
+  if (await back.count()) await back.click();
+  const third = (await team(2).locator(".lab-board-team").innerText()).trim();
+  await team(2).click();
+  const prompt = form.locator(".lab-ticket-swap");
+  await expect(prompt).toContainText(`Replace which one with ${third}`);
+  await expect(prompt.locator(".lab-ticket-swap-choices button")).toHaveCount(2);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-ticket-swap-phone-390.png", { maxDiffPixels: 60 });
+  // Choosing the first pick puts the new team in its place; the prompt goes.
+  await prompt.locator(".lab-ticket-swap-choices button").filter({ hasText: first }).click();
+  await expect(prompt).toHaveCount(0);
+  await expect(team(2)).toHaveAttribute("aria-pressed", "true");
+  await expect(team(0)).toHaveAttribute("aria-pressed", "false");
+  await expect(team(1)).toHaveAttribute("aria-pressed", "true");
+  expect(second).not.toBe("");
+  // Cancel leaves the ticket as it was.
+  await team(0).click();
+  await form.locator(".lab-ticket-swap-cancel").click();
+  await expect(prompt).toHaveCount(0);
+  await expect(team(0)).toHaveAttribute("aria-pressed", "false");
 });
 
 test.describe("on a touch phone", () => {

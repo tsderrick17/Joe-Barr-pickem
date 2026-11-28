@@ -150,10 +150,15 @@
 .lab-bigboard .lab-chips button[aria-pressed="true"] { background: var(--cw-gold); border-color: var(--cw-gold); color: rgb(14 14 12); }
 .lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
 .lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px 8px; grid-template-columns: 1fr 1fr; padding: 8px 0 10px; }
-.lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+.lab-board-time { color: rgb(240 186 64); font-size: .8rem; font-weight: 700; grid-column: 1 / -1; letter-spacing: .1em; }
 /* a game abroad: a red pin and its city and country at the right end of the time line */
 .lab-board-venue { color: rgba(246, 242, 232, .78); float: right; letter-spacing: .04em; margin-left: 8px; white-space: nowrap; }
 .lab-board-at { display: none; }
+/* After kickoff the time line says how the game stands: a red LIVE badge while it is played (as on the Slate), FINAL once decided. */
+.lab-board-status { border-radius: 3px; display: inline-block; font-size: .7rem; font-weight: 900; letter-spacing: .12em; line-height: 1; margin-left: 10px; padding: 3px 6px; text-transform: uppercase; vertical-align: 1px; }
+.lab-board-status.is-live { background: rgb(190 40 34); color: rgb(255 246 240); }
+.lab-bowl-ticket small .lab-board-status { font-size: .6rem; margin-left: 0; padding: 2px 5px; }
+.lab-board-status.is-final { border: 1px solid rgba(236, 230, 214, .45); color: rgb(236 230 214); }
 .lab-board-cell { align-content: start; align-items: center; align-self: stretch; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 2px; color: inherit; cursor: pointer; display: grid; font: inherit; gap: 2px 6px; grid-template-columns: 1fr auto; grid-template-rows: minmax(calc(3.1rem - 14px), auto); min-height: 3.1rem; padding: 6px 9px; position: relative; text-align: left; }
 .lab-board-cell:disabled { cursor: default; }
 .lab-board-cell:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
@@ -161,17 +166,17 @@
 /* A line that can still move is white; once it is final (locked) it turns gold. */
 .lab-board-line { color: rgb(246 242 232); font-size: 1.05rem; font-weight: 700; text-align: right; }
 .lab-board-line.is-final { color: rgb(240 180 41); text-shadow: 0 0 3px rgba(240, 180, 41, .22); }
-.lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .12); color: rgba(240, 233, 214, .7); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
-.lab-board-final b { font-size: 1rem; letter-spacing: .06em; }
-.lab-board-final em { font-size: .62rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .16); color: rgb(236 230 214); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
+.lab-board-final b { font-size: 1.1rem; letter-spacing: .06em; }
+.lab-board-final em { font-size: .72rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
 .lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
 .lab-board-final em i { font-style: normal; }
 .lab-board-final em.is-stacked { display: flex; flex-direction: column; gap: 3px; }   /* three or more names: one per line, never a stray name on a second line */
 .lab-board-final em.is-stacked i { display: none; }
-.lab-board-final em u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.lab-board-cell.is-locked { opacity: .55; }
+.lab-board-final em u { text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.lab-board-cell.is-locked { background: rgb(17 17 15); }   /* a game under way or done: a shade darker, never faded, so its words and numbers stay easy to read */
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }
 /* The pick highlight. Gilt edge: one gold hairline draws itself once round the cell, clockwise from the top, and stays: a single line,
    no second rule. Nothing repeats; reduced motion shows the line at once. */
@@ -1005,6 +1010,14 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-savebar { align-items: center; display: grid; gap: 10px; grid-template-columns: 1fr; }
 .lab-savebar.is-pinned { animation: savebar-up .28s cubic-bezier(.32, .72, 0, 1); background: linear-gradient(180deg, rgba(10, 12, 10, 0), rgb(10 12 10) 28%); bottom: 0; grid-template-columns: auto 1fr; margin-inline: -4px; padding: 14px 4px 8px; position: sticky; z-index: 3; }
 .lab-bowl-ticket .lab-savebar.is-pinned { background: linear-gradient(180deg, rgba(18, 28, 50, 0), rgb(18 28 50) 28%); }
+/* A full ticket asked to take one more team: which pick it replaces, pinned with the send button so it is in view (as the Slate asks). */
+.lab-ticket-swap { align-items: center; background: rgb(30 28 22); border: 1px solid rgba(240, 180, 41, .55); border-radius: 6px; color: rgb(246 242 232); display: grid; gap: 6px 10px; grid-column: 1 / -1; grid-template-columns: 1fr auto; padding: 8px 10px 10px; }
+.lab-ticket-swap > span { color: var(--cw-gold-lt); font-size: .66rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.lab-ticket-swap p { font-size: .9rem; font-weight: 700; grid-column: 1 / -1; margin: 0; }
+.lab-ticket-swap-cancel { background: none; border: 0; color: rgba(246, 242, 232, .8); cursor: pointer; font: inherit; font-size: .7rem; font-weight: 800; letter-spacing: .12em; min-height: 32px; padding: 0 2px; text-transform: uppercase; }
+.lab-ticket-swap-choices { display: grid; gap: 8px; grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+.lab-ticket-swap-choices button { background: var(--cw-gold); border: 0; border-radius: 999px; color: rgb(14 14 12); cursor: pointer; font: inherit; font-size: .9rem; font-weight: 800; letter-spacing: .06em; min-height: 42px; }
+.lab-ticket-swap :focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: 2px; }
 .lab-savebar-count { color: var(--cw-gold-lt); font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 .lab-bowl-ticket .lab-savebar-count { color: var(--bowl-gold-lt); }
 @keyframes savebar-up { from { opacity: 0; transform: translateY(16px); } }
