@@ -1607,4 +1607,19 @@ test.describe("on a touch phone", () => {
     await page.waitForTimeout(800);
     await expect(page).toHaveScreenshot("clubhouse-bigboard-touch-phone-390.png", { maxDiffPixels: 60 });
   });
+
+  test("the ticket's games sit as far from the sheet's right edge as from its left (no scrollbar gutter on a phone)", async ({ page }) => {
+    await openClubhouse(page, { scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
+    const form = page.getByRole("dialog", { name: "Your ticket" });
+    const game = form.locator("ol > li").first();
+    await expect(game).toBeVisible({ timeout: 30_000 });
+    const gaps = await game.evaluate((node) => {
+      const sheet = node.closest(".cw-sheet-body")!.getBoundingClientRect(), box = node.getBoundingClientRect();
+      return { left: Math.round(box.left - sheet.left), right: Math.round(sheet.right - box.right) };
+    });
+    expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(3);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page).toHaveScreenshot("clubhouse-ticket-touch-phone-390.png", { maxDiffPixels: 60 });
+  });
 });
