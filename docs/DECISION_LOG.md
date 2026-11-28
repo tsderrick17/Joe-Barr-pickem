@@ -634,3 +634,7 @@ Owner-picked accents across the clubhouse boards and ticket:
 ## 2026-11-27 - Ticket: the week bubble where the Big Board's is
 
 The ticket's week is the Big Board's own bubble: the same words, size and place at the top right (a phone test holds it to the pixel), with no arrows either side; your lamps move to the left. On a computer the ticket is wider than the board, so the bubble sits at the ticket's own right edge.
+
+## 2026-11-28 - Clubhouse launch switch
+
+The clubhouse is ready to open to every player with one switch: Clubhouse for everyone on `/admin/players` (two taps, audited as clubhouse_opened_to_all / clubhouse_closed_to_all, stored in the one-row `pool_settings` table). It ships OFF. When on, every player's profile carries clubhouseAccess, so the header light switch appears for all and `/clubhouse` lets them in; the classic pages stay the default for each device until its player flips the switch. The per-player beta switch still works. If the setting cannot be read it reads as closed, so a fault never opens it by accident (owner, 2026-11-28).

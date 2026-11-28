@@ -1785,6 +1785,24 @@ export type Database = {
           },
         ]
       }
+      pool_settings: {
+        Row: {
+          clubhouse_open: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          clubhouse_open?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          clubhouse_open?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_vapid_keys: {
         Row: {
           created_at: string
