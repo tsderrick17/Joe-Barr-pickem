@@ -36,6 +36,8 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const [problem, setProblem] = useState("");
   // A full ticket asked to take one more team: which team, until the player says which pick it replaces (or cancels).
   const [swap, setSwap] = useState<string | null>(null);
+  // Just sent: the picks fill with gold once, then the ticket stays where it is.
+  const [justSent, setJustSent] = useState(false);
   const survivor = view.survivor;
   const pickingSurvivor = survivor.playing;
   // The ticket opens on Pick'em, or on Survivor when the Survivor table's Pick button brought the player here.
@@ -89,6 +91,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
     try {
       const answer = await onSubmit({ picks: ordered, survivor: pickingSurvivor ? chip : null });
       if (typeof answer === "string") { setProblem(answer); return false; }
+      setJustSent(true);
       return true;
     } finally { setSending(false); }
   }
@@ -101,7 +104,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const anyLocked = shownGames.some((game) => game.lineFinal);
 
   return (
-    <div className="lab-bigboard is-tote trace-gilt lab-window">
+    <div className={`lab-bigboard is-tote trace-gilt lab-window${justSent ? " is-just-sent" : ""}`}>
       <header>
         {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} step text={view.week} view={view} /> : <h3>{view.week}</h3>}
         <ul aria-label="Your picks" className="lab-lamps">
@@ -139,7 +142,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
                 const entry = survivor.teams[team];
                 const picked = chip === team;
                 return (
-                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { haptic(picked ? "lightTick" : "lockIn"); setChip(picked ? null : team); }} type="button">
+                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""}${picked && view.mine.survivor === team ? " is-sent" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { haptic(picked ? "lightTick" : "lockIn"); setChip(picked ? null : team); }} type="button">
                     <span className="lab-board-team"><Logo team={team} />{team}</span>
                     <span className="lab-board-used">{entry.usedWeek ? `USED WK ${entry.usedWeek}` : entry.used ? "USED" : entry.locked ? "KICKED OFF" : picked ? "YOUR PICK" : ""}</span>
                     <span aria-hidden="true" className="lab-board-trace" />
@@ -154,7 +157,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
               // From kickoff, while the game is being played, each side names who took it (picks are public once a game kicks off).
               const live = !final && locked && result.pickers.length > 0 ? result.pickers : null;
               return (
-                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : live ? `, picked by ${live.join(", ")}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
+                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : live ? `, picked by ${live.join(", ")}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""}${picked && view.mine.picks.includes(team) ? " is-sent" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
                   <span className={`lab-board-line ${game.lineFinal ? "is-final" : ""}`}>{line}</span>
                   {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em className={final.pickers.length > 2 ? "is-stacked" : undefined}>{final.pickers.length ? final.pickers.map((picker, index) => <Fragment key={picker}>{index ? <i aria-hidden="true"> · </i> : ""}<u>{picker.toUpperCase()}</u></Fragment>) : "NO PICKS"}</em></span> : null}

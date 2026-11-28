@@ -10,7 +10,7 @@ import PlayerTrophyName from "@/components/player-trophy-name";
  * The tote board family, the owner's pick of the Pad skins, as the clubhouse's main piece. Drawn from a `BoardView` (the real clubhouse) or the Lab's sample one.
  *  - The Big Board: everyone's picks in one place, as the Pick'em Pad is today (wins, player, Pick 1, Pick 2, no place), with
  *    Survivor's chips in their own column. The standings fold into the same board: one tap turns it to the season table.
- *  - The board is where you pick. Tap the ticket bar under it (or your own row; the board does not mark whose row it is) and the
+ *  - The board is where you pick. Tap the ticket bar under it (or your own row, marked by a warm tint with a gold edge) and the
  *    ticket opens over the board: this week's games as plain rows, pick two against the
  *    spread, then (while you are still in Survivor) the same games again as plain rows to pick one team straight up, the teams you
  *    have used marked with their week. One Submit sends all of it, and your row on the board shows it. There is no separate screen

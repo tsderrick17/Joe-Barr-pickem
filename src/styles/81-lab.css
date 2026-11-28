@@ -68,8 +68,8 @@
 .lab-roll { height: 130px; margin: 3px 8px 0; overflow: hidden; }
 .lab-room-screen.is-board li { align-items: center; background: rgb(18 26 21); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr 40px auto; height: 24px; padding: 0 10px; }
 .lab-room-screen.is-board li em { font-size: 14px; font-style: normal; letter-spacing: .02em; text-align: right; }
-.lab-room-screen.is-board li em.is-up { color: rgb(128 200 152); }
-.lab-room-screen.is-board li em.is-down { color: rgb(220 126 114); }
+.lab-room-screen.is-board li em.is-up { color: rgb(95 211 154); }
+.lab-room-screen.is-board li em.is-down { color: rgb(217 88 74); }
 .lab-room-screen.is-board li i { color: rgb(255 176 46); font-style: normal; text-shadow: 0 0 2px rgba(255, 150, 30, .55), 0 0 6px rgba(255, 140, 30, .18); }
 .lab-room-screen.is-board li b { color: rgb(255 176 46); text-shadow: 0 0 2px rgba(255, 150, 30, .55), 0 0 6px rgba(255, 140, 30, .18); }
 .lab-room-screen.is-spreads { padding: 5px 6px; }
@@ -167,10 +167,8 @@
 .lab-board-line { color: rgb(246 242 232); font-size: 1.05rem; font-weight: 700; text-align: right; }
 .lab-board-line.is-final { color: rgb(240 180 41); text-shadow: 0 0 3px rgba(240, 180, 41, .22); }
 .lab-board-final { align-items: baseline; border-top: 1px dashed rgba(255, 255, 255, .16); color: rgb(236 230 214); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: space-between; margin-top: 2px; padding-top: 3px; }
-.lab-board-final b { font-size: 1.1rem; letter-spacing: .06em; }
-.lab-board-final em { font-size: .72rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }
-.lab-board-final.is-covered { color: var(--cw-gold-lt); }
-.lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
+.lab-board-final b { font-size: 1.1rem; letter-spacing: .06em; text-decoration: underline 2px rgb(217 88 74); text-underline-offset: 4px; }   /* red under a side that did not cover, green under one that did */
+.lab-board-final em { font-size: .72rem; font-style: normal; font-weight: 700; letter-spacing: .08em; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; text-align: right; }.lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
 .lab-board-final em i { font-style: normal; }
 .lab-board-final em.is-stacked { display: flex; flex-direction: column; gap: 3px; }   /* three or more names: one per line, never a stray name on a second line */
@@ -339,7 +337,7 @@
 /* Forfeit inside the clubhouse ticket: quiet links in the ticket's light type, the last step a red-bordered button. */
 .lab-window .forfeit-panel { border-top: 1px dashed rgba(201, 164, 95, .35); margin: 14px 0 0; max-width: none; padding: 12px 0 0; }
 .lab-window .forfeit-button, .lab-window .forfeit-cancel { color: rgba(240, 236, 226, .7); }
-.lab-window .forfeit-panel[data-step="2"] .forfeit-button { border-color: rgb(220 126 114); border-radius: 999px; color: rgb(236 150 132); }
+.lab-window .forfeit-panel[data-step="2"] .forfeit-button { border-color: rgb(217 88 74); border-radius: 999px; color: rgb(236 150 132); }
 .lab-window .forfeit-message { color: rgb(236 150 132); }
 .lab-ticket-raceover { color: rgba(240, 236, 226, .75); font-size: .8rem; letter-spacing: .06em; margin: 0 0 8px; text-align: center; }
 .lab-tote header { align-items: center; display: flex; gap: 10px; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
@@ -372,7 +370,7 @@
 .lab-tote th, .lab-tote td { font-size: .8rem; padding: 0 4px; text-align: left; vertical-align: middle; }
 .lab-tote thead th { color: rgba(240, 236, 226, .75); font-size: .56rem; font-weight: 800; letter-spacing: .14em; padding-bottom: 2px; }
 .lab-tote thead th:first-child { text-align: center; }
-.lab-tote tbody th, .lab-tote tbody td { background: rgb(8 10 9); border-right: 2px solid rgb(18 40 30); height: 2.4rem; }
+.lab-tote tbody th, .lab-tote tbody td { background: rgb(8 10 9); border-radius: 5px; border-right: 2px solid rgb(18 40 30); height: 2.4rem; }   /* soft tiles, the felt between them */
 .lab-tote-col-wins { width: 2rem; }
 .lab-tote-col-pick { width: 27%; }
 .lab-tote-col-surv { width: 3.4rem; }
@@ -387,17 +385,17 @@
    result is in the type itself, in the colours of the lamps on your ticket: yellow while its game is undecided, a win glows green, a
    loss turns red and is struck through. */
 .lab-tote-slip { align-items: baseline; color: rgb(238 194 104); display: flex; font-family: "Courier New", monospace; font-size: 1.06rem; gap: 3px; padding-left: 6px; white-space: nowrap; }
-.lab-tote-slip.is-w { color: rgb(128 200 152); text-shadow: 0 0 3px rgba(128, 200, 152, .15); }
-.lab-tote-slip.is-l { color: rgb(220 126 114); }
-.lab-tote-slip small { font-size: .82rem; opacity: .85; }
+.lab-tote-slip.is-w { color: rgb(95 211 154); text-shadow: 0 0 3px rgba(128, 200, 152, .15); }
+.lab-tote-slip.is-l { color: rgb(217 88 74); }
+.lab-tote-slip small { font-size: .82rem; font-weight: 700; opacity: .78; }   /* the line in the pick's own colour, a touch softer */
 /* A pick made but not shown yet, three ways (no padlock). Lamps dark: the panel's lamps are off and one green IN lamp is lit. */
 .lab-tote-cover { align-items: center; display: flex; gap: 4px; justify-content: flex-start; padding-left: 6px; }
-.lab-tote-in { color: rgb(128 200 152); font-family: "Courier New", monospace; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-shadow: 0 0 6px rgba(128, 200, 152, .3); }
+.lab-tote-in { color: rgb(95 211 154); font-family: "Courier New", monospace; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-shadow: 0 0 6px rgba(128, 200, 152, .3); }
 /* Survivor: the team's logo, always centred. A win is a lit green ring; a loss is a red ring with a bar through a greyed logo. */
 .lab-tote-logo { border-radius: 50%; display: inline-grid; height: 30px; place-items: center; position: relative; vertical-align: middle; width: 30px; }
-.lab-tote-logo.is-w { box-shadow: 0 0 0 2px rgb(128 200 152), 0 0 8px rgba(128, 200, 152, .35); }
-.lab-tote-logo.is-l { box-shadow: 0 0 0 2px rgb(220 126 114); }
-.lab-tote-logo.is-l::after { background: rgb(220 126 114); content: ""; height: 2px; left: -1px; position: absolute; right: -1px; top: calc(50% - 1px); transform: rotate(-45deg); }
+.lab-tote-logo.is-w { box-shadow: 0 0 0 2px rgb(95 211 154), 0 0 8px rgba(128, 200, 152, .35); }
+.lab-tote-logo.is-l { box-shadow: 0 0 0 2px rgb(217 88 74); }
+.lab-tote-logo.is-l::after { background: rgb(217 88 74); content: ""; height: 1.5px; left: 0; position: absolute; right: 0; top: calc(50% - .75px); transform: rotate(-45deg); z-index: 1; }   /* thin and crisp, ring edge to ring edge */
 /* Survivor: the real chip, centred in its column, its W or L lamp beside it. */
 .lab-tote .lab-tote-surv { text-align: center; }
 /* The chip's W or L sits on a small black lamp at its lower right, inside the column. */
@@ -416,7 +414,7 @@
 .lab-survivor-scroll .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); left: 2.6rem; overflow: hidden; position: sticky; text-overflow: ellipsis; z-index: 1; }
 /* Your row, said quietly: the warm tint and gold name, a hairline YOU, no bar down its edge. */
 .lab-survivor-scroll tr.is-you .lab-survivor-name { box-shadow: 2px 0 0 rgb(18 40 30); color: rgb(255 214 120); }
-.lab-survivor-scroll tr.is-you > * { background: rgb(44 40 18); }
+.lab-survivor-scroll tr.is-you > * { background: rgb(34 29 18); }
 .lab-survivor-scroll tr.is-out .lab-survivor-name { color: rgba(240, 236, 226, .4); }   /* out: dimmed, not crossed off */
 .lab-survivor-scroll tr.is-out .lab-tote-logo:not(.is-l) { opacity: .5; }
 .lab-survivor-scroll .lab-tote-cover { justify-content: center; padding-left: 0; }
@@ -473,7 +471,7 @@
 /* Your row on the Big Board is your ticket: its cells are buttons, an owed pick reads PICK in amber, and a bar under the board says so. */
 .lab-tote-mine { background: transparent; border: 0; color: inherit; cursor: pointer; display: block; font: inherit; margin: -4px; min-height: 44px; padding: 4px; text-align: inherit; width: calc(100% + 8px); }
 .lab-tote-mine:focus-visible { outline: 2px solid var(--cw-gold-lt); outline-offset: -2px; }
-.lab-tote-owed { border: 1px dashed rgb(255 176 46); border-radius: 3px; color: rgb(255 176 46); display: inline-block; font-family: "Courier New", monospace; font-size: .74rem; font-weight: 800; letter-spacing: .1em; padding: 3px 7px; }
+.lab-tote-owed { animation: owed-breathe 2.6s ease-in-out infinite; border: 1px dashed rgb(255 176 46); border-radius: 3px; color: rgb(255 176 46); display: inline-block; font-family: "Courier New", monospace; font-size: .74rem; font-weight: 800; letter-spacing: .1em; padding: 3px 7px; }
 .lab-tote-won { color: rgb(255 176 46); font-size: .66rem; font-weight: 800; letter-spacing: .12em; }
 /* The way to your ticket under the Big Board: a small ticket of the same card as the one at the foot of the clubhouse, its words on the
    cream and the verb on a dark stub across a notched perforation, so the way to your ticket looks the same on the board and in the room. */
@@ -742,8 +740,8 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-sheet-matchup i { color: var(--bowl-gold-lt); font-style: normal; }
 .lab-bowl-sheet thead th .lab-bowl-sheet-matchup > .is-tbd { color: rgba(240, 232, 214, .5); font-style: italic; }
 .lab-bowl-sheet-pick { display: block; font-family: Georgia, serif; font-size: .82rem; line-height: 1.15; white-space: normal; }   /* the Bowl Card's school names, wrapped to the column */
-.lab-bowl-sheet-pick.is-w { color: rgb(128 200 152); }
-.lab-bowl-sheet-pick.is-l { color: rgb(220 126 114); }   /* a loss: red, not crossed off */
+.lab-bowl-sheet-pick.is-w { color: rgb(95 211 154); }
+.lab-bowl-sheet-pick.is-l { color: rgb(217 88 74); }   /* a loss: red, not crossed off */
 .lab-bowl-sheet-pick.is-open { color: rgb(238 194 104); }
 .lab-bowl-sheet-pick.is-missed { color: rgba(240, 232, 214, .4); }
 .lab-bowl-sheet .lab-lamp { height: .95rem; width: .95rem; }
@@ -782,7 +780,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-tote tr.is-out .lab-tote-player { color: rgba(240, 236, 226, .45); }   /* out of the race: dimmed, not crossed off */
 .lab-tote tr.is-out .lab-tote-wins, .lab-tote tr.is-out .lab-tote-logo { opacity: .5; }
 .lab-tote-race { color: rgb(240 236 226); font-size: .74rem; font-weight: 700; letter-spacing: .04em; margin: 0 4px 6px; }
-.lab-tote-owed-ring { border: 1.5px dashed rgb(255 176 46); border-radius: 50%; color: rgb(255 176 46); display: inline-grid; font-size: .44rem; font-weight: 900; height: 26px; letter-spacing: .04em; place-items: center; vertical-align: middle; width: 26px; }
+.lab-tote-owed-ring { animation: owed-breathe 2.6s ease-in-out infinite; border: 1.5px dashed rgb(255 176 46); border-radius: 50%; color: rgb(255 176 46); display: inline-grid; font-size: .44rem; font-weight: 900; height: 26px; letter-spacing: .04em; place-items: center; vertical-align: middle; width: 26px; }
 
 /* ---- The clubhouse on a desktop: the pop-ups use the width, stay clear of the site's bar, and the room answers the pointer ---- */
 @media (hover: hover) {
@@ -1027,3 +1025,28 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-bowl-ticket .lab-savebar-count { color: var(--bowl-gold-lt); }
 @keyframes savebar-up { from { opacity: 0; transform: translateY(16px); } }
 @media (prefers-reduced-motion: reduce) { .lab-savebar.is-pinned { animation: none; } }
+
+/* Accents (owner, 2026-11-27). Your row, the same on every board: a warm tint with a gold edge at its left. */
+.lab-tote tbody tr.is-you > * { background: rgb(34 29 18); }
+.lab-tote tbody tr.is-you > :first-child { box-shadow: inset 3px 0 0 var(--cw-gold); }
+.lab-survivor-scroll tr.is-you > .lab-survivor-status { box-shadow: -8px 0 0 rgb(18 40 30), inset 3px 0 0 var(--cw-gold); }
+/* Survivor: once a player is out, the weeks after are left blank, not empty boxes still to fill. */
+.lab-survivor-scroll td.is-blank { background: transparent; }
+/* Big Board lamps are small bulbs: lit (a pick is in, hidden until kickoff) with a soft warm glow; unlit, a dark socket. */
+.lab-tote .lab-tote-cover .lab-lamp { height: 1rem; width: 1rem; }
+.lab-tote .lab-tote-cover .lab-lamp.is-in { box-shadow: inset 0 0 0 1px rgba(40, 24, 4, .55), 0 0 6px 1px rgba(255, 176, 60, .45); }
+.lab-tote .lab-tote-cover .lab-lamp.is-off { background: rgb(14 14 12); border-color: rgb(4 5 4); box-shadow: inset 0 2px 3px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .07); }
+.lab-tote .lab-tote-cover .lab-lamp.is-survivor.is-in { filter: drop-shadow(0 0 4px rgba(255, 176, 60, .5)); }
+/* Your PICK still owed on the board breathes: a soft gold glow every few seconds. Reduced motion keeps it still. */
+@keyframes owed-breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 176, 46, 0); } 50% { box-shadow: 0 0 0 5px rgba(255, 176, 46, .28); } }
+@media (prefers-reduced-motion: reduce) { .lab-tote-owed, .lab-tote-owed-ring { animation: none; } }
+/* The ticket: a pick that is sent is filled warm gold with a gold edge; right after Submit the gold sweeps in from the left. */
+.trace-gilt .lab-board-cell.is-sent { background: linear-gradient(180deg, rgb(226 192 120), rgb(196 156 82)); border-color: var(--cw-gold); box-shadow: inset 0 1px 0 rgba(255, 244, 214, .5); }
+.trace-gilt .lab-board-cell.is-sent .lab-board-line { color: rgb(30 22 8); text-shadow: none; }
+.trace-gilt .lab-board-cell.is-sent .lab-board-trace { display: none; }
+.trace-gilt .lab-board-cell.is-sent .lab-board-final { border-top-color: rgba(30, 22, 8, .3); color: rgb(30 22 8); }
+.trace-gilt .lab-board-cell.is-sent .lab-board-team { color: rgb(30 22 8); }
+@keyframes gold-fill { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
+.trace-gilt.is-just-sent .lab-board-cell.is-sent { animation: gold-fill 520ms cubic-bezier(.3, .1, .2, 1) both; background: rgb(22 22 19) linear-gradient(180deg, rgb(226 192 120), rgb(196 156 82)) no-repeat left / 100% 100%; }
+@media (prefers-reduced-motion: reduce) { .trace-gilt.is-just-sent .lab-board-cell.is-sent { animation: none; } }
+.lab-board-final.is-covered b { text-decoration-color: rgb(95 211 154); }
