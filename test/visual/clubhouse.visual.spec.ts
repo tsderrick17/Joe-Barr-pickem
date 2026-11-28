@@ -1548,3 +1548,24 @@ test("in bowl season the Bowl Pool's plate tells a player without a seat to clai
   await expect.poll(() => sent.length).toBe(1);
   expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
 });
+
+test.describe("on a touch phone", () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test("the Big Board's columns sit as far from the board's right edge as from its left (no scrollbar gutter on a phone)", async ({ page }) => {
+    await openClubhouse(page, { scenarios: ["live-mixed-locks"] });
+    const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+    await room.getByRole("button", { name: "The Big Board", exact: true }).click({ timeout: 30_000 });
+    const board = page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote").first();
+    await expect(board.locator("tbody tr").first()).toBeVisible();
+    const gaps = await board.evaluate((node) => {
+      const outer = node.getBoundingClientRect(), row = node.querySelector("tbody tr")!, cells = row.children;
+      const first = cells[0].getBoundingClientRect(), last = cells[cells.length - 1].getBoundingClientRect();
+      return { left: Math.round(first.left - outer.left), right: Math.round(outer.right - last.right) };
+    });
+    expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(3);
+    await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+    await page.waitForTimeout(800);
+    await expect(page).toHaveScreenshot("clubhouse-bigboard-touch-phone-390.png", { maxDiffPixels: 60 });
+  });
+});
