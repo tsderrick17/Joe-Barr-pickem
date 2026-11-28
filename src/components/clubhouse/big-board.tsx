@@ -138,27 +138,15 @@ function owedCount(view: BoardView) {
  */
 /**
  * The week as a button: tapping it opens the phone's own week list (a select laid over the words), and choosing one changes the board.
- * With `step`, arrows either side go to the week before and after, so the weeks can be flipped through one at a time.
  */
-export function WeekChoice({ view, onWeek, text, step = false }: { view: BoardView; onWeek: (weekId: string) => void; text: string; step?: boolean }) {
-  const at = view.weeks.findIndex((week) => week.id === view.weekId);
-  const before = at > 0 ? view.weeks[at - 1] : null;
-  const after = at >= 0 && at < view.weeks.length - 1 ? view.weeks[at + 1] : null;
-  const label = (
+export function WeekChoice({ view, onWeek, text }: { view: BoardView; onWeek: (weekId: string) => void; text: string }) {
+  return (
     <label className="lab-tote-week">
       <span>{text} <i aria-hidden="true">▾</i></span>
       <select aria-label="Change week" onChange={(event) => { haptic("tick"); onWeek(event.target.value); }} value={view.weekId ?? ""}>
         {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
       </select>
     </label>
-  );
-  if (!step) return label;
-  return (
-    <div className="lab-week-step">
-      <button aria-label={before ? `Back to ${before.name}` : "No earlier week"} disabled={!before} onClick={() => { if (before) { haptic("tick"); onWeek(before.id); } }} type="button"><i aria-hidden="true" /></button>
-      {label}
-      <button aria-label={after ? `On to ${after.name}` : "No later week"} disabled={!after} onClick={() => { if (after) { haptic("tick"); onWeek(after.id); } }} type="button"><i aria-hidden="true" /></button>
-    </div>
   );
 }
 

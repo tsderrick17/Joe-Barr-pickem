@@ -43,6 +43,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   // The ticket opens on Pick'em, or on Survivor when the Survivor table's Pick button brought the player here.
   const [mode, setMode] = useState<"pickem" | "survivor">(startOn === "survivor" && pickingSurvivor ? "survivor" : "pickem");
   const name = (team: string) => view.names[team] ?? team;
+  const weekText = `${view.week}${view.status ? ` · ${view.status}` : ""}`;   // as the Big Board words it
   const cap = view.maxPicks;
 
   const choose = (team: string, gameId: string) => {
@@ -106,10 +107,11 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   return (
     <div className={`lab-bigboard is-tote trace-gilt lab-window${justSent ? " is-just-sent" : ""}`}>
       <header>
-        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} step text={view.week} view={view} /> : <h3>{view.week}</h3>}
+        {/* Your lamps on the left; the week on the right, the same bubble in the same place as the Big Board’s (owner, 2026-11-27). */}
         <ul aria-label="Your picks" className="lab-lamps">
           {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
         </ul>
+        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} text={weekText} view={view} /> : <span className="lab-ticket-week">{weekText}</span>}
       </header>
       {view.playoff?.you.forfeited || view.playoff?.you.out ? <p className="lab-ticket-raceover">{view.playoff.you.forfeited ? "You forfeited · your score stands" : "Out of the race · your score stands"}</p> : null}
 

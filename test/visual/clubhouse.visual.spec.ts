@@ -1648,3 +1648,18 @@ test("the Survivor table: your row tinted with a gold edge, a loss a thin slash 
   await page.evaluate(() => document.fonts.ready);
   await expect(page).toHaveScreenshot("clubhouse-survivor-table-out-phone-390.png", { maxDiffPixels: 60 });
 });
+
+// On a phone, where the ticket and the board are the same width (a computer's wider ticket keeps the bubble at its own right edge).
+test("the ticket's week bubble sits exactly where the Big Board's does, the same size, with your lamps on the left", async ({ page }) => {
+  await openClubhouse(page, { scenarios: ["upcoming-picked"], at: "/clubhouse#slate" });
+  const deck = page.getByRole("navigation", { name: "Board" });
+  const ticketWeek = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-tote-week");
+  await expect(ticketWeek).toBeVisible({ timeout: 30_000 });
+  const look = (node: Element) => { const box = node.getBoundingClientRect(), text = getComputedStyle(node.querySelector("span")!); return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width), h: Math.round(box.height), font: `${text.fontFamily} ${text.fontSize} ${text.fontWeight} ${text.letterSpacing}` }; };
+  const onTicket = await ticketWeek.evaluate(look);
+  const lamps = await page.getByRole("dialog", { name: "Your ticket" }).getByRole("list", { name: "Your picks" }).boundingBox();
+  expect(lamps!.x).toBeLessThan(onTicket.x);
+  await deck.getByRole("button", { name: "Big Board" }).click();
+  const onBoard = await page.getByRole("dialog", { name: "The Big Board" }).locator(".lab-tote-week").evaluate(look);
+  expect(onTicket).toEqual(onBoard);
+});

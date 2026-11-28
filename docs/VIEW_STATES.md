@@ -166,6 +166,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Clubhouse ticket on a touch phone: no scrollbar gutter, the games as far from the sheet's right edge as from its left (`clubhouse-ticket-touch-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone, touch) |
 | Clubhouse ticket just after Submit: it stays open, the sent picks filled gold with dark text (`clubhouse-ticket-sent-gold-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone) |
 | Clubhouse Survivor table with players out: your row tinted with a gold edge, a loss a thin red slash over its logo in full colour, the weeks after a player is out blank (`clubhouse-survivor-table-out-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone) |
+| Clubhouse ticket header on a phone: your lamps on the left, the week bubble exactly where and as big as the Big Board's, no arrows (`clubhouse-ticket-swap-phone-390.png` and the bubble test) | `test/visual/clubhouse.visual.spec.ts` (phone) |
 
 | Your ticket's line key with a line locked: "Gold line: locked." over "White line: moves until 8 AM on game day.", each label on the line with its words (`clubhouse-ticket-line-key-locked-phone-390`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |
 | Your ticket, a game played abroad: a red pin with its city and country ("📍 London, England") at the right end of its time line, clubhouse only (`clubhouse-ticket-game-abroad-phone-390`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |

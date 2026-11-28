@@ -626,3 +626,7 @@ Owner-picked accents across the clubhouse boards and ticket:
 - Your PICK still owed on the board breathes a soft gold glow every few seconds (still for reduced motion).
 - Ticket: a pick that is sent is filled gold with dark text; right after Submit the gold sweeps in from the left, and the ticket stays open (it no longer jumps to the Big Board).
 - A final score is underlined green on the side that covered and red on the side that did not.
+
+## 2026-11-27 - Ticket: the week bubble where the Big Board's is
+
+The ticket's week is the Big Board's own bubble: the same words, size and place at the top right (a phone test holds it to the pixel), with no arrows either side; your lamps move to the left. On a computer the ticket is wider than the board, so the bubble sits at the ticket's own right edge.
