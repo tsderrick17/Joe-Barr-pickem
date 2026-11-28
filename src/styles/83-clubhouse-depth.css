@@ -1,0 +1,135 @@
+/* Clubhouse depth (owner, 2026-11-28): one light, up and to the left, over everything in the room; card stock with a fine grain; the
+   Big Board as a real framed board; Survivor on felt; the Bowl Pool's linen and gold leaf; a framed
+   chalkboard with its tray; rules engraved in two tones; the ticket's cut edges; the rule book's pressed headings; lit glass; and the
+   room stepping back behind an open sheet. Drawn only here, in the stylesheet: no pictures. The plaques get two screws, no grain. */
+:where(.clubhouse-page) {
+  /* card stock: a fine warm fibre, multiplied into the paper */
+  --depth-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .16 0 0 0 .4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* felt: a short dark nap, laid softly over the cloth */
+  --depth-nap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* the one shadow every sheet stands on: tight where it meets the room, soft and long beyond, thrown a little right by the lamp */
+  --depth-drop: 0 1px 1px rgba(0, 0, 0, .45), 2px 4px 8px -2px rgba(0, 0, 0, .4), 4px 18px 34px -12px rgba(0, 0, 0, .65);
+}
+
+/* ---- 11 · The room steps back: darker and soft behind an open sheet, with a warm pool of lamp light where the sheet rises (stronger by night). */
+.clubhouse-page .cw-sheet::backdrop { -webkit-backdrop-filter: blur(3px) saturate(.85); backdrop-filter: blur(3px) saturate(.85); background: radial-gradient(90% 55% at 50% 100%, var(--depth-pool, rgba(255, 204, 130, .07)), transparent 70%), rgba(6, 10, 8, .6); }
+
+/* ---- 3 · The Big Board as a real board: a frame lit along its top and shaded at its foot, a rivet in each corner, and every panel sunk into
+   it (dark along its top edge, a glint of light along its foot). No split-flap seam: split flaps are the Bowl Pool's alone. */
+.clubhouse-page .lab-tote:not(.lab-survivor-tote, .club-chat) {
+  background:
+    radial-gradient(circle at 8px 8px, rgb(222 216 198) 0, rgb(140 134 118) 1.3px, rgb(40 38 33) 2.6px, transparent 3.1px),
+    radial-gradient(circle at calc(100% - 8px) 8px, rgb(222 216 198) 0, rgb(140 134 118) 1.3px, rgb(40 38 33) 2.6px, transparent 3.1px),
+    radial-gradient(circle at 8px calc(100% - 8px), rgb(222 216 198) 0, rgb(140 134 118) 1.3px, rgb(40 38 33) 2.6px, transparent 3.1px),
+    radial-gradient(circle at calc(100% - 8px) calc(100% - 8px), rgb(222 216 198) 0, rgb(140 134 118) 1.3px, rgb(40 38 33) 2.6px, transparent 3.1px),
+    linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 30%, transparent 85%, rgba(0, 0, 0, .2)),
+    rgb(18 40 30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -2px 0 rgba(0, 0, 0, .4), inset 0 0 0 4px rgb(10 26 18), inset 0 0 0 5px rgba(201, 164, 95, .5), var(--depth-drop);
+}
+.clubhouse-page .lab-tote:not(.lab-survivor-tote, .club-chat) tbody :is(th, td) { box-shadow: inset 0 2px 3px rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .07); }
+.clubhouse-page .lab-tote:not(.lab-survivor-tote, .club-chat) tbody tr.is-you > :first-child { box-shadow: inset 3px 0 0 var(--cw-gold), inset 0 2px 3px rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .07); }
+/* the ticket sheet on the same lamp */
+.clubhouse-page .lab-bigboard.is-tote { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(201, 164, 95, .5), var(--depth-drop); }
+
+/* ---- 4 · Survivor on felt: a soft nap that darkens toward the rail, and the rail itself in wood. The team logos stay as they were (owner,
+   2026-11-28: the poker chips read too big). */
+.clubhouse-page .lab-survivor-tote {
+  background-color: rgb(18 40 30);
+  background-blend-mode: soft-light, normal;
+  background-image: var(--depth-nap), radial-gradient(120% 110% at 50% 40%, rgb(21 46 34), rgb(15 34 25) 85%);
+  box-shadow: inset 0 0 0 3px rgb(59 42 24), inset 0 0 0 4px rgb(30 21 11), inset 0 0 0 5px rgba(201, 164, 95, .5), inset 0 0 30px rgba(0, 0, 0, .35), var(--depth-drop);
+}
+
+/* ---- 5 · The Bowl Pool: a faint linen weave in the navy, gold leaf on its title, and every pennant standing off the card. */
+.clubhouse-page .lab-bigboard.lab-bowl-ticket {
+  background-color: rgb(18 28 50);
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 3px), radial-gradient(120% 80% at 30% 0%, rgb(22 34 60), rgb(15 24 44));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 0 0 1px rgba(179, 139, 77, .6), var(--depth-drop);
+}
+.clubhouse-page .lab-bowl-head > h3 { -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, rgb(255 241 201) 0%, rgb(226 191 120) 45%, rgb(168 128 62) 55%, rgb(230 200 134) 100%); color: transparent; }
+.clubhouse-page .lab-bowl-flag svg { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .5)); }
+/* 7 · its rule, engraved: the gold line with a dark cut under it */
+.clubhouse-page .lab-bowl-ticket .lab-bowl-head { box-shadow: 0 1px 0 rgba(0, 0, 0, .55); }
+
+/* ---- 6 · The chalkboard: the slate set in a real walnut frame, its four rails mitred at the corners (the grain runs along each rail, lit
+   on top and shaded at the foot), a dark lip where frame meets slate, a faint eraser swipe, and the tray along its foot with two sticks
+   of chalk and a felt eraser. */
+.clubhouse-page .club-snapshot.is-chalkboard {
+  --frame: 12px;
+  background:
+    radial-gradient(ellipse at 28% 18%, rgb(58 72 64 / .9), transparent 60%) padding-box,
+    radial-gradient(ellipse at 80% 85%, rgb(52 64 57 / .7), transparent 55%) padding-box,
+    radial-gradient(42% 20% at 62% 38%, rgb(255 255 255 / .045), transparent 70%) padding-box,
+    linear-gradient(rgb(33 43 38), rgb(33 43 38)) padding-box,
+    linear-gradient(90deg, rgb(255 225 185 / .14), transparent var(--frame), transparent calc(100% - var(--frame)), rgb(0 0 0 / .3)) border-box,
+    repeating-linear-gradient(90deg, transparent 0 3px, rgb(40 22 8 / .22) 3px 4px, transparent 4px 9px, rgb(255 220 170 / .06) 9px 10px) border-box,
+    linear-gradient(180deg, rgb(112 72 40), rgb(132 88 50) 40%, rgb(104 66 36)) border-box;
+  border: var(--frame) solid transparent;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgb(20 12 6 / .8), inset 0 3px 10px rgb(0 0 0 / .45), var(--depth-drop);
+  height: min(33rem, calc(100dvh - 10rem));
+  padding: 4px 9px 8px;
+  position: relative;
+}
+.clubhouse-page .club-snapshot.is-chalkboard::after {
+  background:
+    linear-gradient(180deg, rgb(255 228 190 / .2), transparent var(--frame), transparent calc(100% - var(--frame)), rgb(0 0 0 / .34)),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgb(40 22 8 / .2) 2px 3px, transparent 3px 5px, rgb(255 220 170 / .05) 5px 6px),
+    linear-gradient(90deg, rgb(120 78 44), rgb(140 94 54) 50%, rgb(112 72 40));
+  border-radius: 5px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--frame)) var(--frame), var(--frame) var(--frame), 0 0, 0 100%, var(--frame) calc(100% - var(--frame)), calc(100% - var(--frame)) calc(100% - var(--frame)), 100% 100%, 0 100%);
+  content: ""; inset: calc(-1 * var(--frame)); pointer-events: none; position: absolute;
+}
+.club-chalk-tray {
+  background: linear-gradient(180deg, rgb(158 108 64) 0, rgb(126 82 46) 40%, rgb(84 52 26) 100%);
+  border-radius: 2px 2px 4px 4px;
+  box-shadow: inset 0 1px 0 rgb(255 228 190 / .35), inset 0 -1px 0 rgb(0 0 0 / .4), 0 6px 10px -2px rgb(0 0 0 / .6);
+  height: 13px; margin: -3px 0 0 50%; position: relative; transform: translateX(-50%); width: min(736px, calc(100% + 12px));
+}
+.club-chalk-tray i { bottom: 5px; position: absolute; }
+.club-chalk-tray .is-stick { background: linear-gradient(180deg, rgb(255 255 252), rgb(232 228 216) 60%, rgb(196 190 176)); border-radius: 2px; box-shadow: 0 1px 1px rgb(0 0 0 / .45); height: 5px; left: 16%; width: 34px; }
+.club-chalk-tray .is-stick.is-short { left: calc(16% + 42px); transform: rotate(-4deg); width: 20px; }
+.club-chalk-tray .is-eraser { background: linear-gradient(180deg, rgb(150 104 62) 0 55%, rgb(70 70 74) 55%); border-radius: 2px; box-shadow: 0 1px 2px rgb(0 0 0 / .5); height: 9px; right: 14%; width: 38px; }
+
+/* ---- 2 · Card stock with a fine grain: the ticket, Notifications and the rule book (never the brass plaques). */
+.clubhouse-page .club-notify-card { background-blend-mode: multiply, normal; background-image: var(--depth-grain), linear-gradient(180deg, var(--ticket-card), var(--ticket-card-2)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), var(--depth-drop); }
+.clubhouse-page .lab-rules { background-blend-mode: multiply; background-color: var(--club-paper); background-image: var(--depth-grain); box-shadow: inset 0 0 0 4px var(--club-paper), inset 0 0 0 5px var(--club-gold), var(--depth-drop); }
+
+/* ---- 8 · The ticket: grain in the card, the edge of each round cut shaded where the card was punched (a half circle at the card's edge),
+   and a soft crease beside the perforation. A phone's ticket is cut only along its top. */
+.clubhouse-page .slip { background-blend-mode: multiply, normal; background-image: var(--depth-grain), linear-gradient(180deg, var(--slip-paper), var(--slip-paper-2)); }
+.clubhouse-page .slip::after {
+  background:
+    radial-gradient(circle 11px at calc(100% - var(--slip-stub)) 0, transparent 7px, rgba(60, 40, 15, .3) 7.5px, rgba(60, 40, 15, 0) 10.5px),
+    var(--depth-low-cut, radial-gradient(circle 11px at calc(100% - var(--slip-stub)) 100%, transparent 7px, rgba(60, 40, 15, .3) 7.5px, rgba(60, 40, 15, 0) 10.5px)),
+    linear-gradient(90deg, transparent, rgba(60, 40, 15, .07) 60%, rgba(255, 255, 255, .25)) calc(100% - var(--slip-stub) - 10px) 0 / 10px 100% no-repeat;
+  border-radius: inherit; content: ""; inset: 0; pointer-events: none; position: absolute; z-index: 1;
+}
+.clubhouse-page .club-ticket-dock .slip { --depth-low-cut: linear-gradient(transparent, transparent); }
+@media (min-width: 900px) { .clubhouse-page .club-ticket-dock .slip { --depth-low-cut: initial; } }
+/* 7 · the ticket's and Notifications' rules, engraved: the hairline with a light line under it */
+.clubhouse-page :is(.slip-head, .club-notify-head) { box-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
+
+/* ---- 9 · The rule book: headings pressed into the paper (a shadow along the top of each letter, light along its foot), no drop capitals.
+   7 · its rules engraved the same way. */
+.clubhouse-page :is(.lab-rules header h4, .lab-rules header p, .lab-rules-part h5, .lab-rules-article h6) { text-shadow: 0 1px 0 var(--depth-press-light), 0 -1px 0 var(--depth-press-dark); }
+.clubhouse-page .lab-rules header { box-shadow: 0 1px 0 var(--depth-press-light); }
+.clubhouse-page .lab-rules-article { box-shadow: inset 0 1px 0 var(--depth-press-light); }
+
+/* ---- 10 · Lit glass: the LIVE badge is a little lit sign, bright along its top and glowing faintly. */
+.clubhouse-page .lab-board-status.is-live { background: linear-gradient(180deg, rgb(222 78 66), rgb(190 40 34) 55%, rgb(160 30 24)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 8px rgba(224, 80, 60, .4); }
+
+/* ---- The plaques: two brass screws holding each faceplate on, either side of the year, slots set at different turns. */
+.clubhouse-page .lab-plaque { position: relative; }
+.clubhouse-page .lab-plaque::before {
+  --slot: 45deg; left: 14px;
+  background: linear-gradient(var(--slot), transparent 40%, rgba(40, 28, 6, .8) 40% 60%, transparent 60%), radial-gradient(circle at 35% 30%, rgb(255 244 214), rgb(196 160 92) 55%, rgb(120 88 36));
+  border-radius: 50%; box-shadow: 0 0 0 .5px rgba(60, 40, 10, .6), 0 1px 0 rgba(255, 250, 235, .45);
+  content: ""; height: 7px; pointer-events: none; position: absolute; top: 25px; width: 7px; z-index: 1;
+}
+.clubhouse-page .lab-plaque::after {
+  --slot: -20deg; right: 14px;
+  background: linear-gradient(var(--slot), transparent 40%, rgba(40, 28, 6, .8) 40% 60%, transparent 60%), radial-gradient(circle at 35% 30%, rgb(255 244 214), rgb(196 160 92) 55%, rgb(120 88 36));
+  border-radius: 50%; box-shadow: 0 0 0 .5px rgba(60, 40, 10, .6), 0 1px 0 rgba(255, 250, 235, .45);
+  content: ""; height: 7px; pointer-events: none; position: absolute; top: 25px; width: 7px; z-index: 1;
+}
