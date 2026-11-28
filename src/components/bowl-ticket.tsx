@@ -98,18 +98,18 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
 
   return (
     <div className="lab-bigboard lab-window lab-bowl-ticket trace-gilt">
+      {/* One compact block: the title over a single row of figures (to pick, picked, games left, all alike), the season dial beside both. */}
       <header className="lab-bowl-head">
-        <div className="lab-bowl-title">
-          <h3>Bowl Pool</h3>
+        <h3>Bowl Pool</h3>
+        <dl className="lab-bowl-counts">
           {/* Your picks at a glance: how many are still to make (gold while any are) and how many are in. */}
-          {view.owed ? (
-            <dl className="lab-bowl-counts">
-              <div className="is-owed"><dt>To pick</dt><dd>{view.owed}</dd></div>
-              <div><dt>Picked</dt><dd>{view.picked ?? 0}</dd></div>
-            </dl>
-          ) : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
-        </div>
-        <BowlGauge played={view.decided} total={view.total} />
+          {view.owed ? <>
+            <div className="is-owed"><dt>To pick</dt><dd>{view.owed}</dd></div>
+            <div><dt>Picked</dt><dd>{view.picked ?? 0}</dd></div>
+          </> : <div className="is-clear"><dt>Picks</dt><dd>{view.decided === view.total && view.total ? "All decided" : "All in"}</dd></div>}
+          {view.total > view.decided ? <div className="is-left"><dt>{view.total - view.decided === 1 ? "Game left" : "Games left"}</dt><dd>{view.total - view.decided}</dd></div> : null}
+        </dl>
+        <BowlGauge bare played={view.decided} total={view.total} />
       </header>
 
       <div aria-label="Bowl Pool view" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
@@ -212,10 +212,18 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
   useLayoutEffect(() => {
     const node = scroller.current;
     if (!node || sheet.todayIndex < 1) return;
-    const column = node.querySelectorAll<HTMLElement>("thead th")[sheet.todayIndex + 2];
-    const held = node.querySelectorAll<HTMLElement>("thead th")[2];
+    const column = node.querySelectorAll<HTMLElement>("thead th.lab-bowl-sheet-game")[sheet.todayIndex];
+    const held = node.querySelector<HTMLElement>("thead th.lab-bowl-sheet-game");
     if (column && held) node.scrollLeft = column.offsetLeft - held.offsetLeft;
   }, [sheet.todayIndex]);
+  // The bowls clumped by day, in order: each day's label and how many bowls it has, and which columns start a day.
+  const days = sheet.games.reduce<Array<{ label: string; start: number; count: number }>>((list, game, index) => {
+    const last = list.at(-1);
+    if (last && last.label === game.day) last.count += 1;
+    else list.push({ label: game.day, start: index, count: 1 });
+    return list;
+  }, []);
+  const dayStart = new Set(days.map((day) => day.start));
   const cell = (value: BowlSheetCell, player: string, bowl: string) => {
     if (value.kind === "hidden") return <Lamp label={`${player}, ${bowl}: pick in, hidden until kickoff`} state="in" />;
     if (value.kind === "pick") return <b aria-label={`${player}, ${bowl}: ${value.team}${value.result === "W" ? ", won" : value.result === "L" ? ", lost" : ""}`} className={`lab-bowl-sheet-pick is-${value.result ? value.result.toLowerCase() : "open"}`}>{value.team}</b>;
@@ -229,10 +237,18 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
         <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem)` }}>
           <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}</colgroup>
           <thead>
+            {/* Three heading rows: each day over its bowls (as the classic Bowl Card clumps them), the bowl names (centred on one line with
+                each other however many lines each takes), then each bowl's schools and spreads. */}
             <tr>
-              <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
-              <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><span className="lab-bowl-sheet-matchup">{game.matchup.every((side) => side.team === "TBD") ? <span className="is-tbd">Teams TBD</span> : game.matchup.map((side, index) => <span key={index}><b>{side.team}</b> <i>{side.line}</i></span>)}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              <th className="lab-bowl-sheet-rec" rowSpan={3} scope="col">Wins</th>
+              <th className="lab-bowl-sheet-name" rowSpan={3} scope="col">Player</th>
+              {days.map((day) => <th className="lab-bowl-sheet-day is-day-start" colSpan={day.count} key={day.start} scope="colgroup"><span>{day.label}</span></th>)}
+            </tr>
+            <tr>
+              {sheet.games.map((game, index) => <th className={`lab-bowl-sheet-game${dayStart.has(index) ? " is-day-start" : ""}`} key={game.id} scope="col">{game.name}</th>)}
+            </tr>
+            <tr>
+              {sheet.games.map((game, index) => <th className={`lab-bowl-sheet-lines${dayStart.has(index) ? " is-day-start" : ""}`} key={game.id}><span className="lab-bowl-sheet-matchup">{game.matchup.every((side) => side.team === "TBD") ? <span className="is-tbd">Teams TBD</span> : game.matchup.map((side, index) => <span key={index}><b>{side.team}</b> <i>{side.line}</i></span>)}</span></th>)}
             </tr>
           </thead>
           <tbody>
@@ -240,7 +256,7 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
                 <td className="lab-bowl-sheet-rec"><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled value={row.wins} /></td>
                 <th className="lab-bowl-sheet-name" scope="row"><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
-                {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
+                {row.cells.map((value, index) => <td className={dayStart.has(index) ? "is-day-start" : undefined} key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
               </tr>
             ))}
           </tbody>
@@ -338,7 +354,7 @@ const PHASES = [0, 0.25, 0.5, 0.75, 1];
  * moon's phases (new, crescent, half, gibbous, full) in place of fractions (no stars: up close they read as specks); each moon lights as the season passes it, the needle points
  * at the share decided, and the bowls left are read out beneath.
  */
-export function BowlGauge({ played, total }: { played: number; total: number }) {
+export function BowlGauge({ played, total, bare = false }: { played: number; total: number; /** no games-left caption (the ticket's heading counts them) */ bare?: boolean }) {
   const id = useId().replace(/:/g, "");
   const share = total ? Math.min(1, played / total) : 0;
   const point = (fraction: number, radius: number) => {
@@ -352,7 +368,7 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
   const along = (radius: number, side: number) => ({ x: 60 + radius * Math.cos(angle) - side * Math.sin(angle), y: 58 - radius * Math.sin(angle) - side * Math.cos(angle) });
   const needle = [along(30, 0), along(0, 1.7), along(-7, 1.1), along(-7, -1.1), along(0, -1.7)].map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   return (
-    <figure aria-label={left ? `${left} of ${total} games left` : `All ${total} games played`} className="lab-bowl-gauge" role="img">
+    <figure aria-label={left ? `${left} of ${total} games left` : `All ${total} games played`} className={`lab-bowl-gauge${bare ? " is-bare" : ""}`} role="img">
       <svg aria-hidden="true" focusable="false" viewBox="0 0 120 66">
         <defs>
           <linearGradient id={`${id}-fill`} x1="0" x2="1" y1="0" y2="0">
@@ -389,7 +405,7 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
         <circle className="lab-bowl-gauge-hub" cx="60" cy="58" fill={`url(#${id}-hub)`} r="3.6" />
         <circle className="lab-bowl-gauge-pin" cx="60" cy="58" r="1.2" />
       </svg>
-      <figcaption>{left ? <><BowlScoreTile label={`${left} left`} large settled value={left} /> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>
+      {bare ? null : <figcaption>{left ? <><BowlScoreTile label={`${left} left`} large settled value={left} /> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>}
     </figure>
   );
 }
