@@ -102,24 +102,27 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
       </header>
       {view.playoff?.you.forfeited || view.playoff?.you.out ? <p className="lab-ticket-raceover">{view.playoff.you.forfeited ? "You forfeited · your score stands" : "Out of the race · your score stands"}</p> : null}
 
-      <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
-        <button aria-pressed={!actionOnly} onClick={() => { haptic("tick"); chooseAction(false); }} type="button">All games</button>
-        <button aria-pressed={actionOnly} onClick={() => { haptic("tick"); chooseAction(true); }} type="button">Pool action</button>
-      </div>
-
-      {pickingSurvivor ? (
-        <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => { haptic("tick"); setMode("pickem"); }} type="button">Pick’em<small>pick {cap} vs. the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => { haptic("tick"); setMode("survivor"); }} type="button">Survivor<small>pick 1 · {survivor.left} teams left</small></button>
+      {/* The two switches share one row, each as wide as the game column under it: All games / Pool action over the left one, Pick'em /
+          Survivor (while Survivor is still yours to pick) over the right one. */}
+      <div className="lab-ticket-switches">
+        <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
+          <button aria-pressed={!actionOnly} onClick={() => { haptic("tick"); chooseAction(false); }} type="button">All games</button>
+          <button aria-pressed={actionOnly} onClick={() => { haptic("tick"); chooseAction(true); }} type="button">Pool action</button>
         </div>
-      ) : null}
+        {pickingSurvivor ? (
+          <div aria-label="What to pick" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
+            <button aria-label={`Pick’em: pick ${cap} vs. the spread`} aria-pressed={mode === "pickem"} onClick={() => { haptic("tick"); setMode("pickem"); }} title={`Pick ${cap} vs. the spread`} type="button">Pick’em</button>
+            <button aria-label={`Survivor: pick 1, ${survivor.left} teams left`} aria-pressed={mode === "survivor"} onClick={() => { haptic("tick"); setMode("survivor"); }} title={`Pick 1 · ${survivor.left} teams left`} type="button">Survivor</button>
+          </div>
+        ) : null}
+      </div>
       {survivor.out && !view.champion ? <p className="lab-window-out">You’re out of Survivor{survivor.outWeek ? ` (lost in week ${survivor.outWeek})` : ""}. The pool goes on: follow it at the Survivor table.</p> : null}
 
       {/* The games, the ticket and its send button scroll as one, under the heading that stands still. */}
       <div className="lab-window-scroll">
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
         {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
-        {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked. <b>White line:</b> can move until 8 AM on game day.</> : <>Lines can move until 8 AM on game day, then lock in gold.</>}</p> : null}
+        {mode === "pickem" && anyMoving ? <p className={`lab-line-key${anyLocked ? " is-keyed" : ""}`}>{anyLocked ? <><span><b className="is-gold">Gold line:</b>{" "}locked.</span><span><b>White line:</b>{" "}moves until 8 AM on game day.</span></> : <>Lines can move until 8 AM on game day, then lock in gold.</>}</p> : null}
         <ol>
           {shownGames.map((game) => {
             const locked = game.kickedOff;
