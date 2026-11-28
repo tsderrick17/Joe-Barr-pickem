@@ -220,3 +220,11 @@ test("the Survivor winner is called out for the week after being crowned, then t
   assert.equal(later.championId, null);
   assert.equal(later.showSurvivor, false);
 });
+
+test("a game abroad carries its place for the ticket's pin; a game at home has none", () => {
+  const reading = reads();
+  reading.board = { ...reading.board, games: reading.board.games.map((game, index) => (index === 1 ? { ...game, venueCity: "London", venueCountry: "England" } : game)) };
+  const view = realBoardView(reading);
+  assert.equal(view.games[1].venue, "London, England");
+  assert.equal(view.games[0].venue, null);
+});

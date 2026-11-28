@@ -157,7 +157,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
             };
             return (
               <li key={game.id}>
-                <span className="lab-board-time">{game.kickoff.toUpperCase()}{game.kickedOff ? " · KICKED OFF" : ""}</span>
+                <span className="lab-board-time">{game.kickoff.toUpperCase()}{game.kickedOff ? " · KICKED OFF" : ""}{game.venue ? <span className="lab-board-venue"><span aria-hidden="true">📍</span> {game.venue}</span> : null}</span>
                 {cell(game.away)}
                 <span aria-hidden="true" className="lab-board-at">@</span>
                 {cell(game.home)}

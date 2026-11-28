@@ -577,3 +577,7 @@ The All games / Pool action switch above it is exactly as wide as the game box u
 ## 2026-11-27 - Ticket switches share a row; the Constitution explains early line locks
 
 On Your ticket, All games / Pool action and Pick'em / Survivor share one row, each exactly as wide as the column of game boxes under it (one team's box on a phone, one game on a desktop). Pick'em / Survivor is now a pill like the other; its "pick 2 vs. the spread" and "teams left" lines move to the buttons' hover text and spoken names. The Constitution's Article III gains a clause: a game played overseas that kicks off Sunday morning has its line lock at 6:00 PM Eastern on Saturday (as getLineLock has always done).
+
+## 2026-11-27 - Games abroad show where they are played (clubhouse ticket)
+
+On the clubhouse ticket a game played outside the United States carries a red pin with its city and country at the right end of its date and time ("📍 London, England"). The place comes from the schedule feed's stadium name (nflverse `stadium`; its stadium codes are sometimes the home team's, so they are not used), matched against a short list of overseas stadiums, and is saved to the existing games.venue_city / venue_country after each schedule import and reconciliation, so it follows the NFL if a game moves. It is display only: early line locks still come from the kickoff time (a Sunday-morning game), so an evening game abroad (Mexico City, Rio, Melbourne) gets a pin but keeps the normal 8 AM lock. No database change: the columns already existed.

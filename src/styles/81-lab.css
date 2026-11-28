@@ -145,6 +145,8 @@
 .lab-bigboard ol { display: grid; list-style: none; margin: 0; padding: 0; }
 .lab-bigboard li { align-items: center; border-bottom: 1px solid rgba(255, 255, 255, .08); display: grid; gap: 6px 8px; grid-template-columns: 1fr 1fr; padding: 8px 0 10px; }
 .lab-board-time { color: rgba(240, 180, 41, .7); font-size: .66rem; grid-column: 1 / -1; letter-spacing: .1em; }
+/* a game abroad: a red pin and its city and country at the right end of the time line */
+.lab-board-venue { color: rgba(246, 242, 232, .78); float: right; letter-spacing: .04em; margin-left: 8px; white-space: nowrap; }
 .lab-board-at { display: none; }
 .lab-board-cell { align-content: start; align-items: center; align-self: stretch; background: rgb(22 22 19); border: 1px solid rgba(255, 255, 255, .06); border-radius: 2px; color: inherit; cursor: pointer; display: grid; font: inherit; gap: 2px 6px; grid-template-columns: 1fr auto; grid-template-rows: minmax(calc(3.1rem - 14px), auto); min-height: 3.1rem; padding: 6px 9px; position: relative; text-align: left; }
 .lab-board-cell:disabled { cursor: default; }

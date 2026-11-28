@@ -60,3 +60,21 @@ test("a feed where teams play different numbers of games is not a complete seaso
   unbalanced.push("2026_18_EXTRA,2026,REG,18,2027-01-10,13:00,ARI,BAL");
   assert.throws(() => parseNflverseRegularSeason(unbalanced.join("\n"), 2026), /does not describe a complete season/);
 });
+
+test("a game abroad carries its city and country from the feed's stadium; a game at home and a feed without stadiums carry none", async () => {
+  const { overseasVenue } = await import("../src/lib/international-venues.js");
+  const rows = completeSchedule().split("\n");
+  const withStadium = [rows[0] + ",stadium", ...rows.slice(1).map((row, index) => `${row},${index === 0 ? "Tottenham Hotspur Stadium" : index === 1 ? "Estadio Banorte" : "Lambeau Field"}`)];
+  const games = parseNflverseRegularSeason(withStadium.join("\n"), 2026);
+  assert.deepEqual(games[0].venue, { city: "London", country: "England" });
+  assert.deepEqual(games[1].venue, { city: "Mexico City", country: "Mexico" });
+  assert.equal(games[2].venue, null);
+  assert.ok(parseNflverseRegularSeason(completeSchedule(), 2026).every((game) => game.venue === null));
+  // Every overseas stadium of the 2024-2026 schedules, by the name the feed gives it.
+  for (const [stadium, city, country] of [
+    ["Wembley Stadium", "London", "England"], ["Allianz Arena", "Munich", "Germany"], ["FC Bayern Munich Stadium", "Munich", "Germany"],
+    ["Arena Corinthians", "São Paulo", "Brazil"], ["Maracana Stadium", "Rio de Janeiro", "Brazil"], ["Melbourne Cricket Ground", "Melbourne", "Australia"],
+    ["Stade de France", "Paris", "France"], ["Bernabeu", "Madrid", "Spain"], ["Deutsche Bank Park", "Frankfurt", "Germany"], ["Croke Park", "Dublin", "Ireland"],
+  ]) assert.deepEqual(overseasVenue(stadium), { city, country }, stadium);
+  for (const stadium of ["SoFi Stadium", "Mercedes-Benz Superdome", "", null]) assert.equal(overseasVenue(stadium), null);
+});
