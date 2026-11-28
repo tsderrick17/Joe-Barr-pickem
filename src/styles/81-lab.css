@@ -497,7 +497,7 @@
 .clubhouse-page .cw-sheet-body > .lab-bigboard:not(.lab-bowl-ticket) > .lab-ticket-switch.lab-ticket-action { width: calc(50% - 11px); }   /* the games there sit inside a 14px scrollbar gutter */
 .lab-ticket-switch.lab-ticket-action button { min-height: 32px; }
 .lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button { border: 0; border-radius: 0; font-size: .66rem; padding: 2px 4px; white-space: nowrap; }
-.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button + button { border-left: 1px solid rgba(201, 164, 95, .6); }
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button + button { box-shadow: inset 1px 0 0 rgba(201, 164, 95, .6); }   /* the divider drawn inside, so the two halves stay the same width whatever the switch's width */
 .lab-room-leader { align-items: center; background: rgb(40 32 12); border-bottom: 1px solid rgba(240, 180, 41, .45); color: rgb(255 214 120); display: grid; font-size: 21px; gap: 10px; grid-template-columns: 40px 1fr auto; height: 26px; margin: 3px 8px 0; padding: 0 10px; }
 .lab-room-leader i { color: rgb(240 180 41); font-size: 13px; font-style: normal; letter-spacing: .08em; }
 .lab-room-leader b { color: rgb(255 176 46); text-shadow: 0 0 2px rgba(255, 150, 30, .55), 0 0 6px rgba(255, 140, 30, .18); }
