@@ -13,7 +13,7 @@ type Props = {
   animate?: boolean;
   idleSpin?: boolean;
   unavailable?: boolean;
-  size?: "wire" | "summary" | "ticket" | "slate" | "table";
+  size?: "wire" | "summary" | "ticket" | "slate";
   tooltip?: string;
   /** The randomness of a toss (defaults to TOSS_DEFAULTS). */
   tossRange?: TossRange;

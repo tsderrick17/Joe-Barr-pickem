@@ -1,5 +1,5 @@
 /* Clubhouse depth (owner, 2026-11-28): one light, up and to the left, over everything in the room; card stock with a fine grain; the
-   Big Board as a real framed board; Survivor on felt with the pool's own poker chips; the Bowl Pool's linen and gold leaf; a framed
+   Big Board as a real framed board; Survivor on felt; the Bowl Pool's linen and gold leaf; a framed
    chalkboard with its tray; rules engraved in two tones; the ticket's cut edges; the rule book's pressed headings; lit glass; and the
    room stepping back behind an open sheet. Drawn only here, in the stylesheet: no pictures. The plaques get two screws, no grain. */
 :where(.clubhouse-page) {
@@ -31,16 +31,14 @@
 /* the ticket sheet on the same lamp */
 .clubhouse-page .lab-bigboard.is-tote { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(201, 164, 95, .5), var(--depth-drop); }
 
-/* ---- 4 · Survivor on felt: a soft nap that darkens toward the rail, the rail itself in wood, and the pool's own poker chips, each team's mark
-   filling the chip's face (as large as the logo it replaces). */
+/* ---- 4 · Survivor on felt: a soft nap that darkens toward the rail, and the rail itself in wood. The team logos stay as they were (owner,
+   2026-11-28: the poker chips read too big). */
 .clubhouse-page .lab-survivor-tote {
   background-color: rgb(18 40 30);
   background-blend-mode: soft-light, normal;
   background-image: var(--depth-nap), radial-gradient(120% 110% at 50% 40%, rgb(21 46 34), rgb(15 34 25) 85%);
   box-shadow: inset 0 0 0 3px rgb(59 42 24), inset 0 0 0 4px rgb(30 21 11), inset 0 0 0 5px rgba(201, 164, 95, .5), inset 0 0 30px rgba(0, 0, 0, .35), var(--depth-drop);
 }
-.lab-tote-logo.lab-survivor-chip { height: 2.25rem; width: 2.25rem; }
-.lab-survivor-chip .survivor-poker-chip-wrap { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .55)); }
 
 /* ---- 5 · The Bowl Pool: a faint linen weave in the navy, gold leaf on its title, and every pennant standing off the card. */
 .clubhouse-page .lab-bigboard.lab-bowl-ticket {
