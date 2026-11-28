@@ -55,6 +55,9 @@ export default function PlayerManagementPage() {
   const quiet = useMemo(() => players.filter((player) => player.active && player.visitDays === 0), [players]);
   const shown = useMemo(() => sort === "name" ? players : [...players].sort((a, b) => (b.lastActiveAt ? Date.parse(b.lastActiveAt) : -1) - (a.lastActiveAt ? Date.parse(a.lastActiveAt) : -1)), [players, sort]);
 
+  const [clubhouseOpen, setClubhouseOpen] = useState(false);
+  const [launchArmed, setLaunchArmed] = useState(false);
+
   const loadPlayers = useCallback(async () => {
     setErrorMessage("");
     setIsLoading(true);
@@ -69,6 +72,7 @@ export default function PlayerManagementPage() {
       }
 
       setPlayers(data.players ?? []);
+      setClubhouseOpen(data.clubhouseOpen === true);
       setLoadedAt(Date.now());
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) {
@@ -87,6 +91,28 @@ export default function PlayerManagementPage() {
   useEffect(() => {
     window.queueMicrotask(() => void loadPlayers());
   }, [loadPlayers]);
+
+  /** The launch switch: open the clubhouse to every player, or close it back to the Commissioner and the beta players. Two taps. */
+  async function setClubhouseForAll(open: boolean) {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setLaunchArmed(false);
+    try {
+      const response = await fetchWithSession("/api/admin/players", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clubhouseOpen: open }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { setErrorMessage(data.error ?? "The clubhouse setting could not be saved."); return; }
+      setClubhouseOpen(data.clubhouseOpen === true);
+      setSuccessMessage(open ? "The clubhouse is open to every player. Each player finds the light switch in the header." : "The clubhouse is closed again: only you and the players you let in have it.");
+    } catch (reason) {
+      if (reason instanceof SessionUnavailableError) { setErrorMessage("Please sign in before changing the clubhouse setting."); return; }
+      reportNetworkError(reason instanceof Error ? reason : new Error("Clubhouse launch request failed."), "/api/admin/players", "PATCH");
+      setErrorMessage("The clubhouse setting could not be saved. Check your connection and try again.");
+    }
+  }
 
   /** The clubhouse beta: let a player into the clubhouse (the light switch and /clubhouse) or take them out. */
   async function setClubhouse(player: Player, on: boolean) {
@@ -185,6 +211,15 @@ export default function PlayerManagementPage() {
       <div className="mx-auto max-w-5xl">
         <div className="players-layout">
           <section className="players-add">
+            <div aria-label="Clubhouse for everyone" className="mb-6 desk-panel p-3" role="group">
+              <p className="text-sm font-bold tracking-wide">CLUBHOUSE FOR EVERYONE · {clubhouseOpen ? "ON" : "OFF"}</p>
+              <p className="mt-1 text-sm leading-5 text-(color:--themed-text-29)">{clubhouseOpen ? "Every player has the light switch in the header and can use the clubhouse." : "Only you and the players you let in (Clubhouse On on their card) have it. Turn this on to launch it for everyone."}</p>
+              <button className="desk-button mt-2" onClick={() => { if (launchArmed) void setClubhouseForAll(!clubhouseOpen); else setLaunchArmed(true); }} type="button">
+                {launchArmed ? (clubhouseOpen ? "Tap again to close it to everyone" : "Tap again to open it to everyone") : clubhouseOpen ? "Close to everyone" : "Open to everyone"}
+              </button>
+              {launchArmed ? <button className="desk-button mt-2 ml-2" onClick={() => setLaunchArmed(false)} type="button">Cancel</button> : null}
+            </div>
+
             <h2 className="font-serif text-3xl font-bold">
               Add a Player
             </h2>

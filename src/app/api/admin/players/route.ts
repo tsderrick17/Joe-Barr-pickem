@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { commissionerAccess } from "@/lib/require-commissioner";
 import { accessDenied } from "@/lib/access-response";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { clubhouseOpenToAll } from "@/lib/pool-settings";
 import { derivePlayerAuthPassword, PLAYER_AUTH_CREDENTIAL_VERSION, playerAuthEmail } from "@/lib/player-auth-credential";
 import { playerAuthPepper } from "@/lib/player-auth-config";
 import { loadForfeitedPlayerIds } from "@/lib/playoff-eligibility";
@@ -46,7 +47,9 @@ export async function GET(request: NextRequest) {
   const visitDays = new Map<string, number>();
   for (const row of visits.data ?? []) visitDays.set(row.player_id, (visitDays.get(row.player_id) ?? 0) + 1);
 
+  const clubhouseOpen = await clubhouseOpenToAll();
   return NextResponse.json({
+    clubhouseOpen,
     players: (players ?? []).map((player) => ({
       id: player.id,
       firstName: player.first_name,
@@ -221,6 +224,8 @@ export async function PATCH(request: NextRequest) {
   const commissioner = commissionerResult.player;
 
   const input = await readJsonObject(request);
+  // The launch switch: open the clubhouse to every player, or close it back to the Commissioner and the beta players.
+  if (typeof input?.clubhouseOpen === "boolean" && input.playerId === undefined) return setClubhouseOpen(commissioner.id, input.clubhouseOpen);
   const playerId = typeof input?.playerId === "string" ? input.playerId : "";
   const clubhouseAccess = input?.clubhouseAccess;
   if (!playerId || typeof clubhouseAccess !== "boolean") {
@@ -247,4 +252,24 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "The clubhouse setting was not saved because the change could not be recorded." }, { status: 500 });
   }
   return NextResponse.json({ playerId, clubhouseAccess });
+}
+
+/** Opens the clubhouse to every player or closes it again; recorded in the audit log, and put back if it cannot be recorded. */
+async function setClubhouseOpen(commissionerId: string, open: boolean) {
+  const before = await clubhouseOpenToAll();
+  if (before === open) return NextResponse.json({ clubhouseOpen: open });
+  const save = (value: boolean) => supabaseAdmin.from("pool_settings").upsert({ id: true, clubhouse_open: value, updated_at: new Date().toISOString() });
+  const { error: saveError } = await save(open);
+  if (saveError) return NextResponse.json({ error: "The clubhouse setting could not be saved." }, { status: 500 });
+  const { error: auditError } = await supabaseAdmin.from("audit_logs").insert({
+    actor_player_id: commissionerId,
+    action: open ? "clubhouse_opened_to_all" : "clubhouse_closed_to_all",
+    entity_type: "pool_setting",
+    details: { setting: "clubhouse_open", from: before, to: open },
+  });
+  if (auditError) {
+    await save(before);
+    return NextResponse.json({ error: "The clubhouse setting was not saved because the change could not be recorded." }, { status: 500 });
+  }
+  return NextResponse.json({ clubhouseOpen: open });
 }
