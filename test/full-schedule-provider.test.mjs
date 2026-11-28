@@ -78,3 +78,11 @@ test("a game abroad carries its city and country from the feed's stadium; a game
   ]) assert.deepEqual(overseasVenue(stadium), { city, country }, stadium);
   for (const stadium of ["SoFi Stadium", "Mercedes-Benz Superdome", "", null]) assert.equal(overseasVenue(stadium), null);
 });
+
+test("a neutral-site game carries its ESPN id so the season's load can ask ESPN where it is played", () => {
+  const rows = completeSchedule().split("\n");
+  const feed = [rows[0] + ",location,espn", ...rows.slice(1).map((row, index) => `${row},${index === 0 ? "Neutral" : "Home"},40177${index}`)];
+  const games = parseNflverseRegularSeason(feed.join("\n"), 2026);
+  assert.deepEqual([games[0].neutral, games[0].espnId], [true, "401770"]);
+  assert.deepEqual([games[1].neutral, games[1].espnId], [false, "401771"]);
+});

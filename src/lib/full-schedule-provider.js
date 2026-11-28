@@ -111,8 +111,11 @@ export function parseNflverseRegularSeason(csv, seasonYear, { allowWeekGameweekD
       lineLockAt: lineLock.lineLockAt,
       isInternational: lineLock.isInternational,
       gameweekKey: getWeekStartKey(kickoff),
-      // Where a game abroad is played, from the feed's stadium (an older feed without the column simply has none).
+      // Where a game abroad is played, from the feed's stadium (an older feed without the column simply has none); a neutral-site
+      // game is also looked up on ESPN by its ESPN id (see game-venues.ts), which places a stadium not on the list.
       venue: overseasVenue(value(row, "stadium")),
+      neutral: value(row, "location") === "Neutral",
+      espnId: value(row, "espn") || null,
     }];
   });
 

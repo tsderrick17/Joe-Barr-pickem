@@ -133,7 +133,7 @@ export async function bootstrapFullSchedule({ automatic = false, now = new Date(
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected full-schedule import did not complete.");
     const venues = await syncGameVenues(prepared.season.id, prepared.games);
-    const result = { outcome: "loaded" as const, seasonYear: prepared.seasonYear, ...data[0], venuesUpdated: venues.updated };
+    const result = { outcome: "loaded" as const, seasonYear: prepared.seasonYear, ...data[0], venuesUpdated: venues.updated, venuesUnplaced: venues.unplaced };
     await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: { automatic, ...result } });
     return result;
   } catch (error) {

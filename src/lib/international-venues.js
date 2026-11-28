@@ -1,8 +1,9 @@
 /**
- * Where an NFL game abroad is played, from the stadium the schedule feed (nflverse) names: "Tottenham Hotspur Stadium" is London,
- * England. Only stadiums outside the United States are listed; a game anywhere else has no place shown. The feed's own stadium codes
- * are not used, because they are sometimes the home team's (a 2026 game at Tottenham carried JAX00).
- * Add a stadium here when the NFL schedules a game at a new one abroad.
+ * Where an NFL game abroad is played. Two sources, so a new city abroad is picked up on its own:
+ *  - ESPN's own record of the game (its venue's city and country), asked for every neutral-site game the schedule feed (nflverse)
+ *    lists; it is right even when the feed's stadium is not (every 2025 game abroad carried the home team's stadium);
+ *  - this list of stadiums abroad, by the name the feed gives ("Tottenham Hotspur Stadium" is London, England), used when ESPN cannot
+ *    be reached. The feed's stadium codes are never used (a 2026 game at Tottenham carried JAX00).
  */
 const OVERSEAS = [
   [/tottenham/i, "London", "England"],
@@ -29,6 +30,16 @@ export function overseasVenue(stadium) {
   if (!name) return null;
   const found = OVERSEAS.find(([pattern]) => pattern.test(name));
   return found ? { city: found[1], country: found[2] } : null;
+}
+
+/**
+ * ESPN's venue address for a game, as a place abroad: { city, country } when the country is not the United States, otherwise null.
+ * @param {{ city?: string, country?: string } | null | undefined} address
+ */
+export function espnVenue(address) {
+  const city = String(address?.city ?? "").trim(), country = String(address?.country ?? "").trim();
+  if (!city || !country || /^(usa|us|united states( of america)?)$/i.test(country)) return null;
+  return { city, country };
 }
 
 /** "London, England", or null for a game at home. */

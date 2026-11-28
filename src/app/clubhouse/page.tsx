@@ -323,9 +323,10 @@ export default function ClubhousePage() {
     if (!room) return null;
     if (!room.feed.bowl || !bowlRead) return room.feed;
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
-    // When the poker table is the Bowl Pool's, its plate says what you have left to do there: claim a seat, or how many bowls to pick.
-    const plate = room.feed.survivorActive ? null : bowlPlateNews(bowlRead, room.home.viewerPlayerId ?? null, now);
-    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now), ...(plate ? { news: { ...room.feed.news, survivor: plate } } : {}) };
+    // The Bowl Pool's plate says what you have left to do there: claim a seat, or how many bowls to pick. It is the poker table's own
+    // plate once Survivor is over, or the second plate under Survivor's while Survivor is still being played.
+    const plate = bowlPlateNews(bowlRead, room.home.viewerPlayerId ?? null, now);
+    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now), ...(plate ? { news: { ...room.feed.news, [room.feed.survivorActive ? "bowl" : "survivor"]: plate } } : {}) };
   }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);

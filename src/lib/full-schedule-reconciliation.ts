@@ -65,7 +65,7 @@ export async function reconcileFullSeasonSchedule(now = new Date()) {
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected schedule reconciliation did not complete.");
     const venues = await syncGameVenues(season.id, games);
-    const result = { outcome: "reconciled" as const, seasonYear, ...data[0], venuesUpdated: venues.updated };
+    const result = { outcome: "reconciled" as const, seasonYear, ...data[0], venuesUpdated: venues.updated, venuesUnplaced: venues.unplaced };
     await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: result });
     return result;
   } catch (error) {
