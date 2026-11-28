@@ -567,4 +567,4 @@ The Black Friday game sent no reveal email because the featured reveal was plann
 
 ## 2026-11-27 - The ticket's line key: one colour a line, each beside its words
 
-With a line locked, the key on Your ticket reads as two lines, "Gold line: locked." over "White line: moves until 8 AM on game day.", so a label is never left at the end of one line with its words on the next (owner). Still two lines at most on a phone.
+With a line locked, the key on Your ticket reads as two lines, "Gold line: locked." over "White line: moves until 8 AM on game day.", so a label is never left at the end of one line with its words on the next (owner). The two lines start at the same left edge, gold right above white, the pair centred under the switch. Still two lines at most on a phone.

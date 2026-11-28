@@ -224,7 +224,7 @@ test("the ticket says what the line colours mean while a line can still move", a
   await expect(page).toHaveScreenshot("clubhouse-ticket-form-top-phone-390.png", { maxDiffPixels: 40 });
 });
 
-test("with a line locked, the key gives each colour its own line, the label beside its words", async ({ page }) => {
+test("with a line locked, the key gives each colour its own line, the label beside its words, the two lines starting together", async ({ page }) => {
   await openClubhouse(page, { scenarios: ["live-mixed-locks"], at: "/clubhouse#slate" });
   const key = page.getByRole("dialog", { name: "Your ticket" }).locator(".lab-line-key");
   await expect(key).toContainText("White line:", { timeout: 30_000 });
@@ -236,6 +236,9 @@ test("with a line locked, the key gives each colour its own line, the label besi
     return Math.abs(range.getBoundingClientRect().top - label.getBoundingClientRect().top) > 4;
   }));
   expect(apart).toEqual([false, false]);
+  // The two lines start at the same left edge: gold right above white.
+  const lefts = await key.locator("b").evaluateAll((labels) => labels.map((label) => Math.round(label.getBoundingClientRect().left)));
+  expect(lefts[0]).toBe(lefts[1]);
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
   await page.evaluate(() => document.fonts.ready);
   await expect(key).toHaveScreenshot("clubhouse-ticket-line-key-locked-phone-390.png", { maxDiffPixels: 20 });
