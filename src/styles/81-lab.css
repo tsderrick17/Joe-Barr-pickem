@@ -167,6 +167,9 @@
 .lab-board-final.is-covered { color: var(--cw-gold-lt); }
 .lab-board-final.is-live { justify-content: flex-end; }   /* while the game is played: just who took the side */
 /* The players who took the team, each name underlined. */
+.lab-board-final em i { font-style: normal; }
+.lab-board-final em.is-stacked { display: flex; flex-direction: column; gap: 3px; }   /* three or more names: one per line, never a stray name on a second line */
+.lab-board-final em.is-stacked i { display: none; }
 .lab-board-final em u { text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lab-board-cell.is-locked { opacity: .55; }
 .lab-board-note { color: rgba(240, 180, 41, .7); font-size: .66rem; letter-spacing: .06em; margin: 0; text-align: center; }

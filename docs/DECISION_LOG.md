@@ -585,3 +585,7 @@ On the clubhouse ticket a game played outside the United States carries a red pi
 ## 2026-11-27 - Bowl season while Survivor runs: a second plate under Survivor's
 
 From Dec 7, while Survivor is still being played, the poker table keeps Survivor's plate and the Bowl Pool's navy-and-gold plate hangs right below it (centred, its own button), reading "Claim your seat" or "N to pick". Once Survivor is decided the table is the Bowl Pool's alone, as before (owner).
+
+## 2026-11-27 - Names under a team's score: all on one line, or one per line
+
+Under each side of a played or live game on the clubhouse ticket, up to two names stay on one line ("RON · CONNOR"); three or more stack one per line, so a lone name is never left on a second line by itself (owner).
