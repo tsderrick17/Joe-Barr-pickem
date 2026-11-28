@@ -240,7 +240,6 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 .asset-submit .slate-receipt-print { width: 8rem; }
 .asset-highlight { display: inline-block; font-size: 1.05rem; font-weight: 700; max-width: 100%; position: relative; }
 .asset-highlight .slate-team-label { white-space: nowrap; }
-.asset-banner { width: 100%; }
 /* The small split-flap counter is drawn at the large one's size (its flaps are 1.6rem tall to the large one's 2.9rem), so switching style
    in the Workshop changes only the look. */
 .asset-flap-small { display: inline-flex; zoom: calc(var(--asset-zoom, 1) * 1.8125); }
@@ -258,9 +257,8 @@ html.is-loading-screen body { height: 100vh; height: 100dvh; overflow: hidden; }
 /* Each choice's name sits in the middle of its button, however tall the row makes it. */
 .asset-choice button { align-items: center; border: 1px solid var(--club-line); border-radius: 2px; color: var(--club-ink); display: inline-flex; font-size: .7rem; justify-content: center; padding: .25rem .6rem; text-align: center; }
 .asset-choice button[aria-pressed="true"] { background: var(--club-forest); border-color: var(--club-gold-dk); color: var(--sand-93); }
-.asset-select, .asset-text { border: 1px solid; border-radius: 2px; font: inherit; font-size: .8rem; min-width: 0; padding: .3rem .45rem; width: 100%; }
+.asset-text { border: 1px solid; border-radius: 2px; font: inherit; font-size: .8rem; min-width: 0; padding: .3rem .45rem; width: 100%; }
 input.asset-text { background: var(--field-bg, var(--club-paper)); border-color: var(--field-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); }
-select.asset-select { background: var(--select-bg, var(--club-paper)); border-color: var(--select-edge, var(--club-line)); color: var(--field-ink, var(--club-ink)); }
 .asset-knob input[type="range"] { accent-color: var(--club-forest-2); }
 /* The football: paused, drag it to turn it by hand; the ball sits on the frame chosen with the slider or the step buttons. */
 .asset-football.has-wobble .football-loader-tilt { animation: football-wobble var(--football-wobble-s, 0.3s) ease-in-out infinite alternate; }

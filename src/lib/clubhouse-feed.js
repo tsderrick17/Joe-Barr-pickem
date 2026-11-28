@@ -7,6 +7,7 @@ import { bowlPennant } from "./bowl-logos.js";
 
 import { ET, coverMargin, kickoffLabel, lineFor } from "./game-lines.js";
 import { roomTicket } from "./clubhouse-ticket.js";
+import { bowlTicketView } from "./bowl-ticket-view.js";
 
 export { coverMargin, kickoffLabel, lineFor };
 
@@ -41,6 +42,20 @@ const BOWL_TICKER_DAYS = 3;
  * @param {any} payload  the Bowl Pool's read (/api/bowl-pool)
  * @param {number} now
  */
+/**
+ * The line under the Bowl Pool's plate on the poker table in bowl season: "Claim your seat" while you have not joined and seats are still
+ * open, "3 to pick" once you have and bowls are still owed, otherwise nothing.
+ * @param {any} payload  the Bowl Pool's read
+ * @param {string | null} viewerPlayerId
+ * @param {number} now
+ */
+export function bowlPlateNews(payload, viewerPlayerId, now) {
+  if (!payload) return null;
+  if (!payload.optedIn) return payload.entryOpen ? "Claim your seat" : null;
+  const { owed } = bowlTicketView(payload, { now, viewerPlayerId });
+  return owed ? `${owed} to pick` : null;
+}
+
 export function bowlTickerGames(payload, now) {
   const own = new Map((payload?.ownPicks ?? []).map((pick) => [pick.game_id, pick.selected_team_id]));
   const reach = BOWL_TICKER_DAYS * 86_400_000;

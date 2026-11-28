@@ -17,7 +17,7 @@
 //    The floor in front of it is the way in. From Dec 7 the Bowl Pool's board stands at the front left.
 // Units are metres: x left to right, z from the front wall (0) to the back (-RD).
 import { THREE, RoundedBoxGeometry, materials } from "/lib.js";
-import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels } from "/surfaces.js";
+import { canvas, texture, rand, tile, oakFloor, shiplap, fieldstone, thatchBack, thatchCourse, cane, bladeWood, palmBlade, frond, flame as fireTongue, sky, walnutVeneer, bottleLabels, wrapTile, STONE, timberGrain, leatherGrain, leafSkin, spineSheet, pageEdges, albumCovers, palmBark, palmFrondSheet, seaRipples, sandGrain, foamBand, seeded } from "/surfaces.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -41,12 +41,17 @@ const rbox = (w, h, d, r = 0.04) => new RoundedBoxGeometry(w, h, d, 3, r);
 const cyl = (rt, rb, h, seg = 32) => new THREE.CylinderGeometry(rt, rb, h, seg);
 
 // ---------- textures
-function neon(text) {
+// A neon sign, drawn in layers so it reads as glass tubes standing off the wall, not a picture of one: "tube" is the lit glass (a hot
+// white core in a pink tube, a glint along its top), "glow" the haze round it, "shadow" the tubes' own soft shadow on the wood behind.
+function neon(text, layer = "tube") {
   const c = canvas(1024, 200), g = c.getContext("2d");
-  g.fillStyle = "rgba(0,0,0,0)"; g.fillRect(0, 0, 1024, 200);
-  g.font = "italic 700 104px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle";
-  g.shadowColor = "#ff5fa2"; g.shadowBlur = 30; g.strokeStyle = "#ffd1e6"; g.lineWidth = 7; g.strokeText(text, 512, 104);
-  g.shadowBlur = 12; g.strokeStyle = "#fff"; g.lineWidth = 3; g.strokeText(text, 512, 104);
+  g.font = "italic 700 104px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineCap = "round";
+  if (layer === "glow") { g.filter = "blur(18px)"; g.strokeStyle = "rgba(255, 70, 150, .55)"; g.lineWidth = 26; g.strokeText(text, 512, 104); return texture(c); }
+  if (layer === "shadow") { g.filter = "blur(5px)"; g.strokeStyle = "rgba(10, 4, 2, .55)"; g.lineWidth = 9; g.strokeText(text, 512, 104); return texture(c); }
+  g.shadowColor = "#ff5fa2"; g.shadowBlur = 14; g.strokeStyle = "#ff6eb0"; g.lineWidth = 9; g.strokeText(text, 512, 104);
+  g.shadowBlur = 0; g.strokeStyle = "#ffc2dc"; g.lineWidth = 5; g.strokeText(text, 512, 104);
+  g.strokeStyle = "#ffffff"; g.lineWidth = 2.2; g.strokeText(text, 512, 104);
+  g.strokeStyle = "rgba(255, 255, 255, .7)"; g.lineWidth = 1; g.strokeText(text, 512, 101.5);   // the glint along the top of the glass
   return texture(c);
 }
 function linenTex(color = "#eee8da") { const c = canvas(128, 128), g = c.getContext("2d"); g.fillStyle = color; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 128; i += 2) { g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.03})`; g.fillRect(0, i, 128, 1); g.fillRect(i, 0, 1, 128); } return texture(c, [4, 4]); }
@@ -142,8 +147,9 @@ export async function buildRoom(q) {
 
   const m = materials();
   const white = std(0xf7f4ec, { roughness: 0.85 });
-  const timber = std(0x7a5634, { roughness: 0.7 });
-  const timberDark = std(0x8a6440, { roughness: 0.65 });
+  // Solid timber with its grain, knots and checks (timberGrain); the colour stays the tone it always was.
+  const timber = new THREE.MeshStandardMaterial({ ...timberGrain([122, 86, 52], [1, 1]), bumpScale: 1.2, roughness: 0.7 });
+  const timberDark = new THREE.MeshStandardMaterial({ ...timberGrain([138, 100, 64], [1, 1]), bumpScale: 1.2, roughness: 0.65 });
   const brass = m.brass;
   // The bar's walnut: veneer boards on end with real grain (see walnutVeneer), laid on by the metre; the flutes take the same wood at
   // their own scale, the grain running up each one.
@@ -160,7 +166,8 @@ export async function buildRoom(q) {
   const whiteCane = new THREE.MeshStandardMaterial({ bumpMap: cane().bumpMap, color: 0xf3efe6, bumpScale: 2.5, roughness: 0.8 });   // the weave painted white: its relief, not its brown
   const whiteWood = std(0xf1ede4, { roughness: 0.55 });
   const rattan = new THREE.MeshStandardMaterial({ ...cane(), bumpScale: 2.5, roughness: 0.8 });
-  const green = std(0x234d3a, { roughness: 0.6 });
+  const hide = leatherGrain();   // the leather's grain, shared by every leather seat and the poker rail
+  const green = new THREE.MeshStandardMaterial({ color: 0x234d3a, roughness: 0.6, bumpMap: hide, bumpScale: 0.6 });
   const caneOpen = rattan.clone(); caneOpen.side = THREE.DoubleSide;
   const chairWood = std(0x4a2c16, { roughness: 0.45 });
   const glow = (color, intensity) => new THREE.MeshStandardMaterial({ color: 0x000000, emissive: color, emissiveIntensity: intensity, roughness: 0.6 });
@@ -172,7 +179,10 @@ export async function buildRoom(q) {
   // short loop of small pictures over these places; see the end of this file.
   const movers = [];
   // every leaf in and around the room is grown from the one modelled frond
-  const leafGreen = new THREE.MeshStandardMaterial({ color: 0x3f8a48, roughness: 0.55, side: THREE.DoubleSide }), leafDeep = new THREE.MeshStandardMaterial({ color: 0x2a6a36, roughness: 0.38, side: THREE.DoubleSide }), leafFresh = new THREE.MeshStandardMaterial({ color: 0x5aa052, roughness: 0.5, side: THREE.DoubleSide });
+  // Leaves wear a skin (leafSkin: midrib, veins, a tone that deepens to the edges), a waxy sheen, and let a little light through.
+  const leafMat = (tone, roughness, seed, extra = {}) => { const skin = leafSkin(tone, { seed, ...extra }); return new THREE.MeshPhysicalMaterial({ map: skin.map, bumpMap: skin.bumpMap, bumpScale: 0.8, roughness, sheen: 0.35, sheenColor: new THREE.Color(0xc8e6a0), clearcoat: 0.12, clearcoatRoughness: 0.5, side: THREE.DoubleSide, ...(extra.torn ? { alphaTest: 0.5, transparent: false } : {}) }); };
+  const leafGreen = leafMat([63, 138, 72], 0.55, 3), leafDeep = leafMat([42, 106, 54], 0.4, 4), leafFresh = leafMat([90, 160, 82], 0.5, 5);
+  const stalk = std(0x6f8f62, { roughness: 0.6 });   // the plants' stems: grey-green, lighter than their leaves
   const palmLeaf = frond({ L: 1.3, HW: 0.21, pleats: 30, droop: 0.55, keel: 0.5, depth: 0.01, scallop: 0.1, shape: 0.6, NU: 240, NV: 64 });
   const pottedLeaf = frond({ L: 1.3, HW: 0.17, pleats: 16, droop: 0.6, keel: 0.35, depth: 0.004, scallop: 0.04, shape: 0.6, NU: 200, NV: 48 });   // softer pleats: read as leaflets, not blocks
   const broadLeaf = frond({ L: 0.46, HW: 0.21, pleats: 7, droop: 0.07, keel: 0.22, depth: 0.004, scallop: 0.2, shape: 0.5, NU: 90, NV: 40 });
@@ -328,14 +338,49 @@ export async function buildRoom(q) {
   // A sunny jungle beach: coconut palms leaning every way (the crown heavy with nuts), banana plants and big-leafed undergrowth banked
   // thick along both sides of the patio and past the side windows, jungle-green headlands either side of the bay, white sand, and the
   // water turquoise over the shallows and deepening to blue.
-  const trunkBark = std(0x9a8064, { roughness: 1 }), nut = std(0x5a3a1a, { roughness: 0.8 }), frondDark = new THREE.MeshStandardMaterial({ color: 0x2f7a3a, roughness: 0.55, side: THREE.DoubleSide });
+  // Coconut palms as they grow: a tall ringed trunk, swollen a little at its foot and tapering as it climbs, bending as it leans; at the
+  // top a boot of old frond bases, a cluster of green and brown coconuts, and a crown of long feather fronds (leaflets hung from a
+  // midrib in a V, light showing between them): young ones standing up in the middle, the mature ones arching out and over, the oldest
+  // drooping, and one or two dead ones gone brown and hanging down the trunk. Each palm draws from a counter of its own; the shared one
+  // is still stepped the 57 draws the old palms took, so nothing else in the room moves.
+  const trunkBark = new THREE.MeshStandardMaterial({ ...palmBark([1, 1]), color: 0x9a948a, bumpScale: 4, roughness: 0.95 });
+  const nut = std(0x5a3a1a, { roughness: 0.8 }), nutGreen = std(0x6f7f2e, { roughness: 0.55 }), boot = std(0x6a5038, { roughness: 1 }), frondDark = leafMat([47, 122, 58], 0.55, 6);
+  const frondMat = (sheet) => { const m = new THREE.MeshStandardMaterial({ map: sheet, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.62 }); m.userData.depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: sheet, alphaTest: 0.45 }); return m; };
+  const frondMats = [frondMat(palmFrondSheet(201)), frondMat(palmFrondSheet(202)), frondMat(palmFrondSheet(203))], deadMat = frondMat(palmFrondSheet(204, true));
+  // one frond: along +x, rising from the crown then arching over and down (`hang`), its leaflets hung from the midrib in a V
+  const frondRibbon = (L, HW, arch, hang) => {
+    const NU = 40, NV = 8, pos = [], uvs = [], idx = [];
+    for (let i = 0; i <= NU; i++) {
+      const u = i / NU, y0 = L * (arch * u - (arch + hang) * u * u), w = HW * Math.sin(Math.PI * Math.pow(u * 0.96 + 0.04, 0.75));
+      for (let j = 0; j <= NV; j++) { const v = (j / NV) * 2 - 1; pos.push(u * L, y0 - Math.abs(v) * w * (0.3 + 0.55 * u), v * w); uvs.push(u, (v + 1) / 2); }
+    }
+    for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = i * (NV + 1) + j, c = a + NV + 1; idx.push(a, a + 1, c, a + 1, c + 1, c); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx); geo.computeVertexNormals(); return geo;
+  };
+  const putFrond = (top, yaw, lift, geo, mat) => { const g = new THREE.Group(); g.position.set(...top); g.rotation.set(0, yaw, lift); out.add(g); const m = add(g, geo, mat, [0, 0, 0]); m.customDepthMaterial = mat.userData.depth; };
+  let palmSeed = 300;
   const palm = (x, z, h, lean = 0.3, turn = 0) => {
     const dx = Math.cos(turn) * lean * h * 0.25, dz = -Math.sin(turn) * lean * h * 0.25;
     const trunk = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0, z), new THREE.Vector3(x + dx * 0.9, h * 0.5, z + dz * 0.9), new THREE.Vector3(x + dx * 1.4, h, z + dz * 1.4)]);
-    add(out, new THREE.TubeGeometry(trunk, 20, 0.16, 10), trunkBark, [0, 0, 0]);
     const top = [x + dx * 1.4, h - 0.1, z + dz * 1.4];
-    spray(out, palmLeaf, leafGreen, top, 13, 2.3, [-0.1, 0.9]); spray(out, palmLeaf, frondDark, [top[0], top[1] + 0.1, top[2]], 6, 2.0, [0.5, 1.1]);
-    for (let k = 0; k < 5; k++) { const a = k * 1.3; add(out, new THREE.SphereGeometry(0.13, 12, 10), nut, [top[0] + Math.cos(a) * 0.17, top[1] - 0.12 - (k % 2) * 0.08, top[2] + Math.sin(a) * 0.17]); }
+    for (let k = 0; k < 57; k++) rand();
+    const rnd = seeded(palmSeed += 7);
+    // the trunk: swollen at the foot, tapering up, the bark's rings a hand apart whatever its height
+    const SEG = 160, RAD = 16, tube = new THREE.TubeGeometry(trunk, SEG, 1, RAD), tp = tube.attributes.position, tuv = tube.attributes.uv;
+    for (let i = 0; i <= SEG; i++) {
+      const t = i / SEG, centre = trunk.getPointAt(t), ring = 1 + 0.025 * Math.pow(Math.abs(Math.sin((t * h / 0.18) * Math.PI)), 8), r = (0.17 + 0.08 * (1 - t) + 0.12 * Math.exp(-t * h / 0.35)) * ring;   // each ring a slight ridge, so the outline is stepped like a real trunk
+      for (let j = 0; j <= RAD; j++) { const n = i * (RAD + 1) + j; tp.setXYZ(n, centre.x + (tp.getX(n) - centre.x) * r, centre.y + (tp.getY(n) - centre.y) * r, centre.z + (tp.getZ(n) - centre.z) * r); tuv.setXY(n, j / RAD, t * h / 1.6); }
+    }
+    tube.computeVertexNormals(); add(out, tube, trunkBark, [0, 0, 0]);
+    add(out, new THREE.CylinderGeometry(0.2, 0.16, 0.55, 12), boot, [top[0], top[1] - 0.25, top[2]]);   // the boot of old frond bases
+    for (let k = 0; k < 9; k++) { const a = k * 0.8 + rnd() * 0.4, ring = 0.2 + (k % 3) * 0.04; add(out, new THREE.SphereGeometry(0.12 + rnd() * 0.03, 14, 12), k % 3 ? nutGreen : nut, [top[0] + Math.cos(a) * ring, top[1] - 0.22 - (k % 3) * 0.1, top[2] + Math.sin(a) * ring], { scale: 1.05 }); }
+    const L = 2.6 + h * 0.08, N = 28;
+    for (let k = 0; k < N; k++) {
+      const tier = k % 3, yaw = (k / N) * Math.PI * 2 + rnd() * 0.35, len = L * (tier === 0 ? 0.72 : 0.9 + rnd() * 0.15);
+      const lift = tier === 0 ? 0.55 + rnd() * 0.35 : tier === 1 ? 0.05 + rnd() * 0.3 : -0.35 + rnd() * 0.25;
+      putFrond([top[0], top[1] + (tier === 0 ? 0.08 : 0), top[2]], yaw, lift, frondRibbon(len, 0.5, tier === 0 ? 0.35 : 0.45, tier === 0 ? 0.25 : 0.9 + rnd() * 0.3), frondMats[k % 3]);
+    }
+    for (let k = 0; k < 2; k++) putFrond([top[0], top[1] - 0.2, top[2]], rnd() * Math.PI * 2, -1.25 - rnd() * 0.2, frondRibbon(L * 0.8, 0.3, 0.1, 0.3), deadMat);   // dead fronds hanging down the trunk
   };
   palm(-6.2, ZB - 3.6, 6.2, 0.4, 2.6); palm(6.6, ZB - 4.5, 7.2, 0.5, 0.3); palm(-3.4, ZB - 10, 5.5, 0.35, 1.9); palm(5.0, ZB - 11, 6.4, 0.6, 0.6);
   palm(-1.2, ZB - 15.5, 6.8, 0.7, 1.4); palm(2.4, ZB - 16.5, 5.8, 0.8, 0.2); palm(-8.5, ZB - 9, 7.8, 0.4, 2.2);
@@ -367,10 +412,22 @@ export async function buildRoom(q) {
   }
   // On the sea side the sand runs only a few metres past the wall; past it the sea comes right round the house, turquoise over the
   // shallows, and curves away along the coast to a far headland: a sheer cliff of pale rock with jungle on its top.
-  add(out, box(49, 0.1, 50), std(0xe8d9b4, { roughness: 1 }), [-15.5, -0.09, -12], { cast: false });                                   // white sand, the jungle side and under the house
-  add(out, box(320, 0.05, 320), std(night ? 0x0e2a46 : 0x1f7fb8, { roughness: 0.15 }), [169, -0.32, -60], { cast: false });              // the sea, deep blue, on the sea side
-  add(out, box(5, 0.05, 50), std(night ? 0x123a56 : 0x36c9c6, { roughness: 0.12 }), [11.5, -0.28, -12], { cast: false });            // the shallows along the shore
-  add(out, box(1.2, 0.3, 50), std(0xece0be), [9.4, -0.2, -12], { cast: false });                                                    // the wet edge of the beach
+  // the sea: wind ripples catching the sky, turquoise over the sand of the shallows and deepening out to blue; white sand with its grain
+  // and ripples; a darker band of wet sand at the waterline and a lacy line of surf where each little wave breaks
+  const seaMat = (colour, repeat) => new THREE.MeshStandardMaterial({ ...seaRipples(night, repeat), color: colour, bumpScale: 0.6, roughness: 0.08, metalness: 0.1 });
+  const sandMat = (colour, repeat) => new THREE.MeshStandardMaterial({ ...sandGrain(repeat), color: colour, bumpScale: 1.2, roughness: 1 });
+  const surf = (w, d, [x, y, z], rotY) => { const m = new THREE.MeshBasicMaterial({ map: foamBand(), transparent: true, opacity: night ? 0.25 : 0.85, depthWrite: false, fog: true }); m.map.repeat.set(w / 6, 1); add(out, new THREE.PlaneGeometry(w, d), m, [x, y, z], { cast: false, receive: false, rot: [-Math.PI / 2, 0, rotY] }); };
+  add(out, box(49, 0.1, 50), sandMat(0xffffff, [12, 12]), [-15.5, -0.09, -12], { cast: false });                                   // white sand, the jungle side and under the house
+  add(out, box(320, 0.05, 320), seaMat(night ? 0x8090b0 : 0x6fa6d8, [60, 60]), [169, -0.32, -60], { cast: false });              // the sea, deep blue, on the sea side
+  add(out, box(1.2, 0.3, 50), sandMat(0xbdb6a6, [1, 20]), [9.4, -0.2, -12], { cast: false });                                                    // the wet edge of the beach
+  surf(50, 1.4, [10.2, -0.04, -12], Math.PI / 2);
+  const fade = (w, d, [x, z], rotY, colour, shoreAtPlusY) => {   // the shallows thin out into the deep with no edge: turquoise at the shore, clear by the far side
+    const geo = new THREE.PlaneGeometry(w, d, 1, 24), p = geo.attributes.position, tint = new THREE.Color(colour), rgba = [];
+    for (let i = 0; i < p.count; i++) { const k = p.getY(i) / d + 0.5, fromShore = shoreAtPlusY ? 1 - k : k; rgba.push(tint.r, tint.g, tint.b, 0.9 * Math.pow(1 - fromShore, 1.4)); }
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(rgba, 4));
+    add(out, geo, new THREE.MeshStandardMaterial({ vertexColors: true, bumpMap: seaRipples(night, [w / 6, d / 6]).bumpMap, bumpScale: 0.5, roughness: 0.08, transparent: true, depthWrite: false, side: THREE.DoubleSide }), [x, -0.2, z], { cast: false, receive: false, rot: [-Math.PI / 2, 0, rotY] });
+  };
+  fade(50, 9, [14.0, -12], Math.PI / 2, night ? 0x2a6a80 : 0x46d0c8, true);
   const rock = std(night ? 0x2a2a30 : 0x9c8a72, { roughness: 1 }), rockDark = std(night ? 0x1e1e24 : 0x75664f, { roughness: 1 }), cliffTop = std(night ? 0x0c1e14 : 0x3f7a4a, { roughness: 1 });
   for (const [x, z, w, h, d, turn] of [[130, -98, 30, 13, 14, 0.5], [146, -68, 24, 11, 12, 0.3], [114, -126, 28, 15, 12, 0.8], [158, -42, 20, 9, 10, 0.1]]) {   // far along the coast, low on the horizon
     // a sloping headland, not a wall: narrow at the top, spreading wide to the sea, with a long low shoulder running down into the water
@@ -381,9 +438,10 @@ export async function buildRoom(q) {
     const top = add(out, new THREE.SphereGeometry(1, 20, 10), cliffTop, [x, h - 0.6, z], { cast: false }); top.scale.set(w * 0.3, 2.2, w * 0.3);
     for (let k = 0; k < 12; k++) add(out, new THREE.SphereGeometry(1 + rand() * 1.2, 10, 8), cliffTop, [x + (rand() - 0.5) * w * 0.45, h + 0.6 + rand(), z + (rand() - 0.5) * w * 0.45], { cast: false });
   }
-  add(out, box(49, 0.05, 40), std(night ? 0x0e2a46 : 0x1f7fb8, { roughness: 0.15 }), [-15.5, -0.321, ZB - 46], { cast: false });   // the sea, deep blue
-  add(out, box(49, 0.05, 8), std(night ? 0x123a56 : 0x36c9c6, { roughness: 0.12 }), [-15.5, -0.28, ZB - 24], { cast: false });    // the shallows, turquoise
-  add(out, box(49, 0.4, 2), std(0xece0be), [-15.5, -0.2, ZB - 19.8], { cast: false });                                         // the beach
+  add(out, box(49, 0.05, 40), seaMat(night ? 0x8090b0 : 0x6fa6d8, [10, 8]), [-15.5, -0.321, ZB - 46], { cast: false });   // the sea, deep blue
+  add(out, box(49, 0.4, 2), sandMat(0xbdb6a6, [12, 1]), [-15.5, -0.2, ZB - 19.8], { cast: false });                                         // the beach
+  surf(49, 1.4, [-15.5, 0.01, ZB - 20.9], 0);
+  fade(49, 9, [-15.5, ZB - 25.5], 0, night ? 0x2a6a80 : 0x46d0c8, false);
   const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 60), new THREE.MeshBasicMaterial({ map: sky(night), fog: false }));
   skyPlane.position.set(0, 26, ZB - 58); scene.add(skyPlane);
   // the same sky round both sides, so every side window looks out at open air (the sea and its far cliff on one side, the jungle on the other)
@@ -578,7 +636,17 @@ export async function buildRoom(q) {
       }
     });
   }
-  add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.085, 2.8, -10.0], { cast: false, rot: [0, Math.PI / 2, 0] }).renderOrder = 2;
+  // The sign: tubes on a clear acrylic backer held off the walnut by four brass stand-offs, their shadow and a pink haze on the wood
+  // behind, and real pink light thrown on the walnut and the shelves round it.
+  {
+    const NY = 2.8, NZ = -10.0, face = { cast: false, rot: [0, Math.PI / 2, 0] };
+    add(bar, new THREE.PlaneGeometry(3.0, 0.8), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks", "glow")), transparent: true, depthWrite: false, toneMapped: false, opacity: night ? 1 : 0.7 }), [WALL + 0.087, NY, NZ], face).renderOrder = 1;
+    add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks", "shadow")), transparent: true, depthWrite: false, opacity: night ? 0.35 : 0.8 }), [WALL + 0.089, NY - 0.018, NZ - 0.012], face).renderOrder = 1;
+    add(bar, box(0.008, 0.6, 2.7), new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transmission: 0.95, thickness: 0.008, ior: 1.49, transparent: true, opacity: 0.35, clearcoat: 1 }), [WALL + 0.112, NY, NZ], { cast: false });
+    for (const dy of [-0.24, 0.24]) for (const dz of [-1.28, 1.28]) add(bar, cyl(0.009, 0.009, 0.05, 12), brass, [WALL + 0.095, NY + dy, NZ + dz], { cast: false, rot: [0, 0, Math.PI / 2] });
+    add(bar, new THREE.PlaneGeometry(2.6, 0.51), new THREE.MeshBasicMaterial({ map: readable(neon("Lead Pipe Locks")), transparent: true, toneMapped: false }), [WALL + 0.125, NY, NZ], face).renderOrder = 2;
+    const pink = new THREE.PointLight(0xff4f9a, night ? 1.1 : 0.5, 1.8, 1.8); pink.position.set(WALL + 0.4, NY, NZ); bar.add(pink);
+  }
   // on the bar top: the tap tower, a cocktail shaker, a pair of glasses
   add(bar, box(0.08, 0.08, 0.5), brass, [BXc - 0.1, 1.55, BZ - 1.0]);
   for (let i = 0; i < 4; i++) { add(bar, cyl(0.03, 0.03, 0.4, 10), brass, [BXc - 0.1, 1.36, BZ - 1.18 + i * 0.12]); add(bar, rbox(0.04, 0.16, 0.04, 0.01), std([0x1f4a36, 0x8c1e24, 0xc9a45f, 0x1d3557][i]), [BXc - 0.1, 1.68, BZ - 1.18 + i * 0.12]); }
@@ -607,14 +675,39 @@ export async function buildRoom(q) {
   // ----- the right wall: a grand fieldstone chimney from the floor to the thatch, the constitution framed on its near face, and the
   // lounge in front of it.
   const fire = group("fireplace");
-  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...fieldstone(), bumpScale: 6, roughness: 0.92 });
-  const stoneBlock = (w, h, d, at) => add(fire, tile(box(w, h, d), 1.9, 2.0, at), stone, at);
+  STONE.lift = Number(q.get("stonelift") ?? 1);
+  // The stone is real relief, not only shading: the wall's surface is moved out by each stone's height (displacement), so stones stand
+  // proud of one another, throw shade into their joints and break the chimney's outline. stonedisp=0 goes back to a flat shaded wall.
+  const DISP = Number(q.get("stonedisp") ?? 0.04), { displacementMap: stoneRelief, ...stoneTex } = fieldstone();
+  const FZ = -9.9, CD = 1.8, stone = new THREE.MeshStandardMaterial({ ...stoneTex, bumpScale: Number(q.get("stonebump") ?? 10), roughness: 0.92, ...(DISP ? { displacementMap: stoneRelief, displacementScale: DISP, displacementBias: -DISP * 0.15 } : {}) });
+  // Every stone box is laid with wrapTile, so the stones carry round the corners of the chimney and the fireplace surround; with relief on,
+  // it is cut fine enough (about 2.5 cm) for the surface to follow each stone.
+  const seg = (size) => (DISP ? Math.max(1, Math.ceil(size / 0.025)) : 1);
+  // Behind the relief, a plain core of mortar a little inside each box: where two faces lift apart at a corner, the gap shows mortar,
+  // a joint running up the corner, never daylight.
+  const mortar = std(0x5e554a, { roughness: 1 });
+  const stoneBlock = (w, h, d, at) => {
+    if (DISP) add(fire, box(w - 0.004, h - 0.004, d - 0.004), mortar, at, { cast: false });
+    const g = wrapTile(new THREE.BoxGeometry(w, h, d, seg(w), seg(h), seg(d)), 1.9, 2.0, at);
+    if (DISP) {
+      // On every edge the two faces' points sit together and carry the same height (wrapTile); pointing both out along the corner's
+      // diagonal moves them to the same place, so a stone lifted at a corner stays one stone round it, with no seam.
+      const p = g.attributes.position, n = g.attributes.normal, e = 1e-4;
+      for (let i = 0; i < p.count; i++) {
+        const x = Math.abs(Math.abs(p.getX(i)) - w / 2) < e, y = Math.abs(Math.abs(p.getY(i)) - h / 2) < e, z = Math.abs(Math.abs(p.getZ(i)) - d / 2) < e;
+        if (x + y + z < 2) continue;
+        const v = new THREE.Vector3(x ? Math.sign(p.getX(i)) : 0, y ? Math.sign(p.getY(i)) : 0, z ? Math.sign(p.getZ(i)) : 0).normalize();
+        n.setXYZ(i, v.x, v.y, v.z);
+      }
+    }
+    return add(fire, g, stone, at);
+  };
   stoneBlock(CD, RIDGE, 3.6, [X1 - CD / 2, RIDGE / 2, FZ]);
   stoneBlock(0.6, 0.5, 4.2, [X1 - CD - 0.3, 0.25, FZ]);                                                  // raised hearth
   // the fireplace proper: a stone surround standing proud of the chimney, the firebox set back between its jambs
   for (const side of [-1, 1]) stoneBlock(0.28, 1.5, 0.44, [X1 - CD - 0.14, 1.25, FZ + side * 1.17]);
   stoneBlock(0.28, 0.3, 2.78, [X1 - CD - 0.14, 1.97, FZ]);
-  add(fire, box(0.04, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.01, 1.16, FZ], { cast: false });
+  add(fire, box(0.1, 1.34, 1.92), std(0x120e0b, { roughness: 1 }), [X1 - CD - 0.04, 1.16, FZ], { cast: false });   // in front of the stones' relief
   // The fire is lit at night. By day it is laid but cold: logs on the grate, a little pale ash.
   add(fire, box(0.5, 0.04, 1.3), std(0x1c1814, { roughness: 1 }), [X1 - CD - 0.14, 0.52, FZ], { cast: false });                      // the grate
   if (night) {
@@ -635,7 +728,7 @@ export async function buildRoom(q) {
   if (arts.includes("boat")) {
     // A model sailing yacht on a little walnut stand, side-on to the room, sails in old canvas: it reads as a quiet silhouette.
     const boat = new THREE.Group(); boat.position.set(X1 - CD + 0.11 - MD / 2, 2.38, FZ + Number(q.get("boatz") ?? 0.6)); fire.add(boat);
-    boat.rotation.y = Number(q.get("boatturn") ?? 0.6); boat.scale.setScalar(Number(q.get("boatscale") ?? 1.5));
+    boat.rotation.y = Number(q.get("boatturn") ?? 0.5); boat.scale.setScalar(Number(q.get("boatscale") ?? 1.0));
     const L = 0.5;
     add(boat, rbox(0.2, 0.025, 0.07, 0.006), std(0x3a2416, { roughness: 0.55 }), [0, 0.012, 0]);
     for (const dx of [-0.07, 0.07]) add(boat, box(0.012, 0.07, 0.03), std(0x3a2416, { roughness: 0.55 }), [dx, 0.05, 0]);
@@ -670,6 +763,74 @@ export async function buildRoom(q) {
   add(charter, box(0.74, 0.94, 0.06), std(0xa8823a, { metalness: 0.6, roughness: 0.35 }), [CX, 2.45, CZ + 0.03]);
   add(charter, new THREE.PlaneGeometry(0.62, 0.79), new THREE.MeshStandardMaterial({ map: readable(parchment()), roughness: 0.9 }), [CX, 2.45, CZ + 0.065], { cast: false });
   add(charter, box(0.5, 0.04, 0.12), brass, [CX, 2.99, CZ + 0.07]);
+
+  // A low walnut bookcase against the chimney's near face, under the constitution (owner, 2026-11-25): three shelves of real books, as
+  // convincing as the bar's bottles: each its own thickness, height and depth, cloth of an old library colour with a gilt-banded spine
+  // (spineSheet), cream page edges on top, packed close with the odd gap, a few leaning at a row's end and a short stack laid flat; a
+  // little framed photograph and two books lie on top. Its random stream is its own, so nothing else in the room moves.
+  {
+    const books = group(), brnd = (() => { let r = 777; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; })();
+    const BW = Number(q.get("bookw") ?? 1.15), BH = 0.95, BD = 0.36, BX = Number(q.get("bookx") ?? X1 - 0.78), BZ0 = CZ + BD / 2 + 0.05;   // clear of the stones' relief
+    const carcass = new THREE.MeshStandardMaterial({ ...walnutVeneer([0.6, 0.6]), bumpScale: 0.6, roughness: 0.5 });
+    add(books, box(0.025, BH, BD), carcass, [BX - BW / 2 + 0.0125, BH / 2, BZ0]);
+    add(books, box(0.025, BH, BD), carcass, [BX + BW / 2 - 0.0125, BH / 2, BZ0]);
+    add(books, box(BW + 0.03, 0.03, BD + 0.02), carcass, [BX, BH + 0.015, BZ0 + 0.005]);
+    add(books, box(BW, 0.07, BD - 0.02), carcass, [BX, 0.035, BZ0 + 0.01]);                                       // the plinth
+    add(books, box(BW - 0.05, BH - 0.07, 0.012), std(0x2a1a10, { roughness: 0.8 }), [BX, BH / 2 + 0.035, BZ0 - BD / 2 + 0.006], { cast: false });   // the back
+    // Record shelves (owner, 2026-11-25): two rows of square bays, each packed with LPs on their edges, spines out; a few lean at a bay's
+    // end, their covers showing. Every sleeve is one of sixteen covers (albumCovers), its spine the colour of its cover.
+    const SH = [0.085, 0.5];   // the rows' floors
+    add(books, box(BW - 0.05, 0.022, BD - 0.03), carcass, [BX, SH[1] - 0.011, BZ0 + 0.005]);
+    for (const y0 of SH) add(books, box(0.022, (y0 === SH[0] ? SH[1] - 0.022 : BH) - y0, BD - 0.03), carcass, [BX, (y0 + (y0 === SH[0] ? SH[1] - 0.022 : BH)) / 2, BZ0 + 0.005]);   // the bays' divider
+    const sleeves = albumCovers(), cardEdge = std(0xd8d0c0, { roughness: 0.9 });
+    const covers = Array.from({ length: 16 }, (_, i) => { const t = sleeves.map.clone(); if (MIRROR < 0) { t.repeat.set(-0.25, 0.25); t.offset.set((i % 4 + 1) * 0.25, 0.75 - Math.floor(i / 4) * 0.25); } else { t.repeat.set(0.25, 0.25); t.offset.set((i % 4) * 0.25, 0.75 - Math.floor(i / 4) * 0.25); } t.needsUpdate = true; return t; });
+    const lp = covers.map((t, i) => { const cover = new THREE.MeshStandardMaterial({ map: t, roughness: 0.55 }), spine = std(sleeves.spines[i], { roughness: 0.6 }); return [cover, cover, cardEdge, cardEdge, spine, cardEdge]; });
+    const LP = 0.315;
+    const record = (x, floor, t, i, lean = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(t, LP, LP), lp[i % 16]); m.position.set(x, floor + LP / 2 + Math.abs(Math.sin(lean)) * 0.002, BZ0 + BD / 2 - 0.02 - LP / 2 - brnd() * 0.006); m.rotation.z = lean; m.castShadow = m.receiveShadow = true; books.add(m); };
+    SH.forEach((floor) => {
+      for (const side of [-1, 1]) {
+        const left = side < 0 ? BX - BW / 2 + 0.03 : BX + 0.016, right = side < 0 ? BX - 0.016 : BX + BW / 2 - 0.03;
+        // packed from one end, two or three leaning into the gap left at the other
+        const fill = 0.62 + brnd() * 0.25;
+        let x = side < 0 ? left : right;
+        const stopAt = side < 0 ? left + (right - left) * fill : right - (right - left) * fill;
+        while (side < 0 ? x < stopAt : x > stopAt) {
+          const t = brnd() < 0.08 ? 0.009 : 0.0035 + brnd() * 0.0025;
+          record(x + side * -0 + (side < 0 ? t / 2 : -t / 2), floor, t, Math.floor(brnd() * 16));
+          x += side < 0 ? t + 0.0004 : -(t + 0.0004);
+        }
+        for (let k = 0; k < 3; k++) { const t = 0.004; const lean = side < 0 ? -0.22 - k * 0.05 : 0.22 + k * 0.05; record(x + (side < 0 ? 0.03 + k * 0.012 : -0.03 - k * 0.012), floor, t, Math.floor(brnd() * 16), lean); }
+      }
+    });
+    // On top (owner, 2026-11-25): a small record player in the middle and a bookshelf speaker at each end, toed in a touch toward the room.
+    const TOP = BH + 0.03, black = std(0x111111, { roughness: 0.35 }), satin = new THREE.MeshStandardMaterial({ color: 0xc9ccd0, metalness: 1, roughness: 0.25 });
+    const walnut = new THREE.MeshStandardMaterial({ ...walnutVeneer([0.3, 0.3]), roughness: 0.45 });
+    // the record player: a walnut plinth on four little feet, a cast platter with a black record and its red label, the tone arm
+    // resting across the record's edge, a speed knob and a smoked dust cover hinged open behind
+    const deck = new THREE.Group(); deck.position.set(BX, TOP, BZ0 + 0.01); books.add(deck);
+    for (const dx of [-0.15, 0.15]) for (const dz of [-0.11, 0.11]) add(deck, cyl(0.014, 0.014, 0.012, 12), black, [dx, 0.006, dz], { cast: false });
+    add(deck, rbox(0.36, 0.06, 0.28, 0.008), walnut, [0, 0.042, 0]);
+    add(deck, cyl(0.126, 0.126, 0.012, 48), satin, [-0.03, 0.078, 0]);
+    add(deck, cyl(0.122, 0.122, 0.003, 64), new THREE.MeshPhysicalMaterial({ color: 0x0b0b0b, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.3 }), [-0.03, 0.0855, 0], { cast: false });
+    add(deck, cyl(0.035, 0.035, 0.0035, 32), std(0xa8282c, { roughness: 0.6 }), [-0.03, 0.0865, 0], { cast: false });
+    add(deck, cyl(0.004, 0.004, 0.02, 8), satin, [-0.03, 0.094, 0], { cast: false });                                       // the spindle
+    add(deck, cyl(0.016, 0.018, 0.02, 16), satin, [0.135, 0.082, -0.08]);                                                     // the arm's pivot
+    const arm = add(deck, cyl(0.003, 0.003, 0.2, 8), satin, [0.075, 0.095, -0.02], { cast: false }); arm.rotation.set(Math.PI / 2, 0, 0); arm.rotation.y = 0.55; arm.rotation.order = "YXZ";
+    add(deck, box(0.02, 0.012, 0.03), black, [0.015, 0.094, 0.06], { cast: false });                                         // the head shell
+    add(deck, cyl(0.012, 0.012, 0.014, 16), satin, [0.14, 0.079, 0.1]);                                                       // the speed knob
+    add(deck, box(0.35, 0.2, 0.004), new THREE.MeshPhysicalMaterial({ color: 0x302820, roughness: 0.08, transmission: 0.7, thickness: 0.004, transparent: true, opacity: 0.45 }), [0, 0.17, -0.15], { cast: false, rot: [-0.32, 0, 0] });   // the open dust cover
+    // the speakers: walnut cabinets, a black baffle with a woofer (its cone and dust cap) and a little dome tweeter above it
+    for (const side of [-1, 1]) {
+      const spk = new THREE.Group(); spk.position.set(BX + side * 0.47, TOP, BZ0 + 0.01); spk.rotation.y = -side * 0.12; books.add(spk);
+      add(spk, rbox(0.16, 0.26, 0.2, 0.006), walnut, [0, 0.13, 0]);
+      add(spk, box(0.146, 0.246, 0.004), std(0x161616, { roughness: 0.7 }), [0, 0.13, 0.1], { cast: false });
+      add(spk, cyl(0.052, 0.052, 0.006, 32), std(0x262626, { roughness: 0.5 }), [0, 0.09, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                // the woofer's surround
+      add(spk, cyl(0.044, 0.02, 0.012, 32, true), std(0x1a1a1a, { roughness: 0.85 }), [0, 0.09, 0.1], { cast: false, rot: [Math.PI / 2, 0, 0] });             // its cone
+      add(spk, new THREE.SphereGeometry(0.014, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x2c2c2c, { roughness: 0.4 }), [0, 0.09, 0.104], { cast: false, rot: [Math.PI / 2, 0, 0] });   // the dust cap
+      add(spk, cyl(0.02, 0.02, 0.005, 24), satin, [0, 0.19, 0.103], { cast: false, rot: [Math.PI / 2, 0, 0] });                                                // the tweeter's ring
+      add(spk, new THREE.SphereGeometry(0.011, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), std(0x101010, { roughness: 0.2 }), [0, 0.19, 0.106], { cast: false, rot: [Math.PI / 2, 0, 0] });
+    }
+  }
   // The lounge by the fire, kept clear of the way through: a linen sofa facing you from the far side, two cane armchairs facing the
   // fire, a low table between; a clear aisle runs past it along the bar and on to the open doors.
   add(room, box(3.3, 0.012, 3.3), new THREE.MeshStandardMaterial({ map: stripeRug(), roughness: 1 }), [0.5, 0.006, FZ - 0.1], { cast: false });
@@ -721,8 +882,8 @@ export async function buildRoom(q) {
   const poker = group("survivor");
   const PX = 1.2, PZ = -4.85, PRX = 1.45, PRZ = 0.84, SEATS = 10;
   const oval = (geometry, mat, y, sx, sz, opts) => { const mesh = add(poker, geometry, mat, [PX, y, PZ], opts); mesh.scale.set(sx, 1, sz); return mesh; };
-  const saddle = new THREE.MeshPhysicalMaterial({ color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
-  const leather = new THREE.MeshPhysicalMaterial({ color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
+  const saddle = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x7a4422, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0xc08a5a) });
+  const leather = new THREE.MeshPhysicalMaterial({ bumpMap: hide, bumpScale: 0.6, color: 0x17110d, roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.35, sheen: 0.3, sheenColor: new THREE.Color(0x6a4a34) });
   oval(cyl(1, 1, 0.12, 96), m.walnut, 0.72, PRX + 0.06, PRZ + 0.06);                                                                   // apron
   oval(cyl(1, 1, 0.06, 96), m.felt, 0.79, PRX - 0.2, PRZ - 0.2);                                                                       // the felt
   oval(new THREE.RingGeometry(0.86, 1.0, 120, 1), m.walnut, 0.822, PRX - 0.08, PRZ - 0.08, { rot: [-Math.PI / 2, 0, 0], cast: false });  // the racetrack
@@ -821,7 +982,7 @@ export async function buildRoom(q) {
     for (let f = 0; f < 11; f++) {
       const a = (f / 11) * Math.PI * 2 + rand(), reach = (0.16 + rand() * 0.3) * s, high = (0.7 + rand() * 0.75) * s;
       const tip = new THREE.Vector3(x + Math.cos(a) * reach, high, z - Math.sin(a) * reach), foot = new THREE.Vector3(x, 0.45 * s, z);
-      const stem = add(room, cyl(0.008 * s, 0.012 * s, tip.distanceTo(foot), 6), leafDeep, [(tip.x + foot.x) / 2, (tip.y + foot.y) / 2, (tip.z + foot.z) / 2]);
+      const stem = add(room, cyl(0.008 * s, 0.012 * s, tip.distanceTo(foot), 6), stalk, [(tip.x + foot.x) / 2, (tip.y + foot.y) / 2, (tip.z + foot.z) / 2]);
       stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tip.clone().sub(foot).normalize());
       const g = new THREE.Group(); g.position.copy(tip); g.rotation.set(rand() * 0.5 - 0.25, a, -0.15 - rand() * 0.45); g.scale.setScalar(s * (0.85 + rand() * 0.4)); room.add(g);
       add(g, broadLeaf, f % 4 === 0 ? leafGreen : leafDeep, [0, 0, 0]); leaves.push(g);
@@ -830,7 +991,9 @@ export async function buildRoom(q) {
   };
   // A bird of paradise, tall and slim: a tall glossy black cylinder pot, a dozen paddle leaves on long upright stems fanning out a
   // little as they climb past two metres, and three of its flowers (a blue-green beak, orange crest, a blue tongue) held up among them.
-  const paddle = frond({ L: 0.66, HW: 0.085, pleats: 0, droop: 0.12, keel: 0.45, depth: 0, scallop: 0, shape: 0.6, NU: 60, NV: 16 });
+  // A bird of paradise's leaf: a long, broad, cupped paddle (a slight ripple at the edge), split here and there along its veins.
+  const paddle = frond({ L: 0.66, HW: 0.11, pleats: 5, droop: 0.14, keel: 0.6, depth: 0.003, scallop: 0.05, shape: 0.6, NU: 90, NV: 24 });
+  const paddleSkin = [leafMat([44, 108, 62], 0.38, 11, { veins: 34, torn: 5 }), leafMat([58, 128, 74], 0.42, 12, { veins: 34, torn: 3 })];
   const birdOfParadise = (x, z) => {
     const POT = 0.62;
     add(room, cyl(0.17, 0.15, POT, 32), new THREE.MeshPhysicalMaterial({ color: 0x141414, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.15 }), [x, POT / 2, z]);
@@ -839,16 +1002,16 @@ export async function buildRoom(q) {
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * Math.PI * 2 + rand() * 0.4, lean = 0.05 + rand() * 0.16, tall = 1.15 + rand() * 0.75;
       const foot = new THREE.Vector3(x + Math.cos(a) * 0.04, POT, z - Math.sin(a) * 0.04), tip = new THREE.Vector3(x + Math.cos(a) * (0.05 + lean * tall), POT + tall, z - Math.sin(a) * (0.05 + lean * tall));
-      const stem = add(room, cyl(0.007, 0.013, foot.distanceTo(tip), 6), leafDeep, [(foot.x + tip.x) / 2, (foot.y + tip.y) / 2, (foot.z + tip.z) / 2]);
+      const stem = add(room, cyl(0.006, 0.014, foot.distanceTo(tip), 8), stalk, [(foot.x + tip.x) / 2, (foot.y + tip.y) / 2, (foot.z + tip.z) / 2]);
       stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tip.clone().sub(foot).normalize());
       // the paddle carries on up from its stem, tipped out a little, its face turned to the light
       const g = new THREE.Group(); g.position.copy(tip); g.rotation.set(0, a + (rand() - 0.5) * 0.6, Math.PI / 2 - 0.45 - lean * 2.2 - rand() * 0.35); g.scale.setScalar(0.85 + rand() * 0.35); room.add(g);
-      add(g, paddle, k % 3 ? leafDeep : leafGreen, [0, 0, 0]); leaves.push(g); stemTip.push(tip);
+      add(g, paddle, paddleSkin[k % 3 ? 0 : 1], [0, 0, 0]); leaves.push(g); stemTip.push(tip);
     }
     const orange = std(0xff8a1c, { roughness: 0.5, side: THREE.DoubleSide, emissive: 0x3a1400 }), beak = std(0x2f5a52, { roughness: 0.5 }), tongue = std(0x2b4fd0, { roughness: 0.45 });
     for (const [k, h] of [[1, 1.35], [5, 1.15], [8, 1.5]]) {
       const a = (k / 12) * Math.PI * 2, fx = x + Math.cos(a) * 0.12, fz = z - Math.sin(a) * 0.12, fy = POT + h;
-      add(room, cyl(0.006, 0.009, h - 0.05, 6), leafDeep, [x + Math.cos(a) * 0.06, POT + (h - 0.05) / 2, z - Math.sin(a) * 0.06], { rot: [Math.sin(a) * 0.08, 0, Math.cos(a) * 0.08] });
+      add(room, cyl(0.006, 0.009, h - 0.05, 6), stalk, [x + Math.cos(a) * 0.06, POT + (h - 0.05) / 2, z - Math.sin(a) * 0.06], { rot: [Math.sin(a) * 0.08, 0, Math.cos(a) * 0.08] });
       const head = new THREE.Group(); head.position.set(fx, fy, fz); head.rotation.y = a; room.add(head);
       add(head, new THREE.ConeGeometry(0.022, 0.2, 8), beak, [0.09, 0, 0], { rot: [0, 0, -Math.PI / 2 + 0.2] });                         // the beak, held out level
       for (let p = 0; p < 4; p++) add(head, new THREE.ConeGeometry(0.012, 0.14, 5), orange, [0.03 + p * 0.018, 0.06 + p * 0.004, (p - 1.5) * 0.012], { rot: [(p - 1.5) * 0.25, 0, -0.35 - p * 0.12], cast: false });   // the orange crest

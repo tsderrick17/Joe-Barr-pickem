@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import { useLayoutEffect, useRef } from "react";
 import { HiddenPick, Logo } from "@/components/clubhouse/lamps";
 import PlayerTrophyName from "@/components/player-trophy-name";
@@ -50,12 +51,12 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
         <span className="lab-survivor-when">
           <span>{String(home.week ?? "").toUpperCase()}</span>
           {/* Your Survivor pick is made on your ticket: this opens it on Survivor. */}
-          {onPick ? <button className="lab-survivor-pick" onClick={onPick} type="button">Make pick <span aria-hidden="true">›</span></button> : null}
+          {onPick ? <button className="lab-survivor-pick" onClick={() => { haptic("tick"); onPick(); }} type="button">Make pick <span aria-hidden="true">›</span></button> : null}
         </span>
       </header>
       {onBoard ? (
         <div className="lab-tote-links">
-          <button onClick={onBoard} type="button">Big Board</button>
+          <button onClick={() => { haptic("tick"); onBoard(); }} type="button">Big Board</button>
           <span aria-current="page">Survivor</span>
         </div>
       ) : null}
@@ -82,7 +83,7 @@ export default function SurvivorToteBoard({ home, onBoard, onPick }: { home: Sta
                       const pick = row.picks[index];
                       const result = pick ? mark(pick.resultMark) : null;
                       return (
-                        <td key={index}>
+                        <td className={out && !pick ? "is-blank" : undefined} key={index}>
                           {pick?.abbreviation
                             ? <span aria-label={`${pick.label ?? pick.abbreviation}${result === "W" ? ", win" : result === "L" ? ", loss" : ""}`} className={`lab-tote-logo${result ? ` is-${result.toLowerCase()}` : ""}`} role="img"><Logo team={pick.abbreviation} /></span>
                             : pick?.isHidden ? <HiddenPick label="Selection submitted and hidden until kickoff" survivor /> : null}

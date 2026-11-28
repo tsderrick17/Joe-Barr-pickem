@@ -16,7 +16,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { bowlChartReady, bowlSnapshot } from "@/lib/chalkboard.js";
-import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
+import { bowlPlateNews, bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
@@ -44,10 +44,10 @@ const writeTicketTuck = (tucked: boolean) => { try { window.localStorage.setItem
 const subscribeTicketTuck = (notify: () => void) => { window.addEventListener(TUCK_EVENT, notify); return () => window.removeEventListener(TUCK_EVENT, notify); };
 
 type Pane = "standings" | "slate" | "survivor" | "trophies" | "bowl" | "rules" | "notifications" | "snapshot";
-const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot" };
+const SPOT_PANE: Record<string, Pane> = { board: "standings", survivor: "survivor", sportsbook: "slate", picks: "slate", trophies: "trophies", bowl: "bowl", constitution: "rules", notify: "notifications", chalkboard: "snapshot", chalkface: "snapshot" };
 const TITLE: Record<Pane, string> = { standings: "The Big Board", slate: "Your ticket", survivor: "Survivor", trophies: "Trophy Room", bowl: "Bowl Pool", rules: "Constitution", notifications: "Notifications", snapshot: "Season Snapshot" };
 // Notifications (the app, phone notifications, the email plan) is loaded only when its pop-up is opened.
-const NotificationSettings = dynamic(() => import("@/components/notification-settings").then((module) => module.NotificationSettings));
+const ClubNotifications = dynamic(() => import("@/components/clubhouse/notifications").then((module) => module.ClubNotifications));
 // The board's panes: one sheet with a switch on top (Big Board, your Ticket, then Survivor or the Bowl Pool by the time of year).
 const DECK: Pane[] = ["standings", "slate", "survivor", "bowl"];
 // The classic pages, loaded the first time they are opened: any week the new board does not cover.
@@ -114,6 +114,25 @@ export default function ClubhousePage() {
   useEffect(() => { askingRef.current = asking !== null; }, [asking]);
   /** Runs `go` at once, or, while picks are waiting to be sent, asks first. */
   const guarded = useCallback((go: () => void) => { if (unsent.current) setAsking({ go }); else go(); }, []);
+  // Leaving the clubhouse any other way with picks waiting (owner, 2026-11-25: picks made here must never go missing on the way to Classic):
+  // a link out of the page, the header's Classic switch among them, stops and asks the same question; once answered it is followed. Closing
+  // or reloading the app asks the browser's own "leave this page?".
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (!unsent.current || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!link || link.target === "_blank") return;
+      const to = new URL(link.href, window.location.href);
+      if (to.origin !== window.location.origin || to.pathname === window.location.pathname) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setAsking({ go: () => { unsent.current = null; link.click(); } });
+    };
+    const onLeave = (event: BeforeUnloadEvent) => { if (unsent.current) { event.preventDefault(); event.returnValue = ""; } };
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("beforeunload", onLeave);
+    return () => { document.removeEventListener("click", onClick, true); window.removeEventListener("beforeunload", onLeave); };
+  }, []);
   // Closing the board's sheet with picks waiting: the sheet stays up and asks; once answered it slides away on this signal.
   const [deckClose, setDeckClose] = useState(0);
   const holdDeck = useCallback(() => { if (!unsent.current) return true; setAsking({ go: () => setDeckClose((count) => count + 1) }); return false; }, []);
@@ -304,7 +323,10 @@ export default function ClubhousePage() {
     if (!room) return null;
     if (!room.feed.bowl || !bowlRead) return room.feed;
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
-    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
+    // The Bowl Pool's plate says what you have left to do there: claim a seat, or how many bowls to pick. It is the poker table's own
+    // plate once Survivor is over, or the second plate under Survivor's while Survivor is still being played.
+    const plate = bowlPlateNews(bowlRead, room.home.viewerPlayerId ?? null, now);
+    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now), ...(plate ? { news: { ...room.feed.news, [room.feed.survivorActive ? "bowl" : "survivor"]: plate } } : {}) };
   }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);
@@ -324,7 +346,7 @@ export default function ClubhousePage() {
   if (!room) return <FootballLoadingScreen background="bg-(color:--themed-bg-18) text-(color:--themed-text-18)" />;
   return (
     <main aria-label="Clubhouse" className={`clubhouse-page${blinks ? ` is-blink-${blinks % 2}` : ""}`} ref={main}>
-      <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
+      <RoomScene feed={roomFeed ?? room.feed} full hrefFor={(spot) => (spot === "chat" || spot === "bottles" ? "#chat" : paneOfSpot(spot) ? `#${paneOfSpot(spot)}` : null)} onSpot={(spot) => { if (spot === "chat" || spot === "bottles") setChatOpen(true); else if (paneOfSpot(spot)) show(paneOfSpot(spot)!); }} />
       <Sheet bare onClose={closeChat} open={chatOpen} title="Pool chat"><ClubChat onHide={closeChat} /></Sheet>
       {room.ticket ? <RoomTicket onOpen={() => show("slate")} onTuck={tuckTicket} tucked={ticketTucked} savedAt={savedAt && savedAt.weekId === view?.weekId ? savedAt.time : null} ticket={room.ticket} week={room.feed.week} /> : null}
       {deck ? <Sheet bare closeSignal={deckClose} guard={holdDeck} onClose={() => { unsent.current = null; leave(...DECK); }} open title={TITLE[deck]}>
@@ -353,11 +375,11 @@ export default function ClubhousePage() {
         onStay={() => setAsking(null)}
       /> : null}
       {popup("snapshot") ? <Sheet bare onClose={() => leave("snapshot")} open title="Season Snapshot"><div className="club-snapshot is-chalkboard pickem-ledger">
-        {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} chalk isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
+        {snapshotOpen || bowlChart ? <SeasonSnapshot active bowl={bowlChart} chalk isPlayoff={room.home.isPlayoff} refreshKey={snapshotKey} standings={snapshotPlayers} viewerId={room.home.viewerPlayerId ?? null} /> : <p className="season-snapshot-message">The Season Snapshot opens once every Week 6 pick has settled.</p>}
       </div></Sheet> : null}
       {popup("trophies") ? <Sheet bare onClose={() => leave("trophies")} open title="Trophy Room"><TrophyPopup /></Sheet> : null}
             {popup("rules") ? <Sheet bare onClose={() => leave("rules")} open title="Constitution"><Constitution /></Sheet> : null}
-      {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><div className="club-notify"><h3>Notifications</h3><NotificationSettings inSheet /></div></Sheet> : null}
+      {popup("notifications") ? <Sheet bare onClose={() => leave("notifications")} open title="Notifications"><ClubNotifications /></Sheet> : null}
       {classic ? <section aria-label="Standings" className="clubhouse-pane" style={{ top: frame.top, ["--site-nav-height" as string]: `${frame.bar}px` }}>
         <header className="lab-room-bar" ref={bar}>
           <button className="lab-room-back" onClick={close} type="button"><span aria-hidden="true">‹</span> Back to Clubhouse</button>

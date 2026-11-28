@@ -19,6 +19,9 @@ export type GameRow = {
   kickoff_at: string;
   line_lock_at: string;
   is_international: boolean;
+  /** Where a game abroad is played (saved from the schedule feed); null at home. Optional: not every read asks for it. */
+  venue_city?: string | null;
+  venue_country?: string | null;
   status: GameStatus;
   away_score: number | null;
   home_score: number | null;
@@ -108,6 +111,8 @@ export function shapeSlateGames({
       kickoffAt: game.kickoff_at,
       lineLockAt: game.line_lock_at,
       isInternational: game.is_international,
+      venueCity: game.venue_city ?? null,
+      venueCountry: game.venue_country ?? null,
       awayTeam: teamNameById.get(game.away_team_id) ?? "Unknown team",
       homeTeam: teamNameById.get(game.home_team_id) ?? "Unknown team",
       awayTeamAbbreviation: teamAbbreviationById.get(game.away_team_id) ?? "NFL",

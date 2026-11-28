@@ -3,6 +3,7 @@ import { seasonYearAt } from "@/lib/season";
 import { ensureAnnualSeasonRollover } from "@/lib/season-rollover";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
+import { syncGameVenues } from "@/lib/game-venues";
 
 type TeamRow = { id: string; abbreviation: string };
 type PeriodRow = { id: string; display_order: number; starts_at: string | null; ends_at: string | null };
@@ -131,7 +132,8 @@ export async function bootstrapFullSchedule({ automatic = false, now = new Date(
       schedule_games: prepared.scheduleGames,
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected full-schedule import did not complete.");
-    const result = { outcome: "loaded" as const, seasonYear: prepared.seasonYear, ...data[0] };
+    const venues = await syncGameVenues(prepared.season.id, prepared.games);
+    const result = { outcome: "loaded" as const, seasonYear: prepared.seasonYear, ...data[0], venuesUpdated: venues.updated, venuesUnplaced: venues.unplaced };
     await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: { automatic, ...result } });
     return result;
   } catch (error) {

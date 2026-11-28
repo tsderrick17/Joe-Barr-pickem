@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings, survivorStillShown, bowlTickerGames, mergeTicker } from "../src/lib/clubhouse-feed.js";
+import { bowlSeason, clubhouseFeed, kickoffLabel, lineFor, placedStandings, survivorStillShown, bowlTickerGames, mergeTicker, bowlPlateNews } from "../src/lib/clubhouse-feed.js";
 
 const game = (id, away, home, extra = {}) => ({
   id, awayTeamId: away.toLowerCase(), homeTeamId: home.toLowerCase(), awayTeamAbbreviation: away, homeTeamAbbreviation: home,
@@ -173,4 +173,14 @@ test("the ticker's order: today's NFL games, then today's bowls, then two NFL ga
   const nfl = [{ id: "n-today-1", at: at("2026-12-27T18:00:00Z") }, { id: "n-today-2", at: at("2026-12-27T21:25:00Z") }, { id: "n-mon", at: at("2026-12-29T01:15:00Z") }, { id: "n-sat", at: at("2026-12-26T21:30:00Z") }, { id: "n-thu", at: at("2026-12-25T01:15:00Z") }];
   const bowls = [{ id: "b-later", at: at("2026-12-29T20:00:00Z") }, { id: "b-today", at: at("2026-12-27T20:00:00Z") }, { id: "b-past", at: at("2026-12-26T01:00:00Z") }];
   assert.deepEqual(mergeTicker(nfl, bowls, now).map((game) => game.id), ["n-today-1", "n-today-2", "b-today", "n-mon", "n-sat", "b-past", "n-thu", "b-later"]);
+});
+
+test("the Bowl Pool plate asks for a seat while seats are open, then counts the bowls still to pick", () => {
+  const game = { id: "g1", bowl_name: "Rose Bowl", kickoff_at: "2026-12-20T20:00:00Z", status: "scheduled", away_team_id: "a", home_team_id: "h", awayTeam: { id: "a" }, homeTeam: { id: "h" } };
+  const now = Date.parse("2026-12-10T18:00:00Z");
+  assert.equal(bowlPlateNews({ optedIn: false, entryOpen: true, games: [game] }, "p1", now), "Claim your seat");
+  assert.equal(bowlPlateNews({ optedIn: false, entryOpen: false, games: [game] }, "p1", now), null);
+  assert.equal(bowlPlateNews({ optedIn: true, games: [game, { ...game, id: "g2" }], ownPicks: [] }, "p1", now), "2 to pick");
+  assert.equal(bowlPlateNews({ optedIn: true, games: [game], ownPicks: [{ game_id: "g1", selected_team_id: "h" }] }, "p1", now), null);
+  assert.equal(bowlPlateNews(null, "p1", now), null);
 });

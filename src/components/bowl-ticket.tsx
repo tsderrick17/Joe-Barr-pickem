@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import BowlScoreTile from "@/components/bowl-score-tile";
+import { SaveBar } from "@/components/clubhouse/save-bar";
 import { Lamp } from "@/components/clubhouse/lamps";
+import PlayerTrophyName from "@/components/player-trophy-name";
 import type { BowlRowState, BowlSide, BowlTicketGame } from "@/lib/bowl-ticket-view.js";
 import { haptic } from "@/lib/haptics-client";
 import { useStableCallback } from "@/lib/use-stable-callback";
@@ -18,7 +20,7 @@ export type BowlTicketData = {
   decided: number;
   owed: number;
   picked?: number;
-  standings: Array<{ id: string; name: string; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
+  standings: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; you: boolean; place: number; tied: boolean }>;
   /** Everyone's picks on every bowl (the classic Bowl Card), when the Bowl Pool's read is the real one. */
   sheet?: BowlSheetData;
 };
@@ -27,7 +29,7 @@ export type BowlSheetCell = { kind: "pick"; team: string; result: "W" | "L" | nu
 export type BowlSheetData = {
   games: Array<{ id: string; name: string; day: string; locked: boolean; matchup: Array<{ team: string; line: string }> }>;
   todayIndex: number;
-  rows: Array<{ id: string; name: string; wins: number; losses: number; place: number; tied: boolean; you: boolean; cells: BowlSheetCell[] }>;
+  rows: Array<{ id: string; name: string; trophies?: string[]; holdsTrophy?: boolean; wins: number; losses: number; place: number; tied: boolean; tiebreaker?: number | null; you: boolean; cells: BowlSheetCell[] }>;
 };
 
 /**
@@ -59,6 +61,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
   const [problem, setProblem] = useState("");
   const open = (game: BowlTicketGame) => !game.locked;
   const changed = view.games.some((game) => open(game) && picks[game.id] !== view.saved[game.id]) || guess !== view.guess;
+  const changes = view.games.filter((game) => open(game) && picks[game.id] !== view.saved[game.id]).length + (guess !== view.guess ? 1 : 0);
   const days = useMemo(() => [...new Set(view.games.map((game) => game.day))], [view.games]);
   const pickedCount = view.games.filter((game) => picks[game.id]).length;
 
@@ -83,35 +86,36 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
   useEffect(() => () => onDirty?.(null), [onDirty]);
   const titleGame = view.games.find((game) => game.tiebreaker) ?? null;
 
-  const caption = (game: BowlTicketGame) => {
+  const caption = (game: BowlTicketGame): ReactNode => {
     if (game.note) return game.note.toUpperCase();
     if (game.state === "missed") return "MISSED · COUNTS AS A LOSS";
     if (game.final) return "FINAL";
-    if (game.locked) return "KICKED OFF";
+    if (game.locked) return <span className="lab-board-status is-live">Live</span>;   // the red LIVE badge, as on the Slate
     return game.time;
   };
+  // Where it is played (city, state) rides on the same small line as the time, so a row never grows taller for it.
+  const withPlace = (game: BowlTicketGame) => (game.place && !game.note && game.state !== "missed" ? <>{caption(game)} · {game.place}</> : caption(game));
 
   return (
     <div className="lab-bigboard lab-window lab-bowl-ticket trace-gilt">
+      {/* One compact block: the title over a single row of figures (to pick, picked, games left, all alike), the season dial beside both. */}
       <header className="lab-bowl-head">
-        <div className="lab-bowl-title">
-          <p aria-hidden="true">★ ★ ★</p>
-          <h3>Bowl Pool</h3>
+        <h3>Bowl Pool</h3>
+        <dl className="lab-bowl-counts">
           {/* Your picks at a glance: how many are still to make (gold while any are) and how many are in. */}
-          {view.owed ? (
-            <dl className="lab-bowl-counts">
-              <div className="is-owed"><dt>To pick</dt><dd>{view.owed}</dd></div>
-              <div><dt>Picked</dt><dd>{view.picked ?? 0}</dd></div>
-            </dl>
-          ) : <span className="lab-bowl-due is-clear">{view.decided === view.total && view.total ? "ALL DECIDED" : "ALL PICKED"}</span>}
-        </div>
-        <BowlGauge played={view.decided} total={view.total} />
+          {view.owed ? <>
+            <div className="is-owed"><dt>To pick</dt><dd>{view.owed}</dd></div>
+            <div><dt>Picked</dt><dd>{view.picked ?? 0}</dd></div>
+          </> : <div className="is-clear"><dt>Picks</dt><dd>{view.decided === view.total && view.total ? "All decided" : "All in"}</dd></div>}
+          {view.total > view.decided ? <div className="is-left"><dt>{view.total - view.decided === 1 ? "Game left" : "Games left"}</dt><dd>{view.total - view.decided}</dd></div> : null}
+        </dl>
+        <BowlGauge bare played={view.decided} total={view.total} />
       </header>
 
       <div aria-label="Bowl Pool view" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
-        <button aria-pressed={tab === "picks"} onClick={() => setTab("picks")} type="button">Picks</button>
+        <button aria-pressed={tab === "picks"} onClick={() => { haptic("tick"); setTab("picks"); }} type="button">Picks</button>
         {/* With the sheet (the real Bowl Pool) the standings are its first column, so there is no separate Standings tab. */}
-        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => setTab("sheet")} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
+        {view.sheet ? <button aria-pressed={tab === "sheet"} onClick={() => { haptic("tick"); setTab("sheet"); }} type="button">Sheet</button> : <button aria-pressed={tab === "standings"} onClick={() => setTab("standings")} type="button">Standings</button>}
       </div>
 
       {/* Everything under the heading scrolls as one, under the heading that stands still. */}
@@ -145,7 +149,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
                     <li className={`lab-bowl-game is-${game.state}`} key={game.id}>
                       <span className="lab-bowl-name">
                         {flagStyle === "logo" && (game.logo || game.playoff) ? (game.logo ? <BowlLogoFlag cloth={game.cloth} hoist={game.hoist} logo={game.logo} state={game.state} /> : <BowlLogoFlag cloth="rgb(0 0 0)" hoist="rgb(200 158 62)" logo={CFP_LOGO} state={game.state} />) : <BowlFlag flag={game.flag} state={game.state} />}
-                        <span>{game.round === "Quarterfinal" || game.round === "Semifinal" ? <em className="lab-bowl-round">CFP {game.round}</em> : null}<b>{game.bowl}</b><small>{caption(game)}</small></span>
+                        <span>{game.round === "Quarterfinal" || game.round === "Semifinal" ? <em className="lab-bowl-round">CFP {game.round}</em> : null}<b>{game.bowl}</b><small>{withPlace(game)}</small></span>
                       </span>
                       {cell(0)}
                       <span aria-hidden="true" className="lab-board-at">vs</span>
@@ -170,10 +174,13 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
             <div><dt>Picked</dt><dd>{pickedCount} of {view.total}</dd></div>
             <div><dt>Still to pick</dt><dd>{view.owed || "None"}</dd></div>
           </dl>
-          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
           {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : savedAt && !changed && !guess && titleGame && !view.tiebreakerLocked ? <p className="lab-window-problem" role="status">Picks saved. Don’t forget your tiebreaker above.</p> : null}
           {onOptOut && view.entryOpen ? <button className="lab-bowl-optout" onClick={onOptOut} type="button">Opt out of the Bowl Pool</button> : null}
         </section>
+        {/* Save rides a bar pinned to the foot of the ticket while there is something to save, so it is never a scroll away. */}
+        <SaveBar changes={changes} pinned={changed}>
+          <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void save()} type="button">{sending ? "Saving…" : changed ? "Save picks" : savedAt ? `Saved at ${savedAt} ✓` : "Saved ✓"}</button>
+        </SaveBar>
       </> : tab === "sheet" && view.sheet ? <BowlSheet sheet={view.sheet} /> : (
         <section aria-label="Bowl standings" className="lab-window-part">
           <h4>STANDINGS<small>{view.decided ? `after ${view.decided} of ${view.total} bowls` : "no bowls played yet"}</small></h4>
@@ -182,7 +189,7 @@ export function BowlTicketCard({ view, onSave, onOptOut, flagStyle = "logo", onD
             {view.standings.map((row) => (
               <li className={row.you ? "is-you" : ""} key={row.id}>
                 <span>{row.tied ? `T${row.place}` : row.place}</span>
-                <b>{row.name}</b>
+                <b><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></b>
                 <em>{row.wins} {row.wins === 1 ? "WIN" : "WINS"}</em>
               </li>
             ))}
@@ -205,10 +212,18 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
   useLayoutEffect(() => {
     const node = scroller.current;
     if (!node || sheet.todayIndex < 1) return;
-    const column = node.querySelectorAll<HTMLElement>("thead th")[sheet.todayIndex + 2];
-    const held = node.querySelectorAll<HTMLElement>("thead th")[2];
+    const column = node.querySelectorAll<HTMLElement>("thead th.lab-bowl-sheet-game")[sheet.todayIndex];
+    const held = node.querySelector<HTMLElement>("thead th.lab-bowl-sheet-game");
     if (column && held) node.scrollLeft = column.offsetLeft - held.offsetLeft;
   }, [sheet.todayIndex]);
+  // The bowls clumped by day, in order: each day's label and how many bowls it has, and which columns start a day.
+  const days = sheet.games.reduce<Array<{ label: string; start: number; count: number }>>((list, game, index) => {
+    const last = list.at(-1);
+    if (last && last.label === game.day) last.count += 1;
+    else list.push({ label: game.day, start: index, count: 1 });
+    return list;
+  }, []);
+  const dayStart = new Set(days.map((day) => day.start));
   const cell = (value: BowlSheetCell, player: string, bowl: string) => {
     if (value.kind === "hidden") return <Lamp label={`${player}, ${bowl}: pick in, hidden until kickoff`} state="in" />;
     if (value.kind === "pick") return <b aria-label={`${player}, ${bowl}: ${value.team}${value.result === "W" ? ", won" : value.result === "L" ? ", lost" : ""}`} className={`lab-bowl-sheet-pick is-${value.result ? value.result.toLowerCase() : "open"}`}>{value.team}</b>;
@@ -219,21 +234,32 @@ function BowlSheet({ sheet }: { sheet: BowlSheetData }) {
   return (
     <section aria-label="Bowl sheet" className="lab-window-part lab-bowl-sheet">
       <div aria-label="Bowl sheet, scrolls sideways" className="lab-bowl-sheet-scroll" ref={scroller} role="region" tabIndex={0}>
-        <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem)` }}>
-          <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}</colgroup>
+        <table style={{ width: `calc(8.7rem + ${sheet.games.length} * 6.6rem + 6.2rem)` }}>
+          <colgroup><col className="lab-bowl-sheet-col-rec" /><col className="lab-bowl-sheet-col-name" />{sheet.games.map((game) => <col className="lab-bowl-sheet-col-game" key={game.id} />)}<col className="lab-bowl-sheet-col-tb" /></colgroup>
           <thead>
+            {/* Three heading rows: each day over its bowls (as the classic Bowl Card clumps them), the bowl names (centred on one line with
+                each other however many lines each takes), then each bowl's schools and spreads. */}
             <tr>
-              <th className="lab-bowl-sheet-rec" scope="col">Wins</th>
-              <th className="lab-bowl-sheet-name" scope="col">Player</th>
-              {sheet.games.map((game) => <th key={game.id} scope="col"><span>{game.name}</span><span className="lab-bowl-sheet-matchup">{game.matchup.every((side) => side.team === "TBD") ? <span className="is-tbd">Teams TBD</span> : game.matchup.map((side, index) => <span key={index}><b>{side.team}</b> <i>{side.line}</i></span>)}</span><small>{game.day.split(" ").slice(1).join(" ")}</small></th>)}
+              <th className="lab-bowl-sheet-rec" rowSpan={3} scope="col">Wins</th>
+              <th className="lab-bowl-sheet-name" rowSpan={3} scope="col">Player</th>
+              {days.map((day) => <th className="lab-bowl-sheet-day is-day-start" colSpan={day.count} key={day.start} scope="colgroup"><span>{day.label}</span></th>)}
+              {/* Last, as on the classic Bowl Card: each player's guess of the total points in the title game. */}
+              <th className="lab-bowl-sheet-tb" rowSpan={3} scope="col">Tiebreaker</th>
+            </tr>
+            <tr>
+              {sheet.games.map((game, index) => <th className={`lab-bowl-sheet-game${dayStart.has(index) ? " is-day-start" : ""}`} key={game.id} scope="col">{game.name}</th>)}
+            </tr>
+            <tr>
+              {sheet.games.map((game, index) => <th className={`lab-bowl-sheet-lines${dayStart.has(index) ? " is-day-start" : ""}`} key={game.id}><span className="lab-bowl-sheet-matchup">{game.matchup.every((side) => side.team === "TBD") ? <span className="is-tbd">Teams TBD</span> : game.matchup.map((side, index) => <span key={index}><b>{side.team}</b> <i>{side.line}</i></span>)}</span></th>)}
             </tr>
           </thead>
           <tbody>
             {sheet.rows.map((row, rowIndex) => (
               <tr className={row.you ? "is-you" : undefined} key={row.id}>
                 <td className="lab-bowl-sheet-rec"><BowlScoreTile landDelay={(rowIndex + 1) * 90} settled value={row.wins} /></td>
-                <th className="lab-bowl-sheet-name" scope="row">{row.name}</th>
-                {row.cells.map((value, index) => <td key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
+                <th className="lab-bowl-sheet-name" scope="row"><PlayerTrophyName name={row.name} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
+                {row.cells.map((value, index) => <td className={dayStart.has(index) ? "is-day-start" : undefined} key={sheet.games[index].id}>{cell(value, row.name, sheet.games[index].name)}</td>)}
+                <td aria-label={`${row.name}, tiebreaker: ${row.tiebreaker ?? "none yet"}`} className="lab-bowl-sheet-tb">{row.tiebreaker ?? "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -331,7 +357,7 @@ const PHASES = [0, 0.25, 0.5, 0.75, 1];
  * moon's phases (new, crescent, half, gibbous, full) in place of fractions (no stars: up close they read as specks); each moon lights as the season passes it, the needle points
  * at the share decided, and the bowls left are read out beneath.
  */
-export function BowlGauge({ played, total }: { played: number; total: number }) {
+export function BowlGauge({ played, total, bare = false }: { played: number; total: number; /** no games-left caption (the ticket's heading counts them) */ bare?: boolean }) {
   const id = useId().replace(/:/g, "");
   const share = total ? Math.min(1, played / total) : 0;
   const point = (fraction: number, radius: number) => {
@@ -345,7 +371,7 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
   const along = (radius: number, side: number) => ({ x: 60 + radius * Math.cos(angle) - side * Math.sin(angle), y: 58 - radius * Math.sin(angle) - side * Math.cos(angle) });
   const needle = [along(30, 0), along(0, 1.7), along(-7, 1.1), along(-7, -1.1), along(0, -1.7)].map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
   return (
-    <figure aria-label={left ? `${left} of ${total} games left` : `All ${total} games played`} className="lab-bowl-gauge" role="img">
+    <figure aria-label={left ? `${left} of ${total} games left` : `All ${total} games played`} className={`lab-bowl-gauge${bare ? " is-bare" : ""}`} role="img">
       <svg aria-hidden="true" focusable="false" viewBox="0 0 120 66">
         <defs>
           <linearGradient id={`${id}-fill`} x1="0" x2="1" y1="0" y2="0">
@@ -382,7 +408,7 @@ export function BowlGauge({ played, total }: { played: number; total: number }) 
         <circle className="lab-bowl-gauge-hub" cx="60" cy="58" fill={`url(#${id}-hub)`} r="3.6" />
         <circle className="lab-bowl-gauge-pin" cx="60" cy="58" r="1.2" />
       </svg>
-      <figcaption>{left ? <><BowlScoreTile label={`${left} left`} large settled value={left} /> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>
+      {bare ? null : <figcaption>{left ? <><BowlScoreTile label={`${left} left`} large settled value={left} /> {left === 1 ? "GAME" : "GAMES"} LEFT</> : "ALL PLAYED"}</figcaption>}
     </figure>
   );
 }

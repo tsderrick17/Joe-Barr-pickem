@@ -380,7 +380,9 @@ measure database requests or end-to-end route time.
 - Haptics: the app gives five feels, one meaning each (`src/lib/haptics.js`): tick = chosen, light tick = taken back, lock-in = a heavier choice, success = saved, warning = that did not work, ratchet = one notch while pulling. Android vibrates (`navigator.vibrate`) for all of them; an iPhone cannot, but it gives its light tick when a finger flips a switch. Since iOS 26.5 the switch must be flipped by the finger itself (a page can no longer flip it from code), so a tapped button carries an invisible label with a hidden switch laid over it (`src/components/haptic-tap.tsx`): one tick per tap, and nothing after a wait or mid-drag (no success, warning or ratchet on an iPhone; the pull gives nothing there). The layer stays mounted through the tap even when the tap changes the button (the finger's switch flips only after the click finishes), and it lets taps through on a disabled button. Where: the Slate (picking a team ticks, taking it back is lighter, going over the limit or touching a closed game warns; a Survivor chip is a lock-in; Submit ticks, then success or a warning once the save answers), the Bowl Pool picks and Submit (the same), the pull-to-refresh chain (a notch as the down counter drops 4 to 3 and 3 to 2, lock-in at 1; Android only), the Notifications page (email plan and final-lines choices, the Turn on / Send test / Turn off buttons, the tick boxes), the "Turn on notifications" banner, the Trophy Room arrows, a tap on a Bowl Card score tile, the theme button, chat Send, and a wrong PIN (a warning on Android). On an iPhone the Notifications tick boxes become the phone's own switch. Never on scrolling, page loads, background updates, arriving notifications, animations or the Commissioner desk. Haptics are always on: there is no switch to turn them off (an old `pickem-vibration` "off" left in a phone's `localStorage` is ignored). A device without haptics, or one that refuses, simply gets nothing and every button works as before.
 - The clubhouse (`/clubhouse`): the Commissioner and the players let into the clubhouse beta (`players.clubhouse_access`, set per player
   from the Clubhouse On/Off switch on `/admin/players`, audited) see the header's light switch and can open it; everyone else is sent to
-  the Standings. It reads and writes only through the classic pages' routes, so it can never show a player more than those pages do.
+  the Standings. The launch switch, Clubhouse for everyone on `/admin/players` (two taps, audited, `pool_settings.clubhouse_open`, off by
+  default), opens it to every player at once; the classic pages stay the default and the light switch is each player's way between them.
+  If the setting cannot be read it reads as closed. It reads and writes only through the classic pages' routes, so it can never show a player more than those pages do.
   Its chalkboard is a still chalk drawing that opens the Season Snapshot (and, once 10 bowls are final, the Bowl Pool's day-by-day chart, `src/lib/chalkboard.js`) and opens the
   full chart; it shows the Season Snapshot only to those the Standings show it to (the Commissioner, everyone once Week 6 settles).
 - The Commissioner area (`/admin`, Commissioner only): the Wheel, ten spokes each with its own address (`SPOKES` in `src/lib/commissioner-wheel.js`):
@@ -426,7 +428,7 @@ measure database requests or end-to-end route time.
 - The Bowl Card's win tiles and its Games remaining counter are split-flap digits (`src/components/bowl-score-tile.tsx`, motion in
   `src/lib/split-flap.js`): one motor drives the whole board, so every flap flips at the same speed (each digit within 3% of it). They flip
   while the card loads, then each digit flips forward only as far as its number and stops, its last three flips slowing, so the board settles
-  raggedly down the rows, once a day per player. A tap on a landed tile flips it once round the drum and back to the same number, with a
+  raggedly down the rows, every time the card is opened or the page refreshed. A tap on a landed tile flips it once round the drum and back to the same number, with a
   tick; it changes nothing. With reduced motion the tiles stand still and cannot be tapped.
 - Before the player-visible launch, placeholders and missing lines are expected
   and the Bowl health contract remains available. From player visibility onward,
@@ -474,7 +476,8 @@ measure database requests or end-to-end route time.
   perfect week of every round but the Super Bowl: a regular 2-0 week, and a playoff round in which the player won every pick it allowed with no
   loss, 6-0 in the Wild Card round when it has six games, 4-0 in the Divisional, 2-0 in the Conference Championships; a round with fewer playable
   games allows fewer picks), places with ties. Other Stats view is **regular season only**: Shutout Free Weeks in a Row and Perfect Weeks in a Row
-  (best run, current run beneath; regular weeks only), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
+  (best run, current run beneath; regular weeks only; a week still being played extends Shutout Free the moment the player has a win in it, and
+  ends Perfect the moment they have a loss in it), games decided by a half point (wins, losses, hit rate) and pushes picked (regular-season
   picks only; a playoff pick never counts); A to Z by default, no places, every column sorts. In both views, in every column, a "—" (nothing to
   show yet) is last whichever way it is sorted, below a real 0 or .000 and never tied with one; level half-point rates go to more wins, then
   fewer losses (`compareRows` in `src/lib/trophy-rank.js`). The two views are one two-way switch.
@@ -496,7 +499,17 @@ across daylight-saving changes.
    loaded, picks may be made immediately.
 2. Preliminary schedule and spread refreshes run before games lock. Each game
    carries its own kickoff and line-lock timestamps; international games can
-   therefore lock earlier without special commissioner action.
+   therefore lock earlier without special commissioner action. A game played
+   abroad also carries its city and country (games.venue_city, venue_country),
+   saved after every schedule import (the season bootstrap) and reconciliation.
+   Every game the feed marks neutral-site is looked up on ESPN by its ESPN id
+   (ESPN's venue city and country), so a new city abroad is picked up with no
+   change here, and a feed that names the wrong stadium is corrected; ESPN is
+   asked once per game (not again once a place is saved). When ESPN cannot be
+   reached, the feed's stadium name is matched against the list in
+   `src/lib/international-venues.js`; a neutral-site game neither can place is
+   listed in the run's `venuesUnplaced`. It is shown only (a pin on the
+   clubhouse ticket); it never decides a lock, a grade or a week.
 3. Official lines lock at their configured time. Picks remain editable until
    kickoff, not merely until the line locks.
    If the provider is unavailable, the most recent preliminary line may lock

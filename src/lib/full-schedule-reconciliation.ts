@@ -2,6 +2,7 @@ import { MIN_REGULAR_SEASON_GAMES, MIN_REGULAR_SEASON_WEEKS, NFLVERSE_SCHEDULE_U
 import { seasonYearAt } from "@/lib/season";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { finishSyncRun } from "@/lib/sync-run";
+import { syncGameVenues } from "@/lib/game-venues";
 
 type Team = { id: string; abbreviation: string };
 type Period = { id: string; display_order: number };
@@ -63,7 +64,8 @@ export async function reconcileFullSeasonSchedule(now = new Date()) {
       target_season_id: season.id, schedule_games: payload,
     });
     if (error || !data?.[0]) throw new Error(error?.message ?? "The protected schedule reconciliation did not complete.");
-    const result = { outcome: "reconciled" as const, seasonYear, ...data[0] };
+    const venues = await syncGameVenues(season.id, games);
+    const result = { outcome: "reconciled" as const, seasonYear, ...data[0], venuesUpdated: venues.updated, venuesUnplaced: venues.unplaced };
     await finishSyncRun(run.id, { status: "success", completed_at: new Date().toISOString(), details: result });
     return result;
   } catch (error) {

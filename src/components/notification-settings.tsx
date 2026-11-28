@@ -8,7 +8,7 @@ import { haptic } from "@/lib/haptics-client";
 import { useHapticsKind } from "@/lib/use-haptics";
 import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 
-type NotificationChoices = {
+export type NotificationChoices = {
   weekly: boolean;
   finalLines: boolean;
   sundayFinalLines: boolean;
@@ -44,18 +44,18 @@ type Profile = {
   emailPlayoffPublicRevealEnabled: boolean;
 };
 
-type NotificationPace = "essentials" | "regular" | "full" | "custom";
-type FinalLineChoice = "all" | "sunday" | "none";
+export type NotificationPace = "essentials" | "regular" | "full" | "custom";
+export type FinalLineChoice = "all" | "sunday" | "none";
 
-const essentials: NotificationChoices = { weekly: false, finalLines: false, sundayFinalLines: false, earlyLock: false, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: false, playoffPublicReveal: false };
-const regular: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: false };
-const full: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: true, sundayLateReveal: true, featuredWindowReveal: true, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: true };
+export const essentials: NotificationChoices = { weekly: false, finalLines: false, sundayFinalLines: false, earlyLock: false, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: false, playoffPublicReveal: false };
+export const regular: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: false, sundayLateReveal: false, featuredWindowReveal: false, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: false };
+export const full: NotificationChoices = { weekly: true, finalLines: true, sundayFinalLines: false, earlyLock: true, pickDueSundayEarly: true, pickDueSundayAfternoon: true, pickDuePrimetime: true, sundayEarlyReveal: true, sundayLateReveal: true, featuredWindowReveal: true, weeklyRecap: true, playoffDayRecap: true, playoffPublicReveal: true };
 
 function matches(left: NotificationChoices, right: NotificationChoices) {
   return (Object.keys(left) as Array<keyof NotificationChoices>).every((key) => left[key] === right[key]);
 }
 
-function paceFor(preferences: NotificationChoices): NotificationPace {
+export function paceFor(preferences: NotificationChoices): NotificationPace {
   if (matches(preferences, essentials)) return "essentials";
   if (matches(preferences, regular)) return "regular";
   if (matches(preferences, full)) return "full";
@@ -81,15 +81,14 @@ function FinalLinesChoice({ active, detail, onChoose, title }: { active: boolean
 }
 
 /**
- * A player's notification choices: getting the app, phone notifications, and pool emails with their pace. The Notifications page
- * shows it; the clubhouse opens the same thing from its cloud, in a pop-up (`inSheet`: no page around it, no page-sized heading).
+ * A player's notification choices, read from and saved to their profile: shared by the Notifications page and the clubhouse's
+ * Notifications pop-up, which look different but save exactly the same thing.
  */
-export function NotificationSettings({ inSheet = false }: { inSheet?: boolean }) {
+export function useNotificationChoices() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [preferences, setPreferences] = useState<NotificationChoices>(regular);
-  const [showFineTune, setShowFineTune] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -106,7 +105,7 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
         if (!response.ok) throw new Error(data.error ?? "Your notification settings could not be loaded.");
         if (!active) return;
         setProfile(data);
-        setEmail(data.notificationEmail);
+        setEmail(data.notificationEmail ?? "");
         setEnabled(data.emailNotificationsEnabled);
         setPreferences({
           weekly: data.emailWeeklyEnabled,
@@ -131,8 +130,7 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
     return () => { active = false; };
   }, []);
 
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function save() {
     setSaving(true); setError(""); setMessage("");
     try {
       const response = await fetchWithSession("/api/profile", {
@@ -166,6 +164,18 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
     } finally { setSaving(false); }
   }
 
+  return { profile, email, setEmail, enabled, setEnabled, preferences, setPreferences, update, pace, finalLineChoice, message, error, saving, save };
+}
+
+/**
+ * A player's notification choices: getting the app, phone notifications, and pool emails with their pace. The Notifications page
+ * shows it; the clubhouse opens the same thing from its cloud, in a pop-up (`inSheet`: no page around it, no page-sized heading).
+ */
+export function NotificationSettings({ inSheet = false }: { inSheet?: boolean }) {
+  const { profile, email, setEmail, enabled, setEnabled, preferences, setPreferences, update, pace, finalLineChoice, message, error, saving, save: saveChoices } = useNotificationChoices();
+  const [showFineTune, setShowFineTune] = useState(false);
+  const save = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); void saveChoices(); };
+
   if (!profile && !error) return inSheet ? <p className="notification-settings is-sheet">Loading Notifications…</p> : <main className="min-h-screen bg-(color:--themed-bg-18) p-8 text-(color:--themed-text-18)">Loading Notifications…</main>;
 
   const body = <>
@@ -183,7 +193,7 @@ export function NotificationSettings({ inSheet = false }: { inSheet?: boolean })
           <section><h3 className="text-xs font-black tracking-[.14em]">FINAL GAMEDAY LINES</h3><p className="mt-1 text-sm text-slate-600">Choose the official-line email pace that fits you.</p><div className="mt-3 grid gap-3 sm:grid-cols-3"><FinalLinesChoice active={finalLineChoice === "none"} detail="No final-line emails." onChoose={() => update({ finalLines: false, sundayFinalLines: false })} title="None" /><FinalLinesChoice active={finalLineChoice === "sunday"} detail="Sent once Sunday’s official lines are ready." onChoose={() => update({ finalLines: false, sundayFinalLines: true })} title="Sundays only" /><FinalLinesChoice active={finalLineChoice === "all"} detail="Sent once that day’s official lines are ready." onChoose={() => update({ finalLines: true, sundayFinalLines: false })} title="All gamedays" /></div></section>
           <section><h3 className="text-xs font-black tracking-[.14em]">SLATE DELIVERY</h3><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.earlyLock} note="Before an International game locks: official line and kickoff reminder." onChange={(checked) => update({ earlyLock: checked })} title="International lock" /><Choice checked={preferences.weekly} note="Wednesday morning: next week’s full preliminary Slate, before official lines." onChange={(checked) => update({ weekly: checked })} title="Fresh Slate on Wednesday" /></div></section>
           <section><h3 className="text-xs font-black tracking-[.14em]">SELECTION REMINDERS</h3><p className="mt-1 text-sm text-slate-600">Each one goes only to players who can still make a needed selection.</p><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.pickDueSundayEarly} note="Sunday at 11 AM ET." onChange={(checked) => update({ pickDueSundayEarly: checked })} title="Sunday early" /><Choice checked={preferences.pickDueSundayAfternoon} note="Sunday at 3 PM ET." onChange={(checked) => update({ pickDueSundayAfternoon: checked })} title="Sunday afternoon" /><Choice checked={preferences.pickDuePrimetime} note="Sunday at 6 PM ET and Monday at 5 PM ET." onChange={(checked) => update({ pickDuePrimetime: checked })} title="Sunday & Monday primetime" /></div></section>
-          <section><h3 className="text-xs font-black tracking-[.14em]">PUBLIC PICK REVEALS</h3><p className="mt-1 text-sm text-slate-600">These go out after kickoff only when someone selected a game in that window. Later picks stay private.</p><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.sundayEarlyReveal} note="When the Sunday early window begins." onChange={(checked) => update({ sundayEarlyReveal: checked })} title="Sunday early window" /><Choice checked={preferences.sundayLateReveal} note="When the Sunday late window begins." onChange={(checked) => update({ sundayLateReveal: checked })} title="Sunday late window" /><Choice checked={preferences.featuredWindowReveal} note="At kickoff, only when at least one player picked that primetime or International game." onChange={(checked) => update({ featuredWindowReveal: checked })} title="Primetime and International windows" /></div></section>
+          <section><h3 className="text-xs font-black tracking-[.14em]">PUBLIC PICK REVEALS</h3><p className="mt-1 text-sm text-slate-600">These go out after kickoff only when someone selected a game in that window. Later picks stay private.</p><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.sundayEarlyReveal} note="When the Sunday early window begins." onChange={(checked) => update({ sundayEarlyReveal: checked })} title="Sunday early window" /><Choice checked={preferences.sundayLateReveal} note="When the Sunday late window begins." onChange={(checked) => update({ sundayLateReveal: checked })} title="Sunday late window" /><Choice checked={preferences.featuredWindowReveal} note="At kickoff, only when at least one player picked that game: primetime, Friday, Saturday or International." onChange={(checked) => update({ featuredWindowReveal: checked })} title="Primetime and International windows" /></div></section>
           <section><h3 className="text-xs font-black tracking-[.14em]">RECAPS & PLAYOFFS</h3><div className="mt-2 divide-y divide-zinc-200 border-y border-zinc-200"><Choice checked={preferences.weeklyRecap} note="Tuesday morning: final Pick’em results and updated standings. Survivor is included only while it remains relevant." onChange={(checked) => update({ weeklyRecap: checked })} title="Weekly recap" /><Choice checked={preferences.playoffDayRecap} note="After every playoff game day is final: results, standings, eliminations, and any newly crowned champion." onChange={(checked) => update({ playoffDayRecap: checked })} title="Daily playoff recap" /><Choice checked={preferences.playoffPublicReveal} note="At every playoff kickoff. Games are combined only when they start at the same time." onChange={(checked) => update({ playoffPublicReveal: checked })} title="All playoff pick reveals" /></div></section>
         </div> : null}</section>
       </div> : null}

@@ -74,7 +74,7 @@ test("unknown teams fall back to safe labels and the full response shape is stab
   const [g1] = shape({ teams: [] });
   assert.deepEqual([g1.awayTeam, g1.homeTeam, g1.awayTeamAbbreviation, g1.homeTeamAbbreviation], ["Unknown team", "Unknown team", "NFL", "NFL"]);
   assert.deepEqual(Object.keys(shape()[0]), [
-    "id", "kickoffAt", "lineLockAt", "isInternational", "awayTeam", "homeTeam", "awayTeamAbbreviation", "homeTeamAbbreviation",
+    "id", "kickoffAt", "lineLockAt", "isInternational", "venueCity", "venueCountry", "awayTeam", "homeTeam", "awayTeamAbbreviation", "homeTeamAbbreviation",
     "favoriteTeamId", "awayTeamId", "homeTeamId", "officialSpread", "preliminarySpread", "spreadSource", "spreadLockedAt",
     "status", "awayScore", "homeScore", "awayResult", "homeResult", "awayPickers", "homePickers",
   ]);

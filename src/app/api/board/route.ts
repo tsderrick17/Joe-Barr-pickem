@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     supabaseAdmin
       .from("games")
       .select(
-        "id, away_team_id, home_team_id, kickoff_at, line_lock_at, is_international, status, away_score, home_score",
+        "id, away_team_id, home_team_id, kickoff_at, line_lock_at, is_international, status, away_score, home_score, venue_city, venue_country",
       )
       .eq("scoring_period_id", weekId)
       .order("kickoff_at"),

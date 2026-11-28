@@ -200,7 +200,7 @@ test("in 6 Wk the starting points show only when a week rests at the left edge; 
   expect((await points()).onEdge, "the points slid out of view with the window").toBe(0);
 });
 
-test("hiding a player removes their line and rescales the axis; nobody's color moves; Show all restores", async ({ page }) => {
+test("hiding a player removes their line and rescales the axis; nobody's color moves; All restores", async ({ page }) => {
   await open(page);
   await flipButton(page).click();
   await page.getByRole("group", { name: "Season half shown" }).getByRole("button", { name: "Season" }).click();
@@ -223,10 +223,13 @@ test("hiding a player removes their line and rescales the axis; nobody's color m
   // Everyone still on the chart keeps the color they had.
   const colorsAfter = await Promise.all(Array.from({ length: count }, (_, index) => swatchOf(index)));
   expect(colorsAfter).toEqual(colorsBefore);
-  const showAll = page.getByRole("button", { name: "Show all" });
-  await expect(showAll).toBeEnabled();
+  const choices = page.getByRole("group", { name: "Players to show" });
+  const showAll = choices.getByRole("button", { name: "All", exact: true });
+  await expect(showAll).toHaveAttribute("aria-pressed", "false");
+  await expect(choices).toContainText(`${count - 1} of ${count} shown`);
   await showAll.click();
-  await expect(showAll).toBeDisabled();
+  await expect(showAll).toHaveAttribute("aria-pressed", "true");
+  await expect(choices).toContainText(`${count} of ${count} shown`);
   expect(await ribbonFills(page)).toEqual(fillsBefore);
 });
 

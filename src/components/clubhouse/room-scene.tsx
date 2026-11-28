@@ -26,27 +26,31 @@ const PICTURES: Record<string, Picture> = ROOM_PICTURES;
 const SPOTS: ReadonlyArray<{ spot: string; room: Room; name: string; tag?: string; label: "above" | "below" | "none" | "free"; at?: { x: number; y: number }; wideAt?: { x: number; y: number }; fullAt?: { x: number; y: number }; ticket?: boolean; realOnly?: boolean }> = [
   // The poker table comes first: it is the biggest thing in the picture, so everything smaller stays on top of it.
   { spot: "survivor", room: "survivor", name: "Survivor", label: "below" },
+  // The bottles on the back bar open the pool chat too, like the chat plate by the stools (no plate of its own; the real clubhouse only).
+  { spot: "bottles", room: "chat", name: "Bottles on the back bar: open Pool chat", label: "none", realOnly: true },
   // The spreads under the Big Board are where picks are made: the board itself opens the Big Board with your ticket ready (it needs
   // no label: it looks like the ticket), and so does the "Your picks" button, which stands by itself in the gap between the chairs.
   { spot: "sportsbook", room: "board", name: "Make your picks", label: "none", ticket: true },
+  // The chalkboard itself (not only its "Snapshot" pill) opens the Season Snapshot: the same rectangle, no plate of its own.
+  { spot: "chalkface", room: "snapshot", name: "Chalkboard: open Season Snapshot", label: "none" },
   { spot: "trophies", room: "trophies", name: "Trophy Room", tag: "Trophies", label: "above" },
   { spot: "board", room: "board", name: "The Big Board", label: "above" },
   // The chat plate stands on the bar stools just above the chalkboard (owner, 2026-11-22).
-  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.82, y: 0.55 }, fullAt: { x: 0.82, y: 0.55 }, wideAt: { x: 0.76, y: 0.64 } },
+  { spot: "chat", room: "chat", name: "Pool chat", tag: "Chat", label: "free", at: { x: 0.835, y: 0.575 }, fullAt: { x: 0.835, y: 0.575 }, wideAt: { x: 0.768, y: 0.635 } },
   // The chalkboard on its stand between the table and the bar: the Season Snapshot, sketched in chalk (and from Dec 7 the Bowl Pool's).
   // A small "Snapshot" pill sits on the board's upper edge so it reads as tappable (owner, 2026-11-22); above your ticket on a phone.
-  { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.7 } },
+  { spot: "chalkboard", room: "snapshot", name: "Season Snapshot", tag: "Snapshot", label: "free", at: { x: 0.78, y: 0.66 }, fullAt: { x: 0.8, y: 0.66 }, wideAt: { x: 0.83, y: 0.72 } },
   { spot: "constitution", room: "constitution", name: "Constitution", tag: "Rules", label: "below" },
   // Notifications: a plate like the others, up in the thatch at the right where it covers nothing (the real clubhouse only: it opens
   // the player's own settings).
-  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.8, y: 0.14 }, realOnly: true },
+  { spot: "notify", room: "board", name: "Notifications", tag: "Notifications", label: "free", at: { x: 0.8, y: 0.19 }, fullAt: { x: 0.8, y: 0.25 }, wideAt: { x: 0.745, y: 0.186 }, realOnly: true },
 ];
 
-/** The room's lamps, by picture shape (tall, filling the phone, wide): tapping one turns the lights down for night, or up for day. */
+/** The room's lamp, by picture shape (tall, filling the phone, wide): tapping the ceiling light turns the lights down for night, or up for day (nothing else in the room does). */
 const LAMPS: Record<"tall" | "full" | "wide", Array<{ name: string; x: number; y: number }>> = {
   tall: [{ name: "ceiling light", x: 0.53, y: 0.04 }],
   full: [{ name: "ceiling light", x: 0.53, y: 0.12 }],
-  wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }, { name: "bar lamp", x: 0.85, y: 0.56 }],
+  wide: [{ name: "ceiling light", x: 0.49, y: 0.15 }],
 };
 
 /** The site's day or night, as the header's switch sets it (read straight from the page, before the header has had a turn). */
@@ -61,6 +65,12 @@ function followTheme(change: () => void) {
   watch.observe(document.documentElement, { attributeFilter: ["data-theme"] });
   return () => { window.removeEventListener("pickem-theme-change", change); watch.disconnect(); };
 }
+/** The back bar's shelves of bottles, by picture (as fractions of it), which open the chat. */
+const BOTTLES: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "-wide": { x: 0.715, y: 0.41, w: 0.125, h: 0.17 },
+  "-full": { x: 0.86, y: 0.4, w: 0.14, h: 0.13 },
+};
+
 /** A desktop (900px and wider) gets the wide picture, known on the first render so a desktop never loads the phone's picture first. */
 const WIDE_QUERY = "(min-width: 900px)";
 const wideNow = () => window.matchMedia(WIDE_QUERY).matches;
@@ -200,34 +210,64 @@ function RoomNews({ picture, frame, feed, night }: { picture: Picture; frame: { 
  * with old chalk dust where earlier races were wiped away. It is the same drawing all season; tapping the board opens the real chart.
  * The picture's own light is on it, so at night the chalk is a little dimmer.
  */
+/** The sketch's race: seven runners' running totals over nine weeks, made up, weaving and crossing as a real season does. */
+const SKETCH_RACE: Array<[string, number[]]> = [
+  ["#f4f1e8", [0, 2, 3, 5, 6, 8, 10, 11, 13]],
+  ["#f3d97a", [0, 1, 3, 4, 6, 7, 8, 10, 12]],
+  ["#9fd3f2", [0, 2, 2, 4, 5, 6, 8, 9, 10]],
+  ["#f2a3c4", [0, 1, 2, 3, 5, 6, 7, 8, 9]],
+  ["#b8e0a8", [0, 0, 2, 3, 3, 5, 6, 7, 8]],
+  ["#f0b98a", [0, 1, 1, 2, 3, 4, 4, 6, 7]],
+  ["#c9b8f0", [0, 0, 1, 2, 2, 3, 4, 4, 5]],
+];
+const SKETCH = { x0: 24, x1: 220, y0: 128, y1: 20, top: 13 };
+const sketchX = (week: number) => SKETCH.x0 + (week / 8) * (SKETCH.x1 - SKETCH.x0);
+const sketchY = (wins: number) => SKETCH.y0 - (wins / SKETCH.top) * (SKETCH.y0 - SKETCH.y1);
+/** A hand-drawn line through the weeks: gentle curves (Catmull-Rom), each point nudged a hair off true, as a hand would. */
+function sketchPath(totals: number[], wobble: number) {
+  const pts = totals.map((wins, week) => [sketchX(week), sketchY(wins) + (week ? Math.sin(week * 2.3 + wobble) * 0.7 : 0)]);
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [pts[Math.max(0, i - 1)], pts[i], pts[i + 1], pts[Math.min(pts.length - 1, i + 2)]];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+/**
+ * The chalkboard's slate: a still chalk sketch of a standings race, the way someone would draw one by hand (no names, no numbers):
+ * seven fine lines that weave over nine weeks, each with a soft halo of chalk dust and a dot where it ends, faint week guides, a light
+ * hand-drawn axis, and old chalk dust where earlier races were wiped away. It is the same drawing all season; tapping it opens the
+ * real chart. The picture's own light is on it, so at night the chalk is a little dimmer.
+ */
 function ChalkSketch() {
-  const lines: Array<[string, string]> = [
-    ["#f4f1e8", "M22 128 C40 112 56 104 72 92 S100 70 118 62 S150 44 170 34 S204 18 222 14"],
-    ["#f3d97a", "M22 128 C42 120 58 110 76 104 S104 92 122 80 S152 74 172 62 S204 48 222 44"],
-    ["#9fd3f2", "M22 128 C44 124 60 118 80 114 S106 104 126 100 S154 94 174 86 S204 78 222 74"],
-    ["#f2a3c4", "M22 128 C46 127 64 124 84 122 S112 118 130 116 S158 112 178 110 S206 106 222 104"],
-  ];
   return (
     <svg viewBox="0 0 240 152">
       <defs>
         <filter id="chalk-grain" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence baseFrequency="0.9" numOctaves="2" result="noise" seed="7" type="fractalNoise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="2.2" />
-          <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.3" />
+          <feTurbulence baseFrequency="1.1" numOctaves="2" result="noise" seed="7" type="fractalNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" result="rough" scale="1.4" />
+          <feColorMatrix in="noise" result="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.8 1.45" />
           <feComposite in="rough" in2="grain" operator="in" />
         </filter>
         <filter id="chalk-dust"><feGaussianBlur stdDeviation="5" /></filter>
+        <filter id="chalk-halo"><feGaussianBlur stdDeviation="1.6" /></filter>
       </defs>
       {/* old races wiped with a felt */}
       <g className="chalk-dust" filter="url(#chalk-dust)">
         <ellipse cx="70" cy="60" rx="52" ry="18" />
         <ellipse cx="170" cy="112" rx="58" ry="16" />
       </g>
+      <g className="chalk-halo" filter="url(#chalk-halo)">
+        {SKETCH_RACE.map(([color, totals], index) => <path d={sketchPath(totals, index)} key={color} style={{ stroke: color }} />)}
+      </g>
       <g filter="url(#chalk-grain)">
-        <path className="chalk-axis" d="M16 14 L17 134 L228 133" />
-        {[40, 72, 104].map((y) => <path className="chalk-tick" d={`M13 ${y} L21 ${y + 1}`} key={y} />)}
-        {[62, 108, 154, 200].map((x) => <path className="chalk-tick" d={`M${x} 130 L${x + 1} 138`} key={x} />)}
-        {lines.map(([color, d]) => <path className="chalk-line" d={d} key={color} style={{ stroke: color }} />)}
+        {Array.from({ length: 8 }, (_, week) => <path className="chalk-guide" d={`M${sketchX(week + 1).toFixed(1)} 18 L${(sketchX(week + 1) + 0.6).toFixed(1)} 130`} key={week} />)}
+        <path className="chalk-axis" d="M18 14 L18.6 132.5 L228 132" />
+        {[54, 92].map((y) => <path className="chalk-tick" d={`M15 ${y} L21 ${y + 0.5}`} key={y} />)}
+        {SKETCH_RACE.map(([color, totals], index) => <path className="chalk-line" d={sketchPath(totals, index)} key={color} style={{ stroke: color }} />)}
+        {SKETCH_RACE.map(([color, totals]) => <circle className="chalk-end" cx={sketchX(8)} cy={sketchY(totals[8])} key={color} r="1.9" style={{ fill: color }} />)}
       </g>
     </svg>
   );
@@ -251,13 +291,17 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
   useEffect(() => { const timer = window.setTimeout(() => setSettled(true), 2500); return () => window.clearTimeout(timer); }, []);
   // The real clubhouse on a phone has its own taller picture, to fill the screen.
   const key = wide ? "-wide" : full ? "-full" : "";
-  const picture = PICTURES[`day${key}`] ?? PICTURES.day;
+  const base = PICTURES[`day${key}`] ?? PICTURES.day;
+  const picture: Picture = { ...base, spots: { ...base.spots, ...(BOTTLES[key] ? { bottles: BOTTLES[key] } : {}), ...(base.spots.chalkboard ? { chalkface: base.spots.chalkboard } : {}) } };
   const news = feed.news;
   // The poker table is whichever pool is being played: Survivor while it runs, the Bowl Pool in bowl season (in the Bowl Pool's navy and
   // gold), never both; between the two (Survivor decided, the Bowl Pool not open yet) it has no plate. (Both are always on the board's tabs.)
   const survivorActive = feed.survivorActive ?? !feed.survivorOver;
   const table: "survivor" | "bowl" | null = survivorActive ? "survivor" : feed.bowl ? "bowl" : null;
   const taken = table === "bowl";
+  // Bowl season while Survivor is still being played: the table stays Survivor's, and a second plate, the Bowl Pool's in its navy and
+  // gold, hangs right below Survivor's, so the Bowl Pool (and a seat to claim) is never hidden in the room.
+  const both = survivorActive && Boolean(feed.bowl);
   const spots = SPOTS.flatMap((item) => {
     if (item.spot === "survivor") return table === null ? [] : taken ? [{ ...item, room: "bowl" as Room, name: "Bowl Pool" }] : [item];
     return [item];
@@ -298,14 +342,28 @@ export function RoomScene({ feed, onSpot, hrefFor, full = false }: { feed: RoomF
             {spot === "chat" && feed.mail ? <span aria-label="New message" className="lab-room-mail" role="img">✉</span> : null}
           </span>
         );
+        if (spot === "survivor" && both && at && !free) {
+          const stackStyle = { left: `${(at.x + at.w * .27) * 100}%`, top: `${(at.y + at.h * .32) * 100}%` } as CSSProperties;
+          const bowlPlate = (
+            <span className={`lab-room-tag is-bowl-pool${news.bowl ? " has-news" : ""}`}>
+              <b aria-hidden="true">Bowl Pool<i /></b>{news.bowl ? <small aria-hidden="true">{news.bowl}</small> : null}
+            </span>
+          );
+          return (
+            <div className="lab-room-plates" key={spot} style={stackStyle}>
+              <button aria-label={name} className="lab-room-plates-item is-survivor" onClick={() => { haptic("tick"); onSpot?.(spot, next, ticket); }} type="button">{plate}</button>
+              <button aria-label="Bowl Pool" className="lab-room-plates-item is-bowl" onClick={() => { haptic("tick"); onSpot?.("bowl", "bowl", ticket); }} type="button">{bowlPlate}</button>
+            </div>
+          );
+        }
         const href = hrefFor?.(spot) ?? null;
         // A button that stands by itself in the picture, not over a thing in it; or placed by its corner over the thing, with no
         // transform (a transform would trap each label under the spots drawn after it).
         const className = free ? `lab-room-bubble is-${spot}` : `lab-room-spot is-${spot}${spot === "sportsbook" && feed.owed ? " is-owed" : ""}`;
         const style = (free ? { left: `${free.x * 100}%`, top: `${free.y * 100}%` } : { left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${at.w * 100}%`, height: `${at.h * 100}%` }) as CSSProperties;
         // A "#name" is not a page: it is a button that asks the screen to open that thing over the room (the chat).
-        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} style={style}>{plate}</Link>;
-        return <button aria-label={name} className={className} key={spot} onClick={() => onSpot?.(spot, next, ticket)} style={style} type="button">{plate}</button>;
+        if (href && !href.startsWith("#")) return <Link aria-label={name} className={className} href={href} key={spot} onClick={() => haptic("tick")} style={style}>{plate}</Link>;
+        return <button aria-label={name} className={className} key={spot} onClick={() => { haptic("tick"); onSpot?.(spot, next, ticket); }} style={style} type="button">{plate}</button>;
       })}
       {/* The lamps (the real clubhouse): tap one and the lights go down for night, or up for day, the same switch as the header's. */}
       {hrefFor ? LAMPS[wide ? "wide" : full ? "full" : "tall"].map((lamp) => (

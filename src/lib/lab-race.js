@@ -2,7 +2,6 @@
 // relies on (nobody runs backwards, the leader reaches the finish only when the pool is decided) can be checked on their own.
 // Sample players only. Nothing here is pool data.
 
-import { LAB_PLAYERS } from "./lab-samples.js";
 
 /** Wins each player took in each regular-season week (two picks a week, so 0 to 2), weeks 1 to 18. */
 const WEEKLY_WINS = {
@@ -134,4 +133,3 @@ export function labRaceStepMs(frame) {
   return frame.kind === "week" ? 380 : 950;
 }
 
-export const LAB_RACE_PLAYERS = LAB_PLAYERS;

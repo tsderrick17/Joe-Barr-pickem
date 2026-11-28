@@ -45,7 +45,7 @@ export function UnsentPicks({ bowl, busy, onSend, onStay, onDrop }: { bowl: bool
   const ref = useRef<HTMLDialogElement | null>(null);
   useEffect(() => { const dialog = ref.current; if (dialog && !dialog.open) dialog.showModal(); }, []);
   return (
-    <dialog aria-labelledby="unsent-title" className="club-unsent" onCancel={(event) => { event.preventDefault(); onStay(); }} onClick={(event) => { if (event.target === event.currentTarget) onStay(); }} ref={ref}>
+    <dialog aria-labelledby="unsent-title" className={`club-unsent${bowl ? " is-bowl" : ""}`} onCancel={(event) => { event.preventDefault(); onStay(); }} onClick={(event) => { if (event.target === event.currentTarget) onStay(); }} ref={ref}>
       <h2 id="unsent-title">{bowl ? "Your bowl picks aren’t saved yet" : "Your picks aren’t sent yet"}</h2>
       <p>{bowl ? "You made changes but didn’t press Save. Save them now?" : "You picked teams but didn’t press Submit. Send them now?"}</p>
       <button className="is-send" disabled={busy} onClick={onSend} type="button">{busy ? (bowl ? "Saving…" : "Sending…") : bowl ? "Save my picks" : "Send my picks"}</button>
@@ -106,7 +106,7 @@ export function TicketPanel({ view, onSent, onChanged, onWeek, startOn = "pickem
       window.dispatchEvent(new Event(PICKS_SAVED_EVENT));
       onSaved?.();
       await onChanged();   // the board and the room's ticket read again, so the pick shows at once
-      onSent();
+      // The ticket stays open after a send (owner, 2026-11-27): the picks fill with gold where they are.
     } catch (reason) {
       if (reason instanceof SessionUnavailableError) { window.location.replace("/login"); return ""; }
       haptic("warning");
@@ -297,7 +297,7 @@ export function BowlPopup({ viewerPlayerId, onDirty }: { viewerPlayerId: string 
   const view = bowlTicketView(payload, { viewerPlayerId });
   if (!view.optedIn) {
     return view.entryOpen
-      ? <BowlClaimSeat busy={claiming} onClaim={() => void claim()} />
+      ? <div className="club-bowl-claim"><BowlClaimSeat busy={claiming} onClaim={() => void claim()} /></div>
       : <p className="lab-board-note">Bowl Pool entry closed at the first kickoff. Check back next year.</p>;
   }
   return <BowlTicketCard key={reads} onDirty={onDirty} onOptOut={() => void optOut()} onSave={save} savedAt={savedAt} view={view} />;

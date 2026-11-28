@@ -1578,6 +1578,24 @@ export type Database = {
           },
         ]
       }
+      pool_settings: {
+        Row: {
+          clubhouse_open: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          clubhouse_open?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          clubhouse_open?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       provider_failure_circuits: {
         Row: {
           consecutive_failures: number

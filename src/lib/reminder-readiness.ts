@@ -9,6 +9,7 @@ import {
   isSundayWindowReady,
 } from "@/lib/reminder-readiness-rules.js";
 import { isSettledGameStatus } from "@/lib/game-status-policy.js";
+import { isFeaturedKickoff } from "@/lib/email-plan-schedule.js";
 import { eligiblePlayerIds } from "@/lib/reminder-audience";
 import { easternDateKey as easternDate, easternHour, easternWeekday } from "@/lib/eastern-time.js";
 
@@ -173,13 +174,6 @@ async function playoffPublicRevealReady(sourceGameIds: string[] = []): Promise<R
     ? { ready: true, reason: null }
     : { ready: false, reason: "The selected playoff window has not reached kickoff yet." };
   return publicRevealSelectionReadiness({ kickoffReady, selectedPickCount: await selectedPickCount(sourceGameIds) });
-}
-
-function isFeaturedKickoff(game: { is_international: boolean; kickoff_at: string }) {
-  if (game.is_international) return true;
-  const weekday = easternWeekday(game.kickoff_at);
-  const hour = easternHour(game.kickoff_at);
-  return weekday === "Wednesday" || weekday === "Thursday" || weekday === "Monday" || (weekday === "Sunday" && hour >= 20);
 }
 
 async function featuredWindowRevealReady(sourceGameIds: string[] = []): Promise<ReminderReadiness> {

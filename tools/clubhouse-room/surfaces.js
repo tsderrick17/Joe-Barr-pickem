@@ -19,6 +19,27 @@ export function tile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
   }
   return geometry;
 }
+
+// Lays stone round a box the way a mason would: the faces that turn a corner share one strip of stone, so a stone cut by a corner
+// carries on round it (the same stone seen from its other side), never a fresh pattern starting at the edge. The strip runs along the
+// front (the -x face, by its z), turns both corners onto the sides, and meets itself only on the +x face, the one set into the wall.
+export function wrapTile(geometry, su, sv = su, [ox, oy, oz] = [0, 0, 0]) {
+  geometry.computeBoundingBox();
+  const { min, max } = geometry.boundingBox, x0 = min.x + ox, z0 = min.z + oz, z1 = max.z + oz;
+  const p = geometry.attributes.position, n = geometry.attributes.normal, uv = geometry.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) + ox, y = (p.getY(i) + oy) / sv, z = p.getZ(i) + oz;
+    const nx = n.getX(i), ny = n.getY(i), nz = n.getZ(i);
+    let t;
+    if (Math.abs(ny) > 0.5) { uv.setXY(i, x / su, z / su); continue; }
+    if (nx < -0.5) t = z;                                   // the front
+    else if (nz < -0.5) t = z0 - (x - x0);                  // round the near corner onto that side
+    else if (nz > 0.5) t = z1 + (x - x0);                   // round the far corner onto the other side
+    else t = z;                                             // the face in the wall: never seen
+    uv.setXY(i, t / su, y);
+  }
+  return geometry;
+}
 // A colour picture and its matching relief (white is high), drawn together.
 function pair(w, h, draw, repeat = [1, 1]) {
   const c = canvas(w, h), b = canvas(w, h); draw(c.getContext("2d"), b.getContext("2d"));
@@ -68,17 +89,22 @@ export function shiplap(repeat) {
 
 // Fieldstone: flat-lying stones of many greys and tans, each one mottled and rounded up out of a raked mortar joint. The pattern is
 // worked out stone by stone (the nearest and second-nearest stone to every point), so no two are alike and the picture still repeats.
+/** Knobs for test renders (scene query `stonelift`): how strongly stones stand out from or sit back in the wall. */
+export const STONE = { lift: 1 };
 export function fieldstone() {
   const W = 1024, H = 1024, GX = 8, GY = 13, seeds = [];
   const palette = [[176, 168, 156], [152, 146, 136], [188, 176, 156], [136, 132, 128], [172, 152, 130], [120, 115, 110], [200, 192, 178], [160, 146, 128], [146, 150, 152]];
+  // Each stone's own relief comes from a stream of its own, so the rest of the room's surfaces keep their looks.
+  const relief = (() => { let r = 4242; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; })();
   for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
     const t = (rand() - 0.5) * 22, p = palette[Math.floor(rand() * palette.length)];
-    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5 });
+    // lift: how far the stone stands out (-1 set back, +1 proud); dome: how rounded its face is (low = a flat slab, high = a cobble).
+    seeds.push({ x: (i + 0.5 + (rand() - 0.5) * 0.8 + (j % 2) * 0.5) / GX, y: (j + 0.5 + (rand() - 0.5) * 0.7) / GY, c: p.map((v) => v + t), tilt: (rand() - 0.5) * 0.5, lift: relief() * 2 - 1, dome: 0.3 + relief() * 0.6 });
   }
   const N = 48, lattice = Array.from({ length: N * N }, () => rand()), at = (i, j) => lattice[(((j % N) + N) % N) * N + (((i % N) + N) % N)];
   const mottle = (u, v) => { const x = u * N, y = v * N, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy); return (at(x0, y0) * (1 - sx) + at(x0 + 1, y0) * sx) * (1 - sy) + (at(x0, y0 + 1) * (1 - sx) + at(x0 + 1, y0 + 1) * sx) * sy; };
   const c = canvas(W, H), b = canvas(W, H), cg = c.getContext("2d"), bg = b.getContext("2d");
-  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H);
+  const ci = cg.createImageData(W, H), bi = bg.createImageData(W, H), d = canvas(W, H), dg = d.getContext("2d"), di = dg.createImageData(W, H);
   for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
     const u = px / W, v = py / H, gi = Math.floor(u * GX), gj = Math.floor(v * GY);
     let d1 = 9, d2 = 9, s1 = seeds[0], ox = 0, oy = 0;
@@ -89,17 +115,32 @@ export function fieldstone() {
       if (d < d1) { d2 = d1; d1 = d; s1 = s; ox = dx * GX; oy = dy * GY; } else if (d < d2) d2 = d;
     }
     const blot = mottle(u, v) - 0.5 + (mottle(u * 4, v * 4) - 0.5) * 0.5, joint = 0.03 + 0.035 * mottle(u * 3 + 0.3, v * 3 + 0.7);
-    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / 0.2)), round = Math.pow(face, 0.5);
+    const edge = d2 - d1, face = Math.min(1, Math.max(0, (edge - joint) / (0.16 + 0.1 * s1.dome))), round = Math.pow(face, s1.dome), lift = Number(STONE.lift);
     const grit = (rand() - 0.5) * 20, o = (py * W + px) * 4, mortar = edge < joint;
-    const shade = mortar ? 1 + blot * 0.1 : 0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.22 + blot * 0.24;
-    const col = mortar ? [130, 121, 106] : s1.c;
-    for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit));
-    const hgt = mortar ? 52 + grit : 92 + 128 * round + blot * 56 + grit * 0.8;
+    // Depth: each stone is a rounded lump set back from deep, dark joints (the shade closes in toward every joint, a soft light from the
+    // top left catches the upper-left of each stone), with pitting and a fine grain on the faces so no stone is flat.
+    const cavity = mortar ? 1 : 0.5 + 0.5 * Math.min(1, face * 2.4);
+    const pit = mottle(u * 14 + 0.31, v * 14 + 0.17) - 0.5, fine = mottle(u * 40 + 0.5, v * 40 + 0.9) - 0.5;
+    // A proud stone catches more light and a set-back one sits in shade; both deepen toward the joint.
+    const proud = 1 + s1.lift * 0.1 * lift;
+    // A proud stone throws a little shade down and to the right into its joint; a set-back one is shaded along its own top and left edge.
+    const rim = mortar ? 0 : (1 - Math.min(1, face * 3)) * lift * (s1.lift > 0 ? 0 : -s1.lift * 0.35);
+    const shade = (mortar ? 0.8 + blot * 0.1 : (0.82 + 0.18 * round + (ox * s1.tilt - oy * 0.12) * 0.34 + blot * 0.26 + pit * 0.16 + fine * 0.1) * cavity * proud - rim) * (mortar ? 1 : 1 + (-ox * 0.05 - oy * 0.07));
+    const col = mortar ? [118, 108, 94] : s1.c;
+    for (let k = 0; k < 3; k++) ci.data[o + k] = Math.max(0, Math.min(255, col[k] * shade + grit * 1.1));
+    // The stone's shape (its dome and how far it stands out) and, much fainter, its pitting: smooth faces that still feel worn.
+    const form = mortar ? 30 : 60 + (110 + 40 * s1.dome) * round + s1.lift * 48 * lift * round;
+    const hgt = mortar ? 30 + grit * 0.3 : form + blot * 24 + pit * 16 + fine * 6 + grit * 0.25;
     bi.data[o] = bi.data[o + 1] = bi.data[o + 2] = Math.max(0, Math.min(255, hgt)); ci.data[o + 3] = bi.data[o + 3] = 255;
+    di.data[o] = di.data[o + 1] = di.data[o + 2] = Math.max(0, Math.min(255, form)); di.data[o + 3] = 255;
   }
-  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0);
-  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b); bumpMap.anisotropy = 8; bumpMap.wrapS = bumpMap.wrapT = THREE.RepeatWrapping;
-  return { map, bumpMap };
+  cg.putImageData(ci, 0, 0); bg.putImageData(bi, 0, 0); dg.putImageData(di, 0, 0);
+  // The relief the wall is shaped by: only each stone's form, softened a little so faces and edges come out smooth, never jagged.
+  const soft = canvas(W, H), sg = soft.getContext("2d"); sg.filter = "blur(3px)";
+  for (const [x, y] of [[0, 0], [-W, 0], [W, 0], [0, -H], [0, H]]) sg.drawImage(d, x, y);   // wrapped, so the blur meets itself at the tile's edges
+  const map = texture(c, [1, 1]), bumpMap = new THREE.CanvasTexture(b), displacementMap = new THREE.CanvasTexture(soft);
+  for (const t of [bumpMap, displacementMap]) { t.anisotropy = 8; t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  return { map, bumpMap, displacementMap };
 }
 
 // The thatch behind the courses: deep, dark straw, only glimpsed between them.
@@ -211,9 +252,10 @@ export function sky(night) {
     let s = 11; const star = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
     for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255, 255, 255, ${0.3 + star() * 0.7})`; g.fillRect(star() * 1024, star() * 420, 1 + star(), 1 + star()); }
     for (let i = 0; i < 270; i++) rand();
-  } else for (let k = 0; k < 9; k++) {
-    const cx = rand() * 1024, cy = 330 + rand() * 110, s = 30 + rand() * 40;
-    for (let p = 0; p < 9; p++) { const x = cx + (rand() - 0.5) * s * 3.4, y = cy + (rand() - 0.5) * s * 0.5, r = s * (0.5 + rand() * 0.6), cg = g.createRadialGradient(x, y, 0, x, y, r); cg.addColorStop(0, "rgba(255, 255, 255, .8)"); cg.addColorStop(1, "rgba(255, 255, 255, 0)"); g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r * 2); }
+  } else {
+    // real cumulus from a counter of their own; the shared one is still stepped the 270 draws the old clouds took, so the room is unchanged
+    cumulus(g, 1024, 512); for (let i = 0; i < 270; i++) rand();
+    const haze = g.createLinearGradient(0, 400, 0, 512); haze.addColorStop(0, "rgba(240, 246, 244, 0)"); haze.addColorStop(1, "rgba(240, 246, 244, .55)"); g.fillStyle = haze; g.fillRect(0, 400, 1024, 112);
   }
   return texture(c);
 }
@@ -271,3 +313,260 @@ export function bottleLabels() {
   });
   return texture(c);
 }
+
+// A random stream of its own for the surfaces added later, so adding one never reshuffles the rest of the room.
+const stream = (seed) => { let r = seed; return () => { r = (r * 16807) % 2147483647; return r / 2147483647; }; };
+
+// Solid timber for the beams, the trusses and the mantel: one piece of wood, not boards. Long grain along its length (the width of the
+// picture) that wavers and gathers round the odd knot, a few seasoning checks, a slow wash of tone; its relief follows the grain.
+// `tone` is the wood's middle colour as [r, g, b].
+export function timberGrain(tone, repeat = [1, 1]) {
+  const rnd = stream(tone[0] * 7 + tone[1]);
+  return pair(1024, 512, (g, b) => {
+    const [r0, g0, b0] = tone;
+    g.fillStyle = `rgb(${r0}, ${g0}, ${b0})`; g.fillRect(0, 0, 1024, 512);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, 1024, 512);
+    const wash = g.createLinearGradient(0, 0, 0, 512); wash.addColorStop(0, "rgba(0, 0, 0, .08)"); wash.addColorStop(0.5, "rgba(255, 220, 170, .05)"); wash.addColorStop(1, "rgba(0, 0, 0, .1)");
+    g.fillStyle = wash; g.fillRect(0, 0, 1024, 512);
+    const knots = Array.from({ length: 3 }, () => ({ x: rnd() * 1024, y: 60 + rnd() * 392, r: 8 + rnd() * 10 }));
+    for (let k = 0; k < 140; k++) {
+      const y0 = rnd() * 512, dark = rnd() < 0.65, amp = 2 + rnd() * 6, len = 120 + rnd() * 300;
+      g.strokeStyle = dark ? `rgba(${r0 * 0.45}, ${g0 * 0.4}, ${b0 * 0.35}, ${0.12 + rnd() * 0.22})` : `rgba(255, 225, 180, ${0.04 + rnd() * 0.07})`;
+      g.lineWidth = 0.6 + rnd() * 1.6; g.beginPath();
+      for (let x = -20; x <= 1044; x += 16) {
+        let y = y0 + Math.sin(x / len + k) * amp;
+        for (const kn of knots) { const dx = x - kn.x, dy = y - kn.y, d = Math.hypot(dx, dy); if (d < kn.r * 5) y += (dy >= 0 ? 1 : -1) * (kn.r * 5 - d) * 0.35; }
+        if (x === -20) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.stroke();
+      if (dark) { b.strokeStyle = "rgba(50, 50, 50, .3)"; b.lineWidth = 1; b.stroke(); }
+    }
+    for (const kn of knots) {
+      for (let i = 4; i >= 0; i--) { g.fillStyle = `rgba(${r0 * 0.35}, ${g0 * 0.3}, ${b0 * 0.25}, ${0.16 + (4 - i) * 0.1})`; g.beginPath(); g.ellipse(kn.x, kn.y, kn.r * (1 + i * 0.45), kn.r * 0.6 * (1 + i * 0.3), 0, 0, Math.PI * 2); g.fill(); }
+      b.fillStyle = "#5a5a5a"; b.beginPath(); b.ellipse(kn.x, kn.y, kn.r, kn.r * 0.6, 0, 0, Math.PI * 2); b.fill();
+    }
+    for (let k = 0; k < 5; k++) {
+      const x = rnd() * 900, y = 40 + rnd() * 432, l = 80 + rnd() * 160;
+      g.strokeStyle = `rgba(20, 10, 4, ${0.35 + rnd() * 0.25})`; g.lineWidth = 1 + rnd(); g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + (rnd() - 0.5) * 6); g.stroke();
+      b.strokeStyle = "#202020"; b.lineWidth = 2; b.beginPath(); b.moveTo(x, y); b.lineTo(x + l, y + (rnd() - 0.5) * 6); b.stroke();
+    }
+  }, repeat);
+}
+
+// Leather's grain for its relief only: a fine pebble of tiny raised cells with creases between them, so a leather seat or the table's
+// padded rail catches the light like hide instead of plastic.
+export function leatherGrain(repeat = [4, 4]) {
+  const rnd = stream(99);
+  const c = canvas(512, 512), g = c.getContext("2d");
+  g.fillStyle = "#909090"; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 9000; i++) {
+    const x = rnd() * 512, y = rnd() * 512, r = 1.5 + rnd() * 3, t = 140 + rnd() * 60;
+    g.fillStyle = `rgba(${t}, ${t}, ${t}, .55)`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * 512, y = rnd() * 512, a = rnd() * Math.PI;
+    g.strokeStyle = "rgba(60, 60, 60, .35)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * (6 + rnd() * 14), y + Math.sin(a) * (6 + rnd() * 14)); g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8;
+  return t;
+}
+
+// A leaf's skin, laid along a frond's own UVs (u from stem to tip, v across with the midrib at the middle): the green lighter toward the
+// stem and the midrib and deeper toward the edges, a pale midrib, fine side veins sweeping out toward the tip, and a faint stipple, with
+// the veins pressed in for the relief. `torn` cuts the splits a banana or bird of paradise leaf gets: slits from the edge toward the
+// midrib along the veins (see-through, alphaTest), so the leaf reads as a real one, not a cut-out.
+export function leafSkin(tone, { veins = 26, torn = 0, seed = 5 } = {}) {
+  const rnd = stream(seed), W = 512, H = 256;
+  return pair(W, H, (g, b) => {
+    const [r, gg, bl] = tone;
+    const across = g.createLinearGradient(0, 0, 0, H);
+    const edge = `rgb(${r * 0.72}, ${gg * 0.74}, ${bl * 0.7})`, mid = `rgb(${Math.min(255, r * 1.12)}, ${Math.min(255, gg * 1.1)}, ${Math.min(255, bl * 1.05)})`;
+    across.addColorStop(0, edge); across.addColorStop(0.42, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(0.5, mid); across.addColorStop(0.58, `rgb(${r}, ${gg}, ${bl})`); across.addColorStop(1, edge);
+    g.fillStyle = across; g.fillRect(0, 0, W, H);
+    const along = g.createLinearGradient(0, 0, W, 0); along.addColorStop(0, "rgba(220, 240, 170, .18)"); along.addColorStop(0.35, "rgba(220, 240, 170, 0)"); along.addColorStop(1, "rgba(10, 30, 10, .12)");
+    g.fillStyle = along; g.fillRect(0, 0, W, H);
+    b.fillStyle = "#808080"; b.fillRect(0, 0, W, H);
+    for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(${rnd() < 0.5 ? "255, 255, 220" : "0, 30, 0"}, ${0.03 + rnd() * 0.05})`; g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2, 1 + rnd() * 2); }
+    // side veins: from the midrib out and forward to the edge, both halves
+    for (let k = 1; k < veins; k++) {
+      const x = (k / veins) * W * 0.96, sweep = 40 + rnd() * 20;
+      for (const side of [-1, 1]) {
+        g.strokeStyle = `rgba(230, 245, 190, ${0.12 + rnd() * 0.08})`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, H / 2); g.quadraticCurveTo(x + sweep * 0.5, H / 2 + side * H * 0.22, x + sweep, H / 2 + side * H * 0.5); g.stroke();
+        b.strokeStyle = "rgba(60, 60, 60, .6)"; b.lineWidth = 1.2; b.stroke();
+      }
+    }
+    // the midrib: a pale raised line down the middle, broad at the stem, fine at the tip
+    for (let x = 0; x < W; x += 2) { const w = 5 * (1 - x / W) + 1; g.fillStyle = "rgba(225, 240, 185, .55)"; g.fillRect(x, H / 2 - w / 2, 2, w); b.fillStyle = "#d0d0d0"; b.fillRect(x, H / 2 - w / 2, 2, w); }
+    if (torn) {
+      g.globalCompositeOperation = "destination-out";
+      for (let k = 0; k < torn; k++) {
+        const x = W * (0.2 + rnd() * 0.7), side = rnd() < 0.5 ? -1 : 1, depth = H * (0.18 + rnd() * 0.26);
+        g.lineWidth = 2.2; g.strokeStyle = "black"; g.beginPath(); g.moveTo(x + 30, side > 0 ? H : 0); g.quadraticCurveTo(x + 12, H / 2 + side * (H / 2 - depth * 0.5), x, H / 2 + side * (H / 2 - depth)); g.stroke();
+      }
+      g.globalCompositeOperation = "source-over";
+    }
+  });
+}
+
+// Book spines, sixteen to a sheet (each a column 64 wide): cloth in old library colours, worn a little at the head and foot, with gilt
+// bands, a title in gilt (bars of tiny type: from across the room a title is a line of gold, which is all it needs to be) on some a dark
+// leather label, and a publisher's mark at the foot. Like the bottle labels, one sheet, each book a window onto its own spine.
+export function spineSheet() {
+  const rnd = stream(31), W = 1024, H = 512, c = canvas(W, H), g = c.getContext("2d");
+  const cloths = [[110, 28, 32], [24, 40, 70], [30, 64, 44], [120, 92, 52], [30, 26, 24], [86, 40, 30], [64, 72, 86], [150, 120, 80], [70, 24, 44], [40, 80, 84], [180, 160, 120], [96, 60, 30], [20, 30, 50], [130, 50, 40], [60, 52, 40], [36, 56, 40]];
+  cloths.forEach(([r, gg, b], i) => {
+    const x = i * 64;
+    g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.fillRect(x, 0, 64, H);
+    for (let k = 0; k < 900; k++) { g.fillStyle = `rgba(${rnd() < 0.5 ? "255, 240, 210" : "0, 0, 0"}, ${0.04 + rnd() * 0.05})`; g.fillRect(x + rnd() * 64, rnd() * H, 1, 1 + rnd() * 3); }
+    const wear = g.createLinearGradient(0, 0, 0, H); wear.addColorStop(0, "rgba(255, 235, 200, .18)"); wear.addColorStop(0.06, "rgba(0, 0, 0, 0)"); wear.addColorStop(0.94, "rgba(0, 0, 0, 0)"); wear.addColorStop(1, "rgba(255, 235, 200, .2)");
+    g.fillStyle = wear; g.fillRect(x, 0, 64, H);
+    const gold = (y, h) => { g.fillStyle = `rgba(${206 + rnd() * 20}, ${168 + rnd() * 20}, ${90 + rnd() * 20}, ${0.75 + rnd() * 0.2})`; g.fillRect(x + 6, y, 52, h); };
+    const style = i % 4;
+    if (style !== 3) { gold(26, 3); gold(33, 1.5); gold(H - 36, 1.5); gold(H - 30, 3); }
+    if (style === 1 || style === 2) { g.fillStyle = style === 1 ? "rgb(28, 20, 16)" : "rgb(120, 30, 28)"; g.fillRect(x + 8, 70, 48, 120); gold(74, 1); gold(186, 1); }
+    // the title: short gilt strokes like letters, in two or three lines, centred
+    const lines = 2 + Math.floor(rnd() * 2);
+    for (let l = 0; l < lines; l++) {
+      const y = 96 + l * 26, n = 4 + Math.floor(rnd() * 5);
+      let tx = x + 32 - n * 3.2;
+      for (let k = 0; k < n; k++) { const w = 3 + rnd() * 3; g.fillStyle = "rgba(226, 190, 112, .9)"; g.fillRect(tx, y, w, 9); tx += w + 1.6; }
+    }
+    if (style !== 2) for (let k = 0; k < 3 + Math.floor(rnd() * 3); k++) { g.fillStyle = "rgba(226, 190, 112, .7)"; g.fillRect(x + 22 + k * 5, 300, 3, 5); }   // the author, smaller
+    g.fillStyle = "rgba(226, 190, 112, .8)"; g.beginPath(); g.arc(x + 32, H - 64, 5, 0, Math.PI * 2); g.fill();   // the publisher's mark
+    g.fillStyle = "rgba(0, 0, 0, .35)"; g.fillRect(x, 0, 1.5, H); g.fillRect(x + 62.5, 0, 1.5, H);             // the rounded spine's edges in shade
+  });
+  return texture(c);
+}
+
+// The tops of a book block: cream page edges, packed lines, a little dusky at the edge.
+export function pageEdges() {
+  const rnd = stream(37), c = canvas(128, 64), g = c.getContext("2d");
+  g.fillStyle = "rgb(232, 222, 198)"; g.fillRect(0, 0, 128, 64);
+  for (let y = 0; y < 64; y += 1.5) { g.fillStyle = `rgba(120, 100, 70, ${0.06 + rnd() * 0.08})`; g.fillRect(0, y, 128, 0.6); }
+  return texture(c);
+}
+
+// Sixteen record sleeves on one sheet (4 x 4): each a 12-inch cover of its own, made of what album covers are made of (a bold field of
+// colour, rings and bars, a photo-like wash, a band of type) with no real words, so from across the room each reads as an album. The
+// spine colour of each is returned with it, so the edge on the shelf matches its cover.
+export function albumCovers() {
+  const rnd = stream(53), S = 256, c = canvas(S * 4, S * 4), g = c.getContext("2d"), spines = [];
+  const fields = [[226, 196, 120], [24, 34, 52], [176, 46, 38], [238, 232, 218], [40, 92, 80], [232, 120, 56], [18, 18, 18], [96, 64, 140], [210, 168, 60], [60, 110, 170], [200, 80, 110], [120, 140, 90], [244, 210, 196], [70, 40, 30], [150, 190, 200], [30, 60, 40]];
+  fields.forEach(([r, gg, b], i) => {
+    const x = (i % 4) * S, y = Math.floor(i / 4) * S, ink = (r + gg + b) / 3 > 140 ? "rgba(20, 20, 24, .85)" : "rgba(245, 240, 228, .9)";
+    g.save(); g.beginPath(); g.rect(x, y, S, S); g.clip();
+    g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.fillRect(x, y, S, S);
+    const kind = i % 5;
+    if (kind === 0) { for (let k = 6; k > 0; k--) { g.fillStyle = `rgba(${255 - k * 30}, ${120 + k * 15}, ${80 + k * 20}, .55)`; g.beginPath(); g.arc(x + S * 0.55, y + S * 0.45, k * 18, 0, Math.PI * 2); g.fill(); } }
+    if (kind === 1) { for (let k = 0; k < 7; k++) { g.fillStyle = `hsla(${(i * 40 + k * 30) % 360}, 60%, 55%, .8)`; g.fillRect(x, y + 30 + k * 26, S, 14); } }
+    if (kind === 2) { const w = g.createRadialGradient(x + S * 0.4, y + S * 0.35, 10, x + S / 2, y + S / 2, S * 0.7); w.addColorStop(0, "rgba(255, 230, 190, .7)"); w.addColorStop(1, "rgba(0, 0, 0, .55)"); g.fillStyle = w; g.fillRect(x, y, S, S); g.fillStyle = "rgba(0, 0, 0, .55)"; g.beginPath(); g.ellipse(x + S * 0.5, y + S * 0.62, 46, 64, 0, 0, Math.PI * 2); g.fill(); }
+    if (kind === 3) { g.strokeStyle = ink; g.lineWidth = 3; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(x, y + k * 22 + rnd() * 8); g.bezierCurveTo(x + S * 0.3, y + k * 22 - 30, x + S * 0.7, y + k * 22 + 30, x + S, y + k * 22); g.stroke(); } }
+    if (kind === 4) { g.fillStyle = ink; g.fillRect(x + 40, y + 40, S - 80, S - 80); g.fillStyle = `rgb(${r}, ${gg}, ${b})`; g.beginPath(); g.arc(x + S / 2, y + S / 2, 60, 0, Math.PI * 2); g.fill(); }
+    // the band of type: the artist big, the title small
+    g.fillStyle = ink; let tx = x + 18;
+    for (let k = 0; k < 4 + Math.floor(rnd() * 4); k++) { const w = 10 + rnd() * 16; g.fillRect(tx, y + S - 46, w, 18); tx += w + 5; }
+    tx = x + 18; for (let k = 0; k < 6; k++) { const w = 6 + rnd() * 8; g.fillRect(tx, y + S - 22, w, 7); tx += w + 4; }
+    g.restore();
+    spines.push((r << 16) | (gg << 8) | b);
+  });
+  return { map: texture(c), spines };
+}
+
+// A coconut palm's trunk, round its girth (the width) and up its height: grey-tan bark ringed every hand's width with the scars the old
+// fronds left, the rings wavering a little and not quite level, fine fibres running up between them and a slow wash of weathering.
+// The relief presses the rings in.
+export function palmBark(repeat = [1, 6]) {
+  const rnd = stream(61), W = 256, H = 512;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = "rgb(146, 138, 124)"; g.fillRect(0, 0, W, H);
+    for (let k = 0; k < 30; k++) { const x = rnd() * W, y = rnd() * H, r = 20 + rnd() * 50, wash = g.createRadialGradient(x, y, 0, x, y, r); wash.addColorStop(0, `rgba(${rnd() < 0.5 ? "190, 186, 176" : "96, 88, 74"}, .25)`); wash.addColorStop(1, "rgba(0, 0, 0, 0)"); g.fillStyle = wash; g.fillRect(x - r, y - r, r * 2, r * 2); }   // weathering: sun-bleached patches and darker damp ones
+    b.fillStyle = "rgb(150, 150, 150)"; b.fillRect(0, 0, W, H);
+    for (let k = 0; k < 40; k++) { const x = rnd() * W, w = 20 + rnd() * 60; g.fillStyle = `rgba(${rnd() < 0.5 ? "90, 80, 66" : "196, 186, 168"}, ${0.08 + rnd() * 0.1})`; g.fillRect(x, 0, w, H); g.fillRect(x - W, 0, w, H); }
+    for (let k = 0; k < 900; k++) { const x = rnd() * W, y = rnd() * H, h = 6 + rnd() * 30, dark = rnd() < 0.55; g.fillStyle = dark ? `rgba(80, 70, 56, ${0.12 + rnd() * 0.2})` : `rgba(214, 204, 186, ${0.1 + rnd() * 0.18})`; g.fillRect(x, y, 1 + rnd(), h); b.fillStyle = dark ? "rgba(90, 90, 90, .35)" : "rgba(200, 200, 200, .3)"; b.fillRect(x, y, 1, h); }
+    const rings = 9;
+    for (let r = 0; r < rings; r++) {
+      const y0 = (r + 0.3 + rnd() * 0.3) * (H / rings), tilt = (rnd() - 0.5) * 10, wob = 2 + rnd() * 3;
+      const line = (ctx, colour, width, dy) => { ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.beginPath(); for (let x = 0; x <= W; x += 4) { const y = y0 + dy + (x / W - 0.5) * tilt + Math.sin((x / W) * Math.PI * 2 * 2 + r) * wob; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); };
+      line(g, "rgba(200, 192, 176, .35)", 10, -7);   // the lip above the scar catches the light
+      line(g, "rgba(70, 62, 52, .5)", 3, 0);       // the scar itself
+      line(g, "rgba(98, 90, 78, .25)", 8, 5);
+      line(b, "rgba(230, 230, 230, .8)", 8, -6); line(b, "rgba(20, 20, 20, .95)", 5, 0);
+    }
+  }, repeat);
+}
+
+// One coconut frond, flat (along its length the width of the picture, across it the height, the midrib down the middle): long narrow
+// leaflets in pairs, each leaving the rib angled toward the tip, tapering to a point, the odd one shorter or split away so light
+// shows between them. Transparent between the leaflets (alpha). `dead` paints it as an old frond, gone straw and brown.
+export function palmFrondSheet(seed, dead = false) {
+  const rnd = stream(seed), W = 1024, H = 256, c = canvas(W, H), g = c.getContext("2d");
+  const tone = () => dead ? [150 + rnd() * 40, 118 + rnd() * 30, 70 + rnd() * 20] : [40 + rnd() * 26, 96 + rnd() * 34, 34 + rnd() * 18];
+  g.lineCap = "round";
+  for (let i = 0; i < 84; i++) {
+    const u = 0.04 + (i / 84) * 0.94, x0 = u * W, len = Math.sin(Math.PI * Math.pow(u, 0.75)) * (H * 0.5) * (0.82 + rnd() * 0.18);
+    for (const side of [-1, 1]) {
+      if (rnd() < (dead ? 0.22 : 0.03)) continue;   // a gap where a leaflet has torn away
+      const short = rnd() < 0.12 ? 0.55 : 1, l = len * short, sweep = l * (0.55 + u * 0.35), [r, gg, bl] = tone();
+      const x1 = x0 + sweep, y1 = H / 2 + side * l, bend = side * l * 0.18;
+      const grad = g.createLinearGradient(x0, H / 2, x1, y1);
+      grad.addColorStop(0, `rgb(${r * 0.8}, ${gg * 0.85}, ${bl * 0.8})`); grad.addColorStop(0.5, `rgb(${r}, ${gg}, ${bl})`); grad.addColorStop(1, `rgb(${Math.min(255, r * 1.15)}, ${Math.min(255, gg * 1.1)}, ${bl})`);
+      g.strokeStyle = grad;
+      for (const [w, a] of [[15, 1], [10, 1], [5, 1]]) { g.lineWidth = w * (1 - u * 0.4); g.globalAlpha = a; g.beginPath(); g.moveTo(x0, H / 2); g.quadraticCurveTo(x0 + sweep * 0.4, H / 2 + side * l * 0.55 + bend, x1, y1); g.stroke(); }
+      g.globalAlpha = 1; g.strokeStyle = `rgba(${dead ? "220, 200, 150" : "170, 200, 120"}, .45)`; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, H / 2); g.quadraticCurveTo(x0 + sweep * 0.4, H / 2 + side * l * 0.55 + bend, x1, y1); g.stroke();   // its own midrib
+    }
+  }
+  g.strokeStyle = dead ? "rgb(170, 140, 90)" : "rgb(150, 160, 90)"; g.lineWidth = 7; g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke();   // the frond's midrib
+  const t = texture(c); t.premultiplyAlpha = false; return t;
+}
+
+// The sea seen from the beach: small wind ripples catching the sky in thin bright dashes over deeper troughs, laid across the water
+// (the width runs along the shore). Tiles.
+export function seaRipples(night = false, repeat = [1, 1]) {
+  const rnd = stream(67), W = 512, H = 512;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = night ? "rgb(20, 50, 80)" : "rgb(40, 132, 186)"; g.fillRect(0, 0, W, H);
+    b.fillStyle = "rgb(128, 128, 128)"; b.fillRect(0, 0, W, H);
+    for (let k = 0; k < 1400; k++) {
+      const x = rnd() * W, y = rnd() * H, w = 6 + rnd() * 26, h = 1 + rnd() * 2, light = rnd() < 0.5;
+      g.fillStyle = light ? (night ? `rgba(120, 160, 210, ${0.15 + rnd() * 0.2})` : `rgba(200, 236, 250, ${0.18 + rnd() * 0.3})`) : `rgba(10, 40, 80, ${0.12 + rnd() * 0.18})`;
+      g.fillRect(x, y, w, h); g.fillRect(x - W, y, w, h);
+      b.fillStyle = light ? "rgba(255, 255, 255, .5)" : "rgba(0, 0, 0, .5)"; b.fillRect(x, y, w, h + 1); b.fillRect(x - W, y, w, h + 1);
+    }
+  }, repeat);
+}
+
+// The white sand: fine grain, a few shell flecks and soft wind ripples. Tiles.
+export function sandGrain(repeat = [1, 1]) {
+  const rnd = stream(71), W = 256, H = 256;
+  return pair(W, H, (g, b) => {
+    g.fillStyle = "rgb(232, 218, 184)"; g.fillRect(0, 0, W, H); b.fillStyle = "rgb(128, 128, 128)"; b.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 16) for (const [ctx, colour, dy] of [[g, "rgba(196, 178, 140, .35)", 0], [g, "rgba(250, 242, 222, .4)", -3], [b, "rgba(40, 40, 40, .5)", 0], [b, "rgba(220, 220, 220, .5)", -3]]) {
+      ctx.strokeStyle = colour; ctx.lineWidth = 3; ctx.beginPath(); for (let x = 0; x <= W; x += 8) { const yy = y + dy + Math.sin((x / W) * Math.PI * 4 + y) * 3; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); } ctx.stroke();
+    }
+    for (let k = 0; k < 5000; k++) { const v = rnd(); g.fillStyle = v < 0.5 ? `rgba(170, 150, 110, ${0.2 + rnd() * 0.3})` : `rgba(255, 250, 236, ${0.25 + rnd() * 0.35})`; g.fillRect(rnd() * W, rnd() * H, 1, 1); }
+  }, repeat);
+}
+
+// Surf along the waterline: a lacy band of white foam, thick where the wave has just broken and thinning to nothing up the sand and out
+// over the water. Transparent around the foam. The band runs along the width.
+export function foamBand() {
+  const rnd = stream(73), W = 1024, H = 128, c = canvas(W, H), g = c.getContext("2d");
+  for (let k = 0; k < 2200; k++) {
+    const x = rnd() * W, edge = H * (0.45 + Math.sin(x / 70) * 0.08), y = edge + (rnd() - 0.4) * H * 0.5 * rnd(), r = 1 + rnd() * 5;
+    g.fillStyle = `rgba(255, 255, 255, ${0.25 + rnd() * 0.5})`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  }
+  const t = texture(c, [6, 1]); return t;
+}
+
+// Fair-weather cumulus for the sky: each cloud a heap of soft puffs, white on top where the sun falls and a cool grey underneath, flat-
+// bottomed, smaller and flatter toward the horizon. Drawn onto the sky's own canvas.
+export function cumulus(g, W, H) {
+  const rnd = stream(79);
+  for (let k = 0; k < 14; k++) {
+    const far = rnd(), cx = rnd() * W, base = H * (0.3 + far * 0.55), s = (1 - far * 0.6) * (40 + rnd() * 36), puffs = 8 + Math.floor(rnd() * 8);
+    const blobs = Array.from({ length: puffs }, () => ({ x: cx + (rnd() - 0.5) * s * 4.2, y: base - rnd() * s * (1.3 - far * 0.6), r: s * (0.45 + rnd() * 0.55) }));
+    for (const { x, y, r } of blobs) { const sh = g.createRadialGradient(x, y + r * 0.35, 0, x, y + r * 0.35, r); sh.addColorStop(0, "rgba(176, 192, 210, .55)"); sh.addColorStop(1, "rgba(176, 192, 210, 0)"); g.fillStyle = sh; g.beginPath(); g.arc(x, y + r * 0.35, r, 0, Math.PI * 2); g.fill(); }   // the cool shade underneath
+    for (const { x, y, r } of blobs) { const lit = g.createRadialGradient(x - r * 0.2, y - r * 0.3, 0, x, y, r); lit.addColorStop(0, "rgba(255, 255, 255, .95)"); lit.addColorStop(0.6, "rgba(246, 250, 255, .7)"); lit.addColorStop(1, "rgba(240, 246, 255, 0)"); g.fillStyle = lit; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+  }
+}
+export const seeded = stream;

@@ -1,14 +1,16 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import type { ReactNode } from "react";
 import type { BoardView } from "@/lib/board-view.js";
 import { HiddenPick, Logo, NoPick } from "@/components/clubhouse/lamps";
+import PlayerTrophyName from "@/components/player-trophy-name";
 
 /**
  * The tote board family, the owner's pick of the Pad skins, as the clubhouse's main piece. Drawn from a `BoardView` (the real clubhouse) or the Lab's sample one.
  *  - The Big Board: everyone's picks in one place, as the Pick'em Pad is today (wins, player, Pick 1, Pick 2, no place), with
  *    Survivor's chips in their own column. The standings fold into the same board: one tap turns it to the season table.
- *  - The board is where you pick. Tap the ticket bar under it (or your own row; the board does not mark whose row it is) and the
+ *  - The board is where you pick. Tap the ticket bar under it (or your own row, marked by a warm tint with a gold edge) and the
  *    ticket opens over the board: this week's games as plain rows, pick two against the
  *    spread, then (while you are still in Survivor) the same games again as plain rows to pick one team straight up, the teams you
  *    have used marked with their week. One Submit sends all of it, and your row on the board shows it. There is no separate screen
@@ -43,7 +45,7 @@ function PlayoffFace({ view, open }: { view: BoardView; open: (() => void) | nul
           return (
             <tr className={`${row.you ? "is-you" : ""}${row.out || row.forfeited ? " is-out" : ""}`} key={row.id}>
               <td className="lab-tote-wins">{row.wins}</td>
-              <th className="lab-tote-name" scope="row"><span className="lab-tote-player">{row.name.toUpperCase()}</span>{standing ? <small>{standing}</small> : null}</th>
+              <th className="lab-tote-name" scope="row"><span className="lab-tote-player"><PlayerTrophyName name={row.name.toUpperCase()} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></span>{standing ? <small>{standing}</small> : null}</th>
               {view.games.map((game, index) => {
                 const slat = row.slats[index];
                 const matchup = `${name(game.away)} at ${name(game.home)}`;
@@ -90,7 +92,7 @@ function WeekFace({ view, open }: { view: BoardView; open: (() => void) | null }
           return (
             <tr className={row.you ? "is-you" : ""} key={row.id}>
               <td className="lab-tote-wins">{row.wins}</td>
-              <th className="lab-tote-name" scope="row">{row.name.toUpperCase()}</th>
+              <th className="lab-tote-name" scope="row"><PlayerTrophyName name={row.name.toUpperCase()} showTrophy={Boolean(row.holdsTrophy)} titles={row.trophies} /></th>
               {row.slats.map((slat, index) => (
                 <td className="lab-tote-pick" key={index}>
                   {slat === null ? (row.you ? cell(`Pick ${index + 1}: not picked. Open your ticket`, <span className="lab-tote-owed">PICK</span>) : <NoPick label={`Pick ${index + 1}: none yet`} />)
@@ -136,27 +138,15 @@ function owedCount(view: BoardView) {
  */
 /**
  * The week as a button: tapping it opens the phone's own week list (a select laid over the words), and choosing one changes the board.
- * With `step`, arrows either side go to the week before and after, so the weeks can be flipped through one at a time.
  */
-export function WeekChoice({ view, onWeek, text, step = false }: { view: BoardView; onWeek: (weekId: string) => void; text: string; step?: boolean }) {
-  const at = view.weeks.findIndex((week) => week.id === view.weekId);
-  const before = at > 0 ? view.weeks[at - 1] : null;
-  const after = at >= 0 && at < view.weeks.length - 1 ? view.weeks[at + 1] : null;
-  const label = (
+export function WeekChoice({ view, onWeek, text }: { view: BoardView; onWeek: (weekId: string) => void; text: string }) {
+  return (
     <label className="lab-tote-week">
       <span>{text} <i aria-hidden="true">▾</i></span>
-      <select aria-label="Change week" onChange={(event) => onWeek(event.target.value)} value={view.weekId ?? ""}>
+      <select aria-label="Change week" onChange={(event) => { haptic("tick"); onWeek(event.target.value); }} value={view.weekId ?? ""}>
         {view.weeks.map((week) => <option key={week.id} value={week.id}>{week.name}{week.status === "complete" ? " — Final" : ""}</option>)}
       </select>
     </label>
-  );
-  if (!step) return label;
-  return (
-    <div className="lab-week-step">
-      <button aria-label={before ? `Back to ${before.name}` : "No earlier week"} disabled={!before} onClick={() => before && onWeek(before.id)} type="button"><i aria-hidden="true" /></button>
-      {label}
-      <button aria-label={after ? `On to ${after.name}` : "No later week"} disabled={!after} onClick={() => after && onWeek(after.id)} type="button"><i aria-hidden="true" /></button>
-    </div>
   );
 }
 
@@ -175,16 +165,21 @@ export function ToteBoard({ view, onOpen, onSurvivor, onWeek, sent = false, save
       {onSurvivor ? (
         <div className="lab-tote-links">
           <span aria-current="page">Big Board</span>
-          <button onClick={onSurvivor} type="button">Survivor</button>
+          <button onClick={() => { haptic("tick"); onSurvivor(); }} type="button">Survivor</button>
         </div>
       ) : null}
       {view.playoff ? <p className="lab-tote-race">{raceLine(view)}</p> : null}
       <div className="lab-tote-data"><WeekFace open={view.canPick ? onOpen : null} view={view} /></div>
       {view.canPick ? (
-        <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={onOpen} type="button">
+        <button className={`lab-tote-ticket${owed ? " is-owed" : ""}`} onClick={() => { haptic("tick"); onOpen?.(); }} type="button">
+          {/* Set like the heading of your ticket in the room: a small word over what is left to do, and (once saved) when, on the right. */}
           <span className="lab-tote-ticket-body">
-            <b>{owed ? `${owed} ${owed === 1 ? "PICK" : "PICKS"} TO MAKE` : savedAt ? "PICKS SAVED ✓" : sent ? "SUBMITTED ✓" : "ALL PICKS IN"}</b>
-            <span>{owed ? "Tap here to pick" : savedAt ? `Saved at ${savedAt}` : "Tap here to change a pick"}</span>
+            <span className="lab-tote-ticket-title">
+              <i>Your ticket</i>
+              <b>{owed ? <><em>{owed}</em> {owed === 1 ? "PICK TO MAKE" : "PICKS TO MAKE"}</> : savedAt ? "PICKS SAVED" : sent ? "SUBMITTED" : "ALL PICKS IN"}</b>
+            </span>
+            {!owed && savedAt ? <span className="lab-tote-ticket-note"><i>Saved</i>{savedAt}</span> : null}
+            {!owed && !savedAt ? <span className="lab-tote-ticket-note"><i>Change</i>until kickoff</span> : null}
           </span>
           <span aria-hidden="true" className="lab-tote-ticket-stub">{owed ? "PICK" : "VIEW"}<i /></span>
         </button>

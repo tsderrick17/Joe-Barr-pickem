@@ -12,7 +12,7 @@ import { dateFormat } from "./date-format.js";
  *   owed: still open and no saved pick; picked: still open, picked; missed: kicked off with no pick (a loss); done: kicked off with a
  *   pick; off: postponed, cancelled or no contest, nothing to pick.
  * @typedef {{ side: BowlSide, teamId: string | null, name: string, line: string, score: number | null, covered: boolean | null, colors: { primary: string, secondary: string } | null }} BowlTeamCell   // colors: the school's own, once the import saved them
- * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string,
+ * @typedef {{ id: string, bowl: string, flag: string, logo: string | null, cloth: string | null, hoist: string | null, day: string, time: string, place: string,
  *   cells: BowlTeamCell[], locked: boolean, final: boolean, note: string | null, state: BowlRowState, mine: BowlSide | null,
  *   result: "W" | "L" | null, tiebreaker: boolean, playoff: boolean,
  *   round: "First Round" | "Quarterfinal" | "Semifinal" | "Championship" | null }} BowlTicketGame
@@ -150,6 +150,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
       ...pennant,
       day: Number.isFinite(kickoff) ? EASTERN_DAY.format(new Date(kickoff)).toUpperCase().replace(",", "") : "DATE TBD",
       time: Number.isFinite(kickoff) && game.time_confirmed !== false ? EASTERN_TIME.format(new Date(kickoff)) : "Time TBD",
+      place: [game.venue_city, game.venue_state].filter(Boolean).join(", "),
       cells: [cell(game.awayTeam, game.away_team_id ?? game.awayTeam?.id, game.away_score, "away"), cell(game.homeTeam, game.home_team_id ?? game.homeTeam?.id, game.home_score, "home")],
       locked,
       final,
@@ -163,7 +164,7 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
     };
   });
   const decided = games.filter((game) => game.final || game.state === "off").length;
-  const standings = (payload?.standings ?? []).map((row) => ({ id: row.playerId, name: row.playerName, wins: row.wins ?? 0, losses: row.losses ?? 0, you: row.playerId === viewerPlayerId }));
+  const standings = (payload?.standings ?? []).map((row) => ({ id: row.playerId, name: row.playerName, wins: row.wins ?? 0, losses: row.losses ?? 0, trophies: row.trophies ?? [], holdsTrophy: Boolean(row.holdsTrophy), tiebreaker: Number.isInteger(row.tiebreakerTotal) ? row.tiebreakerTotal : null, you: row.playerId === viewerPlayerId }));
   const ranked = standings.map((row) => {
     const place = standings.findIndex((other) => other.wins === row.wins) + 1;
     return { ...row, place, tied: standings.filter((other) => other.wins === row.wins).length > 1 };
@@ -192,10 +193,10 @@ export function bowlTicketView(payload, { now = Date.now(), viewerPlayerId = nul
  * own picks all along. It reads only what the Bowl Pool's read already gives (picks after kickoff, markers before).
  * @param {any} payload
  * @param {BowlTicketGame[]} games
- * @param {Array<{ id: string, name: string, wins: number, losses: number, you: boolean, place: number, tied: boolean }>} standings
+ * @param {Array<{ id: string, name: string, trophies?: string[], holdsTrophy?: boolean, wins: number, losses: number, you: boolean, place: number, tied: boolean, tiebreaker?: number | null }>} standings
  * @param {number} now
  * @param {string | null} viewerPlayerId
- * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean, matchup: Array<{ team: string, line: string }> }>, todayIndex: number, rows: Array<{ id: string, name: string, wins: number, losses: number, place: number, tied: boolean, you: boolean, cells: BowlSheetCell[] }> }}
+ * @returns {{ games: Array<{ id: string, name: string, day: string, locked: boolean, matchup: Array<{ team: string, line: string }> }>, todayIndex: number, rows: Array<{ id: string, name: string, trophies?: string[], holdsTrophy?: boolean, wins: number, losses: number, place: number, tied: boolean, tiebreaker: number | null, you: boolean, cells: BowlSheetCell[] }> }}
  */
 function bowlSheet(payload, games, standings, now, viewerPlayerId) {
   const raw = new Map((payload?.games ?? []).map((game) => [game.id, game]));
@@ -237,7 +238,7 @@ function bowlSheet(payload, games, standings, now, viewerPlayerId) {
     }),
     todayIndex: games.findIndex((game) => game.day === today),
     rows: standings.map((row) => ({
-      id: row.id, name: row.name, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, you: row.id === viewerPlayerId,
+      id: row.id, name: row.name, trophies: row.trophies, holdsTrophy: row.holdsTrophy, wins: row.wins, losses: row.losses, place: row.place, tied: row.tied, tiebreaker: row.tiebreaker ?? null, you: row.id === viewerPlayerId,
       cells: games.map((game) => /** @returns {BowlSheetCell} */ {
         const key = `${row.id}:${game.id}`;
         const own = row.id === viewerPlayerId ? mine.get(game.id) : null;

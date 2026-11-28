@@ -21,6 +21,73 @@ Add new entries at the top of this file. When it passes about 60 KB, move
 everything older than about two weeks into a new file under `docs/decisions/`
 and add a row above. (It is read at the start of every change, so short is cheaper.)
 
+## 2026-11-26 - Pool stats: Most faded teams
+
+Beside Most picked teams is the same table for the teams faded: the team on the other side of each graded pick, its share column named
+Picked against. From 1200px the three tables (What the league picks, Most picked, Most faded) sit in one row, each title over its switch, two-line
+column names and teams by nickname (Chiefs, 49ers) so every row stays one line and the three line up; 900-1199px it sits under Most picked in
+the right column; stacked on a phone. Its record is the picks' own, so a high hit rate means fading that team paid off. Share is of all graded picks, like
+Most picked. It has its own sort (Faded or Hit rate, pressed again to turn it over: Most / Least faded teams, Best / Worst teams to fade) and
+its own All-time / This season switch. Both team tables use the same fixed widths for every column but Team (Picked against and
+Hit rate may take two lines), so a team name wraps in one only where it would in the other. Requested by the Commissioner.
+
+## 2026-11-26 - Shutout Free Weeks count the first win at once
+
+A week's first win already rules out a shutout (0-2), so Shutout Free Weeks in a Row now counts a week still being played the moment the
+player has a win in it, without waiting for the second pick to be made or graded. This mirrors Perfect Weeks, which already ends the moment
+a week in play has a loss. The week still is not a counted week for anything else (Perfect Weeks total, the group's weekly records) until it is
+decided. Reported by the Commissioner: a first win of the week left the streak unchanged.
+
+## 2026-11-26 - Clubhouse: a real beach outside the glass
+
+- The outside of the clubhouse room is drawn to look real (owner: "the palm trees ... not very convincing. None of the outside is really"). Coconut palms: a grey, weathered trunk ringed where old fronds fell, swollen at its foot and tapering up, a boot of old frond bases, green and brown coconuts, and a crown of long feather fronds (narrow leaflets hung from the midrib in a V, light between them), young ones upright, older ones arching over, one or two dead brown fronds hanging. Sky: fair-weather cumulus, white on top and grey underneath, with haze at the horizon. Sea: wind ripples catching the light; turquoise shallows fading into deep blue with no edge; grainy, rippled sand; a darker band of wet sand and a lacy line of surf at the waterline.
+- Nothing inside the room moved: every new surface draws from its own random counter, and the shared one is still stepped exactly as before, so the tap spots (`src/lib/clubhouse-room.json`) are unchanged.
+
+## 2026-11-25 - Clubhouse: a bookcase by the fire, a real neon sign, Notifications on the thatch
+
+- A low walnut record cabinet stands against the chimney's near face under the constitution (owner's spot and ask): two rows of square bays packed with LPs on their edges, spines out in their covers' colours, two or three leaning at each bay's end so their covers show (sixteen made-up covers on one sheet, no real words). On top a small record player (walnut plinth, black record with a red label, tone arm) between two walnut bookshelf speakers toed in toward the room. It stands clear of the stones' relief.
+- The neon is a real sign now (owner: "looks flat"): lit tubes (a white core in pink glass with a glint) on a clear acrylic backer held off the walnut by four brass stand-offs, their soft shadow and a pink haze on the wood, and a little real pink light on the walnut round it.
+- On a desktop the Notifications pill sits on the thatch just under the beam, left of the ledge plants (owner, 2026-11-25).
+- The tucked ticket's spacing (owner: "a little sloppy"): each place's mark and words sit centred in its share of the ticket instead of pushed left, the padding above and below is even, and the lamp dot is smaller and closer to its mark.
+- On the clubhouse Bowl ticket a game's name never wraps onto a second line (owner); the logo pennants are shorter (7.25rem from 9rem) to give the names room, and a name that still does not fit ends in an ellipsis.
+- The Bowl sheet's win counts are cream figures on navy flaps, like the games-left counter: the ticket's cream ink had fallen on cream flaps and they could not be read (owner, 2026-11-25).
+- Your ticket's top is tighter (owner: trim excess space): the line note is two lines at most on a phone ("Gold line: locked. White line: can move until 8 AM on game day."), the gaps under the week row and between sections are smaller, and All games | Pool action is one touching switch like the chart's All | 6 Wk, two equal halves filling the left half of the row.
+- A lamp that is not lit has no gold rim, and a pick on the ticket but not sent shows a cream ring instead of a gold one, so only a lit lamp is gold (owner: the gold outline made him look twice).
+- The Bowl ticket's header is shorter: the games-left counter stands to the left of the dial instead of under it.
+- Picks waiting to be sent or saved on a clubhouse ticket are guarded on every way out: closing the pop-up or going back asks (as before), a link out of the clubhouse asks the same question and then follows it, and closing or reloading the app asks the browser's leave-this-page question (owner, 2026-11-25: picks made in the clubhouse must never go missing on the way to Classic). Both views save Bowl picks through the same POST /api/bowl-pool and read the same entry, so a saved pick shows in both.
+- Save is never a scroll away (owner's pick of four ideas, 2026-11-25): on both clubhouse tickets the Save picks / Submit button rides a bar pinned to the foot of the ticket's list while changes are waiting, with the count of changes beside it ("1 change"), sliding up at the first change; with nothing waiting it rests at the end of the list saying Saved or Submitted.
+
+## 2026-11-25 - Bowl scores flip on every visit; rounded lines on the clubhouse chart
+
+- The classic Bowl Card's score tiles spin in every time the card is opened or the page refreshed (owner, 2026-11-25), the same as the clubhouse Bowl sheet. The once-a-day-per-player memory in the browser is gone. Reduced motion still lands them at once.
+- The two Frisco bowls keep the same pennant colour (owner: fine as is).
+- On the clubhouse Season Snapshot (the chalkboard's chart) the lines' bends are rounded: a monotone curve through every week's point that never swings past the totals on either side, so it never shows a score nobody had. The classic Pick'em Pad chart keeps straight lines until the owner decides after trying it in the clubhouse.
+- The Season Snapshot's key has quick choices under it, in both views: Top 5, Me + Top 5 (only when you are outside the top five), All and None, with "N of M shown" at the end of the row; tapping a name still adds or removes just that player. A pool of eight or fewer opens with everyone; a bigger one opens on you and the top five. Colours still follow the person.
+- The Big Board's way to your ticket is set like your ticket's own heading: a small YOUR TICKET over what is left (picks still owed counted in a red seal, the words in ink), and once saved, when, on the right. "Tap here" is gone: the whole ticket is the button and its stub says PICK or VIEW.
+- In the clubhouse the Bowl Pool's Claim your seat ticket keeps its navy and gold but has the room's rounded corners, and its perforation notches are cut through the card. It also carries its own colours (it came through see-through over the room after an opt-out, 2026-11-25).
+- The clubhouse Notifications pop-up is its own card, no longer the Notifications page restyled (owner: "doesn't fit the design aesthetic; should be intuitive and easy to know the options"): set like a phone's settings on the ticket's paper. On this phone first (Get the app, phone alerts), then Email: a "Send me pool emails" switch and the address, the plan as three plain choices (Essentials, Regular, Full Card) with what it sends underneath ("Your own mix" when none matches), every single email folded under "Choose each email" as switch rows grouped The Slate, Pick reminders, Pick reveals, Recaps & playoffs, and one Save. It saves exactly what the Notifications page saves (one shared `useNotificationChoices`).
+- Haptics across the clubhouse, with the app's five feels and their one meaning each: picking on your ticket ticks, taking a pick back is a light tick, a full ticket warns, a Survivor team locks in (as on the Slate); tapping a place in the room, the ticket, the deck's tabs, the Big Board's week and links, the Bowl ticket's Picks/Sheet and the Notifications fold tick; a pop-up put away by the player gives a light tick (shared Sheet, the Commissioner's too).
+- On a desktop the Chat pill sits on the bar's front panel, just under the counter by the laptop (owner, 2026-11-25).
+- Room texture pass: the beams and mantel are solid timber with grain, knots and checks; the leather (poker chairs, the table's rail, the bar stools) has a fine hide grain. New surfaces draw from random streams of their own so nothing else in the room shifts.
+- The chalkboard's still sketch is lighter and less basic (owner: "a bit too bold and a bit too basic"): seven fine chalk lines that weave and cross over nine weeks like a real season, each with a soft halo of dust and a dot where it ends, faint dashed week guides and a finer axis. Still no names, numbers or title.
+- Plant realism pass: every leaf wears a skin (pale midrib, fine side veins, lighter at the stem and deeper to the edges, a faint stipple), a waxy sheen and a little light through it; stems are a lighter grey-green; the bird of paradise's paddles are broader, cupped and split along their veins.
+
+## 2026-11-23 - Small batch: trophies beside names, centred sun and moon
+
+- The clubhouse Big Board and Bowl sheet (and the Bowl ticket's standings list) show the champion's trophy beside their name like the classic pages (`PlayerTrophyName`, titles on hover, only the current holder wears the mark). The board's rows now carry `trophies` and `holdsTrophy`.
+- The day/night button draws its sun and moon as SVG in one exact square instead of typing the characters: the typed sun sat off-centre (font side room, worse for the emoji sun) and turning it on night mode swung it further off. A test measures both glyphs at the button's centre.
+- The clubhouse ticket's tuck control is just an arrow on a small folder tab at the ticket's far left (like the Slate's How it works chevron, turning the other way, with no words). The fold is one measured motion (2026-11-25, after the owner called the old one awful): the ticket's edge glides to its new height while each logo slides from where it was to where it now sits, the words fade in place and the heading fades as it goes, all on one smooth deceleration with no overshoot (420 ms, the iOS sheet curve); the arrow turns on the same curve and the tab presses down when tapped. Nothing moves with reduced motion.
+- Workshop Lab: a "Game states" try-out (first on the shelf) shows the real Big Board and ticket in nine states on sample players, hand-written to match what `boardView` and `roomTicket` produce, so the owner can review every state in one place. No pool data is read.
+
+## 2026-11-23 - Clubhouse: chalkboard, bottles, one lamp, sheet snap, city and state, mantel ship, deeper stone
+
+- The chalkboard was a "Snapshot" pill only; the board face is now a tap target for the Season Snapshot too. The bottles on the back bar open Pool chat. Both are real-clubhouse hit areas with no plate of their own.
+- Only the ceiling light changes day and night; the bar lamp no longer does.
+- The Bowl ticket's sheet snaps to a game column like the classic Bowl Card (scroll-snap, game columns align to the held columns).
+- Each Bowl ticket game's small line carries where it is played (city, state) after the time, on the same single line (ellipsis, never wraps), so a row is never taller for it. Pennants stay non-tappable.
+- The chat pill sits slightly lower and to the right. The mantel ship is smaller and turned so it sits on the mantel instead of running into the stone. The fireplace stone has deeper joints, cavity shading, pitting and grain; per-stone relief is tabled for about a week (owner).
+- The Trophy Room's plaque shelf has no visible "Plaques" heading (still a labelled region).
+
 ## 2026-11-22 - Clubhouse: the chalkboard is a still chalk drawing
 
 The chalkboard in the room no longer draws the live chart: it is a still chalk sketch of a race (an axis, four coloured chalk lines,
@@ -478,3 +545,102 @@ The plaque shelf in the clubhouse Trophy Room lost its "one for every season" li
 The low-balance line, where Normal score checking ends and Lean or Minimal begin, moved from 440 to 450 of the month's 500 Odds API credits used (the Commissioner asked for a 450 floor): Normal runs 10 credits longer, leaving 50 credits (35 after the lines) for the lighter schedules instead of 60 (45). On Odds credits, every card heading now puts its explanation under the whole heading row instead of squeezing it beside the headline number; the finals chart's headline reads "found in 10 min" (the share of finals found within 10 minutes of the first score check) and its explanation is shorter. Tapping a bar or day on a phone keeps its details up until a tap lands outside the chart (they used to vanish the moment the finger lifted).
 
 The monthly credits chart's title uses the three-letter month ("Credits in Nov 2026").
+
+## 2026-11-23 - Side-by-side teams on the clubhouse games board stay level
+
+When one side's list of pickers ran to a second line, its box grew and the other side's box stayed short and centred, so the team names no longer lined up. Both boxes in a game now stretch to the same height and each keeps its team and line on the top row; only the bottom grows.
+
+## 2026-11-23 - Clubhouse Bowl dial: smaller games-left tile; pop-up scroll bars leave room
+
+The games-left flap tile under the Bowl dial in the clubhouse is smaller. The scrolling pop-up bodies reserve 14px on the right so the floating scroll bar never covers the figures (the Window's pick lines).
+
+## 2026-11-23 - The ticket tucks with an arrow; the Bowl pop-up's top section is shorter
+
+Dragging the clubhouse ticket to tuck it away is replaced by a small arrow tab on the ticket's top edge: it folds the ticket to half its height (heading away, every pick kept) and, turned the other way, opens it again; the choice is still remembered on the device. The fold settles with a small spring, the picks pop back into place one after another and the arrow flips with a little overshoot (all still, with "reduce motion"). Tapping the ticket still opens your ticket.
+
+The Bowl Pool pop-up's heading is compact (no row of stars, a smaller title, counts and dial, a slimmer Picks/Sheet switch): the first game day starts about 65px higher on a phone. The earlier smaller-tile note is superseded: the games-left tile shrank by its flap size (1.9rem by 1.2rem), not its font.
+
+
+## 2026-11-27 - Every non-Sunday-afternoon kickoff gets a public pick reveal
+
+The Black Friday game sent no reveal email because the featured reveal was planned only for Wednesday, Thursday, Monday, Sunday night and International games. It now covers every kickoff outside the two Sunday afternoon windows (which keep their own reveals): Friday, Saturday, Tuesday and holiday games included. The notification wording says so.
+
+## 2026-11-27 - Bowl sheet heading stays in sight; the clubhouse leads players to their Bowl Pool seat
+
+On the clubhouse Bowl Pool Sheet the heading holds at the top while the list of players scrolls under it: each day over its bowls as the classic Bowl Card clumps them (a fine gold rule down each day's left, the date riding along its band), the bowl names centred on one line with each other however many lines each takes, then both schools with their spreads. The Bowl ticket's own heading is one compact block: the title over a single row of figures (to pick, picked, games left, all alike) with the season dial, now uncaptioned and without its own glow, beside both and as tall as they are (its top moon level with the title's capitals, its foot with the figures' labels). Before this, the row naming each bowl, its two schools with their spreads, and its day held at the top while the list of players scrolls under it (the sheet scrolls both ways in one box, the Wins and Player columns held at its left). In bowl season, when the poker table is the Bowl Pool's, its plate reads "Claim your seat" for a player who has not joined while seats are open, and "N to pick" for one who has bowls still owed. With the clubhouse switch up, the Bowl Pool's emails and phone messages (which link to /bowl-pool) open its ticket in the clubhouse. Only players who claimed a seat are on the Sheet; before the Dec 7 launch the Commissioner's preview lists every active player so the layout can be checked.
+
+## 2026-11-27 - The ticket's line key: one colour a line, each beside its words
+
+With a line locked, the key on Your ticket reads as two lines, "Gold line: locked." over "White line: moves until 8 AM on game day.", so a label is never left at the end of one line with its words on the next (owner). The two lines start at the same left edge, gold right above white, the pair centred under the switch. Still two lines at most on a phone.
+The All games / Pool action switch above it is exactly as wide as the game box under it: one team's box on a phone, one whole game on a desktop where two games share a row (owner).
+
+## 2026-11-27 - Ticket switches share a row; the Constitution explains early line locks
+
+On Your ticket, All games / Pool action and Pick'em / Survivor share one row, each exactly as wide as the column of game boxes under it (one team's box on a phone, one game on a desktop). Pick'em / Survivor is now a pill like the other; its "pick 2 vs. the spread" and "teams left" lines move to the buttons' hover text and spoken names. The Constitution's Article III gains a clause: a game played overseas that kicks off Sunday morning has its line lock at 6:00 PM Eastern on Saturday (as getLineLock has always done).
+
+## 2026-11-27 - Games abroad show where they are played (clubhouse ticket)
+
+On the clubhouse ticket a game played outside the United States carries a red pin with its city and country at the right end of its date and time ("📍 London, England"). The place comes from the schedule feed's stadium name (nflverse `stadium`; its stadium codes are sometimes the home team's, so they are not used), matched against a short list of overseas stadiums; every game the feed marks neutral-site is also looked up on ESPN (its venue city and country), so the season bootstrap picks up a new city abroad by itself and corrects a feed that names the wrong stadium (every 2025 game abroad carried a US stadium). It is saved to the existing games.venue_city / venue_country after each schedule import and reconciliation, so it follows the NFL if a game moves. It is display only: early line locks still come from the kickoff time (a Sunday-morning game), so an evening game abroad (Mexico City, Rio, Melbourne) gets a pin but keeps the normal 8 AM lock. No database change: the columns already existed.
+
+## 2026-11-27 - Bowl season while Survivor runs: a second plate under Survivor's
+
+From Dec 7, while Survivor is still being played, the poker table keeps Survivor's plate and the Bowl Pool's navy-and-gold plate hangs right below it (centred, its own button), reading "Claim your seat" or "N to pick". Once Survivor is decided the table is the Bowl Pool's alone, as before (owner).
+
+## 2026-11-27 - Names under a team's score: all on one line, or one per line
+
+Under each side of a played or live game on the clubhouse ticket, up to two names stay on one line ("RON · CONNOR"); three or more stack one per line, so a lone name is never left on a second line by itself (owner).
+
+## 2026-11-27 - Bowl sheet: dates centred over the first bowl in view, and a Tiebreaker column
+
+On the clubhouse Bowl sheet each day's date sits centred over its first bowl, and stays centred over the first of that day's bowls in view as the sheet slides sideways. A last column, as on the classic Bowl Card, shows each player's tiebreaker guess (total points in the title game; a dash for none yet) (owner).
+
+## 2026-11-27 - Ticket legibility: games under way are no longer faded
+
+On the clubhouse ticket (and the Bowl ticket, which shares its boxes) a game that has kicked off is no longer faded to half strength; its box is a shade darker instead, and its words and numbers keep full brightness. The kickoff line is brighter and a little bigger, the final score a little bigger, and the names under each team bigger, brighter and more firmly underlined, so they read easily for every eye (owner asked for brighter, sharper, more legible text).
+
+## 2026-11-27 - Clubhouse ticket: a full ticket asks which pick to replace
+
+As on the Slate, tapping another team when both picks are already on the clubhouse ticket no longer just buzzes: a prompt pinned with the send button says "Picks are full · Replace which one with LAR -3?" with a button for each pick whose game has not kicked off, and Cancel. If every pick's game has kicked off, the tap only buzzes. The ticket's date and time lines are a step bigger again (owner).
+
+## 2026-11-27 - Ticket time line: red LIVE, then FINAL, instead of "Kicked off"
+
+On the clubhouse ticket a game being played shows a red LIVE badge beside its kickoff time (as the Slate does) and a FINAL badge once decided, in place of "· KICKED OFF". The Bowl ticket's game under way shows the same red LIVE badge (owner).
+
+## 2026-11-27 - Big Board: even margins on a phone
+
+On a touch phone the scrollbar floats over the page, so the clubhouse Big Board no longer keeps a 14px gutter for it on the right; its columns widen so the rows sit as far from the board's right edge as from its left (owner). A mouse-driven screen keeps the gutter for its scrollbar.
+
+## 2026-11-27 - Clubhouse sheets: even margins on a phone
+
+The touch-phone rule from the Big Board now covers every clubhouse sheet that scrolls (the ticket, Survivor, the Bowl sheet, the rules, the wall table): no 14px scrollbar gutter on the right, so the games sit as far from the sheet's right edge as from its left (owner: "I prefer symmetry"). A mouse-driven screen keeps the gutter for its scrollbar.
+
+## 2026-11-28 - Bowl Pool: no sideways scroll; its unsaved-picks ask in the Bowl Pool's colours
+
+On a phone the clubhouse sheets keep no scrollbar gutter (2026-11-27), so the pinned Save bar's 4px reach past its sides let the Bowl Pool (and the ticket) slide sideways. The bar now stops at the edge on a phone, and the sheets' scroll areas never scroll sideways (Survivor keeps its own sideways scroll for the weeks). The "Your bowl picks aren't saved yet" ask wears the Bowl Pool's navy, gold rule, lettering and gold Save, not the clubhouse green (owner).
+
+## 2026-11-27 - Clubhouse accents: one green and red, your row, soft tiles, lit lamps, gold sent picks
+
+Owner-picked accents across the clubhouse boards and ticket:
+- One win green (rgb 95 211 154) and one loss red (rgb 217 88 74) everywhere in the clubhouse (Big Board picks, Survivor rings, Bowl sheet, room screen).
+- Your row on the Big Board (week and playoff faces) and the Survivor table: a warm tint with a gold edge at its left.
+- Board cells are soft rounded tiles in the dark board colour, the felt showing between them.
+- The line beside a Big Board pick is the pick's own colour, a touch softer.
+- Survivor: once a player is out, the weeks after are blank, not empty boxes; a loss is a thin, crisp red slash over the logo in full colour.
+- Big Board lamps read as small bulbs: a pick in (hidden until kickoff) glows warm; no pick is a dark, recessed socket.
+- Your PICK still owed on the board breathes a soft gold glow every few seconds (still for reduced motion).
+- Ticket: a pick that is sent is filled gold with dark text; right after Submit the gold sweeps in from the left, and the ticket stays open (it no longer jumps to the Big Board).
+- A final score is underlined green on the side that covered and red on the side that did not.
+
+## 2026-11-27 - Ticket: the week bubble where the Big Board's is
+
+The ticket's week is the Big Board's own bubble: the same words, size and place at the top right (a phone test holds it to the pixel), with no arrows either side; your lamps move to the left. On a computer the ticket is wider than the board, so the bubble sits at the ticket's own right edge.
+
+## 2026-11-28 - Constitution by pool; Notifications green by night; bigger ticket logos
+
+- The Pool Constitution is regrouped so each pool is its own part: 1 · Pick'em (weekly picks, lines, winning, the playoffs), 2 · Survivor, 3 · The Bowl Pool (joining and picking, winning), then Good to know (games that move, emails, the Commissioner). Clauses are merged and shortened where they said the same thing; Slate-only details (left/right, CAPITALS, line colours) are dropped. Ten articles still, every rule unchanged (owner).
+- The Notifications sheet stays cream by night, so its green ticks ("You're using the app", "Notifications are on") stay dark green instead of night mode's mint, which could not be read on cream (owner).
+- Team logos on the clubhouse ticket are 32px (were 24px), in the room the row already had: no row grows (a test holds both).
+
+## 2026-11-28 - Clubhouse launch switch
+
+The clubhouse is ready to open to every player with one switch: Clubhouse for everyone on `/admin/players` (two taps, audited as clubhouse_opened_to_all / clubhouse_closed_to_all, stored in the one-row `pool_settings` table). It ships OFF. When on, every player's profile carries clubhouseAccess, so the header light switch appears for all and `/clubhouse` lets them in; the classic pages stay the default for each device until its player flips the switch. The per-player beta switch still works. If the setting cannot be read it reads as closed, so a fault never opens it by accident (owner, 2026-11-28).

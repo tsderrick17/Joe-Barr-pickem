@@ -42,6 +42,23 @@ function runs(weeks, good) {
 }
 
 /**
+ * The four five-team lists of a team table (most, least, best hit rate, lowest hit rate) from a map of teamId -> { wins, losses }, each team's
+ * share measured against `total` graded picks. Used for the teams picked and the teams faded (picked against).
+ */
+function fiveOf(byTeam, total, teamById) {
+  const all = [...byTeam]
+    .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
+    .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
+  return {
+    all,
+    teams: all.slice(0, 5),
+    teamsByHitRate: [...all].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5),
+    teamsLeastPicked: [...all].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5),
+    teamsByLowestHitRate: [...all].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5),
+  };
+}
+
+/**
  * Record, pushes, seasons and favorite/underdog and home/road splits over a set of picks (the whole pool's, or one player's).
  * Only graded picks count; a push is a loss.
  */
@@ -51,7 +68,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   const bucket = () => ({ wins: 0, losses: 0 });
   const netBySeason = new Map();
   const side = { favorite: bucket(), underdog: bucket(), pickem: bucket() }, venue = { home: bucket(), away: bucket() };
-  const bySeason = new Map(), byTeam = new Map();
+  const bySeason = new Map(), byTeam = new Map(), byFaded = new Map();
   for (const pick of subset) {
     if (!isDecided(pick)) continue;
     const period = periodById.get(pick.scoring_period_id), game = gameById.get(pick.game_id), line = lineByGame.get(pick.game_id);
@@ -61,6 +78,9 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     if (year !== undefined) { const season = bySeason.get(year) ?? bucket(); season[won ? "wins" : "losses"] += 1; bySeason.set(year, season); }
     pickedGames.add(pick.game_id);
     { const team = byTeam.get(pick.selected_team_id) ?? bucket(); team[won ? "wins" : "losses"] += 1; byTeam.set(pick.selected_team_id, team); }
+    // The team picked against (faded): the other side of the game. Its record is the picks' own: a win means fading it paid off.
+    const faded = game ? (pick.selected_team_id === game.home_team_id ? game.away_team_id : pick.selected_team_id === game.away_team_id ? game.home_team_id : null) : null;
+    if (faded) { const team = byFaded.get(faded) ?? bucket(); team[won ? "wins" : "losses"] += 1; byFaded.set(faded, team); }
     if (game && line && Number.isInteger(game.home_score) && Number.isInteger(game.away_score)) {
       const margin = pick.selected_team_id === game.home_team_id ? game.home_score - game.away_score : game.away_score - game.home_score;
       const adjusted = margin + (pick.selected_team_id === line.favorite_team_id ? -line.locked_spread : line.locked_spread);
@@ -76,13 +96,9 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
   const share = (bucketRecord, whole) => ({ ...withRate(bucketRecord), share: rate(bucketRecord.wins + bucketRecord.losses, whole) });
   const sideTotal = Object.values(side).reduce((sum, item) => sum + item.wins + item.losses, 0);
   const venueTotal = Object.values(venue).reduce((sum, item) => sum + item.wins + item.losses, 0);
-  const everyTeam = [...byTeam]
-    .map(([teamId, record]) => ({ teamId, name: teamById.get(teamId)?.full_name ?? "Unknown team", abbreviation: teamById.get(teamId)?.abbreviation ?? "", ...withRate(record), share: rate(record.wins + record.losses, total) }))
-    .sort((a, b) => b.picks - a.picks || a.name.localeCompare(b.name));
-  const teams = everyTeam.slice(0, 5);
-  const teamsByHitRate = [...everyTeam].sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
-  const teamsLeastPicked = [...everyTeam].sort((a, b) => a.picks - b.picks || a.name.localeCompare(b.name)).slice(0, 5);
-  const teamsByLowestHitRate = [...everyTeam].sort((a, b) => (a.hitRate ?? 0) - (b.hitRate ?? 0) || b.picks - a.picks || a.name.localeCompare(b.name)).slice(0, 5);
+  const { all: everyTeam, teams, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate } = fiveOf(byTeam, total, teamById);
+  const fadedLists = fiveOf(byFaded, total, teamById);
+  const faded = { teams: fadedLists.teams, teamsByHitRate: fadedLists.teamsByHitRate, teamsLeastPicked: fadedLists.teamsLeastPicked, teamsByLowestHitRate: fadedLists.teamsByLowestHitRate };
   const tiedForMost = everyTeam.length ? everyTeam.filter((team) => team.picks === everyTeam[0].picks).length : 0;   // how many teams share the top spot
   return {
     record: { ...withRate({ wins, losses }), net, pushes: pushPicks, pushedGames: pushedGames.size, pushShare: rate(pushedGames.size, pickedGames.size) },
@@ -90,6 +106,7 @@ function recordsFor(subset, { periodById, yearBySeason, gameById, lineByGame, te
     teamsByHitRate,
     teamsLeastPicked,
     teamsByLowestHitRate,
+    faded,
     mostPicked: teams[0] ?? null,
     mostPickedTied: tiedForMost,   // 1 when one team leads; more when teams tie for the most picks
     bySeason: [...bySeason].sort((a, b) => b[0] - a[0]).map(([year, record]) => ({ seasonYear: year, ...withRate(record), net: netBySeason.get(year) ?? 0 })),
@@ -126,6 +143,8 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
   const weeksByPlayer = new Map();
   // Weeks still in play in which a player already has a loss: not decided yet (1-1 or 0-2), but certainly not a 2-0, so they end a 2-0 streak now.
   const lostInPlay = new Map();
+  // Weeks still in play in which a player already has a win: not decided yet (2-0 or 1-1), but certainly no shutout, so they extend the shutout-free streak now.
+  const wonInPlay = new Map();
   for (const [joinKey, firstWeek] of weeksOfPlayerInSeason) {
     const [playerId, seasonId] = joinKey.split("|");
     for (const period of counted) {
@@ -136,15 +155,18 @@ function playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodId
         lostInPlay.set(playerId, [...(lostInPlay.get(playerId) ?? []), { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: 1 }]);
         continue;
       }
-      if (own.some((pick) => pick.result === "pending")) continue;   // an unsettled pick leaves the week out
-      if (!finished(period) && own.filter(isDecided).length < WEEK_PICKS) continue;   // a week still in play counts once this player's own two picks are graded
+      const undecided = own.some((pick) => pick.result === "pending") || (!finished(period) && own.filter(isDecided).length < WEEK_PICKS);
+      if (undecided) {
+        if (own.some((pick) => pick.result === "win")) wonInPlay.set(playerId, [...(wonInPlay.get(playerId) ?? []), { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: 1 }]);
+        continue;   // an unsettled pick, or a week in play without both of this player's picks graded, leaves the week out of the counted weeks
+      }
       const weekWins = own.filter((pick) => pick.result === "win").length;   // a pick not made is a loss, so losses are whatever is left of the two
       const week = { seasonYear: yearBySeason.get(seasonId), week: period.display_order, wins: Math.min(WEEK_PICKS, weekWins) };
       weeksByPlayer.set(playerId, [...(weeksByPlayer.get(playerId) ?? []), week]);
       histogram[week.wins === 0 ? "donut" : week.wins === 1 ? "split" : "sweep"] += 1;
     }
   }
-  return { weeksByPlayer, histogram, lostInPlay };
+  return { weeksByPlayer, histogram, lostInPlay, wonInPlay };
 }
 
 const NOT_PLAYED = ["postponed", "cancelled", "no_contest"];
@@ -183,7 +205,7 @@ function perfectRounds({ periods, yearBySeason, picks, games }) {
 }
 
 /**
- * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win, and 2-0 weeks in a row (a week still in play ends it the moment the player has a loss in it), as
+ * Each player's two streaks (regular season, carried across seasons): weeks in a row with at least 1 win (a week still in play extends it the moment the player has a win in it), and 2-0 weeks in a row (a week still in play ends it the moment the player has a loss in it), as
  * { longest, current, endedAt }. The 2-0 streak also carries `total`, how many perfect weeks the player has had in all: the regular season's
  * 2-0 weeks plus every playoff round won pick for pick, everything but the Super Bowl. Only the streaks are regular season. Only the periods and picks are needed.
  * A week counts once it is complete OR every game in it is final (`settledPeriodIds`), so a streak does not wait for the pool to advance.
@@ -194,15 +216,17 @@ function perfectRounds({ periods, yearBySeason, picks, games }) {
 export function weeklyStreaks({ seasons, periods, picks, settledPeriodIds = new Set(), games = [] }) {
   const periodById = new Map(periods.map((period) => [period.id, period]));
   const yearBySeason = new Map(seasons.map((season) => [season.id, season.year]));
-  const { weeksByPlayer, lostInPlay } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
+  const { weeksByPlayer, lostInPlay, wonInPlay } = playerWeeks({ periodById, yearBySeason, periods, picks, settledPeriodIds });
   const summary = (run) => ({ longest: run.longest, current: run.current, endedAt: run.longestEnd });
   const playoffPerfect = perfectRounds({ periods, yearBySeason, picks, games });
-  return new Map([...new Set([...weeksByPlayer.keys(), ...playoffPerfect.keys()])].map((playerId) => {
+  return new Map([...new Set([...weeksByPlayer.keys(), ...wonInPlay.keys(), ...playoffPerfect.keys()])].map((playerId) => {
     const weeks = weeksByPlayer.get(playerId) ?? [];
     weeks.sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
     // A week in play with a loss already is no 2-0 (it ends the 2-0 streak now) but is not yet a counted week for the rest.
     const withLost = [...weeks, ...(lostInPlay.get(playerId) ?? [])].sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
-    return [playerId, { sweeps: { ...summary(runs(withLost, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(weeks, (week) => week.wins > 0)) }];
+    // A week in play with a win already is no shutout (it extends the shutout-free streak now) but is not yet a counted week for the rest.
+    const withWon = [...weeks, ...(wonInPlay.get(playerId) ?? [])].sort((a, b) => a.seasonYear - b.seasonYear || a.week - b.week);
+    return [playerId, { sweeps: { ...summary(runs(withLost, (week) => week.wins === 2)), total: weeks.filter((week) => week.wins === 2).length + (playoffPerfect.get(playerId) ?? 0) }, noDonut: summary(runs(withWon, (week) => week.wins > 0)) }];
   }));
 }
 
@@ -237,8 +261,8 @@ export function buildGroupStats({ players, seasons, periods, games, lines, picks
   const currentSeason = seasons.reduce((newest, season) => (!newest || season.year > newest.year ? season : newest), null);
   const inCurrentSeason = (pick) => Boolean(currentSeason) && periodById.get(pick.scoring_period_id)?.season_id === currentSeason.id;
   const thisSeasonOf = (subset) => {
-    const { splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate } = recordsFor(subset.filter(inCurrentSeason), lookups);
-    return { seasonYear: currentSeason?.year ?? null, splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate };
+    const { splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate, faded } = recordsFor(subset.filter(inCurrentSeason), lookups);
+    return { seasonYear: currentSeason?.year ?? null, splits, teams: top, teamsByHitRate, teamsLeastPicked, teamsByLowestHitRate, faded };
   };
 
   // Each player's own full set: the same record, histogram and splits from just their picks.

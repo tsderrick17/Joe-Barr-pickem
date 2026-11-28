@@ -1,10 +1,12 @@
 "use client";
 
+import { haptic } from "@/lib/haptics-client";
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import type { BoardView } from "@/lib/board-view.js";
 import { useStableCallback } from "@/lib/use-stable-callback";
 import { gameOf, inOrder, lineOf, WeekChoice, type Ticket } from "@/components/clubhouse/big-board";
 import { Lamp, LAMP_SAYS, lampFor, Logo, type LampState } from "@/components/clubhouse/lamps";
+import { SaveBar } from "@/components/clubhouse/save-bar";
 
 /**
  * Your ticket, opened from your row: the week's games as plain rows, twice. First pick against the spread; then, while you are
@@ -32,25 +34,38 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const [chip, setChip] = useState(view.mine.survivor);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState("");
+  // A full ticket asked to take one more team: which team, until the player says which pick it replaces (or cancels).
+  const [swap, setSwap] = useState<string | null>(null);
+  // Just sent: the picks fill with gold once, then the ticket stays where it is.
+  const [justSent, setJustSent] = useState(false);
   const survivor = view.survivor;
   const pickingSurvivor = survivor.playing;
   // The ticket opens on Pick'em, or on Survivor when the Survivor table's Pick button brought the player here.
   const [mode, setMode] = useState<"pickem" | "survivor">(startOn === "survivor" && pickingSurvivor ? "survivor" : "pickem");
   const name = (team: string) => view.names[team] ?? team;
+  const weekText = `${view.week}${view.status ? ` · ${view.status}` : ""}`;   // as the Big Board words it
   const cap = view.maxPicks;
 
   const choose = (team: string, gameId: string) => {
     const game = view.games.find((item) => item.id === gameId)!;
     const other = team === game.home ? game.away : game.home;
-    if (picks.includes(team)) { setPicks(picks.filter((pick) => pick !== team)); return; }
-    if (picks.length >= cap && !picks.includes(other)) return;
+    // The same feels as the Slate: a pick ticks, taking one back is lighter, a full ticket warns.
+    if (picks.includes(team)) { haptic("lightTick"); setSwap(null); setPicks(picks.filter((pick) => pick !== team)); return; }
+    // A full ticket, as on the Slate: it asks which pick the new team replaces (only a pick whose game has not kicked off can go).
+    if (picks.length >= cap && !picks.includes(other)) {
+      if (picks.some((pick) => !gameOf(view, pick).kickedOff)) { haptic("tick"); setSwap(team); } else haptic("warning");
+      return;
+    }
+    setSwap(null);
     const next = [...picks.filter((pick) => pick !== other), team];
+    haptic("tick");
     setPicks(next);
     // The last pick moves you on to Survivor, if it is still to do.
     if (next.length === cap && pickingSurvivor && !chip && !picks.includes(other)) setMode("survivor");
   };
 
   const ordered = inOrder(view, picks);
+  const replace = (out: string) => { if (!swap) return; haptic("tick"); setPicks([...picks.filter((pick) => pick !== out), swap]); setSwap(null); };
   // A playoff round names each line by its game (a pick for every game); a regular week by Pick 1 and Pick 2.
   const lines = view.playoff
     ? view.games.map((game) => { const team = picks.find((pick) => pick === game.away || pick === game.home); return { label: `${game.away} @ ${game.home}`, value: team ? `${team} ${lineOf(view, team)}` : null }; })
@@ -67,6 +82,9 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   ];
   const hasSent = view.mine.picks.length > 0 || Boolean(view.mine.survivor);
   const changed = ordered.join() !== inOrder(view, view.mine.picks).join() || (pickingSurvivor && chip !== view.mine.survivor);
+  // How many picks differ from the ticket as sent: a swap is one change, as is a Survivor team.
+  const sentPicks = inOrder(view, view.mine.picks);
+  const changes = Math.max(ordered.filter((team) => !sentPicks.includes(team)).length, sentPicks.filter((team) => !ordered.includes(team)).length) + (pickingSurvivor && chip !== view.mine.survivor ? 1 : 0);
 
   async function send(): Promise<boolean> {
     setSending(true);
@@ -74,6 +92,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
     try {
       const answer = await onSubmit({ picks: ordered, survivor: pickingSurvivor ? chip : null });
       if (typeof answer === "string") { setProblem(answer); return false; }
+      setJustSent(true);
       return true;
     } finally { setSending(false); }
   }
@@ -86,33 +105,37 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
   const anyLocked = shownGames.some((game) => game.lineFinal);
 
   return (
-    <div className="lab-bigboard is-tote trace-gilt lab-window">
+    <div className={`lab-bigboard is-tote trace-gilt lab-window${justSent ? " is-just-sent" : ""}`}>
       <header>
-        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} step text={view.week} view={view} /> : <h3>{view.week}</h3>}
+        {/* Your lamps on the left; the week on the right, the same bubble in the same place as the Big Board’s (owner, 2026-11-27). */}
         <ul aria-label="Your picks" className="lab-lamps">
           {lamps.map((lamp) => <li key={lamp.label}><Lamp label={`${lamp.label}: ${LAMP_SAYS[lamp.state]}`} state={lamp.state} survivor={lamp.survivor} /><small aria-hidden="true">{lamp.survivor ? "SURV" : lamp.label.replace("Pick ", "P")}</small></li>)}
         </ul>
+        {onWeek && view.weeks.length > 1 ? <WeekChoice onWeek={onWeek} text={weekText} view={view} /> : <span className="lab-ticket-week">{weekText}</span>}
       </header>
       {view.playoff?.you.forfeited || view.playoff?.you.out ? <p className="lab-ticket-raceover">{view.playoff.you.forfeited ? "You forfeited · your score stands" : "Out of the race · your score stands"}</p> : null}
 
-      <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
-        <button aria-pressed={!actionOnly} onClick={() => chooseAction(false)} type="button">All games</button>
-        <button aria-pressed={actionOnly} onClick={() => chooseAction(true)} type="button">Pool action</button>
-      </div>
-
-      {pickingSurvivor ? (
-        <div aria-label="What to pick" className="lab-chips lab-ticket-switch" role="group">
-          <button aria-pressed={mode === "pickem"} onClick={() => setMode("pickem")} type="button">Pick’em<small>pick {cap} vs. the spread</small></button>
-          <button aria-pressed={mode === "survivor"} onClick={() => setMode("survivor")} type="button">Survivor<small>pick 1 · {survivor.left} teams left</small></button>
+      {/* The two switches share one row, each as wide as the game column under it: All games / Pool action over the left one, Pick'em /
+          Survivor (while Survivor is still yours to pick) over the right one. */}
+      <div className="lab-ticket-switches">
+        <div aria-label="Games shown" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
+          <button aria-pressed={!actionOnly} onClick={() => { haptic("tick"); chooseAction(false); }} type="button">All games</button>
+          <button aria-pressed={actionOnly} onClick={() => { haptic("tick"); chooseAction(true); }} type="button">Pool action</button>
         </div>
-      ) : null}
+        {pickingSurvivor ? (
+          <div aria-label="What to pick" className="lab-chips lab-ticket-switch lab-ticket-action" role="group">
+            <button aria-label={`Pick’em: pick ${cap} vs. the spread`} aria-pressed={mode === "pickem"} onClick={() => { haptic("tick"); setMode("pickem"); }} title={`Pick ${cap} vs. the spread`} type="button">Pick’em</button>
+            <button aria-label={`Survivor: pick 1, ${survivor.left} teams left`} aria-pressed={mode === "survivor"} onClick={() => { haptic("tick"); setMode("survivor"); }} title={`Pick 1 · ${survivor.left} teams left`} type="button">Survivor</button>
+          </div>
+        ) : null}
+      </div>
       {survivor.out && !view.champion ? <p className="lab-window-out">You’re out of Survivor{survivor.outWeek ? ` (lost in week ${survivor.outWeek})` : ""}. The pool goes on: follow it at the Survivor table.</p> : null}
 
       {/* The games, the ticket and its send button scroll as one, under the heading that stands still. */}
       <div className="lab-window-scroll">
       <section aria-label={mode === "survivor" ? "Survivor" : "Pick’em"} className="lab-window-part">
         {shownGames.length === 0 ? <p className="lab-board-note">No pool action in this week’s games yet. Switch to All games to see them.</p> : null}
-        {mode === "pickem" && anyMoving ? <p className="lab-line-key">{anyLocked ? <><b className="is-gold">Gold line:</b> locked, it won’t change. <b>White line:</b> can still move until 8 AM on game day.</> : <>Lines can still move until 8 AM on game day. Once a line locks it turns gold.</>}</p> : null}
+        {mode === "pickem" && anyMoving ? <p className={`lab-line-key${anyLocked ? " is-keyed" : ""}`}>{anyLocked ? <><span><b className="is-gold">Gold line:</b>{" "}locked.</span><span><b>White line:</b>{" "}moves until 8 AM on game day.</span></> : <>Lines can move until 8 AM on game day, then lock in gold.</>}</p> : null}
         <ol>
           {shownGames.map((game) => {
             const locked = game.kickedOff;
@@ -121,7 +144,7 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
                 const entry = survivor.teams[team];
                 const picked = chip === team;
                 return (
-                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { setChip(picked ? null : team); }} type="button">
+                  <button aria-label={name(team)} aria-pressed={picked} className={`lab-board-cell is-survivor ${picked ? "is-picked" : ""}${picked && view.mine.survivor === team ? " is-sent" : ""} ${entry.free ? "" : "is-locked"}`} disabled={!entry.free} onClick={() => { haptic(picked ? "lightTick" : "lockIn"); setChip(picked ? null : team); }} type="button">
                     <span className="lab-board-team"><Logo team={team} />{team}</span>
                     <span className="lab-board-used">{entry.usedWeek ? `USED WK ${entry.usedWeek}` : entry.used ? "USED" : entry.locked ? "KICKED OFF" : picked ? "YOUR PICK" : ""}</span>
                     <span aria-hidden="true" className="lab-board-trace" />
@@ -136,18 +159,18 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
               // From kickoff, while the game is being played, each side names who took it (picks are public once a game kicks off).
               const live = !final && locked && result.pickers.length > 0 ? result.pickers : null;
               return (
-                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : live ? `, picked by ${live.join(", ")}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
+                <button aria-label={`${name(team)} ${line}${final ? `, final ${final.score}, ${final.says.toLowerCase()}, picked by ${final.pickers.length ? final.pickers.join(", ") : "no one"}` : live ? `, picked by ${live.join(", ")}` : ""}`} aria-pressed={picked} className={`lab-board-cell ${picked ? "is-picked" : ""}${picked && view.mine.picks.includes(team) ? " is-sent" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} onClick={() => choose(team, game.id)} type="button">
                   <span className="lab-board-team"><Logo team={team} />{team}</span>
                   <span className={`lab-board-line ${game.lineFinal ? "is-final" : ""}`}>{line}</span>
-                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em>{final.pickers.length ? final.pickers.map((picker, index) => <Fragment key={picker}>{index ? " · " : ""}<u>{picker.toUpperCase()}</u></Fragment>) : "NO PICKS"}</em></span> : null}
-                  {live ? <span className="lab-board-final is-live"><em>{live.map((picker, index) => <Fragment key={picker}>{index ? " · " : ""}<u>{picker.toUpperCase()}</u></Fragment>)}</em></span> : null}
+                  {final ? <span className={`lab-board-final ${final.covered ? "is-covered" : ""}`}><b>{final.score}</b><em className={final.pickers.length > 2 ? "is-stacked" : undefined}>{final.pickers.length ? final.pickers.map((picker, index) => <Fragment key={picker}>{index ? <i aria-hidden="true"> · </i> : ""}<u>{picker.toUpperCase()}</u></Fragment>) : "NO PICKS"}</em></span> : null}
+                  {live ? <span className="lab-board-final is-live"><em className={live.length > 2 ? "is-stacked" : undefined}>{live.map((picker, index) => <Fragment key={picker}>{index ? <i aria-hidden="true"> · </i> : ""}<u>{picker.toUpperCase()}</u></Fragment>)}</em></span> : null}
                   <span aria-hidden="true" className="lab-board-trace" />
                 </button>
               );
             };
             return (
               <li key={game.id}>
-                <span className="lab-board-time">{game.kickoff.toUpperCase()}{game.kickedOff ? " · KICKED OFF" : ""}</span>
+                <span className="lab-board-time">{game.kickoff.toUpperCase()}{game.kickedOff ? (game.results[game.away].ats !== null ? <span className="lab-board-status is-final">Final</span> : <span className="lab-board-status is-live">Live</span>) : null}{game.venue ? <span className="lab-board-venue"><span aria-hidden="true">📍</span> {game.venue}</span> : null}</span>
                 {cell(game.away)}
                 <span aria-hidden="true" className="lab-board-at">@</span>
                 {cell(game.home)}
@@ -161,12 +184,24 @@ export function TicketForm({ view, onSubmit, poolAction, onPoolAction, onWeek, s
         <dl>
           {lines.map((line) => <div key={line.label}><dt>{line.label}</dt><dd>{line.value ?? "—"}</dd></div>)}
         </dl>
-        <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void send()} type="button">
-          {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
-        </button>
         {problem ? <p className="lab-window-problem" role="alert">{problem}</p> : null}
         <p className="lab-board-note">{view.playoff ? "Pick every game against the spread. Send the whole round at once, and change any pick until its game kicks off." : view.champion ? `Survivor is decided: ${view.champion} won it.` : "Tap a team to pick it; tap again to take it back. Change any pick until its game kicks off."}</p>
       </section>
+      {/* The send button rides a bar pinned to the foot of the ticket while there is something to send, so it is never a scroll away. */}
+      <SaveBar changes={changes} pinned={changed || Boolean(swap)} prompt={swap ? (
+        <div className="lab-ticket-swap" role="alert">
+          <span>Picks are full</span>
+          <button className="lab-ticket-swap-cancel" onClick={() => { haptic("lightTick"); setSwap(null); }} type="button">Cancel</button>
+          <p>Replace which one with {swap} {lineOf(view, swap)}?</p>
+          <div className="lab-ticket-swap-choices">
+            {ordered.filter((pick) => !gameOf(view, pick).kickedOff).map((pick) => <button key={pick} onClick={() => replace(pick)} type="button">{pick} {lineOf(view, pick)}</button>)}
+          </div>
+        </div>
+      ) : null}>
+        <button className="lab-window-submit" disabled={!changed || sending} onClick={() => void send()} type="button">
+          {sending ? "Sending…" : changed ? (hasSent ? "Submit changes" : "Submit picks") : hasSent ? "Submitted ✓" : "Submit picks"}
+        </button>
+      </SaveBar>
       {/* Below the games and the send button, inside the ticket: Forfeit in the playoffs. */}
       {footer}
       </div>
