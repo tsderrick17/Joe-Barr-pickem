@@ -609,3 +609,7 @@ On the clubhouse ticket a game being played shows a red LIVE badge beside its ki
 ## 2026-11-27 - Big Board: even margins on a phone
 
 On a touch phone the scrollbar floats over the page, so the clubhouse Big Board no longer keeps a 14px gutter for it on the right; its columns widen so the rows sit as far from the board's right edge as from its left (owner). A mouse-driven screen keeps the gutter for its scrollbar.
+
+## 2026-11-27 - Clubhouse sheets: even margins on a phone
+
+The touch-phone rule from the Big Board now covers every clubhouse sheet that scrolls (the ticket, Survivor, the Bowl sheet, the rules, the wall table): no 14px scrollbar gutter on the right, so the games sit as far from the sheet's right edge as from its left (owner: "I prefer symmetry"). A mouse-driven screen keeps the gutter for its scrollbar.

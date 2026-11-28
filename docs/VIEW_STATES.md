@@ -163,6 +163,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Clubhouse ticket, Pick'em full and another team tapped: "Picks are full · Replace which one with …?" pinned with the send button, a button per pick still open, and Cancel (`clubhouse-ticket-swap-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |
 
 | Clubhouse Big Board on a touch phone: no scrollbar gutter, the rows as far from the board's right edge as from its left (`clubhouse-bigboard-touch-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone, touch) |
+| Clubhouse ticket on a touch phone: no scrollbar gutter, the games as far from the sheet's right edge as from its left (`clubhouse-ticket-touch-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone, touch) |
 
 | Your ticket's line key with a line locked: "Gold line: locked." over "White line: moves until 8 AM on game day.", each label on the line with its words (`clubhouse-ticket-line-key-locked-phone-390`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |
 | Your ticket, a game played abroad: a red pin with its city and country ("📍 London, England") at the right end of its time line, clubhouse only (`clubhouse-ticket-game-abroad-phone-390`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |

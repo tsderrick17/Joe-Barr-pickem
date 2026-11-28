@@ -835,7 +835,12 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
 .lab-window-scroll { display: grid; gap: inherit; min-width: 0; }
 /* On a phone the scrollbar floats over the page, so the Big Board keeps no gutter for it: its columns widen to sit as far from the
    board's right edge as from its left. */
-@media (hover: none) and (pointer: coarse) { .clubhouse-page .cw-sheet-body > .lab-tote > .lab-tote-data { padding-right: 0; } }
+/* On a touch phone the scrollbar floats over the page: no gutter kept for it, so every sheet sits as far from its right edge as from its left. */
+@media (hover: none) and (pointer: coarse) {
+  .clubhouse-page .cw-sheet-body > :is(.lab-tote, .lab-bigboard, .lab-rules) > :is(.lab-tote-data, .lab-survivor-scroll, .lab-window-scroll, .lab-rules-body),
+  .clubhouse-page .cw-sheet-body > .lab-wall-table,
+  .clubhouse-page .cw-sheet-body > .lab-bigboard > .lab-ticket-switches { padding-right: 0; }
+}
 
 /* ---- The clubhouse's pop-ups rise out of the ticket at the foot of the screen: quick, smooth, settling softly; no coloured band on top ---- */
 @keyframes club-rise { from { opacity: .4; transform: translateY(calc(100% + 40px)) scale(.97); } }
