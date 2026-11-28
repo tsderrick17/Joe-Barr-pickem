@@ -884,6 +884,11 @@ test("closing the Bowl ticket with picks not saved asks first", async ({ page })
   await ticket.getByRole("button", { name: "Arizona -2.5" }).click({ timeout: 30_000 });
   await page.keyboard.press("Escape");
   const ask = page.getByRole("dialog", { name: "Your bowl picks aren’t saved yet" });
+  // It wears the Bowl Pool's navy and gold, not the clubhouse green.
+  await expect(ask).toHaveClass(/is-bowl/);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-unsaved-ask-phone-390.png", { maxDiffPixels: 60 });
   await ask.getByRole("button", { name: "Save my picks" }).click();
   await expect.poll(() => sent.length).toBe(1);
   await expect(page.getByRole("dialog", { name: "Bowl Pool" })).toHaveCount(0);
@@ -1602,6 +1607,17 @@ test("on a full ticket, tapping another team asks which pick it replaces, as the
 
 test.describe("on a touch phone", () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test("the Bowl Pool and the ticket only scroll up and down, never sideways, even with Save pinned", async ({ page }) => {
+    await openClubhouse(page, { at: "/clubhouse#bowl", bowl: bowlRead() });
+    const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+    await ticket.locator(".lab-bowl-game .lab-board-cell:not([disabled])").first().click({ timeout: 30_000 });
+    await expect(ticket.locator(".lab-savebar.is-pinned")).toBeVisible();
+    const scroll = page.locator(".cw-sheet-body .lab-window-scroll").first();
+    const slid = await scroll.evaluate((node) => { node.scrollLeft = 60; return { left: node.scrollLeft, wider: node.scrollWidth - node.clientWidth }; });
+    expect(slid.wider, "nothing reaches past the sides").toBeLessThanOrEqual(0);
+    expect(slid.left).toBe(0);
+  });
 
   test("the Big Board's columns sit as far from the board's right edge as from its left (no scrollbar gutter on a phone)", async ({ page }) => {
     await openClubhouse(page, { scenarios: ["live-mixed-locks"] });

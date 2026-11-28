@@ -614,6 +614,10 @@ On a touch phone the scrollbar floats over the page, so the clubhouse Big Board 
 
 The touch-phone rule from the Big Board now covers every clubhouse sheet that scrolls (the ticket, Survivor, the Bowl sheet, the rules, the wall table): no 14px scrollbar gutter on the right, so the games sit as far from the sheet's right edge as from its left (owner: "I prefer symmetry"). A mouse-driven screen keeps the gutter for its scrollbar.
 
+## 2026-11-28 - Bowl Pool: no sideways scroll; its unsaved-picks ask in the Bowl Pool's colours
+
+On a phone the clubhouse sheets keep no scrollbar gutter (2026-11-27), so the pinned Save bar's 4px reach past its sides let the Bowl Pool (and the ticket) slide sideways. The bar now stops at the edge on a phone, and the sheets' scroll areas never scroll sideways (Survivor keeps its own sideways scroll for the weeks). The "Your bowl picks aren't saved yet" ask wears the Bowl Pool's navy, gold rule, lettering and gold Save, not the clubhouse green (owner).
+
 ## 2026-11-27 - Clubhouse accents: one green and red, your row, soft tiles, lit lamps, gold sent picks
 
 Owner-picked accents across the clubhouse boards and ticket:

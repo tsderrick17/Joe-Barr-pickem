@@ -163,6 +163,7 @@ Shot as the chat element alone, at phone 390 and desktop 1280, day and night. Fo
 | Clubhouse ticket, Pick'em full and another team tapped: "Picks are full · Replace which one with …?" pinned with the send button, a button per pick still open, and Cancel (`clubhouse-ticket-swap-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone by day) |
 
 | Clubhouse Big Board on a touch phone: no scrollbar gutter, the rows as far from the board's right edge as from its left (`clubhouse-bigboard-touch-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone, touch) |
+| Bowl Pool "Your bowl picks aren't saved yet" ask: navy, gold rule, Bowl lettering, gold Save (`clubhouse-bowl-unsaved-ask-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone) |
 | Clubhouse ticket on a touch phone: no scrollbar gutter, the games as far from the sheet's right edge as from its left (`clubhouse-ticket-touch-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone, touch) |
 | Clubhouse ticket just after Submit: it stays open, the sent picks filled gold with dark text (`clubhouse-ticket-sent-gold-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone) |
 | Clubhouse Survivor table with players out: your row tinted with a gold edge, a loss a thin red slash over its logo in full colour, the weeks after a player is out blank (`clubhouse-survivor-table-out-phone-390.png`) | `test/visual/clubhouse.visual.spec.ts` (phone) |
