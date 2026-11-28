@@ -605,3 +605,7 @@ As on the Slate, tapping another team when both picks are already on the clubhou
 ## 2026-11-27 - Ticket time line: red LIVE, then FINAL, instead of "Kicked off"
 
 On the clubhouse ticket a game being played shows a red LIVE badge beside its kickoff time (as the Slate does) and a FINAL badge once decided, in place of "· KICKED OFF". The Bowl ticket's game under way shows the same red LIVE badge (owner).
+
+## 2026-11-27 - Big Board: even margins on a phone
+
+On a touch phone the scrollbar floats over the page, so the clubhouse Big Board no longer keeps a 14px gutter for it on the right; its columns widen so the rows sit as far from the board's right edge as from its left (owner). A mouse-driven screen keeps the gutter for its scrollbar.
