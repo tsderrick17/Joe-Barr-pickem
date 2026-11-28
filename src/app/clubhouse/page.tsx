@@ -16,7 +16,7 @@ import { fetchWithSession, SessionUnavailableError } from "@/lib/auth-session";
 import type { SlateResponse, StandingsResponse } from "@/lib/api-contracts";
 import { boardViewSupported, realBoardView } from "@/lib/board-view.js";
 import { bowlChartReady, bowlSnapshot } from "@/lib/chalkboard.js";
-import { bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
+import { bowlPlateNews, bowlTickerGames, clubhouseFeed, mergeTicker } from "@/lib/clubhouse-feed.js";
 import { paneForHref, paneFromHash, setClubhouseMode } from "@/lib/clubhouse-mode.js";
 import { selectDefaultScoringPeriod } from "@/lib/scoring-period.js";
 import { useClubhouseAccess } from "@/lib/use-commissioner-access";
@@ -323,7 +323,9 @@ export default function ClubhousePage() {
     if (!room) return null;
     if (!room.feed.bowl || !bowlRead) return room.feed;
     const now = Date.parse(room.board.serverTime ?? room.home.serverTime ?? new Date().toISOString());
-    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now) };
+    // When the poker table is the Bowl Pool's, its plate says what you have left to do there: claim a seat, or how many bowls to pick.
+    const plate = room.feed.survivorActive ? null : bowlPlateNews(bowlRead, room.home.viewerPlayerId ?? null, now);
+    return { ...room.feed, games: mergeTicker(room.feed.games, bowlTickerGames(bowlRead, now), now), ...(plate ? { news: { ...room.feed.news, survivor: plate } } : {}) };
   }, [room, bowlRead]);
   // The Trophy Room and the chat too, once the room is up.
   const roomUp = Boolean(room);

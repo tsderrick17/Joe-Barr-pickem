@@ -1415,3 +1415,34 @@ test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ p
   await expect(form.locator(".lab-savebar.is-pinned")).toContainText("1 change");
   await expect(form.getByRole("button", { name: /Submit/ })).toBeInViewport();
 });
+
+test("the Bowl sheet's heading row (bowls, schools and spreads) stays in sight while a long list of players scrolls under it", async ({ page }) => {
+  const read = bowlRead();
+  read.standings = ["Tyler", "Gary", "Rick", "Zac", "Al", "Connor", "John", "Shane O", "Ron", "Steve", "Mike", "Dave", "Bill", "Jim"].map((name, index) => ({ playerId: index === 0 ? "p2" : `x${index}`, playerName: name, wins: 0, losses: 0 }));
+  await openClubhouse(page, { at: "/clubhouse#bowl", bowl: read });
+  const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
+  await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
+  const scroller = ticket.locator(".lab-bowl-sheet-scroll");
+  await expect(scroller.locator("tbody tr")).toHaveCount(14);
+  await scroller.evaluate((node) => node.scrollTo({ top: 400, left: 200, behavior: "instant" }));
+  await page.waitForTimeout(700);
+  const held = await scroller.evaluate((node) => {
+    const box = node.getBoundingClientRect(), head = node.querySelector("thead th")!.getBoundingClientRect();
+    return { scrolled: node.scrollTop > 100, headAtTop: Math.abs(head.top - box.top) < 1 };
+  });
+  expect(held).toEqual({ scrolled: true, headAtTop: true });
+  await expect(scroller.locator("thead")).toContainText("Arizona -2.5");
+  await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
+  await page.waitForTimeout(1200);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-sheet-scrolled-phone-390.png", { maxDiffPixels: 60 });
+});
+
+test("in bowl season the Bowl Pool's plate tells a player without a seat to claim one, and the claim opens their ticket", async ({ page }) => {
+  await openClubhouse(page, { bowl: bowlRead(false), homeExtra: { survivorComplete: true, survivorChampionName: "Walt", survivorCrownedAt: "2026-09-20T12:00:00Z", serverTime: "2026-12-10T18:00:00Z" } });
+  const room = page.getByRole("navigation", { name: "Clubhouse rooms" });
+  await expect(room.locator(".lab-room-tag.is-bowl-pool small")).toHaveText("Claim your seat", { timeout: 30_000 });
+  await room.getByRole("button", { name: "Bowl Pool", exact: true }).click();
+  await page.getByRole("button", { name: /Claim your seat/i }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0]).toEqual({ optedIn: true, selections: [], championshipTotalGuess: null });
+});

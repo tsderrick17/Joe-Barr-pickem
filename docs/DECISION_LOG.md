@@ -564,3 +564,7 @@ The Bowl Pool pop-up's heading is compact (no row of stars, a smaller title, cou
 ## 2026-11-27 - Every non-Sunday-afternoon kickoff gets a public pick reveal
 
 The Black Friday game sent no reveal email because the featured reveal was planned only for Wednesday, Thursday, Monday, Sunday night and International games. It now covers every kickoff outside the two Sunday afternoon windows (which keep their own reveals): Friday, Saturday, Tuesday and holiday games included. The notification wording says so.
+
+## 2026-11-27 - Bowl sheet heading stays in sight; the clubhouse leads players to their Bowl Pool seat
+
+On the clubhouse Bowl Pool Sheet the row naming each bowl, its two schools with their spreads, and its day holds at the top while the list of players scrolls under it (the sheet scrolls both ways in one box, the Wins and Player columns held at its left). In bowl season, when the poker table is the Bowl Pool's, its plate reads "Claim your seat" for a player who has not joined while seats are open, and "N to pick" for one who has bowls still owed. With the clubhouse switch up, the Bowl Pool's emails and phone messages (which link to /bowl-pool) open its ticket in the clubhouse. Only players who claimed a seat are on the Sheet; before the Dec 7 launch the Commissioner's preview lists every active player so the layout can be checked.

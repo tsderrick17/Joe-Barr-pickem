@@ -163,6 +163,9 @@ export default function SiteNav() {
   // clubhouse checks access itself and puts the switch down for anyone it sends back.
   useEffect(() => {
     if (pathname === "/" && clubhouseModeOn()) router.replace("/clubhouse");
+    // The Bowl Pool's emails and phone messages link to its classic page: with the switch up they open its ticket in the clubhouse instead
+    // (a past season, chosen with ?season=, stays on the classic page).
+    else if (pathname === "/bowl-pool" && !window.location.search && clubhouseModeOn()) router.replace("/clubhouse#bowl");
   }, [pathname, router]);
   // With the switch up, the Standings link (and the masthead) go straight to the clubhouse instead of the classic Standings, which would
   // flash first while the redirect above caught up. Inside the clubhouse they stay "/", the Standings pane the page opens in place.
