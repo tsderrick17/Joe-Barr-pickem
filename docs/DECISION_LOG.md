@@ -569,3 +569,7 @@ The Black Friday game sent no reveal email because the featured reveal was plann
 
 With a line locked, the key on Your ticket reads as two lines, "Gold line: locked." over "White line: moves until 8 AM on game day.", so a label is never left at the end of one line with its words on the next (owner). The two lines start at the same left edge, gold right above white, the pair centred under the switch. Still two lines at most on a phone.
 The All games / Pool action switch above it is exactly as wide as the game box under it: one team's box on a phone, one whole game on a desktop where two games share a row (owner).
+
+## 2026-11-27 - Ticket switches share a row; the Constitution explains early line locks
+
+On Your ticket, All games / Pool action and Pick'em / Survivor share one row, each exactly as wide as the column of game boxes under it (one team's box on a phone, one game on a desktop). Pick'em / Survivor is now a pill like the other; its "pick 2 vs. the spread" and "teams left" lines move to the buttons' hover text and spoken names. The Constitution's Article III gains a clause: a game played overseas that kicks off Sunday morning has its line lock at 6:00 PM Eastern on Saturday (as getLineLock has always done).

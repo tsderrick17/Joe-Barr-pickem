@@ -493,8 +493,9 @@
 .lab-ticket-switch button { border-radius: 8px; display: grid; gap: 1px; justify-items: center; min-height: 52px; padding: 4px 8px; }
 .lab-ticket-switch button small { font-size: .64rem; font-weight: 600; opacity: .85; }
 /* All games | Pool action: one touching switch, like the chart's All | 6 Wk, in the left half of the row (owner, 2026-11-25). */
-.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action { border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; gap: 0; grid-template-columns: 1fr 1fr; justify-self: start; overflow: hidden; width: calc(50% - 4px); }   /* as wide as one game box under it (half, less half the 8px gap between boxes) */
-.clubhouse-page .cw-sheet-body > .lab-bigboard:not(.lab-bowl-ticket) > .lab-ticket-switch.lab-ticket-action { width: calc(50% - 11px); }   /* the games there sit inside a 14px scrollbar gutter */
+.lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action { border: 1px solid rgba(201, 164, 95, .6); border-radius: 999px; gap: 0; grid-template-columns: 1fr 1fr; overflow: hidden; }
+.lab-ticket-switches { column-gap: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* each switch as wide as the column of game boxes under it */
+.clubhouse-page .cw-sheet-body > .lab-bigboard > .lab-ticket-switches { padding-right: 14px; }   /* the games there sit inside a 14px scrollbar gutter */
 .lab-ticket-switch.lab-ticket-action button { min-height: 32px; }
 .lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button { border: 0; border-radius: 0; font-size: .66rem; padding: 2px 4px; white-space: nowrap; }
 .lab-window:not(.lab-bowl-ticket) .lab-ticket-switch.lab-ticket-action button + button { box-shadow: inset 1px 0 0 rgba(201, 164, 95, .6); }   /* the divider drawn inside, so the two halves stay the same width whatever the switch's width */
@@ -759,7 +760,7 @@ a.lab-room-back.is-foot { justify-content: center; margin: 18px auto 0; width: f
   /* The ticket's games stand two across. The Bowl ticket keeps one bowl a row (its days are short), in a narrower sheet. */
   .clubhouse-page .cw-sheet:has(.lab-bowl-ticket) { max-width: 720px; }
   .clubhouse-page .cw-sheet:has(.lab-wall-table) { max-width: 760px; }   /* the Trophy Room as wide as its trophies, so its scroll bar runs down its own edge */
-  .clubhouse-page .cw-sheet-body > .lab-bigboard:not(.lab-bowl-ticket) > .lab-ticket-switch.lab-ticket-action { width: calc(50% - 16px); }   /* two games a row here: as wide as one game (both its teams), half less the 18px gap and the 14px gutter */
+  .clubhouse-page .cw-sheet-body > .lab-bigboard > .lab-ticket-switches { column-gap: 18px; }   /* two games a row here: each switch as wide as one game */
   .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) { column-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* the Bowl Pool standings stay one list */
   .clubhouse-page .lab-window-part > ol:not(.lab-bowl-standings) > li { align-content: start; grid-template-columns: 1fr 1fr; }   /* a game beside a taller one (a final) starts level with it, at the top */
   .clubhouse-page .lab-window-part .lab-board-time { grid-column: 1 / -1; }

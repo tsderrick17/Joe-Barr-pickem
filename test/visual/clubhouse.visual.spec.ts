@@ -1437,17 +1437,27 @@ test("Pick'em's ticket pins Submit the same way once a pick is made", async ({ p
 });
 
 for (const [label, size] of [["phone-390", SIZES["phone-390"]], ["desktop-1280", SIZES["desktop-1280"]]] as const) {
-  test(`the All games / Pool action switch is exactly as wide as the game box under it (one team's box on a phone, one game on a desktop), ${label}`, async ({ page }) => {
-    await openClubhouse(page, { size, scenarios: ["live-mixed-locks"], at: "/clubhouse#slate" });
+  test(`All games / Pool action sits over the left game column and Pick'em / Survivor over the right, each exactly as wide, ${label}`, async ({ page }) => {
+    await openClubhouse(page, { size, scenarios: ["upcoming-unpicked"], at: "/clubhouse#slate" });
     const form = page.getByRole("dialog", { name: "Your ticket" });
-    await expect(form.locator(".lab-ticket-action")).toBeVisible({ timeout: 30_000 });
-    // On a phone a game's two teams fill the row, so the switch matches one team's box; on a desktop two games share a row, so it matches one game.
-    const under = label === "phone-390" ? ".lab-window-part .lab-board-cell" : ".lab-window-part > ol > li";
-    const edges = await form.evaluate((node, below) => [".lab-ticket-action", below].map((selector) => {
-      const box = node.querySelector(selector)!.getBoundingClientRect();
-      return [box.left, box.right];
-    }), under);
-    expect(Math.abs(edges[0][0] - edges[1][0])).toBeLessThan(1);   // starts where the box starts
-    expect(Math.abs(edges[0][1] - edges[1][1])).toBeLessThan(1);   // and ends where it ends
+    await expect(form.getByRole("group", { name: "What to pick" })).toBeVisible({ timeout: 30_000 });
+    // On a phone a game's two teams fill the row, so each switch matches one team's box; on a desktop two games share a row, so one game.
+    const under = label === "phone-390" ? ".lab-window-part li:first-of-type .lab-board-cell" : ".lab-window-part > ol > li";
+    const edges = await form.evaluate((node, below) => {
+      const box = (el: Element) => { const rect = el.getBoundingClientRect(); return [rect.left, rect.right, rect.top]; };
+      const switches = [...node.querySelectorAll(".lab-ticket-action")].map(box);
+      const columns = [...node.querySelectorAll(below)].slice(0, 2).map(box);
+      return { switches, columns };
+    }, under);
+    for (const side of [0, 1]) {
+      expect(Math.abs(edges.switches[side][0] - edges.columns[side][0])).toBeLessThan(1);   // starts where its column starts
+      expect(Math.abs(edges.switches[side][1] - edges.columns[side][1])).toBeLessThan(1);   // and ends where it ends
+    }
+    expect(Math.abs(edges.switches[0][2] - edges.switches[1][2])).toBeLessThan(1);   // one row
+    if (label === "phone-390") {
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; } *, *::before, *::after { animation: none !important; transition: none !important; }" });
+      await page.evaluate(() => document.fonts.ready);
+      await expect(form.locator(".lab-ticket-switches")).toHaveScreenshot("clubhouse-ticket-switches-phone-390.png", { maxDiffPixels: 20 });
+    }
   });
 }

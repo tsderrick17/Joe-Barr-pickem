@@ -28,6 +28,7 @@ export const POOL_CONSTITUTION: Array<{ part: string; articles: Array<{ title: s
         "You pick against the spread. The favorite has to win by more than the line. The underdog covers by winning, or by losing by less than the line.",
         "On the Slate the favorite is on the left and the home team is in CAPITALS.",
         "Lines lock at 8:00 AM Eastern on game day. Before that the line is black and can still move. Once it locks it turns teal and never changes.",
+        "Early line lock: a game played overseas that kicks off Sunday morning has its line lock at 6:00 PM Eastern on Saturday, the night before.",
         "Your pick is graded on the locked teal line, even if you picked earlier.",
       ] },
       { title: "Article IV · Winning", clauses: [
