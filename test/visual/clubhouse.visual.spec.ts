@@ -1507,7 +1507,7 @@ test("the Bowl sheet's heading row (bowls, schools and spreads) stays in sight w
     { id: "g5", bowl_name: "Gasparilla Bowl", kickoff_at: "2026-10-02T23:00:00Z", status: "scheduled", venue_city: "Tampa", venue_state: "FL", away_team_id: "a5", home_team_id: "h5", awayTeam: team("a5", "Memphis"), homeTeam: team("h5", "Florida"), line: { favorite_team_id: "h5", locked_spread: 6.5 } },
     { id: "g6", bowl_name: "Salute to Veterans Bowl", kickoff_at: "2026-10-03T01:00:00Z", status: "scheduled", venue_city: "Montgomery", venue_state: "AL", away_team_id: "a6", home_team_id: "h6", awayTeam: team("a6", "Toledo"), homeTeam: team("h6", "Rice"), line: { favorite_team_id: "a6", locked_spread: 3 } },
   );
-  read.standings = ["Tyler", "Gary", "Rick", "Zac", "Al", "Connor", "John", "Shane O", "Ron", "Steve", "Mike", "Dave", "Bill", "Jim"].map((name, index) => ({ playerId: index === 0 ? "p2" : `x${index}`, playerName: name, wins: 0, losses: 0 }));
+  read.standings = ["Tyler", "Gary", "Rick", "Zac", "Al", "Connor", "John", "Shane O", "Ron", "Steve", "Mike", "Dave", "Bill", "Jim"].map((name, index) => ({ playerId: index === 0 ? "p2" : `x${index}`, playerName: name, wins: 0, losses: 0, tiebreakerTotal: index % 4 ? 38 + index : null }));
   await openClubhouse(page, { at: "/clubhouse#bowl", bowl: read });
   const ticket = page.getByRole("dialog", { name: "Bowl Pool" }).locator(".lab-bowl-ticket");
   await ticket.getByRole("button", { name: "Sheet", exact: true }).click({ timeout: 30_000 });
@@ -1521,9 +1521,22 @@ test("the Bowl sheet's heading row (bowls, schools and spreads) stays in sight w
   });
   expect(held).toEqual({ scrolled: true, headAtTop: true });
   await expect(scroller.locator("thead")).toContainText("Arizona -2.5");
+  // The day's date sits centred over the first bowl in view, part way through its day as well as at its start.
+  const dateOverFirst = await scroller.evaluate((node) => {
+    const column = node.querySelectorAll("thead th.lab-bowl-sheet-game")[2].getBoundingClientRect();
+    return [...node.querySelectorAll("thead th.lab-bowl-sheet-day > span")].some((span) => { const box = span.getBoundingClientRect(); return Math.abs((box.left + box.right) / 2 - (column.left + column.right) / 2) < 2; });
+  });
+  expect(dateOverFirst).toBe(true);
+  // Last of all, each player's tiebreaker guess (a dash for none yet), as on the classic Bowl Card.
+  await expect(scroller.locator("thead th.lab-bowl-sheet-tb")).toHaveText("Tiebreaker");
+  await expect(scroller.locator("tbody td.lab-bowl-sheet-tb")).toHaveText(["—", "39", "40", "41", "—", "43", "44", "45", "—", "47", "48", "49", "—", "51"]);
   await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; }" });
   await page.waitForTimeout(1200);
   await expect(page).toHaveScreenshot("clubhouse-bowl-sheet-scrolled-phone-390.png", { maxDiffPixels: 60 });
+  // Slid to the end: the tiebreaker column, last.
+  await scroller.evaluate((node) => node.scrollTo({ left: node.scrollWidth, behavior: "instant" }));
+  await page.waitForTimeout(500);
+  await expect(page).toHaveScreenshot("clubhouse-bowl-sheet-tiebreaker-phone-390.png", { maxDiffPixels: 60 });
 });
 
 test("in bowl season the Bowl Pool's plate tells a player without a seat to claim one, and the claim opens their ticket", async ({ page }) => {
